@@ -1,0 +1,6 @@
+// Copyright © 2015 Hansoft AB 
+// Distributed under the MIT license, see license text in LICENSE.Malterlib
+
+#pragma once
+#include "../../../Source/Malterlib_Memory_MemoryManager_Debug.h"
+#include "../../../Source/Malterlib_Memory_MemoryManager_Debug.hpp"

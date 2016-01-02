@@ -1,0 +1,100 @@
+﻿// Copyright © 2015 Hansoft AB 
+// Distributed under the MIT license, see license text in LICENSE.Malterlib
+
+#pragma once
+
+namespace NMib
+{
+	namespace NMem
+	{
+		template <typename t_CParams>
+		struct TCMemoryManagerSubSlab_SmallSizeShared
+		{
+
+			struct CParams
+			{
+				CMemoryManagerSubSlab_SmallSizeLink m_Link;
+				uint16 m_FirstFreeList;
+				uint16 m_nAllocated;
+				uint16 m_AllocSize;
+				uint16 m_Alignment;
+			};
+
+			CParams m_Params;
+
+			TCMemoryManagerSubSlab_SmallSizeShared(mint _AllocSize);
+
+			uint8 *f_GetArray();
+			void *f_Alloc(bool &_bFull);
+			void f_Free(void *_pAlloc, mint _iAlloc, bool &_bWasFull, bool &_bFullyFree);
+			void f_OnAlloc(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
+			void f_OnFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
+			void f_OnFillFree(TCMemoryManagerArena<t_CParams> &_Arena);
+			bool f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, bool _bBreak);
+			bool f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, bool _bBreak);
+		};
+
+		template <typename t_CParams, mint t_AllocSize>
+		struct TCMemoryManagerSubSlab_SmallSize : TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>
+		{
+			using typename TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::CParams;
+			static const mint mc_Alignment = 1 << TCLowestBitSet<t_AllocSize>::mc_Value;
+			static const mint mc_NumAllocs = (t_CParams::mc_SubSlabSize - TCAlignUp<mint, sizeof(CParams), mc_Alignment>::mc_Value) / t_AllocSize;
+			static const mint mc_SmallSlabIndex
+				= 
+				(
+					t_AllocSize <= TCMemoryManagerArena<t_CParams>::mc_MinAlignment
+					? NMib::TCHighestBitSetCorrect<mint, t_AllocSize>::mc_Value 
+					: 
+					(
+						TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabsAligned 
+						+ (t_AllocSize - (TCMemoryManagerArena<t_CParams>::mc_MinAlignment * 2)) / TCMemoryManagerArena<t_CParams>::mc_MinAlignment
+					)
+				)
+			;
+
+			static_assert(						mc_SmallSlabIndex < TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabs, "Out of range");
+			static_assert(t_AllocSize != 1 ||	mc_SmallSlabIndex == 0, "");
+			static_assert(t_AllocSize != 2 ||	mc_SmallSlabIndex == 1, "");
+			static_assert(t_AllocSize != 4 ||	mc_SmallSlabIndex == 2, "");
+			static_assert(t_AllocSize != 8 ||	mc_SmallSlabIndex == 3, "");
+			static_assert(t_AllocSize != 12 ||	mc_SmallSlabIndex == 4, "");
+
+
+			TCMemoryManagerSubSlab_SmallSize();
+			void f_Free(void *_pAlloc, bool &_bWasFull, bool &_bFullyFree);
+		};
+
+
+		template <typename t_CParams>
+		struct TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>
+		{
+			struct CParams
+			{
+				CMemoryManagerSubSlab_SmallSizeLink m_Link;
+				uint8 m_FirstFreeList;
+				uint8 m_FreeListsNext[(t_CParams::mc_SubSlabSize + 254) / 255];
+				uint8 m_FreeLists[(t_CParams::mc_SubSlabSize + 254) / 255];
+				uint16 m_nAllocated;
+			};
+
+			CParams m_Params;
+
+			static const mint mc_NumAllocs = (t_CParams::mc_SubSlabSize - sizeof(CParams));
+			static const mint mc_NumAllocRegions = (mc_NumAllocs + 254) / 255;
+			static const mint mc_SmallSlabIndex = 0;
+			static_assert(mc_NumAllocRegions < 256, "Out of bounds");
+
+			TCMemoryManagerSubSlab_SmallSize();
+
+			uint8 *f_GetArray();
+			void *f_Alloc(bool &_bFull);
+			void f_Free(void *_pAlloc, bool &_bWasFull, bool &_bFullyFree);
+			void f_OnAlloc(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
+			void f_OnFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
+			void f_OnFillFree(TCMemoryManagerArena<t_CParams> &_Arena);
+			bool f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, bool _bBreak);
+			bool f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, bool _bBreak);
+		};
+	}
+}

@@ -1,0 +1,377 @@
+// Copyright © 2015 Hansoft AB 
+// Distributed under the MIT license, see license text in LICENSE.Malterlib
+
+Import "../Core/Lib_Malterlib.MTarget"
+
+%Group "{Malterlib}/{Lib_Malterlib_Memory}"
+{
+	%Group Memory
+	{
+		%Group Include
+		{
+			Compile.Type "C++"
+			{
+				!!DocumentationEnabled true
+			}
+			%File "Include/Mib/Memory/^*"
+		}
+		%File "Source/*"
+		%File "Source/Malterlib_Memory_SystemManager*"
+		{
+			Compile.Disabled true
+		}
+		%File "Source/Malterlib_Memory_SystemOverride*"
+		{
+			Compile.Disabled true
+		}
+		%File "Source/Malterlib_Memory_Allocator_Heap.cpp"
+		{
+			Compile.Disabled true
+		}
+		%File "Source/Malterlib_Memory.cpp"
+		{
+			Compile.Disabled true
+		}
+		%Group Documentation
+		{
+			%File "Documentation/*"
+		}
+	}
+}
+
+
+Property
+{
+	MalterlibLibrary_Memory true
+	{
+		&
+		{
+			MalterlibLibrary_Memory ""
+			MalterlibLibrary_All true
+		}
+	}
+	MalterlibSubLibraries "Memory;@(MalterlibSubLibraries)"
+	{
+		!!MalterlibLibrary_Memory true
+	}
+	//MalterlibSubLibrarySeparate_Lib_Malterlib_Memory true
+	MalterlibIncludeRoots "@('Include'->MakeAbsolute());@(MalterlibIncludeRoots)"
+	{
+		!!MalterlibLibrary_Memory true
+	}
+}
+
+%Target Dll_Test_Malterlib_Helper_Memory
+{
+	Property
+	{
+		MalterlibHelperTest true
+		MalterlibPostCopyProject "Tests"
+		ProductName "Malterlib Test Memory Dll"
+	}
+	Target
+	{
+		BaseName "Test_Malterlib_Helper_Memory"
+		Type "DynamicLibrary"
+		Group "Helpers"
+	}
+	Compile
+	{
+		!!CompileDialect C
+		PrefixHeader ""
+	}
+	%File Test/Test_Malterlib_Memory_DllMain.cpp
+	%Dependency Lib_Malterlib
+}
+
+
+%Group "{Test}/{Malterlib_Memory}"
+{
+	Property
+	{
+		MalterlibWindowsNtVersion "_WIN32_WINNT_VISTA"
+		MalterlibWindowsVersion "NTDDI_VISTA"
+
+		MemoryManagerTestEnable_MalterlibNew true
+		MemoryManagerTestEnable_OSX true
+		{
+			!!PlatformFamily "OSX"
+		}
+		MemoryManagerTestEnable_DlMalloc true
+		{
+			!!MalterlibEnableThirdPartyComparisonTests true
+		}
+		MemoryManagerTestEnable_DlMallocMultiThreaded true
+		{
+			!!MalterlibEnableThirdPartyComparisonTests true
+		}
+		MemoryManagerTestEnable_MalterlibOld true
+//			MemoryManagerTestEnable_StdLib true
+//			MemoryManagerTestEnable_Virtual true
+		MemoryManagerTestEnable_WindowsDefault true
+		{
+			!!PlatformFamily "Windows"
+		}
+		MemoryManagerTestEnable_WindowsLF true
+		{
+			!!PlatformFamily "Windows"
+		}
+		MemoryManagerTestEnable_PtMalloc true
+		{
+			&
+			{
+				PlatformFamily "Windows"
+				MalterlibEnableThirdPartyComparisonTests true
+			}
+		}
+		MemoryManagerTestEnable_LLAlloc true
+		{
+			&
+			{
+				PlatformFamily "Windows"
+				MalterlibEnableThirdPartyComparisonTests true
+			}
+		}
+		MemoryManagerTestEnable_TcMalloc true
+		{
+			&
+			{
+				PlatformFamily "Windows"
+				MalterlibEnableThirdPartyComparisonTests true
+			}
+		}
+	}
+	Target
+	{
+		LinkWithLibraries	"kernel32.lib;@(Target.LinkWithLibraries)"
+		{
+			!!PlatformType "Windows"
+		}
+	}
+	Compile
+	{
+		!!CompileDialect C
+
+		SearchPath "@(Builtin.BasePath)/@(Builtin.Function->RelativeBase('..'));@(Compile.SearchPath)"
+		SearchPath "@(Builtin.BasePath)/SDK/TCMalloc/windows;@(Compile.SearchPath)"
+		{
+			!!PlatformFamily "Windows"
+		}
+		SearchPath "@(Builtin.BasePath)/SDK/TCMalloc;@(Compile.SearchPath)"
+		PreprocessorDefines "PERFTOOLS_DLL_DECL=;@(Compile.PreprocessorDefines)"
+		PreprocessorDefines "DMemoryManagerTestEnable_OSX;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_OSX "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_MalterlibNew;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_MalterlibNew "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_StdLib;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_StdLib "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_DlMalloc;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_DlMalloc "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_DlMallocMultiThreaded;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_DlMallocMultiThreaded "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_Virtual;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_Virtual "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_MalterlibOld;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_MalterlibOld "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_WindowsDefault;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_WindowsDefault "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_WindowsLF;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_WindowsLF "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_PtMalloc;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_PtMalloc "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_LLAlloc;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_LLAlloc "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_TcMalloc;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_TcMalloc "true"
+		}
+	}
+	%Group Documentation
+	{
+		%File Documentation/MemoryManager.md
+		%File Documentation/MemoryManagerSlabs.md
+		%File ../Core/Documentation/Markdown.css
+	}
+	%Group Tests
+	{
+		%Group Performance
+		{
+			Compile.Disabled true
+			{
+				!!MalterlibTestsMem_EnablePerfTests false
+			}
+			%Group SDK
+			{
+				%Group DLMalloc
+				{
+					!!MalterlibEnableThirdPartyComparisonTests true
+					%Group "MultiThreaded"
+					{
+						%File ../../SDK/DLMalloc/dlmalloc_multithreaded.cpp
+						%File ../../SDK/DLMalloc/dlmalloc_multithreaded.h
+						%File ../../SDK/DLMalloc/dlmalloc_multithreadedclear.cpp
+						%File ../../SDK/DLMalloc/dlmalloc_multithreadedclear.h
+						Compile.Disabled true
+						{
+							!MemoryManagerTestEnable_DlMallocMultiThreaded "true"
+						}
+					}
+					%Group "SingleThreadedr"
+					{
+						%File ../../SDK/DLMalloc/dlmalloc_singlethreaded.cpp
+						%File ../../SDK/DLMalloc/dlmalloc_singlethreaded.h
+						%File ../../SDK/DLMalloc/dlmalloc_singlethreadedclear.cpp
+						%File ../../SDK/DLMalloc/dlmalloc_singlethreadedclear.h
+						Compile.Disabled true
+						{
+							!MemoryManagerTestEnable_DlMalloc "true"
+						}
+					}
+					%File ../../SDK/DLMalloc/malloc.c
+					{
+						Compile.Disabled true
+					}
+					%File ../../SDK/DLMalloc/malloc.h
+				}
+				%Group TcMalloc
+				{
+					!!MalterlibEnableThirdPartyComparisonTests true
+					%File ../../SDK/TCMalloc/base/dynamic_annotations.c
+					%File ../../SDK/TCMalloc/base/logging.cc
+					%File ../../SDK/TCMalloc/base/low_level_alloc.cc
+					%File ../../SDK/TCMalloc/base/spinlock.cc
+					%File ../../SDK/TCMalloc/base/spinlock_internal.cc
+					%File ../../SDK/TCMalloc/base/sysinfo.cc
+					%File ../../SDK/TCMalloc/base/thread_lister.c
+					%File ../../SDK/TCMalloc/central_freelist.cc
+					%File ../../SDK/TCMalloc/common.cc
+					%File ../../SDK/TCMalloc/heap-checker-bcad.cc
+					%File ../../SDK/TCMalloc/heap-checker.cc
+					%File ../../SDK/TCMalloc/heap-profile-table.cc
+					%File ../../SDK/TCMalloc/internal_logging.cc
+					%File ../../SDK/TCMalloc/malloc_extension.cc
+					%File ../../SDK/TCMalloc/malloc_hook.cc
+					%File ../../SDK/TCMalloc/memory_region_map.cc
+					%File ../../SDK/TCMalloc/page_heap.cc
+					%File ../../SDK/TCMalloc/raw_printer.cc
+					%File ../../SDK/TCMalloc/sampler.cc
+					%File ../../SDK/TCMalloc/span.cc
+					%File ../../SDK/TCMalloc/stack_trace_table.cc
+					%File ../../SDK/TCMalloc/stacktrace.cc
+					%File ../../SDK/TCMalloc/static_vars.cc
+					%File ../../SDK/TCMalloc/symbolize.cc
+					%File ../../SDK/TCMalloc/tcmalloc.cc
+					%File ../../SDK/TCMalloc/tcmalloc.h
+					%File ../../SDK/TCMalloc/thread_cache.cc
+					%Group Windows
+					{
+						%File ../../SDK/TCMalloc/windows/google/tcmalloc.h
+						%File ../../SDK/TCMalloc/windows/port.cc
+						Compile.Disabled true
+						{
+							!PlatformFamily "Windows"
+						}
+					}
+					Compile.Disabled true
+					{
+						!MemoryManagerTestEnable_TcMalloc "true"
+					}
+				}
+				%Group PtMalloc
+				{
+					!!MalterlibEnableThirdPartyComparisonTests true
+					%Group sysdeps
+					{
+						%Group generic
+						{
+							%File ../../SDK/PTMalloc/sysdeps/generic/atomic.h
+							%File ../../SDK/PTMalloc/sysdeps/generic/malloc-machine.h
+							%File ../../SDK/PTMalloc/sysdeps/generic/thread-st.h
+						}
+						%File ../../SDK/PTMalloc/sysdeps/win32/malloc-machine.h
+					}
+					%File ../../SDK/PTMalloc/lran2.h
+					%File ../../SDK/PTMalloc/malloc-2.8.3.h
+					%File ../../SDK/PTMalloc/malloc-private.h
+					%File ../../SDK/PTMalloc/malloc.c
+					{
+						Compile.Disabled true
+					}
+					%File ../../SDK/PTMalloc/ptmalloc3.c
+					{
+						Compile.Disabled true
+					}
+					%File ../../SDK/PTMalloc/ptmalloc_cpp.cpp
+					%File ../../SDK/PTMalloc/ptmalloc_cpp.h
+					%File ../../SDK/PTMalloc/ptmalloc_cpp_malloc.cpp
+					Compile.Disabled true
+					{
+						!MemoryManagerTestEnable_PtMalloc "true"
+					}
+				}
+				%Group LLAlloc
+				{
+					!!MalterlibEnableThirdPartyComparisonTests true
+					%File ../../SDK/LLAlloc/compiler.h
+					%File ../../SDK/LLAlloc/gcc.h
+					%File ../../SDK/LLAlloc/ll_alloc.c
+					%File ../../SDK/LLAlloc/ll_alloc.h
+					%File ../../SDK/LLAlloc/ll_asm.h
+					%File ../../SDK/LLAlloc/ll_list.h
+					%File ../../SDK/LLAlloc/ming.h
+					%File ../../SDK/LLAlloc/vs.h
+					%File ../../SDK/LLAlloc/win_stub.cc
+					Compile.Disabled true
+					{
+						!MemoryManagerTestEnable_LLAlloc "true"
+					}
+				}
+			}
+			%File Test/Test_Malterlib_Memory_MemoryManager_Performance.h
+			%File Test/Test_Malterlib_Memory_MemoryManager_Performance.cpp
+		}
+
+		%File Test/Test_Malterlib_Memory_DebugMemoryManager.cpp
+		%File Test/Test_Malterlib_Memory_OldHeap.cpp
+		%File Test/Test_Malterlib_Memory_MemoryManager_Basics.cpp
+		%File Test/Test_Malterlib_Memory_MemoryManager_Debug.cpp
+		%File Test/Test_Malterlib_Memory_Pool.cpp
+	}
+	%Dependency Lib_Malterlib
+	%Dependency "Dll_Test_Malterlib_Helper_Memory"
+	{
+		Dependency.Link "false"
+	}
+}
+
+
+Property
+{
+	!!MalterlibEnableInternalTests true
+	
+	MalterlibTests "Malterlib_Memory;@(MalterlibTests)"
+	MalterlibTestExtraGroups_Malterlib_Memory "{Test}/{Malterlib_Memory}"
+}
+
