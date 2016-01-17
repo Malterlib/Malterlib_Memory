@@ -10,8 +10,8 @@
 #include <Mib/Cryptography/UUID>
 #include <Mib/Cryptography/Hashes/MD5>
 #include <Mib/Process/ProcessLaunch>
+#include <Mib/Core/PlatformSpecific/WindowsError>
 
-NMib::NStr::CFStr256 fg_Win32_GetLastErrorStr(uint32 _Error = 0);
 #endif
 
 namespace NMib
@@ -154,11 +154,11 @@ namespace NMib
 					}
 					else if (ExitCode != 0)
 					{
-						DMibTraceSafe("unlodctr.exe failed with: {}\n", fg_Win32_GetLastErrorStr(ExitCode));
+						DMibTraceSafe("unlodctr.exe failed with: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(ExitCode));
 					}
 				}
 
-					DMibTraceSafe("0xc0000bb8: {}\n", fg_Win32_GetLastErrorStr(0xc0000bb8));
+					DMibTraceSafe("0xc0000bb8: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(0xc0000bb8));
 					
 				{
 					NProcess::CProcessLaunchParams Params;
@@ -173,7 +173,7 @@ namespace NMib
 					}
 					if (ExitCode != 0)
 					{
-						DMibTraceSafe("lodctr.exe failed with: {}\n", fg_Win32_GetLastErrorStr(ExitCode));
+						DMibTraceSafe("lodctr.exe failed with: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(ExitCode));
 						return;
 					}
 				}
@@ -197,7 +197,7 @@ namespace NMib
 												&m_pMalterlibPerfProvider);
 				if (Status != ERROR_SUCCESS)
 				{
-					DMibTraceSafe("PerfStartProviderEx failed: {}\n", fg_Win32_GetLastErrorStr(Status));
+					DMibTraceSafe("PerfStartProviderEx failed: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(Status));
 					m_pMalterlibPerfProvider = nullptr;
 					return;
 				}
@@ -205,7 +205,7 @@ namespace NMib
 				Status = PerfSetCounterSetInfo(m_pMalterlibPerfProvider, &m_MemoryUsedInfo.m_CounterSet, sizeof(m_MemoryUsedInfo));
 				if (Status != ERROR_SUCCESS) 
 				{
-					DMibTraceSafe("PerfSetCounterSetInfo failed: {}\n", fg_Win32_GetLastErrorStr(Status));
+					DMibTraceSafe("PerfSetCounterSetInfo failed: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(Status));
 					return;
 				}
 
@@ -226,7 +226,7 @@ namespace NMib
 					auto pNewCounter = PerfCreateInstance(m_pMalterlibPerfProvider, &m_CounterSetGUID, Name.f_GetStr(), 0);
 					if (!pNewCounter)
 					{
-						DMibTraceSafe("PerfCreateInstance failed: {}\n", fg_Win32_GetLastErrorStr());
+						DMibTraceSafe("PerfCreateInstance failed: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr());
 						return;
 					}
 					m_PerfCounters[_Name] = pNewCounter;
@@ -236,13 +236,13 @@ namespace NMib
 				ULONG Status = PerfSetULongLongCounterValue(m_pMalterlibPerfProvider, *pCounter, 1, _Bytes);
 				if (Status != ERROR_SUCCESS)
 				{
-					DMibTraceSafe("PerfSetULongLongCounterValue failed: {}\n", fg_Win32_GetLastErrorStr(Status));
+					DMibTraceSafe("PerfSetULongLongCounterValue failed: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(Status));
 					return;
 				}
 				Status = PerfSetULongLongCounterValue(m_pMalterlibPerfProvider, *pCounter, 2, _Allocations);
 				if (Status != ERROR_SUCCESS)
 				{
-					DMibTraceSafe("PerfSetULongLongCounterValue failed: {}\n", fg_Win32_GetLastErrorStr(Status));
+					DMibTraceSafe("PerfSetULongLongCounterValue failed: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(Status));
 					return;
 				}
 			}
