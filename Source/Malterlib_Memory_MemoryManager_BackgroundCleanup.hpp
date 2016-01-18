@@ -55,6 +55,8 @@ namespace NMib
 		template <typename t_CParams>
 		void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::fp_StartupThread()
 		{
+			// Force initialization of time context on main thread as it uses environment which is not thread safe. In future try to remove dependency on time context here
+			NTime::CSystem_Time::fs_CyclesFrequency();
 			mp_pThread = NThread::CThreadObjectNonTracked::fs_StartThread
 				(
 					[this](NThread::CThreadObjectNonTracked *_pThread) -> aint
