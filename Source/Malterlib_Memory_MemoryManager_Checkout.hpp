@@ -59,6 +59,14 @@ namespace NMib
 			if (m_pThreadLocal)
 				m_pThreadLocal->f_RelinquishOwnership();
 		}
-
+		
+		inline void CMemoryManagerCheckout::f_CheckMessages()
+		{
+			if (m_pThreadLocal)
+			{
+				m_pThreadLocal->f_TemporaryReturn();
+				m_pThreadLocal->f_TemporaryGetBack();
+			}
+		}
 	}
 }

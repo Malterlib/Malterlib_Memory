@@ -41,6 +41,7 @@ namespace NMib
 			void f_TemporaryGetBack();
 			void f_TakeOwnership();
 			void f_RelinquishOwnership();
+			void f_CheckMessages();
 		};
 	}
 }
