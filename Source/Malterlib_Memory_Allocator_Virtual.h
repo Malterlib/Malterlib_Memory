@@ -16,7 +16,7 @@ namespace NMib
 		||______________________________________________________________________________________________||
 		\************************************************************************************************/
 
-		class CAllocator_Virtual
+		class CAllocator_Virtual : public CAllocator_Base
 		{
 		public:
 			enum
@@ -78,7 +78,7 @@ namespace NMib
 			static void f_Decommit(void *_pMem, mint _Size);
 		};	
 
-		class CAllocator_VirtualNoTracking
+		class CAllocator_VirtualNoTracking : public CAllocator_Base
 		{
 		public:
 			enum

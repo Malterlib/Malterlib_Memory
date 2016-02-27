@@ -9,7 +9,7 @@ namespace NMib
 {
 	namespace NMem
 	{
-		class CAllocator_Placement
+		class CAllocator_Placement : public CAllocator_Base
 		{
 		public:
 			enum

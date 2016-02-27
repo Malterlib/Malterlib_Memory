@@ -90,7 +90,7 @@ namespace NMib
 			}
 		};
 		
-		class CAllocator_Heap
+		class CAllocator_Heap : public CAllocator_Base
 		{
 		public:
 
@@ -148,7 +148,7 @@ namespace NMib
 			only_parameters_aliased static void f_Free(void *_pBlock, mint _Size = 0);
 		};		
 
-		class CAllocator_NonTrackedHeap
+		class CAllocator_NonTrackedHeap : public CAllocator_Base
 		{
 		public:
 			enum

@@ -274,7 +274,10 @@ namespace NMib
 #		define DMibMemoryReportAllocatorName(d_MemoryAllocator, d_AllocatorName)
 #	endif
 
-		class CAllocator_Empty
+		class CAllocator_Base
+		{
+		};
+		class CAllocator_Empty : public CAllocator_Base
 		{
 		public:
 			
@@ -384,7 +387,7 @@ namespace NMib
 			}
 		};		
 
-		class CAllocator_Disable
+		class CAllocator_Disable : public CAllocator_Base
 		{
 		public:
 			
