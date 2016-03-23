@@ -23,6 +23,9 @@ extern "C"
 	extern void fg_MalterlibSystem_InitHelper() __attribute__((weak_import));
 }
 
+constexpr NMib::EHeapDebugFlag gc_DebugFlags = NMib::EHeapDebugFlag_Ignore;
+//constexpr NMib::EHeapDebugFlag gc_DebugFlags = NMib::EHeapDebugFlag_None;
+
 void fg_MalterlibMallocOverrideInit()
 {
 	if (fg_MalterlibSystem_InitHelper)
@@ -482,7 +485,7 @@ void *fg_Malterlib_malloc(struct _malloc_zone_t *zone, size_t size)
 	mint Size = NMib::fg_AlignUp(NMib::fg_Max(size, 1), 16);
 	
 #if DMibConfig_MalterlibMemoryManager_Debug
-	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_AllocDebug(Size, DMibPFile, DMibPLine, gc_DebugFlags);
 #else
 	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_Alloc(Size);
 #endif
@@ -494,7 +497,7 @@ void *fg_Malterlib_calloc(struct _malloc_zone_t *zone, size_t num_items, size_t 
 	DMibOSXOverrideZoneCheck(zone);
 	mint Size = NMib::fg_AlignUp(NMib::fg_Max(size * num_items, 1), 16);
 #if DMibConfig_MalterlibMemoryManager_Debug
-	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_AllocDebug(Size, DMibPFile, DMibPLine, gc_DebugFlags);
 #else
 	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_Alloc(Size);
 #endif
@@ -508,7 +511,7 @@ void *fg_Malterlib_memalign(struct _malloc_zone_t *zone, size_t alignment, size_
 
 	mint Size = NMib::fg_AlignUp(NMib::fg_Max(size, 1), alignment);
 #if DMibConfig_MalterlibMemoryManager_Debug
-	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_AllocAlignedDebug(Size, alignment, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_AllocAlignedDebug(Size, alignment, DMibPFile, DMibPLine, gc_DebugFlags);
 #else
 	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_AllocAligned(Size, alignment);
 #endif
@@ -523,7 +526,7 @@ void *fg_Malterlib_valloc(struct _malloc_zone_t *zone, size_t size) /* same as m
 
 	mint Size = NMib::fg_AlignUp(NMib::fg_Max(size, 1), NMib::NSys::NPrivate::g_PageSize);
 #if DMibConfig_MalterlibMemoryManager_Debug
-	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_AllocAlignedDebug(Size, NMib::NSys::NPrivate::g_PageSize, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_AllocAlignedDebug(Size, NMib::NSys::NPrivate::g_PageSize, DMibPFile, DMibPLine, gc_DebugFlags);
 #else
 	uint8 *pMalterlibAlloc = (uint8 *)NMib::NMem::fg_AllocAligned(Size, NMib::NSys::NPrivate::g_PageSize);
 #endif
@@ -540,7 +543,7 @@ void *fg_Malterlib_realloc(struct _malloc_zone_t *zone, void *ptr, size_t size)
 	mint Size = NMib::fg_AlignUp(NMib::fg_Max(size, 1), 16);
 	
 #if DMibConfig_MalterlibMemoryManager_Debug
-	pMalterlibAlloc = (uint8 *)NMib::NMem::fg_ResizeDebug(pMalterlibAlloc, Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+	pMalterlibAlloc = (uint8 *)NMib::NMem::fg_ResizeDebug(pMalterlibAlloc, Size, DMibPFile, DMibPLine, gc_DebugFlags);
 #else
 	pMalterlibAlloc = (uint8 *)NMib::NMem::fg_Resize(pMalterlibAlloc, Size);
 #endif

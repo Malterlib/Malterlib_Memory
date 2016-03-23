@@ -66,6 +66,11 @@ namespace NMib
 							}
 							if (TraceInfo.m_pFunctionName)
 							{
+#ifdef DPlatformFamily_OSX
+								if (NStr::fg_StrMatchWildcard(TraceInfo.m_pFunctionName, "+[* load]") == NStr::EMatchWildcardResult_WholeStringMatchedAndPatternExhausted)
+									return;
+#endif
+
 								for (char const** pCurIgnoreFunction = gc_IgnoreFunctions; *pCurIgnoreFunction; ++pCurIgnoreFunction)
 								{
 									if (NStr::fg_StrStartsWith(TraceInfo.m_pFunctionName, *pCurIgnoreFunction))
