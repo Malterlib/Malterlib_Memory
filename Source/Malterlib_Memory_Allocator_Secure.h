@@ -21,7 +21,7 @@ namespace NMib
 			typename t_CBaseAllocator
 			, bool t_bStatic = t_CBaseAllocator::mc_bMethodsStatic
 		>
-		class TAllocator_Secure : public t_CBaseAllocator
+		class TCAllocator_Secure : public t_CBaseAllocator
 		{
 		public:
 			typedef t_CBaseAllocator CBaseAllocator;
@@ -35,7 +35,7 @@ namespace NMib
 
 
 		template<typename t_CBaseAllocator>
-		class TAllocator_Secure<t_CBaseAllocator, true> : public t_CBaseAllocator
+		class TCAllocator_Secure<t_CBaseAllocator, true> : public t_CBaseAllocator
 		{
 		public:
 			typedef t_CBaseAllocator CBaseAllocator;
@@ -45,7 +45,9 @@ namespace NMib
 			static void *f_Resize(void *_pMem, mint &_Size, mint _OldSize = 0, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 			static void *f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 			static void f_Free(void *_pBlock, mint _Size = 0);
-		};	
+		};
+		
+		using CAllocator_HeapSecure = TCAllocator_Secure<CAllocator_Heap>;
 
 	} // Namespace NMem
 
