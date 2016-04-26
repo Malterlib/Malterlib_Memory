@@ -48,6 +48,11 @@ namespace NMib
 				"getElapsedWallTime",
 				"cache_t::reallocate",
 				"ibm_4758_cca_init",
+				"xpc_connection_create_mach_service",
+				"_xpc_connection_init",
+				"-[OS_xpc_object _xref_dispose]",
+				"net_helper_get_connection",
+				"_dispatch_mach_kevent_register",
 				
 	#elif defined(DPlatformFamily_Linux)
 				"qt_load_library_runtime",
