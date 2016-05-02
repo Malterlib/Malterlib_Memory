@@ -23,8 +23,11 @@ extern "C"
 	extern void fg_MalterlibSystem_InitHelper() __attribute__((weak_import));
 }
 
-constexpr NMib::EHeapDebugFlag gc_DebugFlags = NMib::EHeapDebugFlag_Ignore;
-//constexpr NMib::EHeapDebugFlag gc_DebugFlags = NMib::EHeapDebugFlag_None;
+#ifdef DMibConfig_CheckOverrideMemoryLeaks
+	constexpr NMib::EHeapDebugFlag gc_DebugFlags = NMib::EHeapDebugFlag_None;
+#else
+	constexpr NMib::EHeapDebugFlag gc_DebugFlags = NMib::EHeapDebugFlag_Ignore;
+#endif
 
 void fg_MalterlibMallocOverrideInit()
 {
