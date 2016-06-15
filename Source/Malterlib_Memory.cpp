@@ -84,7 +84,15 @@ namespace NMib
 				"__CFStringCreateImmutableFunnel3",
 				"+[NSFileManager defaultManager]",
 				"__CFGetConverter",
-				
+				"NMib::NService::CService::CDetails::f_RunAsProgram",
+				"CFRunLoopRunSpecific",
+				"_dispatch_client_callout",
+				"CFRunLoopGetCurrent",
+				"-[NSSystemStatusBar _createStatusItemControlInWindow:]",
+				"CMMMemMgr::New(unsigned long)",
+				"_NSEventThread",
+				"_NSPopUpCarbonMenu3",
+				"pthread_once",
 	#elif defined(DPlatformFamily_Linux)
 				"qt_load_library_runtime",
 				"qt_set_x11_resources",
