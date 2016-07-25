@@ -17,6 +17,8 @@ namespace NMib
 		\************************************************************************************************/
 		
 		only_parameters_aliased return_not_aliased void *fg_Alloc(mint &_Size);
+		only_parameters_aliased return_not_aliased void *fg_AllocNoSize(mint _Size);
+		only_parameters_aliased return_not_aliased void *fg_AllocInitZeroNoSize(mint _Size);
 		only_parameters_aliased return_not_aliased void *fg_AllocInitZero(mint &_Size);
 		only_parameters_aliased return_not_aliased void *fg_AllocAligned(mint &_Size, mint _Align);
 		only_parameters_aliased void fg_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);

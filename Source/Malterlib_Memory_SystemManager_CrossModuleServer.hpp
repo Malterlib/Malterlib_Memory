@@ -107,7 +107,18 @@ namespace NMib
 			return CCrossModuleImplementationExtra::fs_Alloc(&g_CrossModule, _Size);
 		}
 
+		void *fg_AllocNoSize(mint _Size)
+		{
+			return CCrossModuleImplementationExtra::fs_Alloc(&g_CrossModule, _Size);
+		}
+
 		void *fg_AllocInitZero(mint &_Size)
+		{
+			return CCrossModuleImplementationExtra::fs_AllocInitZero(&g_CrossModule, _Size);
+		}
+		
+		
+		void *fg_AllocInitZeroNoSize(mint _Size)
 		{
 			return CCrossModuleImplementationExtra::fs_AllocInitZero(&g_CrossModule, _Size);
 		}
