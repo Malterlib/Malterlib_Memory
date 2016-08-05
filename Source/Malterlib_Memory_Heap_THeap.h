@@ -457,9 +457,9 @@ namespace NMib
 				,ETLSFSecondarySize = 8
 			};
 			
-			static const EAllocationFlag mc_AllocationFlags = t_CHeapParams::mc_AllocationFlags;
+			static constexpr EAllocationFlag mc_AllocationFlags = t_CHeapParams::mc_AllocationFlags;
 
-			static const mint ELargestBlock = ((EUseableBits + EAlignBits) >= sizeof(mint)*8 ? (DMibBitRangeTyped(1, (sizeof(mint)*8-1), mint)) : ((mint)1 << ELargestBlockBits));
+			static constexpr mint ELargestBlock = ((EUseableBits + EAlignBits) >= sizeof(mint)*8 ? (DMibBitRangeTyped(1, (sizeof(mint)*8-1), mint)) : ((mint)1 << ELargestBlockBits));
 
             static inline_small mint f_SmallestBlock()
 			{

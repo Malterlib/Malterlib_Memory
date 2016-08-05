@@ -38,9 +38,9 @@ namespace NMib
 		struct TCMemoryManagerSubSlab_SmallSize : TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>
 		{
 			using typename TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::CParams;
-			static const mint mc_Alignment = 1 << TCLowestBitSet<t_AllocSize>::mc_Value;
-			static const mint mc_NumAllocs = (t_CParams::mc_SubSlabSize - TCAlignUp<mint, sizeof(CParams), mc_Alignment>::mc_Value) / t_AllocSize;
-			static const mint mc_SmallSlabIndex
+			static constexpr mint mc_Alignment = 1 << TCLowestBitSet<t_AllocSize>::mc_Value;
+			static constexpr mint mc_NumAllocs = (t_CParams::mc_SubSlabSize - TCAlignUp<mint, sizeof(CParams), mc_Alignment>::mc_Value) / t_AllocSize;
+			static constexpr mint mc_SmallSlabIndex
 				= 
 				(
 					t_AllocSize <= TCMemoryManagerArena<t_CParams>::mc_MinAlignment
@@ -80,9 +80,9 @@ namespace NMib
 
 			CParams m_Params;
 
-			static const mint mc_NumAllocs = (t_CParams::mc_SubSlabSize - sizeof(CParams));
-			static const mint mc_NumAllocRegions = (mc_NumAllocs + 254) / 255;
-			static const mint mc_SmallSlabIndex = 0;
+			static constexpr mint mc_NumAllocs = (t_CParams::mc_SubSlabSize - sizeof(CParams));
+			static constexpr mint mc_NumAllocRegions = (mc_NumAllocs + 254) / 255;
+			static constexpr mint mc_SmallSlabIndex = 0;
 			static_assert(mc_NumAllocRegions < 256, "Out of bounds");
 
 			TCMemoryManagerSubSlab_SmallSize();

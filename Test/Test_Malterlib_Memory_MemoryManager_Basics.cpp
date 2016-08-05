@@ -137,7 +137,7 @@ namespace
 		
 		struct CDefaultMemoryManagerParams_BackgroundTest : public CDefaultMemoryManagerParams
 		{
-			static const uint32 mc_BackgroundCleanupLifetime = 10;
+			static constexpr uint32 mc_BackgroundCleanupLifetime = 10;
 		};
 
 		void f_Dummy()

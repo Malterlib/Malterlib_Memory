@@ -22,7 +22,7 @@ namespace NMib
 	struct CMemoryManagerParams : public NMem::CDefaultMemoryManagerParams
 	{
 		typedef CMainHeapVirtualAllocator CAllocator;
-		static const EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
+		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 	};
 
 #	if DEnableDebugMemoryManager
@@ -73,9 +73,9 @@ namespace NMib
 	
 	struct CMemoryManagerNonTrackedParams : public CMemoryManagerParams
 	{
-		static const EAllocationFlag mc_AllocationFlags = EAllocationFlag_NonTrackedMainHeap;
+		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_NonTrackedMainHeap;
 		typedef NMem::CAllocator_VirtualNoTracking CAllocator;
-		static const bool mc_bBackgroundCleanup = false; // Threading potentially recursive allocations
+		static constexpr bool mc_bBackgroundCleanup = false; // Threading potentially recursive allocations
 	};
 
 #if DEnableDebugMemoryManager
@@ -265,9 +265,9 @@ namespace NMib
 				// Don't bother with non-tracked heap as that should not be used a lot
 				//g_NonTrackedHeap->f_SetNumaNode(_NumaNode);
 			}
-			static const bool mc_SupportsNonTracked = true;
+			static constexpr bool mc_SupportsNonTracked = true;
 #			if DEnableDebugMemoryManager
-				static const bool mc_SupportsDebug = true;
+				static constexpr bool mc_SupportsDebug = true;
 				inline_always static void * fs_AllocDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 				{
 					return g_MainHeap->f_AllocDebug(_Size, _pFile, _Line, _Flags);
@@ -305,7 +305,7 @@ namespace NMib
 					;
 				}
 #			else
-				static const bool mc_SupportsDebug = false;
+				static constexpr bool mc_SupportsDebug = false;
 #			endif
 
 			inline_always static mint fs_NonTracked_Granularity(CMemoryManagerCrossModule *_pModule)

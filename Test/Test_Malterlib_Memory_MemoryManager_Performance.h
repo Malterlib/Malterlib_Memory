@@ -300,7 +300,7 @@ namespace
 	{
 		struct CParams : public NMib::NMem::CDefaultMemoryManagerParams
 		{
-			static const NMib::NMem::EDeferCleanup mc_DeferCleanup
+			static constexpr NMib::NMem::EDeferCleanup mc_DeferCleanup
 				= NMib::NMem::EDeferCleanup
 				(
 					constenum(NMib::NMem::EDeferCleanup_NoCleanup)
@@ -365,7 +365,7 @@ namespace
 	{
 		struct CParams : public NMib::NMem::CDefaultMemoryManagerParams
 		{
-			static const NMib::NMem::EDeferCleanup mc_DeferCleanup = NMib::NMem::EDeferCleanup_None;
+			static constexpr NMib::NMem::EDeferCleanup mc_DeferCleanup = NMib::NMem::EDeferCleanup_None;
 		};
 		
 		NMib::NMem::TCMemoryManager<CParams> m_MemoryManager;
@@ -564,8 +564,8 @@ namespace
 		
 		UTicket m_Lock;
 		
-		static const mint mc_Split = sizeof(mint) * 8 / 2;
-		static const mint mc_Lower = DMibBitRangeTyped(0, mc_Split - 1, mint);
+		static constexpr mint mc_Split = sizeof(mint) * 8 / 2;
+		static constexpr mint mc_Lower = DMibBitRangeTyped(0, mc_Split - 1, mint);
 		inline_never CTicketLockShared()
 		{
 			m_Lock.m_Lock.f_Store(1);

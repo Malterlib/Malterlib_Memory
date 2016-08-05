@@ -88,80 +88,80 @@ namespace NMib
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<8, 0>
 		{
-			static const uint8 mc_Multiplier = 1;
+			static constexpr uint8 mc_Multiplier = 1;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<8, 1>
 		{
-			static const uint8 mc_Multiplier = 9;
+			static constexpr uint8 mc_Multiplier = 9;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<8, 2>
 		{
-			static const uint8 mc_Multiplier = 5;
+			static constexpr uint8 mc_Multiplier = 5;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<8, 3>
 		{
-			static const uint8 mc_Multiplier = 11;
+			static constexpr uint8 mc_Multiplier = 11;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<8, 4>
 		{
-			static const uint8 mc_Multiplier = 3;
+			static constexpr uint8 mc_Multiplier = 3;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<8, 5>
 		{
-			static const uint8 mc_Multiplier = 13;
+			static constexpr uint8 mc_Multiplier = 13;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<8, 6>
 		{
-			static const uint8 mc_Multiplier = 7;
+			static constexpr uint8 mc_Multiplier = 7;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<8, 7>
 		{
-			static const uint8 mc_Multiplier = 15;
+			static constexpr uint8 mc_Multiplier = 15;
 		};
 
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<4, 0>
 		{
-			static const uint8 mc_Multiplier = 1;
+			static constexpr uint8 mc_Multiplier = 1;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<4, 1>
 		{
-			static const uint8 mc_Multiplier = 5;
+			static constexpr uint8 mc_Multiplier = 5;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<4, 2>
 		{
-			static const uint8 mc_Multiplier = 3;
+			static constexpr uint8 mc_Multiplier = 3;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<4, 3>
 		{
-			static const uint8 mc_Multiplier = 7;
+			static constexpr uint8 mc_Multiplier = 7;
 		};
 
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<2, 0>
 		{
-			static const uint8 mc_Multiplier = 1;
+			static constexpr uint8 mc_Multiplier = 1;
 		};
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<2, 1>
 		{
-			static const uint8 mc_Multiplier = 3;
+			static constexpr uint8 mc_Multiplier = 3;
 		};
 
 		template <>
 		struct TCDefaultMemoryManagerParams_GetSlabInfo<1, 0>
 		{
-			static const uint8 mc_Multiplier = 1;
+			static constexpr uint8 mc_Multiplier = 1;
 		};
 
 
@@ -170,26 +170,26 @@ namespace NMib
 		{
 			static_assert(t_nSizesPerLevel == 8 || t_nSizesPerLevel == 4 || t_nSizesPerLevel == 2 || t_nSizesPerLevel == 1, "Unsupported option");
 
-			static const mint mc_NumSizesPerLevel = t_nSizesPerLevel;
-			static const mint mc_MaxSlabAllocSize = 512*1024 - (256*1024) / mc_NumSizesPerLevel;
-			static const mint mc_SizesPerLevelShift = TCHighestBitSetCorrect<mint, t_nSizesPerLevel>::mc_Value;
+			static constexpr mint mc_NumSizesPerLevel = t_nSizesPerLevel;
+			static constexpr mint mc_MaxSlabAllocSize = 512*1024 - (256*1024) / mc_NumSizesPerLevel;
+			static constexpr mint mc_SizesPerLevelShift = TCHighestBitSetCorrect<mint, t_nSizesPerLevel>::mc_Value;
 
-			static const mint mc_SubSlabSize = 4 * 1024;						// Should be the page size
-			static const mint mc_SlabSize = mc_SubSlabSize * 1024 * 4;			// Carefully choosen to minimize waste in different subslab types
-			static const mint mc_NumSubSlabs = mc_SlabSize / mc_SubSlabSize;
-			static const mint mc_MaxHeapAllocSize = mc_SlabSize;
-			static const mint mc_HeapChunkSize = mc_SlabSize * 2;
-			static const mint mc_HeapBlockSize = 64*1024;
-			static const bool mc_bRandomizeSlabHeader = false;
-			static const bool mc_bBackgroundCleanup = true;
-			static const EDeferCleanup mc_DeferCleanup = (EDeferCleanup)(constenum(EDeferCleanup_Allocs) | constenum(EDeferCleanup_Commit) | constenum(EDeferCleanup_OneSizeBlocks));
+			static constexpr mint mc_SubSlabSize = 4 * 1024;						// Should be the page size
+			static constexpr mint mc_SlabSize = mc_SubSlabSize * 1024 * 4;			// Carefully choosen to minimize waste in different subslab types
+			static constexpr mint mc_NumSubSlabs = mc_SlabSize / mc_SubSlabSize;
+			static constexpr mint mc_MaxHeapAllocSize = mc_SlabSize;
+			static constexpr mint mc_HeapChunkSize = mc_SlabSize * 2;
+			static constexpr mint mc_HeapBlockSize = 64*1024;
+			static constexpr bool mc_bRandomizeSlabHeader = false;
+			static constexpr bool mc_bBackgroundCleanup = true;
+			static constexpr EDeferCleanup mc_DeferCleanup = (EDeferCleanup)(constenum(EDeferCleanup_Allocs) | constenum(EDeferCleanup_Commit) | constenum(EDeferCleanup_OneSizeBlocks));
 			
-			static const uint32 mc_BackgroundCleanupLifetime = 10*1000; // The number of milleseconds that garbage should be kept before being cleaned up.
+			static constexpr uint32 mc_BackgroundCleanupLifetime = 10*1000; // The number of milleseconds that garbage should be kept before being cleaned up.
 			
-			static const mint mc_NumSizeLevels = TCHighestBitSetCorrect<mint, mc_MaxSlabAllocSize>::mc_Value + 1;
-			static const mint mc_NumNormalSizeLevels = mc_NumSizeLevels - 4;
+			static constexpr mint mc_NumSizeLevels = TCHighestBitSetCorrect<mint, mc_MaxSlabAllocSize>::mc_Value + 1;
+			static constexpr mint mc_NumNormalSizeLevels = mc_NumSizeLevels - 4;
 			
-			static const EAllocationFlag mc_AllocationFlags = EAllocationFlag_None;
+			static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_None;
 			
 			static const uint16 ms_NumSubSlabs[mc_NumSizesPerLevel];
 			static const CSlabTypeInfo ms_SlabTypeInfo[mc_NumSizesPerLevel];
@@ -204,7 +204,7 @@ namespace NMib
 			template <int32 t_SlabType>
 			struct TCGetSlabInfo
 			{
-				static const uint8 mc_Multiplier = TCDefaultMemoryManagerParams_GetSlabInfo<t_nSizesPerLevel, t_SlabType>::mc_Multiplier;
+				static constexpr uint8 mc_Multiplier = TCDefaultMemoryManagerParams_GetSlabInfo<t_nSizesPerLevel, t_SlabType>::mc_Multiplier;
 			};
 
 			//template <typename tf_COffset>
@@ -228,7 +228,7 @@ namespace NMib
 
 		struct CDefaultMemoryManagerParams_Tests : public TCDefaultMemoryManagerParams<8>
 		{
-			static const bool mc_bBackgroundCleanup = false; // Background cleanups will hurt predictability
+			static constexpr bool mc_bBackgroundCleanup = false; // Background cleanups will hurt predictability
 		};		
 	}
 }

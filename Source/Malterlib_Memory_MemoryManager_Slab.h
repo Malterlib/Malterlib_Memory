@@ -103,9 +103,9 @@ namespace NMib
 		{
 		public:
 
-			static const mint mc_SlabMultiplier = t_CParams::template TCGetSlabInfo<t_SlabType>::mc_Multiplier;
-			static const mint mc_TheoreticalSubSlabs = (t_CParams::mc_SlabSize - 1) / (t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
-			static const mint mc_SubSlabs 
+			static constexpr mint mc_SlabMultiplier = t_CParams::template TCGetSlabInfo<t_SlabType>::mc_Multiplier;
+			static constexpr mint mc_TheoreticalSubSlabs = (t_CParams::mc_SlabSize - 1) / (t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
+			static constexpr mint mc_SubSlabs 
 				=
 				(
 					t_CParams::mc_SlabSize 

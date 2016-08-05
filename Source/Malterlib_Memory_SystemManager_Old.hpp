@@ -147,10 +147,10 @@ namespace NMib
 				g_MemoryManagerForkLock.f_Unlock();
 			}
 
-			static const bool mc_SupportsNonTracked = true;
+			static constexpr bool mc_SupportsNonTracked = true;
 
 #		if DEnableDebugMemoryManager
-			static const bool mc_SupportsDebug = true;
+			static constexpr bool mc_SupportsDebug = true;
 			inline_always static void * fs_AllocDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 			{
 				return g_MainHeap->f_AllocDebug(_Size, _pFile, _Line, _Flags);
@@ -169,7 +169,7 @@ namespace NMib
 				return fg_Resize(_pMemory, _Size);
 			}
 #		else
-			static const bool mc_SupportsDebug = false;
+			static constexpr bool mc_SupportsDebug = false;
 #		endif
 
 

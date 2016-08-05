@@ -161,16 +161,16 @@ namespace NMib
 			void fp_RequestCleanup();
 		public:
 
-			static const mint mc_MinAlignment = 4; // Can be 4 or 8
-			static const mint mc_nSmallSizeSlabsAligned = NMib::TCHighestBitSetCorrect<mint, mc_MinAlignment>::mc_Value + 1;
-			static const mint mc_nSmallSizeSlabs = mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment*2) / mc_MinAlignment;
-			static const mint mc_MinAlignmentCalc = 16 / t_CParams::mc_NumSizesPerLevel;
-			static const mint mc_MinNormalSizeAlignment = mc_MinAlignmentCalc < 4 ? 4 : mc_MinAlignmentCalc;
-			static const mint mc_nLevel0Lists = (32 - sizeof(void *) * 2) / mc_MinNormalSizeAlignment;
-			static const mint mc_nNormalSizeLists = t_CParams::mc_NumNormalSizeLevels-1;
-			static const mint mc_Level0SmallestSize = 32 - mc_MinNormalSizeAlignment;
-			static const mint mc_SmallSizeSlabsLargestSize = 16;
-			static const mint mc_NumSubSlabSizeLevels = t_CParams::mc_NumSizeLevels - TCHighestBitSetCorrect<mint, t_CParams::mc_SubSlabSize>::mc_Value;
+			static constexpr mint mc_MinAlignment = 4; // Can be 4 or 8
+			static constexpr mint mc_nSmallSizeSlabsAligned = NMib::TCHighestBitSetCorrect<mint, mc_MinAlignment>::mc_Value + 1;
+			static constexpr mint mc_nSmallSizeSlabs = mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment*2) / mc_MinAlignment;
+			static constexpr mint mc_MinAlignmentCalc = 16 / t_CParams::mc_NumSizesPerLevel;
+			static constexpr mint mc_MinNormalSizeAlignment = mc_MinAlignmentCalc < 4 ? 4 : mc_MinAlignmentCalc;
+			static constexpr mint mc_nLevel0Lists = (32 - sizeof(void *) * 2) / mc_MinNormalSizeAlignment;
+			static constexpr mint mc_nNormalSizeLists = t_CParams::mc_NumNormalSizeLevels-1;
+			static constexpr mint mc_Level0SmallestSize = 32 - mc_MinNormalSizeAlignment;
+			static constexpr mint mc_SmallSizeSlabsLargestSize = 16;
+			static constexpr mint mc_NumSubSlabSizeLevels = t_CParams::mc_NumSizeLevels - TCHighestBitSetCorrect<mint, t_CParams::mc_SubSlabSize>::mc_Value;
 			
 		private:
 			
