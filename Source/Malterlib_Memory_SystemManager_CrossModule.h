@@ -142,8 +142,8 @@ namespace NMib
 		
 		struct ICMemoryManagerCrossModule
 		{
-			virtual void f_Register(CMemoryManagerCrossModule *_pModule, uint32 _Version) pure;
-			virtual void f_Unregister(CMemoryManagerCrossModule *_pModule) pure;
+			virtual void f_Register(CMemoryManagerCrossModule *_pModule, uint32 _Version) = 0;
+			virtual void f_Unregister(CMemoryManagerCrossModule *_pModule) = 0;
 		};
 	}
 }

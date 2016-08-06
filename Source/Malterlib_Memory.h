@@ -18,11 +18,11 @@ namespace NMib
 		{
 		public:
 
-			virtual void f_AllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName) pure;
-			virtual void f_AllocatorDelete(mint _MemoryAllocator) pure;
+			virtual void f_AllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName) = 0;
+			virtual void f_AllocatorDelete(mint _MemoryAllocator) = 0;
 
-			virtual void f_ScopeEnter(mint _MemoryAllocator) pure;
-			virtual void f_ScopeExit(mint _MemoryAllocator) pure;
+			virtual void f_ScopeEnter(mint _MemoryAllocator) = 0;
+			virtual void f_ScopeExit(mint _MemoryAllocator) = 0;
 
 			virtual void f_Alloc
 				(
@@ -33,7 +33,7 @@ namespace NMib
 					, mint _ReturnedSize
 					, fp32 _nBytesOverhead
 					, void *_pAllocationInfo
-				) pure
+				) = 0
 			;
 			virtual void f_Resize
 				(
@@ -47,7 +47,7 @@ namespace NMib
 					, mint _ReturnedSize
 					, fp32 _nBytesOverhead
 					, void *_pAllocationInfo
-				) pure
+				) = 0
 			;
 			virtual void f_Realloc
 				(
@@ -61,13 +61,13 @@ namespace NMib
 					, mint _ReturnedSize
 					, fp32 _nBytesOverhead
 					, void *_pAllocationInfo
-				) pure
+				) = 0
 			;
-			virtual void f_Free(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) pure;
-			virtual void f_GetSize(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) pure;
-			virtual void f_Protect(mint _MemoryAllocator, mint _Address, mint _Size, uaint _Protect) pure;
-			virtual void f_Commit(mint _MemoryAllocator, mint _Address, mint _Size) pure;
-			virtual void f_Decommit(mint _MemoryAllocator, mint _Address, mint _Size) pure;
+			virtual void f_Free(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) = 0;
+			virtual void f_GetSize(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) = 0;
+			virtual void f_Protect(mint _MemoryAllocator, mint _Address, mint _Size, uaint _Protect) = 0;
+			virtual void f_Commit(mint _MemoryAllocator, mint _Address, mint _Size) = 0;
+			virtual void f_Decommit(mint _MemoryAllocator, mint _Address, mint _Size) = 0;
 
 			virtual void f_Report(bool _bFullReport) {};
 		};
@@ -86,7 +86,7 @@ namespace NMib
 					, mint _ReturnedSize
 					, fp32 _nBytesOverhead
 					, void *_pAllocationInfo
-				) pure
+				) = 0
 			;
 			virtual void f_Resize
 				(
@@ -102,7 +102,7 @@ namespace NMib
 					, mint _ReturnedSize
 					, fp32 _nBytesOverhead
 					, void *_pAllocationInfo
-				) pure
+				) = 0
 			;
 			virtual void f_Realloc
 				(
@@ -118,14 +118,14 @@ namespace NMib
 					, mint _ReturnedSize
 					, fp32 _nBytesOverhead
 					, void *_pAllocationInfo
-				) pure
+				) = 0
 			;
-			virtual void f_Free(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size, void const *_pAllocationInfo) pure;
-			virtual void f_GetSize(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size, void const *_pAllocationInfo) pure;
-			virtual void f_Protect(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size, uaint _Protect) pure;
-			virtual void f_Commit(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size) pure;
-			virtual void f_Decommit(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size) pure;
-			virtual void f_AllocatorDelete(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth) pure;
+			virtual void f_Free(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size, void const *_pAllocationInfo) = 0;
+			virtual void f_GetSize(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size, void const *_pAllocationInfo) = 0;
+			virtual void f_Protect(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size, uaint _Protect) = 0;
+			virtual void f_Commit(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size) = 0;
+			virtual void f_Decommit(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size) = 0;
+			virtual void f_AllocatorDelete(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth) = 0;
 		};
 
 #	if DMibConfig_Memory_Shims_Enable

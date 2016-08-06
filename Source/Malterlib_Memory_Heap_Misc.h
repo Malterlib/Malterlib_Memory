@@ -43,15 +43,15 @@ namespace NMib
 				_Tree.f_Remove(this);
 			}
 
-			virtual mint f_Size(const void *_pBlock) pure;
-			virtual mint f_SizeAndHeap(const void *_pBlock, void * &_pHeap) pure;
-			virtual fp32 f_Overhead(void const *_pBlock) pure;
-			virtual void f_Free(void *_pBlock) pure;
-			virtual void* f_Realloc(void *_pBlock, mint &_NewSize) pure;
-			virtual void* f_Resize(void *_pBlock, mint &_NewSize) pure;
-			virtual void* f_GetExtraData(void *_pBlock) pure;
-			virtual bint f_ContainsBlock(void *_pBlock) pure;
-			virtual void* f_GetHeapIdent() const pure;
+			virtual mint f_Size(const void *_pBlock) = 0;
+			virtual mint f_SizeAndHeap(const void *_pBlock, void * &_pHeap) = 0;
+			virtual fp32 f_Overhead(void const *_pBlock) = 0;
+			virtual void f_Free(void *_pBlock) = 0;
+			virtual void* f_Realloc(void *_pBlock, mint &_NewSize) = 0;
+			virtual void* f_Resize(void *_pBlock, mint &_NewSize) = 0;
+			virtual void* f_GetExtraData(void *_pBlock) = 0;
+			virtual bint f_ContainsBlock(void *_pBlock) = 0;
+			virtual void* f_GetHeapIdent() const = 0;
 		};
 
 

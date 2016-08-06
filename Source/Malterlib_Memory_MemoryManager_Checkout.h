@@ -18,11 +18,11 @@ namespace NMib
 			uint32 m_Version;
 
 			// Available in version 0x101
-			virtual void f_ReturnCheckoutVirtual() pure;
-			virtual void f_TemporaryReturn() pure;
-			virtual void f_TemporaryGetBack() pure;
-			virtual void f_TakeOwnership() pure;
-			virtual void f_RelinquishOwnership() pure;
+			virtual void f_ReturnCheckoutVirtual() = 0;
+			virtual void f_TemporaryReturn() = 0;
+			virtual void f_TemporaryGetBack() = 0;
+			virtual void f_TakeOwnership() = 0;
+			virtual void f_RelinquishOwnership() = 0;
 		};
 		
 		class CMemoryManagerCheckout

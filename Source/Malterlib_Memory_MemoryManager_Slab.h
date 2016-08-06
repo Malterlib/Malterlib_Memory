@@ -67,25 +67,25 @@ namespace NMib
 			DMibMemoryManagerLink(TCMemoryManagerSlabShared, m_Link2);
 			DMibMemoryManagerList(CMemoryManagerSubSlab_Free, m_Link) m_FreeSubSlabs;
 			
-			virtual aint f_FindFreeBitAndSet(mint _Level) pure;
-			virtual void f_SetBitFree(mint _Level, mint _Bit) pure;
-			virtual bool f_HasFreeBit(mint _Level) pure;
-			virtual mint f_GetNumSetBits(mint _Level) pure;
-			virtual bool f_IsFullyFree() pure;
+			virtual aint f_FindFreeBitAndSet(mint _Level) = 0;
+			virtual void f_SetBitFree(mint _Level, mint _Bit) = 0;
+			virtual bool f_HasFreeBit(mint _Level) = 0;
+			virtual mint f_GetNumSetBits(mint _Level) = 0;
+			virtual bool f_IsFullyFree() = 0;
 
-			virtual void f_SetPendingBit(mint _Bit) pure;
-			virtual bool f_ClearPendingBit(mint _Bit) pure;
-			virtual bool f_HasPendingBit() pure;
-			virtual mint f_GetNumPendingBits() pure;
-			virtual void f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (mint _Bit)> const& _fCallback) pure;
+			virtual void f_SetPendingBit(mint _Bit) = 0;
+			virtual bool f_ClearPendingBit(mint _Bit) = 0;
+			virtual bool f_HasPendingBit() = 0;
+			virtual mint f_GetNumPendingBits() = 0;
+			virtual void f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (mint _Bit)> const& _fCallback) = 0;
 
-			virtual fp32 f_OverheadPerByte() const pure;
+			virtual fp32 f_OverheadPerByte() const = 0;
 			
-			virtual void f_CommitSubSlabs(mint _iSubSlab, mint _nSubSlabs) pure;
-			virtual void f_DecommitSubSlabs(mint _iSubSlab, mint _nSubSlabs) pure;
-			virtual void f_DecommitDeferred() pure;
-			virtual void f_GetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_NumSubSlabs> & _Comitted) pure;
-			virtual void f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_NumSubSlabs> const& _Comitted) pure;
+			virtual void f_CommitSubSlabs(mint _iSubSlab, mint _nSubSlabs) = 0;
+			virtual void f_DecommitSubSlabs(mint _iSubSlab, mint _nSubSlabs) = 0;
+			virtual void f_DecommitDeferred() = 0;
+			virtual void f_GetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_NumSubSlabs> & _Comitted) = 0;
+			virtual void f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_NumSubSlabs> const& _Comitted) = 0;
 			
 			mint f_GetNumSubSlabs() const;
 			mint f_GetSubSlabMultiplier() const;
