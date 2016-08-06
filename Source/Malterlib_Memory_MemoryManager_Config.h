@@ -164,6 +164,12 @@ namespace NMib
 			static constexpr uint8 mc_Multiplier = 1;
 		};
 
+#ifdef DCompiler_MSVC
+#define DMalterlibMemoryConstExprWorkaround const
+#else
+#define DMalterlibMemoryConstExprWorkaround constexpr
+#endif
+
 
 		template <mint t_nSizesPerLevel>
 		struct TCDefaultMemoryManagerParams
@@ -190,13 +196,12 @@ namespace NMib
 			static constexpr mint mc_NumNormalSizeLevels = mc_NumSizeLevels - 4;
 			
 			static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_None;
-			
-			static constexpr uint16 ms_NumSubSlabs[mc_NumSizesPerLevel];
-			static constexpr CSlabTypeInfo ms_SlabTypeInfo[mc_NumSizesPerLevel];
-			static constexpr uint16 ms_DivideMultiply[mc_NumSizesPerLevel];
-			static constexpr uint8 ms_DivideShift[mc_NumSizesPerLevel];
 
-			static constexpr uint16 ms_NumAllocsPerSubSlab[mc_NumSizesPerLevel];
+			static DMalterlibMemoryConstExprWorkaround uint16 ms_NumSubSlabs[mc_NumSizesPerLevel];
+			static DMalterlibMemoryConstExprWorkaround CSlabTypeInfo ms_SlabTypeInfo[mc_NumSizesPerLevel];
+			static DMalterlibMemoryConstExprWorkaround uint16 ms_DivideMultiply[mc_NumSizesPerLevel];
+			static DMalterlibMemoryConstExprWorkaround uint8 ms_DivideShift[mc_NumSizesPerLevel];
+			static DMalterlibMemoryConstExprWorkaround uint16 ms_NumAllocsPerSubSlab[mc_NumSizesPerLevel];
 
 			typedef CAllocator_Virtual CAllocator;
 			typedef CDefaultMemoryManagerNotifier CNotifier;
