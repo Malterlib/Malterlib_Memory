@@ -191,12 +191,12 @@ namespace NMib
 			
 			static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_None;
 			
-			static const uint16 ms_NumSubSlabs[mc_NumSizesPerLevel];
-			static const CSlabTypeInfo ms_SlabTypeInfo[mc_NumSizesPerLevel];
-			static const uint16 ms_DivideMultiply[mc_NumSizesPerLevel];
-			static const uint8 ms_DivideShift[mc_NumSizesPerLevel];
+			static constexpr uint16 ms_NumSubSlabs[mc_NumSizesPerLevel];
+			static constexpr CSlabTypeInfo ms_SlabTypeInfo[mc_NumSizesPerLevel];
+			static constexpr uint16 ms_DivideMultiply[mc_NumSizesPerLevel];
+			static constexpr uint8 ms_DivideShift[mc_NumSizesPerLevel];
 
-			static const uint16 ms_NumAllocsPerSubSlab[mc_NumSizesPerLevel];
+			static constexpr uint16 ms_NumAllocsPerSubSlab[mc_NumSizesPerLevel];
 
 			typedef CAllocator_Virtual CAllocator;
 			typedef CDefaultMemoryManagerNotifier CNotifier;
@@ -207,15 +207,7 @@ namespace NMib
 				static constexpr uint8 mc_Multiplier = TCDefaultMemoryManagerParams_GetSlabInfo<t_nSizesPerLevel, t_SlabType>::mc_Multiplier;
 			};
 
-			//template <typename tf_COffset>
-			inline_always static uint32 fs_DivideBySlabMultiplier(uint32 _Offset, uint32 _SlabMultiplier)
-			{
-				DMibFastCheck(_Offset < (mc_SlabSize / mc_SubSlabSize));
-				DMibFastCheck(_SlabMultiplier < mc_NumSizesPerLevel);
-				uint32 Return = (_Offset * ms_DivideMultiply[_SlabMultiplier]) >> ms_DivideShift[_SlabMultiplier];
-				DMibFastCheck(Return == _Offset / ms_SlabTypeInfo[_SlabMultiplier].m_SubSlabMutiplier);
-				return Return;
-			}
+			inline_always static uint32 fs_DivideBySlabMultiplier(uint32 _Offset, uint32 _SlabMultiplier);
 		};
 
 		typedef TCDefaultMemoryManagerParams<8> CDefaultMemoryManagerParams;
