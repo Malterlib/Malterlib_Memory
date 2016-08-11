@@ -69,13 +69,24 @@ namespace NMib
 			}
 		};
 		
+		struct CMemoryManagerConfig
+		{
+#if DMibPPtrBits >= 64
+			mint m_nMaxArenas = TCLimitsInt<mint>::mc_Max;
+#elif DMibPPtrBits == 32
+			mint m_nMaxArenas = 8;
+#else
+#	error "Decide max arenas"			
+#endif
+			uint64 m_Magic = NMisc::fg_GetHighEntropyRandomInteger<uint64>();
+		};
+		
 		template <typename t_CParams>
 		struct TCMemoryManager : public t_CParams::CNotifier::CGlobal, ICMemoryManagerReturnCheckout
 		{
 		public:
-			
 			template <typename... tfp_CAllocator>
-			TCMemoryManager(tfp_CAllocator &&..._Params);
+			TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator &&..._Params);
 			
 			~TCMemoryManager();
 
@@ -100,6 +111,9 @@ namespace NMib
 			mint f_SizeInline(void const * _pMemory) const;
 			fp32 f_Overhead(void const * _pMemory);
 			bool f_ContainsBlock(void const * _pMemory);
+
+			uint64 f_GetMagic() const;
+			TCMemoryManager *f_GetMemoryManager(void const *_pMemory); // Will only work between managers that share the same magic
 			
 			void f_Free(void * _pMemory);
 			void f_FreeInline(void * _pMemory);
@@ -131,7 +145,6 @@ namespace NMib
 			void f_SetMaxArenas(mint _nArenas);
 			
 		private:
-
 			void *fp_AllocSlowPath(mint & _Size);
 			void *fp_AllocAlignedSlowPath(mint & _Size, mint _Alignment);
 			void fp_AllocBatchSlowPath(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
@@ -159,7 +172,6 @@ namespace NMib
 			void f_RelinquishOwnership() override;
 
 		private:
-			
 			template <typename t_CParams2>
 			friend class TCMemoryManagerArenaHeapChunk;
 			
@@ -215,9 +227,6 @@ namespace NMib
 			
 			mutable NThread::CMutualManyRead m_HeapChunksLock;
 			NContainer::TCMap<uint8 *, TCMemoryManagerArenaHeapChunk<t_CParams>, NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_HeapChunks;
-
 		};
-		
 	}
 }
-

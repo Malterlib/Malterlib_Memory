@@ -140,6 +140,7 @@ namespace
 		NMib::NMem::TCMemoryManager<NMib::NMem::CDefaultMemoryManagerParams> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew()
+			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -193,6 +194,7 @@ namespace
 		NMib::NMem::TCMemoryManagerDebug<NMib::NMem::CDefaultMemoryManagerParams, false> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_Debug()
+			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -247,7 +249,7 @@ namespace
 		NMib::NMem::TCMemoryManagerTracked<NMib::NMem::TCMemoryManager<NMib::NMem::CDefaultMemoryManagerParams>> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_Tracked()
-			: m_MemoryManager("Test tracked manager")
+			: m_MemoryManager("Test tracked manager", NMib::NMem::CMemoryManagerConfig())
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -314,6 +316,7 @@ namespace
 		NMib::NMem::TCMemoryManager<CParams> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_NoCleanup()
+			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -372,6 +375,7 @@ namespace
 	public:
 		
 		CMalterlibMemoryMalterlibNew_NoDeferCleanup()
+			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -424,6 +428,7 @@ namespace
 		NMib::NMem::TCMemoryManager<NMib::NMem::CDefaultMemoryManagerParams> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_NoCheckout()
+			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -476,6 +481,7 @@ namespace
 		NMib::NMem::TCMemoryManager<NMib::NMem::CDefaultMemoryManagerParams_NoCommit> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_NoCommit()
+			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)

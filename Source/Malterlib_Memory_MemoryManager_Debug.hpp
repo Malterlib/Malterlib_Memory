@@ -707,6 +707,13 @@ namespace NMib
 			
 			return CSuper::f_ContainsBlock(pOldMemory);
 		}
+
+		template <typename t_CParams, bool t_bException, typename t_COptions>
+		auto TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_GetMemoryManager(void const *_pMemory) -> TCMemoryManagerDebug *
+		{
+			auto *pMemoryManager = CSuper::f_GetMemoryManager(_pMemory);
+			return fg_AutoStaticCast(pMemoryManager);
+		}
 		
 		template <typename t_CParams, bool t_bException, typename t_COptions>
 		void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_FreeInline(void * _pMemory)

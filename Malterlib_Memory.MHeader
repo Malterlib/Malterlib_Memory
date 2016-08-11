@@ -2,6 +2,7 @@
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 Import "../Core/Lib_Malterlib.MTarget"
+Import "Apps/*/*.MHeader"
 
 %Group "{Malterlib}/{Lib_Malterlib_Memory}"
 {
@@ -375,3 +376,12 @@ Property
 	MalterlibTestExtraGroups_Malterlib_Memory "{Test}/{Malterlib_Memory}"
 }
 
+%Workspace "Apps_Malterlib_Memory"
+{
+	&
+	{
+		MalterlibEnableInternalWorkspaces true
+	}
+	
+	%Target "@(Malterlib_Memory_App_Targets)"
+}

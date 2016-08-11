@@ -40,6 +40,8 @@ namespace NMib
 			void f_FreeInline(void * _pMemory);
 			mint f_SizePadded(mint _Size);
 
+			TCMemoryManagerTracked *f_GetMemoryManager(void const *_pMemory); // Will only work between managers that share the same magic
+			
 		private:
 
 			void *fp_Alloc(mint &_Size, mint _Alignment);
@@ -84,6 +86,8 @@ namespace NMib
 			mint f_SizeInline(void const * _pMemory) const;
 			void f_Free(void * _pMemory);
 			void f_FreeInline(void * _pMemory);
+			
+			TCMemoryManagerTracked *f_GetMemoryManager(void const *_pMemory); // Will only work between managers that share the same magic
 			
 		private:
 			ch8 const *mp_pName;			

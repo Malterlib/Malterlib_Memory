@@ -196,7 +196,6 @@ namespace NMib
 		TCHeap_CombinedDebug<t_CParams16Bit, t_CParamArchSize, t_MaxHeapTraceDepth, t_CDebugData>::~TCHeap_CombinedDebug()
 		{
 			DMibMemoryGoingToReportScope(this, m_pDebugName != nullptr);
-			f_TraceLeaks(true);
 			f_Clear();
 #if DMibConfig_Memory_Shims_Enable
 			if (m_pDebugName != nullptr)

@@ -104,7 +104,7 @@ namespace NMib
 		private:
 				
 
-			TCPool<TCMemoryManagerArena<t_CParams>, 128, NThread::CMutual, NMem::CPoolType_Freeable, typename t_CParams::CAllocator> m_Pool;
+			TCPool<TCMemoryManagerArena<t_CParams>, 16, NThread::CMutual, NMem::CPoolType_Freeable, typename t_CParams::CAllocator> m_Pool;
 			TCPool<TCMemoryManagerThreadLocal<t_CParams>, 128, NThread::CMutual, NMem::CPoolType_Freeable, typename t_CParams::CAllocator> m_PoolThreadLocal;
 			TCMemoryManager<t_CParams> *m_pMemoryManager;
 

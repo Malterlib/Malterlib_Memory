@@ -164,7 +164,7 @@ namespace
 
 				{
 					DMibTestPath("Sizes 8");
-					TCMemoryManager<TCDefaultMemoryManagerParams<8>> Manager;
+					TCMemoryManager<TCDefaultMemoryManagerParams<8>> Manager{CMemoryManagerConfig()};
 					
 					DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(1));
 					DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(1));
@@ -223,7 +223,7 @@ namespace
 				}
 				{
 					DMibTestPath("Sizes 4");
-					TCMemoryManager<TCDefaultMemoryManagerParams<4>> Manager;
+					TCMemoryManager<TCDefaultMemoryManagerParams<4>> Manager{CMemoryManagerConfig()};
 					
 					DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(1));
 					DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(1));
@@ -264,7 +264,7 @@ namespace
 				}
 				{
 					DMibTestPath("Sizes 2");
-					TCMemoryManager<TCDefaultMemoryManagerParams<2>> Manager;
+					TCMemoryManager<TCDefaultMemoryManagerParams<2>> Manager{CMemoryManagerConfig()};
 					
 					DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(1));
 					DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(1));
@@ -297,7 +297,7 @@ namespace
 				}
 				{
 					DMibTestPath("Sizes 1");
-					TCMemoryManager<TCDefaultMemoryManagerParams<1>> Manager;
+					TCMemoryManager<TCDefaultMemoryManagerParams<1>> Manager{CMemoryManagerConfig()};
 					
 					DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(1));
 					DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(1));
@@ -336,7 +336,7 @@ namespace
 				MeasureMemory.f_Start();
 				
 				{
-					TCMemoryManagerTracked<TCMemoryManager<CDefaultMemoryManagerParams_Tests>> MemoryManager("Test");
+					TCMemoryManagerTracked<TCMemoryManager<CDefaultMemoryManagerParams_Tests>> MemoryManager("Test", CMemoryManagerConfig());
 					mint LastAlloc = 0;
 					auto Checkout = MemoryManager.f_Checkout();
 					for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize; ++MemorySize)
@@ -387,7 +387,7 @@ namespace
 				MeasureMemory.f_Start();
 				
 				{
-					TCMemoryManagerTracked<TCMemoryManager<CDefaultMemoryManagerParams_Tests>> MemoryManager("Test");
+					TCMemoryManagerTracked<TCMemoryManager<CDefaultMemoryManagerParams_Tests>> MemoryManager("Test", CMemoryManagerConfig());
 					mint LastAlloc = 0;
 					auto Checkout = MemoryManager.f_Checkout();
 					for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize; ++MemorySize)
@@ -442,7 +442,7 @@ namespace
 
 			DMibTestSuite("Big allocs")
 			{
-				TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager;
+				TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
 				auto Checkout = MemoryManager.f_Checkout();
 				mint LastAlloc = 0;
 				for (mint MemorySize = CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize * 2; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_SlabSize * 4; MemorySize *= 2)
@@ -463,7 +463,7 @@ namespace
 			
 			DMibTestSuite("Multiple slabs")
 			{
-				TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManagerTest;
+				TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManagerTest{CMemoryManagerConfig()};
 				mint LastAlloc = 0;
 				for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize; ++MemorySize)
 				{
@@ -475,7 +475,7 @@ namespace
 							continue;
 						DMibTestPath(NMib::NStr::CStr::CFormat("{}") << AllocSize);
 						
-						TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager;
+						TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
 						auto Checkout = MemoryManager.f_Checkout();
 						mint nAlloc = (CDefaultMemoryManagerParams_Tests::mc_SlabSize * 4) / MemorySize;
 						NMib::NContainer::TCVector<void *> lAlloc;
@@ -497,7 +497,7 @@ namespace
 			DMibTestSuite("Aligned")
 			{
 				mint LastAlloc = 0;
-				TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager;
+				TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
 				auto Checkout = MemoryManager.f_Checkout();
 				uint8 * pLast = nullptr;
 				for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxHeapAllocSize * 2; ++MemorySize)
@@ -524,7 +524,7 @@ namespace
 			DMibTestSuite("Commit")
 			{
 				mint LastAlloc = 0;
-				TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager;
+				TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
 
 				{
 					DMibTestPath("Alloc1");
@@ -635,7 +635,7 @@ namespace
 				{
 					
 					mint LastAlloc = 0;
-					TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager;
+					TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
 			
 					for (mint i = 0; i < 2; ++i)
 					{
@@ -700,7 +700,7 @@ namespace
 				{
 					
 					mint LastAlloc = 0;
-					TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager;
+					TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
 					
 					for (mint i = 0; i < 2; ++i)
 					{
@@ -791,7 +791,7 @@ namespace
 			
 			DMibTestSuite("BackgroundCleanup")
 			{
-				TCMemoryManager<CDefaultMemoryManagerParams_BackgroundTest> MemoryManager;
+				TCMemoryManager<CDefaultMemoryManagerParams_BackgroundTest> MemoryManager{CMemoryManagerConfig()};
 				
 				MemoryManager.f_GarbageCollect(true); // Make sure that the thread local is created for this thread
 				

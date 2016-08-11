@@ -7,17 +7,12 @@ namespace NMib
 {
 	namespace NMem
 	{
-		
 		template <typename t_CParams>
 		template <typename... tfp_CAllocator>
-		TCMemoryManager<t_CParams>::TCMemoryManager(tfp_CAllocator &&..._Params)
+		TCMemoryManager<t_CParams>::TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator &&..._Params)
 			: t_CParams::CNotifier::CGlobal(*this)
-			, m_Magic(NMisc::fg_GetHighEntropyRandomInteger<uint64>())
-#if DMibPPtrBits == 64
-			, m_nMaxArenas(TCLimitsInt<mint>::mc_Max)
-#elif DMibPPtrBits == 32
-			, m_nMaxArenas(8)
-#endif
+			, m_Magic(_Config.m_Magic)
+			, m_nMaxArenas(_Config.m_nMaxArenas)
 			, m_nArenas(0)
 			, m_HeapChunks(NMem::CAllocatorConstructTag(), this)
 			, m_Allocator(fg_Forward<tfp_CAllocator>(_Params)...)
@@ -469,6 +464,39 @@ namespace NMib
 			
 			return m_Allocator.f_Size(_pMemory);
 		}
+		
+		template <typename t_CParams>
+		uint64 TCMemoryManager<t_CParams>::f_GetMagic() const
+		{
+			return m_Magic;
+		}
+
+		template <typename t_CParams>
+		TCMemoryManager<t_CParams> *TCMemoryManager<t_CParams>::f_GetMemoryManager(void const *_pMemory)
+		{
+			uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
+			CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
+
+			if (pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic))
+			{ 
+				TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
+				return pSlab->m_pMemoryManager;
+			}
+			
+			{
+				TCMemoryManagerArenaHeapChunk<t_CParams> const *pChunk;
+				{
+					DMibLockRead(m_HeapChunksLock);
+					pChunk = m_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
+				}
+				
+				if (pChunk && (uint8 *)_pMemory < pChunk->f_GetEndAddress())
+					return this;
+			}
+			if (m_Allocator.f_TrySize(_pMemory))
+				return this;
+			return nullptr;
+		}		
 
 		template <typename t_CParams>
 		inline_always mint TCMemoryManager<t_CParams>::f_TrySize(void const * _pMemory) const

@@ -1,0 +1,34 @@
+// Copyright © 2015 Hansoft AB
+// Distributed under the MIT license, see license text in LICENSE.Malterlib
+
+%Target "Malterlib_Memory_MalterlibMalloc"
+{
+	Property
+	{
+		MalterlibPostCopyProject "MalterlibMalloc"
+		{
+			!!MalterlibPostCopyProject ""
+		}
+		MalterlibNeedsMallocOverrideLibrary true
+		{
+			&
+			{
+				TargetIsExecutable true
+				PlatformIsDarwin true
+			}
+		}	
+		MalterlibForceExecutable true
+	}
+	Target
+	{
+		FileName "MalterlibMalloc"
+		Type SharedDynamicLibrary
+	}
+	%Group Source
+	{
+		%File "Source/*"
+	}
+	%Dependency "Lib_Malterlib"
+}
+
+Property.Malterlib_Memory_App_Targets "Malterlib_Memory_MalterlibMalloc;@(Malterlib_Memory_App_Targets)"

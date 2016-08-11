@@ -1,6 +1,8 @@
 ﻿// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
+#ifdef DMibConfig_OverrideSystemMalloc
+
 #include <Mib/Core/Core>
 #include <stdlib.h>
 #include <malloc.h>
@@ -105,3 +107,4 @@ extern "C"
 	}
 }
 
+#endif

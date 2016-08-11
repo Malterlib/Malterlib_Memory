@@ -5,63 +5,11 @@
 	#include "Malterlib_Memory_SystemManager_NewWithTracking.hpp"
 #else
 
-#include "Malterlib_Memory_MemoryManager.hpp"
-
-#if DMibConfig_MalterlibMemoryManager_Debug && DMibConfig_MalterlibMemoryManager_Debug_Features || DMibConfig_MalterlibMemoryManager_Debug_Features == 1
-#	define DEnableDebugMemoryManager 1
-#else
-#	define DEnableDebugMemoryManager 0
-#endif
-
-#if DEnableDebugMemoryManager
-#	include "Malterlib_Memory_MemoryManager_Debug.h"
-#endif
-
+#include "Malterlib_Memory_MemoryManager.h"
+#include "Malterlib_Memory_SystemManager_New.h"
 
 namespace NMib
 {
-	struct CMemoryManagerParams : public NMem::CDefaultMemoryManagerParams
-	{
-		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
-		typedef CMainHeapVirtualAllocator CAllocator;
-	};
-
-#if DEnableDebugMemoryManager
-		struct CMemoryManagerDebugOptions : public NMem::CMemoryManagerDebugOptionsDefault
-		{
-			enum
-			{
-				EDummy
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreedGuards
-				, mc_bCheckModifyAfterFree	= false
-	#endif
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableAllocatedFill
-				, mc_bFillAllocated			= false
-	#endif
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableStackTrace
-				, mc_StackTraceDepth		= 0
-	#endif
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableEdgeGuards
-				, mc_nPreGuardBytes			= 0
-				, mc_nPostGuardBytes		= 0
-	#endif
-				, mc_bCanAllocateNonTracked = false // Threading potentially recursive allocations
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreeValidation
-				, mc_bFreeValidation		= false
-	#endif
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreeValidation && !DMibConfig_MalterlibMemoryManager_Debug_EnableMemoryLeaks
-				, mc_bEnumeration			= false
-	#endif
-	#if  !DMibConfig_MalterlibMemoryManager_Debug_EnableMemoryLeaks
-				, mc_bTraceLeaks			= false
-	#endif
-			};
-		};
-		typedef NMem::TCMemoryManagerDebug<CMemoryManagerParams, false, CMemoryManagerDebugOptions> CMemoryManager;
-#	else
-		typedef NMem::TCMemoryManager<CMemoryManagerParams> CMemoryManager;
-#	endif
-	
 	NMib::NAggregate::TCAggregateSimple<CMemoryManager> g_MainHeap = {DAggregateInit};
 	NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
 	mint g_MemoryManagerForkedCount = 0;
@@ -71,7 +19,7 @@ namespace NMib
 	{
 		inline_always void CCrossModuleImplementation::fs_CreateNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
-			g_MainHeap.f_Construct();
+			g_MainHeap.f_Construct(CMemoryManagerConfig());
 			{
 				// Make sure the code for checking out manager is included
 				auto MemoryManagerCheckout = NMib::fg_GetSys()->f_MemoryManager_Checkout();

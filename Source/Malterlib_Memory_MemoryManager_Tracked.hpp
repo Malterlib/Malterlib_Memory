@@ -244,7 +244,12 @@ namespace NMib
 			DMibMemoryReportFree(this, mp_pName, _pMemory, Size, nullptr);
 		}
 
-
+		template <typename t_CSuper>
+		auto TCMemoryManagerTracked<t_CSuper, void>::f_GetMemoryManager(void const *_pMemory) -> TCMemoryManagerTracked *
+		{
+			auto *pMemoryManager = t_CSuper::f_GetMemoryManager(_pMemory);
+			return fg_AutoStaticCast(pMemoryManager);
+		}
 
 		//
 		// With allocation info
@@ -538,5 +543,11 @@ namespace NMib
 			return SizePadded - HeaderSize;
 		}
 
+		template <typename t_CSuper, typename t_CAllocationInfo>
+		auto TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_GetMemoryManager(void const *_pMemory) -> TCMemoryManagerTracked *
+		{
+			auto *pMemoryManager = t_CSuper::f_GetMemoryManager(_pMemory);
+			return fg_AutoStaticCast(pMemoryManager);
+		}
 	}
 }

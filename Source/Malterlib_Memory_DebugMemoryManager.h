@@ -72,7 +72,7 @@ namespace NMib
 		public:
 
 			TCDebugMemoryManager()
-				: m_Heap()
+				: m_Heap(CMemoryManagerConfig())
 				, m_Sequence(0)
 				, m_nFreeBlocks(0)
 				, m_bCheckUpper(0)
