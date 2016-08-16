@@ -19,7 +19,7 @@ namespace NMib
 
 	void CSystem::fp_CreateNonTrackedMemoryManager()
 	{
-#ifndef DMibConfig_MemoryManager_UseSystem
+#if DMibConfig_MemoryManager_CrossModule_Enable
 		DMibFastCheck(!fg_GetSys()->f_IsDll());
 #endif
 		NMem::CCrossModuleImplementationExtra::fs_CreateNonTrackedMemoryManager(&NMem::g_CrossModule);
