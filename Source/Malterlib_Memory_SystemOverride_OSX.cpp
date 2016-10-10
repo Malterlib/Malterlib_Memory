@@ -1,7 +1,7 @@
 // Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
-#ifdef DMibConfig_OverrideSystemMalloc
+#if defined(DMibConfig_OverrideSystemMalloc) || defined(DMibMemoryOverrideDll)
 
 #include <Mib/Core/Core>
 #include <Mib/Core/System>
@@ -29,13 +29,25 @@ namespace NMib
 }
 #endif
 
+#define DMibOverrideErrorOutput(...) NMib::NSys::fg_DebugOutput((NMib::NStr::fg_Format<NMib::NStr::CFStr256>(__VA_ARGS__)).f_GetStr())
 
 #if 0
-#define DMibOverrideTrace DMibTraceSafe2
+#define DMibOverrideTrace DMibOverrideErrorOutput
 #else
 #define DMibOverrideTrace(...) (void)0
 #endif
 
+#if defined(DMibMemoryOverrideDll)
+#define DMibMalterlibOverrideMallocExport
+#else
+#define DMibMalterlibOverrideMallocExport module_export
+#endif
+
+#if DMibConfig_MalterlibMemoryManager_Debug && DMibConfig_MalterlibMemoryManager_Debug_Features || DMibConfig_MalterlibMemoryManager_Debug_Features == 1
+#	define DEnableDebugMemoryManager 1
+#else
+#	define DEnableDebugMemoryManager 0
+#endif
 
 
 using namespace NMib;
@@ -43,10 +55,15 @@ using namespace NMib::NMem;
 
 //#define DEmulateCrash
 #define DOptimizeSetJmp
+#define DFullArenasForSecondary
 
 extern "C"
 {
+#ifdef DMibMemoryOverrideDll
+	extern COriginalFunctions g_OriginalFunctions;
+#else
 	COriginalFunctions g_OriginalFunctions;
+#endif
 
 	extern void fg_MalterlibSystem_InitHelper() __attribute__((weak_import));
 }
@@ -74,12 +91,14 @@ extern "C"
 	};
 	
 	// These are here so dynamic linking works on OSes where these are not defined
+#if !defined(DMibMemoryOverrideDll)
 	assure_used module_export void __attribute__((weak)) __malloc_init(const char *apple[])
 	{
 	}
 	assure_used module_export void __attribute__((weak)) __libc_init(const struct ProgramVars *vars, void (*atfork_prepare)(void),void (*atfork_parent)(void),void (*atfork_child)(void),const char *apple[])
 	{
 	}
+#endif
 }
 
 namespace NMib
@@ -123,12 +142,6 @@ namespace
 		}
 	};
 	
-	struct CThreadLocal
-	{
-		bool m_bReentrant = false;
-		jmp_buf m_ReturnJump;
-	};
-
 	struct CMemoryManagerZone
 	{
 		CMemoryManagerZone(CMemoryManagerConfig const &_Config)
@@ -153,9 +166,32 @@ namespace
 	
 	struct CGlobalState
 	{
-		NThread::TCThreadLocal<CThreadLocal, CAllocatorIgnore> m_ThreadLocal;
+		CGlobalState()
+		{
+			m_iThreadLocal = NSys::fg_Thread_AllocLocal();
+		}
+		
+		~CGlobalState()
+		{
+			NSys::fg_Thread_FreeLocal(m_iThreadLocal);
+		}
+		
+		jmp_buf *f_GetJumpBuffer()
+		{
+			return (jmp_buf *)NSys::fg_Thread_GetLocal(m_iThreadLocal);
+		}
+		
+		void f_SetJumpBuffer(jmp_buf *_pBuffer)
+		{
+			return NSys::fg_Thread_SetLocal(m_iThreadLocal, _pBuffer);
+		}
+		
 		NThread::CMutualManyRead m_ZoneListLock;
 		DMibListLinkDS_List(CMemoryManagerZone, m_Link) m_ZoneList;
+		NContainer::TCVector<malloc_zone_t *> m_ForeignZones;
+		malloc_zone_t **m_pForeignZones = nullptr;
+		mint m_nForeignZones = 0;
+		mint m_iThreadLocal;
 	};
 	
 	NAggregate::TCAggregateSimple<CGlobalState> g_GlobalState = {DAggregateInit};
@@ -176,6 +212,9 @@ extern "C"
 
 	void (* exit_reenter)(int) __attribute__((noreturn));
 	
+	void fg_InterposeOverride();
+	void fg_InterposeOverrideUnhook();
+	
 	void fg_MalterlibSystem_DestroyLate()
 	{
 		NSys::g_FunctionHooks->f_Suspend();
@@ -190,6 +229,9 @@ extern "C"
 		}
 #endif
 		NSys::g_FunctionHooks->f_Unhook((void **)&exit_reenter);
+		
+		fg_InterposeOverrideUnhook();
+		
 		NSys::g_FunctionHooks->f_Resume();
 		
 		NSys::g_FunctionHooks.f_Destruct();
@@ -284,11 +326,14 @@ extern "C"
 			DMibOverrideTrace("Failed to hook exit, aborting!\n", 0);
 			DMibPDebugBreak;
 		}
+		
+		fg_InterposeOverride();
+		g_MainHeap->f_CanDoLazyCheckout();
 
 		NSys::g_FunctionHooks->f_Resume();
 	}
 
-	assure_used module_export void fg_MalterlibSystem_InitAfterMalloc()
+	assure_used DMibMalterlibOverrideMallocExport void fg_MalterlibSystem_InitAfterMalloc()
 	{
 		if (g_MalterlibMallocAfterMallocCalled)
 			return;
@@ -313,9 +358,12 @@ extern "C"
 		fg_MalterlibMallocOverrideEnable();
 	}
 
-	assure_used module_export void fg_MalterlibSystem_InitEarly(COriginalFunctions const &_Functions, int argc, char const* argv[], char const* envp[], char const* apple[], const ProgramVars * vars)
+	assure_used DMibMalterlibOverrideMallocExport void fg_MalterlibSystem_InitEarly(COriginalFunctions const &_Functions, int argc, char const* argv[], char const* envp[], char const* apple[], const ProgramVars * vars)
 	{
-		g_OriginalFunctions = _Functions;
+#ifndef DMibMemoryOverrideDll
+		if (!g_MalterlibMallocBeforeMallocCalled)
+			g_OriginalFunctions = _Functions;
+#endif
 
 		NSys::fg_CreateSystemVersion();
 		
@@ -465,8 +513,8 @@ struct sigaction g_OldSignalHandlerSegv;
 
 void fg_HandleCrashSignalBus(int signal)
 {
-	auto pThreadLocal = g_GlobalState->m_ThreadLocal.f_TryGet();
-	if (pThreadLocal && pThreadLocal->m_bReentrant)
+	auto *pJumpBuffer = g_GlobalState->f_GetJumpBuffer();
+	if (pJumpBuffer)
 	{
 #ifdef DOptimizeSetJmp
 		// Unblock this signal so it's called again the next time
@@ -474,9 +522,9 @@ void fg_HandleCrashSignalBus(int signal)
 		sigemptyset (&ToUnblock);
 		sigaddset(&ToUnblock, signal);
 		sigprocmask(SIG_UNBLOCK, &ToUnblock, nullptr);
-		_longjmp(pThreadLocal->m_ReturnJump, 1);
+		_longjmp(*pJumpBuffer, 1);
 #else
-		longjmp(pThreadLocal->m_ReturnJump, 1);
+		longjmp(*pJumpBuffer, 1);
 #endif
 	}
 
@@ -487,8 +535,8 @@ void fg_HandleCrashSignalBus(int signal)
 
 void fg_HandleCrashSignalSegv(int signal)
 {
-	auto pThreadLocal = g_GlobalState->m_ThreadLocal.f_TryGet();
-	if (pThreadLocal && pThreadLocal->m_bReentrant)
+	auto *pJumpBuffer = g_GlobalState->f_GetJumpBuffer();
+	if (pJumpBuffer)
 	{
 #ifdef DOptimizeSetJmp
 		// Unblock this signal so it's called again the next time
@@ -496,9 +544,9 @@ void fg_HandleCrashSignalSegv(int signal)
 		sigemptyset (&ToUnblock);
 		sigaddset(&ToUnblock, signal);
 		sigprocmask(SIG_UNBLOCK, &ToUnblock, nullptr);
-		_longjmp(pThreadLocal->m_ReturnJump, 1);
+		_longjmp(*pJumpBuffer, 1);
 #else
-		longjmp(pThreadLocal->m_ReturnJump, 1);
+		longjmp(*pJumpBuffer, 1);
 #endif
 	}
 
@@ -529,17 +577,19 @@ void fg_MalterlibMallocOverrideInit_ReinstallHandler()
 
 extern "C"
 {
-	assure_used module_export bool breakpad_should_handle_exception(pthread_t _pThread)
+#if !defined(DMibMemoryOverrideDll)
+	assure_used DMibMalterlibOverrideMallocExport bool breakpad_should_handle_exception(pthread_t _pThread)
 	{
 		if (!g_MalterlibMallocOveriddenInstalled)
 			return true;
 		
-		auto *pThreadLocal = g_GlobalState->m_ThreadLocal.f_TryGetForThread((mint)_pThread);
-		if (pThreadLocal)
-			return !pThreadLocal->m_bReentrant;
+		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((mint)_pThread, g_GlobalState->m_iThreadLocal);
+		if (pJumpBuffer)
+			return false;
 		else
 			return true;
 	}
+#endif
 }
 
 size_t fg_Malterlib_zone_size(struct _malloc_zone_t *_pZone, const void *ptr) /* returns the size of a block or 0 if not in this zone; must be fast, especially for negative answers */
@@ -549,14 +599,15 @@ size_t fg_Malterlib_zone_size(struct _malloc_zone_t *_pZone, const void *ptr) /*
 	
 	uint8 *pMalterlibAlloc = (uint8 *)ptr;
 	
-	auto &ThreadLocal = *g_GlobalState->m_ThreadLocal;
-	DMibFastCheck(!ThreadLocal.m_bReentrant);
-	ThreadLocal.m_bReentrant = true;
+	auto &State = *g_GlobalState;
+	jmp_buf JumpBuffer;
+	DMibFastCheck(!State.f_GetJumpBuffer());
+	State.f_SetJumpBuffer(&JumpBuffer);
 	auto Cleanup = fg_OnScopeExit
 		(
 			[&]()
 			{
-				ThreadLocal.m_bReentrant = false;
+				State.f_SetJumpBuffer(nullptr);
 			}
 		)
 	;
@@ -570,9 +621,9 @@ size_t fg_Malterlib_zone_size(struct _malloc_zone_t *_pZone, const void *ptr) /*
 #endif
 	
 #ifdef DOptimizeSetJmp
-	if (_setjmp(ThreadLocal.m_ReturnJump))
+	if (_setjmp(JumpBuffer))
 #else
-	if (setjmp(ThreadLocal.m_ReturnJump))
+	if (setjmp(JumpBuffer))
 #endif
 	{
 #ifdef DEmulateCrash
@@ -582,7 +633,11 @@ size_t fg_Malterlib_zone_size(struct _malloc_zone_t *_pZone, const void *ptr) /*
 #endif
 	}
 	
+#ifdef DMemoryManagerIsSame
+	return g_MainHeap->f_TrySize(pMalterlibAlloc);
+#else
 	return fg_TrySize(pMalterlibAlloc);
+#endif
 }
 
 void fg_Malterlib_zone_free(struct _malloc_zone_t *_pZone, void *ptr)
@@ -591,7 +646,11 @@ void fg_Malterlib_zone_free(struct _malloc_zone_t *_pZone, void *ptr)
 		return;
 	DMibOSXOverrideZoneCheck(_pZone);
 	uint8 *pMalterlibAlloc = (uint8 *)ptr;
+#ifdef DMemoryManagerIsSame
+	return g_MainHeap->f_Free(pMalterlibAlloc);
+#else
 	return fg_Free(pMalterlibAlloc);
+#endif
 }
 
 void fg_Malterlib_zone_free_definite_size(struct _malloc_zone_t *_pZone, void *ptr, size_t size)
@@ -600,7 +659,11 @@ void fg_Malterlib_zone_free_definite_size(struct _malloc_zone_t *_pZone, void *p
 		return;
 	DMibOSXOverrideZoneCheck(_pZone);
 	uint8 *pMalterlibAlloc = (uint8 *)ptr;
+#ifdef DMemoryManagerIsSame
+	return g_MainHeap->f_Free(pMalterlibAlloc);
+#else
 	return fg_Free(pMalterlibAlloc);
+#endif
 }
 
 size_t fg_Malterlib_zone_pressure_relief(struct _malloc_zone_t *_pZone, size_t goal)
@@ -609,16 +672,27 @@ size_t fg_Malterlib_zone_pressure_relief(struct _malloc_zone_t *_pZone, size_t g
 	return 0;
 }
 
+#define DAlignSizeOSX(d_Size) fg_AlignUp(fg_Max(d_Size, 1), 16)
+//#define DAlignSizeOSX(d_Size) d_Size
+
 void *fg_Malterlib_zone_malloc(struct _malloc_zone_t *_pZone, size_t size)
 {
 	DMibOSXOverrideZoneCheck(_pZone);
 
-	mint Size = fg_AlignUp(fg_Max(size, 1), 16);
+	mint Size = DAlignSizeOSX(size);
 	
-#if DMibConfig_MalterlibMemoryManager_Debug
+#ifdef DMemoryManagerIsSame
+#if DEnableDebugMemoryManager
+	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+#else
+	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+#endif
+#else
+#if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 #else
 	uint8 *pMalterlibAlloc = (uint8 *)fg_Alloc(Size);
+#endif
 #endif
 	
 	return pMalterlibAlloc;
@@ -629,10 +703,42 @@ unsigned fg_Malterlib_zone_batch_malloc(struct _malloc_zone_t *_pZone, size_t si
 	DMibOSXOverrideZoneCheck(_pZone);
 	if (num_requested)
 		return 0;
-	mint Size = fg_AlignUp(fg_Max(size, 1), 16);
+	mint Size = DAlignSizeOSX(size);
 	
 	mint nAllocated = 0;
-#if DMibConfig_MalterlibMemoryManager_Debug
+#ifdef DMemoryManagerIsSame
+#if DEnableDebugMemoryManager
+	g_MainHeap->f_AllocBatchDebug
+		(
+			Size
+			, 1
+			, [&](void *_pAlloc, mint _Size) -> bool
+			{
+				results[nAllocated] = _pAlloc;
+				++nAllocated;
+				return nAllocated < num_requested;
+			}
+			, DMibPFile
+			, DMibPLine
+			, g_DebugFlags
+		)
+	;
+#else
+	g_MainHeap->f_AllocBatch
+		(
+			Size
+			, 1
+			, [&](void *_pAlloc, mint _Size) -> bool
+			{
+				results[nAllocated] = _pAlloc;
+				++nAllocated;
+				return nAllocated < num_requested;
+			}
+		)
+	;
+#endif
+#else
+#if DEnableDebugMemoryManager
 	fg_AllocBatchDebug
 		(
 			Size
@@ -662,6 +768,7 @@ unsigned fg_Malterlib_zone_batch_malloc(struct _malloc_zone_t *_pZone, size_t si
 		)
 	;
 #endif
+#endif
 	
 	return num_requested;
 }
@@ -670,19 +777,37 @@ void fg_Malterlib_zone_batch_free(struct _malloc_zone_t *_pZone, void **to_be_fr
 {
 	if (num_to_be_freed == 0)
 		return;
+	
+#ifdef DMemoryManagerIsSame
+	auto &MainHeap = *g_MainHeap;
+#endif
 	auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
 	for (mint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
+	{
+#ifdef DMemoryManagerIsSame
+		return MainHeap.f_Free(to_be_freed[iToFree]);
+#else
 		fg_Free(to_be_freed[iToFree]);
+#endif
+	}
 }
 
 void *fg_Malterlib_zone_calloc(struct _malloc_zone_t *_pZone, size_t num_items, size_t size) /* same as malloc, but block returned is set to zero */
 {
 	DMibOSXOverrideZoneCheck(_pZone);
-	mint Size = fg_AlignUp(fg_Max(size * num_items, 1), 16);
-#if DMibConfig_MalterlibMemoryManager_Debug
+	mint Size = DAlignSizeOSX(size * num_items);
+#ifdef DMemoryManagerIsSame
+#if DEnableDebugMemoryManager
+	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+#else
+	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+#endif
+#else
+#if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 #else
 	uint8 *pMalterlibAlloc = (uint8 *)fg_Alloc(Size);
+#endif
 #endif
 	fg_MemClear(pMalterlibAlloc, Size);
 	return pMalterlibAlloc;
@@ -692,11 +817,19 @@ void *fg_Malterlib_zone_memalign(struct _malloc_zone_t *_pZone, size_t alignment
 {
 	DMibOSXOverrideZoneCheck(_pZone);
 
-	mint Size = fg_AlignUp(fg_Max(size, 1), alignment);
-#if DMibConfig_MalterlibMemoryManager_Debug
+	mint Size = size;
+#ifdef DMemoryManagerIsSame
+#if DEnableDebugMemoryManager
+	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedDebug(Size, alignment, DMibPFile, DMibPLine, g_DebugFlags);
+#else
+	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, alignment);
+#endif
+#else
+#if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, alignment, DMibPFile, DMibPLine, g_DebugFlags);
 #else
 	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, alignment);
+#endif
 #endif
 
 	return pMalterlibAlloc;
@@ -706,11 +839,20 @@ void *fg_Malterlib_zone_valloc(struct _malloc_zone_t *_pZone, size_t size) /* sa
 {
 	DMibOSXOverrideZoneCheck(_pZone);
 
-	mint Size = fg_AlignUp(fg_Max(size, 1), NSys::NPrivate::g_PageSize);
-#if DMibConfig_MalterlibMemoryManager_Debug
-	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, NSys::NPrivate::g_PageSize, DMibPFile, DMibPLine, g_DebugFlags);
+	mint Alignmnt = NSys::NPrivate::g_PageSize;
+	mint Size = fg_AlignUp(fg_Max(size, 1), Alignmnt);
+#ifdef DMemoryManagerIsSame
+#if DEnableDebugMemoryManager
+	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, NSys::NPrivate::g_PageSize);
+	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, Alignmnt);
+#endif
+#else
+#if DEnableDebugMemoryManager
+	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, Alignmnt, DMibPFile, DMibPLine, g_DebugFlags);
+#else
+	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, Alignmnt);
+#endif
 #endif
 
 	fg_MemClear(pMalterlibAlloc, Size);
@@ -723,12 +865,20 @@ void *fg_Malterlib_zone_realloc(struct _malloc_zone_t *_pZone, void *ptr, size_t
 
 	uint8 *pMalterlibAlloc = (uint8 *)ptr;
 
-	mint Size = fg_AlignUp(fg_Max(size, 1), 16);
+	mint Size = DAlignSizeOSX(size);
 	
-#if DMibConfig_MalterlibMemoryManager_Debug
+#ifdef DMemoryManagerIsSame
+#if DEnableDebugMemoryManager
+	pMalterlibAlloc = (uint8 *)g_MainHeap->f_ResizeDebug(pMalterlibAlloc, Size, DMibPFile, DMibPLine, g_DebugFlags);
+#else
+	pMalterlibAlloc = (uint8 *)g_MainHeap->f_Resize(pMalterlibAlloc, Size);
+#endif
+#else	
+#if DEnableDebugMemoryManager
 	pMalterlibAlloc = (uint8 *)fg_ResizeDebug(pMalterlibAlloc, Size, DMibPFile, DMibPLine, g_DebugFlags);
 #else
 	pMalterlibAlloc = (uint8 *)fg_Resize(pMalterlibAlloc, Size);
+#endif
 #endif
 	return pMalterlibAlloc;
 }
@@ -740,7 +890,11 @@ void fg_Malterlib_zone_destroy(struct _malloc_zone_t *_pZone) /* zone is destroy
 
 size_t fg_Malterlib_zone_good_size(malloc_zone_t *zone, size_t size) /* zone is destroyed and all memory reclaimed */
 {
+#ifdef DMemoryManagerIsSame
+	return g_MainHeap->f_SizePadded(size);
+#else
 	return fg_SizePadded(size);
+#endif
 }
 
 malloc_introspection_t_10_7 g_MalterlibMallocZoneIntrospection =
@@ -819,6 +973,7 @@ malloc_zone_t_10_7 g_MalterlibMallocZone =
 extern "C" unsigned malloc_num_zones;
 extern "C" malloc_zone_t **malloc_zones;
 extern "C" bool g_bForeignZone = false;
+extern "C" bool g_bHasForeignZones = false;
 extern "C" bool g_bOnlyDefaultZone = true;
 
 void fg_MalterlibMallocOverrideEnable()
@@ -929,71 +1084,54 @@ void fg_MalterlibMallocOverride_CanStartThreads()
 extern "C"
 {
 	
-	assure_used module_export void fg_MalterlibSystem_InitBeforeMalloc(COriginalFunctions const &_Functions)
+	assure_used DMibMalterlibOverrideMallocExport void fg_MalterlibSystem_InitBeforeMalloc(COriginalFunctions const &_Functions)
 	{
 		if (g_MalterlibMallocBeforeMallocCalled)
 			return;
 		g_MalterlibMallocBeforeMallocCalled = true;
+#ifndef DMibMemoryOverrideDll
 		g_OriginalFunctions = _Functions;
+#endif
 	}
 
 #ifdef DMemoryManagerIsSame
 	
-	void fg_MakeForeign()
+	void fg_LazyReturnCheckout()
 	{
-		DMibOverrideTrace("Make FOREIGN\n");
-		g_bForeignZone = true;
-		g_bOnlyDefaultZone = false;
+		if (!g_MalterlibMallocOveriddenInterposersInstalled)
+			return;
+#ifdef DFullArenasForSecondary
+		if (!g_bOnlyDefaultZone)
 		{
 			auto &State = *g_GlobalState;
 			DMibLockRead(State.m_ZoneListLock);
 			for (auto &Zone : State.m_ZoneList)
-				g_OriginalFunctions.malloc_zone_register(Zone.f_GetMallocZone());
-			State.m_ZoneList.f_Clear();
+				Zone.m_MemoryManager.f_LazyReturnCheckout();
 		}
-		if (CSystem::ms_PlatformVersion >= 10'12'00)
-		{
-			g_OriginalFunctions.malloc_destroy_zone(malloc_create_zone(0, 0));
-			malloc_zone_t_10_7 *pDefaultZone = (malloc_zone_t_10_7 *)g_OriginalFunctions.malloc_default_zone();
-			g_OriginalFunctions.malloc_zone_register((malloc_zone_t *)&g_MalterlibMallocZone);
-			*pDefaultZone = g_MalterlibMallocZone;
-			
-			if (malloc_zones && malloc_num_zones > 1 && malloc_zones[0]->malloc != &fg_Malterlib_zone_malloc)
-			{
-				auto pDefaultRealZone = malloc_zones[0];
-				g_OriginalFunctions.malloc_zone_unregister(pDefaultRealZone);
-				g_OriginalFunctions.malloc_zone_register(pDefaultRealZone);
-			}
-		}
-		else
-		{
-			malloc_zone_t_10_7 *pDefaultZone = (malloc_zone_t_10_7 *)g_OriginalFunctions.malloc_default_zone();
-			g_OriginalFunctions.malloc_zone_unregister((malloc_zone_t *)pDefaultZone);
-			g_OriginalFunctions.malloc_zone_register((malloc_zone_t *)&g_MalterlibMallocZone);
-			g_OriginalFunctions.malloc_zone_register((malloc_zone_t *)pDefaultZone);
-		}
+#endif
+		g_MainHeap->f_LazyReturnCheckout();
 	}
 	
 	mint fg_Malterlib_Safe_GetSize(CMemoryManagerZone *_pZone, const void *_pMemory)
 	{
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 		
-		auto &ThreadLocal = *g_GlobalState->m_ThreadLocal;
-		DMibFastCheck(!ThreadLocal.m_bReentrant);
-		ThreadLocal.m_bReentrant = true;
+		auto &State = *g_GlobalState;
+		jmp_buf JumpBuffer;
+		DMibFastCheck(!State.f_GetJumpBuffer());
+		State.f_SetJumpBuffer(&JumpBuffer);
 		auto Cleanup = fg_OnScopeExit
 			(
 				[&]()
 				{
-					ThreadLocal.m_bReentrant = false;
+					State.f_SetJumpBuffer(nullptr);
 				}
 			)
 		;
-		
 	#ifdef DOptimizeSetJmp
-		if (_setjmp(ThreadLocal.m_ReturnJump))
+		if (_setjmp(JumpBuffer))
 	#else
-		if (setjmp(ThreadLocal.m_ReturnJump))
+		if (setjmp(JumpBuffer))
 	#endif
 			return 0; // Access violation accessing header, this is not our block
 		return _pZone->m_MemoryManager.f_TrySize(pMalterlibAlloc);
@@ -1001,22 +1139,23 @@ extern "C"
 
 	CMemoryManager *fg_Malterlib_Safe_GetDefaultMemoryManager(void const *_pMemory)
 	{
-		auto &ThreadLocal = *g_GlobalState->m_ThreadLocal;
-		DMibFastCheck(!ThreadLocal.m_bReentrant);
-		ThreadLocal.m_bReentrant = true;
+		auto &State = *g_GlobalState;
+		jmp_buf JumpBuffer;
+		DMibFastCheck(!State.f_GetJumpBuffer());
+		State.f_SetJumpBuffer(&JumpBuffer);
 		auto Cleanup = fg_OnScopeExit
 			(
 				[&]()
 				{
-					ThreadLocal.m_bReentrant = false;
+					State.f_SetJumpBuffer(nullptr);
 				}
 			)
 		;
 		
 	#ifdef DOptimizeSetJmp
-		if (_setjmp(ThreadLocal.m_ReturnJump))
+		if (_setjmp(JumpBuffer))
 	#else
-		if (setjmp(ThreadLocal.m_ReturnJump))
+		if (setjmp(JumpBuffer))
 	#endif
 			return nullptr;
 		
@@ -1024,26 +1163,25 @@ extern "C"
 	}
 	CMemoryManager *fg_Malterlib_Safe_GetOtherMemoryManager(void const *_pMemory)
 	{
-		auto &ThreadLocal = *g_GlobalState->m_ThreadLocal;
-		DMibFastCheck(!ThreadLocal.m_bReentrant);
-		ThreadLocal.m_bReentrant = true;
+		auto &State = *g_GlobalState;
+		jmp_buf JumpBuffer;
+		DMibFastCheck(!State.f_GetJumpBuffer());
+		State.f_SetJumpBuffer(&JumpBuffer);
 		auto Cleanup = fg_OnScopeExit
 			(
 				[&]()
 				{
-					ThreadLocal.m_bReentrant = false;
+					State.f_SetJumpBuffer(nullptr);
 				}
 			)
 		;
-		auto &State = *g_GlobalState;
 		DMibLockRead(State.m_ZoneListLock);
 		auto iZone = State.m_ZoneList.f_GetIterator();
 		
-		
 	#ifdef DOptimizeSetJmp
-		if (_setjmp(ThreadLocal.m_ReturnJump))
+		if (_setjmp(JumpBuffer))
 	#else
-		if (setjmp(ThreadLocal.m_ReturnJump))
+		if (setjmp(JumpBuffer))
 	#endif
 			return nullptr;
 		
@@ -1088,30 +1226,48 @@ extern "C"
 	
 #endif
 	
-	assure_used module_export void *fg_Malterlib_malloc(size_t _Size)
+	malloc_zone_t *fg_GetForeignZone(void const *_pMemory, mint *_pSize = nullptr)
+	{
+		auto &State = *g_GlobalState;
+		for (mint iZone = 0; iZone < State.m_nForeignZones; ++iZone)
+		{
+			auto *pZone = State.m_pForeignZones[iZone];
+			if (!pZone)
+				continue;
+			if (mint Size = pZone->size(pZone, _pMemory))
+			{
+				if (_pSize)
+					*_pSize = Size;
+				return pZone;
+			}
+		}
+		return nullptr;
+	}
+	
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc(size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = fg_AlignUp(fg_Max(_Size, 1), 16);
-	#if DMibConfig_MalterlibMemoryManager_Debug
-		uint8 *pMalterlibAlloc = (uint8 *)fg_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
-		uint8 *pMalterlibAlloc = (uint8 *)fg_Alloc(Size);
-	#endif
+		mint Size = DAlignSizeOSX(_Size);
+#if DEnableDebugMemoryManager
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+#else
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+#endif
 		return pMalterlibAlloc;
 #else
 		return g_OriginalFunctions.malloc(_Size);
 #endif
 	}
 	
-	assure_used module_export void *fg_Malterlib_valloc(size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_valloc(size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
 		mint Alignment = NSys::NPrivate::g_PageSize;
-		mint Size = fg_AlignUp(fg_Max(_Size, 1), Alignment);
-	#if DMibConfig_MalterlibMemoryManager_Debug
-		uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		mint Size = DAlignSizeOSX(_Size);
+	#if DEnableDebugMemoryManager
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, Alignment);
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, Alignment);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1119,14 +1275,14 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export void *fg_Malterlib_calloc(size_t _NumItems, size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_calloc(size_t _NumItems, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = fg_AlignUp(fg_Max(_Size * _NumItems, 1), 16);
-	#if DMibConfig_MalterlibMemoryManager_Debug
-		uint8 *pMalterlibAlloc = (uint8 *)fg_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		mint Size = DAlignSizeOSX(_Size * _NumItems);
+	#if DEnableDebugMemoryManager
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)fg_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
 	#endif
 		fg_MemClear(pMalterlibAlloc, Size);
 		return pMalterlibAlloc;
@@ -1135,23 +1291,40 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export void *fg_Malterlib_realloc(void *_pMemory, size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_realloc(void *_pMemory, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
 			return g_OriginalFunctions.realloc(_pMemory, _Size);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		mint Size = fg_AlignUp(fg_Max(_Size, 1), 16);
+		mint Size = DAlignSizeOSX(_Size);
 		if (g_bOnlyDefaultZone || !_pMemory)
 		{
-#			if DMibConfig_MalterlibMemoryManager_Debug
-				return (uint8 *)fg_ResizeDebug(pMalterlibAlloc, Size, DMibPFile, DMibPLine, g_DebugFlags);
+#			if DEnableDebugMemoryManager
+				return (uint8 *)g_MainHeap->f_ResizeDebug(pMalterlibAlloc, Size, DMibPFile, DMibPLine, g_DebugFlags);
 #			else
-				return (uint8 *)fg_Resize(pMalterlibAlloc, Size);
+				return (uint8 *)g_MainHeap->f_Resize(pMalterlibAlloc, Size);
 #			endif
 		}
- 		CMemoryManager *pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
-#		if DMibConfig_MalterlibMemoryManager_Debug
+ 		CMemoryManager *pMemoryManager;
+		if (g_bHasForeignZones)
+		{
+			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
+			if (!pMemoryManager)
+			{
+				auto pZone = fg_GetForeignZone(_pMemory);
+				if (!pZone)
+				{
+					DMibOverrideErrorOutput("realloc failed beacuse no zone was found for pointer: {}\n", _pMemory);
+					return nullptr;
+				}
+				return pZone->realloc(pZone, _pMemory, _Size);
+			}
+		}
+		else
+			pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
+		DMibFastCheck(pMemoryManager);
+#		if DEnableDebugMemoryManager
 			return pMemoryManager->f_ResizeDebug(_pMemory, Size, DMibPFile, DMibPLine, g_DebugFlags);
 #		else
 			return pMemoryManager->f_Resize(_pMemory, Size);
@@ -1161,24 +1334,40 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export void *fg_Malterlib_reallocf(void *_pMemory, size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_reallocf(void *_pMemory, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
 			return g_OriginalFunctions.reallocf(_pMemory, _Size);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		mint Size = fg_AlignUp(fg_Max(_Size, 1), 16);
+		mint Size = DAlignSizeOSX(_Size);
 		if (g_bOnlyDefaultZone || !_pMemory)
 		{
-#			if DMibConfig_MalterlibMemoryManager_Debug
-				return (uint8 *)fg_ResizeDebug(pMalterlibAlloc, Size, DMibPFile, DMibPLine, g_DebugFlags);
+#			if DEnableDebugMemoryManager
+				return (uint8 *)g_MainHeap->f_ResizeDebug(pMalterlibAlloc, Size, DMibPFile, DMibPLine, g_DebugFlags);
 #			else
-				return (uint8 *)fg_Resize(pMalterlibAlloc, Size);
+				return (uint8 *)g_MainHeap->f_Resize(pMalterlibAlloc, Size);
 #			endif
 		}
- 		CMemoryManager *pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
+ 		CMemoryManager *pMemoryManager;
+		if (g_bHasForeignZones)
+		{
+			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
+			if (!pMemoryManager)
+			{
+				auto pZone = fg_GetForeignZone(_pMemory);
+				if (!pZone)
+				{
+					DMibOverrideErrorOutput("realloc failed beacuse no zone was found for pointer: {}\n", _pMemory);
+					return nullptr;
+				}
+				return pZone->realloc(pZone, _pMemory, _Size);
+			}
+		}
+		else
+			pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
 		DMibFastCheck(pMemoryManager);
-#		if DMibConfig_MalterlibMemoryManager_Debug
+#		if DEnableDebugMemoryManager
 			return pMemoryManager->f_ResizeDebug(_pMemory, Size, DMibPFile, DMibPLine, g_DebugFlags);
 #		else
 			return pMemoryManager->f_Resize(_pMemory, Size);
@@ -1188,7 +1377,7 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export void fg_Malterlib_free(void *_pMemory)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_free(void *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
@@ -1197,8 +1386,30 @@ extern "C"
 			return g_OriginalFunctions.free(_pMemory);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 		if (g_bOnlyDefaultZone)
+		{
+#ifdef DMemoryManagerIsSame
+			return g_MainHeap->f_Free(pMalterlibAlloc);
+#else
 			return fg_Free(pMalterlibAlloc);
- 		CMemoryManager *pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
+#endif
+		}
+ 		CMemoryManager *pMemoryManager;
+		if (g_bHasForeignZones)
+		{
+			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
+			if (!pMemoryManager)
+			{
+				auto pZone = fg_GetForeignZone(_pMemory);
+				if (!pZone)
+				{
+					DMibOverrideErrorOutput("free failed beacuse no zone was found for pointer: {}\n", _pMemory);
+					return;
+				}
+				return pZone->free(pZone, _pMemory);
+			}
+		}
+		else
+			pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
 		DMibFastCheck(pMemoryManager);
 		return pMemoryManager->f_Free(_pMemory);
 #else
@@ -1206,7 +1417,7 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export void fg_Malterlib_vfree(void *_pMemory)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_vfree(void *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
@@ -1214,8 +1425,30 @@ extern "C"
 		if (unlikely(g_bForeignZone))
 			return g_OriginalFunctions.vfree(_pMemory);
 		if (g_bOnlyDefaultZone)
+		{
+#ifdef DMemoryManagerIsSame
+			return g_MainHeap->f_Free(_pMemory);
+#else
 			return fg_Free((uint8 *)_pMemory);
- 		CMemoryManager *pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
+#endif
+		}
+ 		CMemoryManager *pMemoryManager;
+		if (g_bHasForeignZones)
+		{
+			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
+			if (!pMemoryManager)
+			{
+				auto pZone = fg_GetForeignZone(_pMemory);
+				if (!pZone)
+				{
+					DMibOverrideErrorOutput("free failed beacuse no zone was found for pointer: {}\n", _pMemory);
+					return;
+				}
+				return pZone->free(pZone, _pMemory);
+			}
+		}
+		else
+			pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
 		DMibFastCheck(pMemoryManager);
 		return pMemoryManager->f_Free(_pMemory);
 #else
@@ -1223,14 +1456,14 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export int fg_Malterlib_posix_memalign(void **_pOutput, size_t _Alignment, size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport int fg_Malterlib_posix_memalign(void **_pOutput, size_t _Alignment, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = fg_AlignUp(fg_Max(_Size, 1), _Alignment);
-	#if DMibConfig_MalterlibMemoryManager_Debug
-		uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		mint Size = DAlignSizeOSX(_Size);
+	#if DEnableDebugMemoryManager
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, _Alignment);
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, _Alignment);
 	#endif
 		*_pOutput = pMalterlibAlloc;
 		return 0;
@@ -1239,7 +1472,7 @@ extern "C"
 #endif
 	}
 		
-	assure_used module_export int fg_Malterlib_malloc_jumpstart(int _Value)
+	assure_used DMibMalterlibOverrideMallocExport int fg_Malterlib_malloc_jumpstart(int _Value)
 	{
 #ifdef DMemoryManagerIsSame
 		return 1;
@@ -1248,14 +1481,14 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void *fg_Malterlib__Znam (size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__Znam (size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = fg_AlignUp(fg_Max(_Size, 1), 16);
-	#if DMibConfig_MalterlibMemoryManager_Debug
-		uint8 *pMalterlibAlloc = (uint8 *)fg_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		mint Size = DAlignSizeOSX(_Size);
+	#if DEnableDebugMemoryManager
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)fg_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1263,14 +1496,14 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export void *fg_Malterlib__Znwm (size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__Znwm (size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = fg_AlignUp(fg_Max(_Size, 1), 16);
-	#if DMibConfig_MalterlibMemoryManager_Debug
-		uint8 *pMalterlibAlloc = (uint8 *)fg_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		mint Size = DAlignSizeOSX(_Size);
+	#if DEnableDebugMemoryManager
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)fg_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1278,14 +1511,14 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export void *fg_Malterlib__ZnwmRKSt9nothrow_t (size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnwmRKSt9nothrow_t (size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = fg_AlignUp(fg_Max(_Size, 1), 16);
-	#if DMibConfig_MalterlibMemoryManager_Debug
-		uint8 *pMalterlibAlloc = (uint8 *)fg_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		mint Size = DAlignSizeOSX(_Size);
+	#if DEnableDebugMemoryManager
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)fg_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1293,14 +1526,14 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export void *fg_Malterlib__ZnamRKSt9nothrow_t (size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnamRKSt9nothrow_t (size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = fg_AlignUp(fg_Max(_Size, 1), 16);
-	#if DMibConfig_MalterlibMemoryManager_Debug
-		uint8 *pMalterlibAlloc = (uint8 *)fg_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		mint Size = DAlignSizeOSX(_Size);
+	#if DEnableDebugMemoryManager
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)fg_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1308,55 +1541,55 @@ extern "C"
 #endif
 	}
 		
-	assure_used module_export void fg_Malterlib__ZdaPv(void *_pMemory)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdaPv(void *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return fg_Free(pMalterlibAlloc);
+		return g_MainHeap->f_Free(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdaPv(_pMemory);
 #endif
 	}
 	
-	assure_used module_export void fg_Malterlib__ZdlPv(void *_pMemory)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdlPv(void *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return fg_Free(pMalterlibAlloc);
+		return g_MainHeap->f_Free(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdlPv(_pMemory);
 #endif
 	}
 	
-	assure_used module_export void fg_Malterlib__ZdaPvRKSt9nothrow_t (void *_pMemory)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdaPvRKSt9nothrow_t (void *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return fg_Free(pMalterlibAlloc);
+		return g_MainHeap->f_Free(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdaPvRKSt9nothrow_t(_pMemory);
 #endif
 	}
 	
-	assure_used module_export void fg_Malterlib__ZdlPvRKSt9nothrow_t (void *_pMemory)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdlPvRKSt9nothrow_t (void *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return fg_Free(pMalterlibAlloc);
+		return g_MainHeap->f_Free(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdlPvRKSt9nothrow_t(_pMemory);
 #endif
 	}
 
-	assure_used module_export size_t fg_Malterlib_malloc_size(const void *_pMemory)
+	assure_used DMibMalterlibOverrideMallocExport size_t fg_Malterlib_malloc_size(const void *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
@@ -1364,14 +1597,35 @@ extern "C"
 		if (unlikely(g_bForeignZone))
 			return g_OriginalFunctions.malloc_size(_pMemory);
 		if (g_bOnlyDefaultZone)
+		{
+#ifdef DMemoryManagerIsSame
+			return g_MainHeap->f_Size(_pMemory);
+#else
 			return fg_Size(_pMemory);
-		
-		// Unaligned memory can never be OK
-		if ((uint8 *)_pMemory != fg_AlignUp((uint8 *)_pMemory, 16))
-			return 0;
+#endif
+		}
 		
 		// Need safe because objc stupidly relies on being able to check if it's a real memory block 
- 		CMemoryManager *pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
+ 		CMemoryManager *pMemoryManager;
+		if (g_bHasForeignZones)
+		{
+			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
+			if (!pMemoryManager)
+			{
+				mint Size;
+				auto pZone = fg_GetForeignZone(_pMemory, &Size);
+				if (!pZone)
+					return 0;
+				return Size;
+			}
+		}
+		else
+		{
+			// Unaligned memory can never be OK
+			if ((uint8 *)_pMemory != fg_AlignUp((uint8 *)_pMemory, 16))
+				return 0;
+			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
+		}
 		if (!pMemoryManager)
 			return 0;
 		return pMemoryManager->f_Size(_pMemory);
@@ -1380,16 +1634,16 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export size_t fg_Malterlib_malloc_good_size(size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport size_t fg_Malterlib_malloc_good_size(size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		return fg_SizePadded(_Size);
+		return g_MainHeap->f_SizePadded(_Size);
 #else
 		return g_OriginalFunctions.malloc_good_size(_Size);
 #endif
 	}
 
-	assure_used module_export malloc_zone_t *fg_Malterlib_malloc_default_zone()
+	assure_used DMibMalterlibOverrideMallocExport malloc_zone_t *fg_Malterlib_malloc_default_zone()
 	{
 #ifdef DMemoryManagerIsSame
 		return (malloc_zone_t *)&g_MalterlibMallocZone;
@@ -1449,13 +1703,20 @@ extern "C"
 		}
 	;
 	
-	assure_used module_export malloc_zone_t *fg_Malterlib_malloc_create_zone(vm_size_t start_size, unsigned flags)
+	assure_used DMibMalterlibOverrideMallocExport malloc_zone_t *fg_Malterlib_malloc_create_zone(vm_size_t start_size, unsigned flags)
 	{
 #ifdef DMemoryManagerIsSame
 		CMemoryManagerConfig Config;
+#ifndef DFullArenasForSecondary
 		Config.m_nMaxArenas = 1; // For these zones don't waste address space, chances are they will be single thread use anyways
+#endif
 		Config.m_Magic = g_MainHeap->f_GetMagic();
 		NPtr::TCUniquePointer<CMemoryManagerZone> pMemoryManager = fg_Construct(Config);
+		
+#ifdef DFullArenasForSecondary
+		pMemoryManager->m_MemoryManager.f_CanDoLazyCheckout();
+#endif
+
 		
 		pMemoryManager->m_MallocZone = 
 			{
@@ -1473,14 +1734,14 @@ extern "C"
 				, [](malloc_zone_t *_pZone, size_t _Size) -> void * // malloc
 				{
 					auto *pZone = (CMemoryManagerZone *)_pZone;
-					mint Size = fg_AlignUp(fg_Max(_Size, 1), 16);
+					mint Size = DAlignSizeOSX(_Size);
 					uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 					return pMalterlibAlloc;
 				}
 				, [](malloc_zone_t *_pZone, size_t _nItems, size_t _Size) -> void *
 				{
 					auto *pZone = (CMemoryManagerZone *)_pZone;
-					mint Size = fg_AlignUp(fg_Max(_Size * _nItems, 1), 16);
+					mint Size = DAlignSizeOSX(_Size * _nItems);
 					uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 					fg_MemClear(pMalterlibAlloc, Size);
 					return pMalterlibAlloc;
@@ -1504,7 +1765,7 @@ extern "C"
 				, [](malloc_zone_t *_pZone, void *_pMemory, size_t _Size) -> void *
 				{
 					uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-					mint Size = fg_AlignUp(fg_Max(_Size, 1), 16);
+					mint Size = DAlignSizeOSX(_Size);
 					auto *pZone = (CMemoryManagerZone *)_pZone;
 					pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_Resize(pMalterlibAlloc, Size);
 					return pMalterlibAlloc;
@@ -1512,14 +1773,14 @@ extern "C"
 				, [](malloc_zone_t *_pZone)
 				{
 					NPtr::TCUniquePointer<CMemoryManagerZone> pMemoryManager = fg_Explicit((CMemoryManagerZone *)_pZone);
-					if (g_bForeignZone)
+					if (unlikely(g_bForeignZone))
 						g_OriginalFunctions.malloc_zone_unregister(pMemoryManager->f_GetMallocZone());
 					else
 					{
 						auto &State = *g_GlobalState;
 						DMibLock(State.m_ZoneListLock);
 						State.m_ZoneList.f_Remove(*pMemoryManager);
-						g_bOnlyDefaultZone = State.m_ZoneList.f_IsEmpty();
+						g_bOnlyDefaultZone = State.m_ZoneList.f_IsEmpty() && !g_bHasForeignZones;
 					}
 					pMemoryManager.f_Clear();		
 				}
@@ -1528,11 +1789,11 @@ extern "C"
 				{
 					if (num_requested)
 						return 0;
-					mint Size = fg_AlignUp(fg_Max(size, 1), 16);
+					mint Size = DAlignSizeOSX(size);
 					auto *pZone = (CMemoryManagerZone *)_pZone;
 					
 					mint nAllocated = 0;
-				#if DMibConfig_MalterlibMemoryManager_Debug
+				#if DEnableDebugMemoryManager
 					pZone->m_MemoryManager.f_AllocBatchDebug
 						(
 							Size
@@ -1579,8 +1840,8 @@ extern "C"
 				, [](struct _malloc_zone_t *_pZone, size_t alignment, size_t size) -> void *
 				{
 					auto *pZone = (CMemoryManagerZone *)_pZone;
-					mint Size = fg_AlignUp(fg_Max(size, 1), alignment);
-				#if DMibConfig_MalterlibMemoryManager_Debug
+					mint Size = size;
+				#if DEnableDebugMemoryManager
 					uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedDebug(Size, alignment, DMibPFile, DMibPLine, g_DebugFlags);
 				#else
 					uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, alignment);
@@ -1605,7 +1866,7 @@ extern "C"
 			}
 		;
 
-		if (g_bForeignZone)
+		if (unlikely(g_bForeignZone))
 			g_OriginalFunctions.malloc_zone_register(pMemoryManager->f_GetMallocZone());
 		else
 		{
@@ -1622,7 +1883,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_destroy_zone(malloc_zone_t *_pZone)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_destroy_zone(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1633,7 +1894,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void *fg_Malterlib_malloc_zone_malloc(malloc_zone_t *_pZone, size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_malloc(malloc_zone_t *_pZone, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1644,7 +1905,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void *fg_Malterlib_malloc_zone_calloc(malloc_zone_t *_pZone, size_t _nItems, size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_calloc(malloc_zone_t *_pZone, size_t _nItems, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1655,7 +1916,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void *fg_Malterlib_malloc_zone_valloc(malloc_zone_t *_pZone, size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_valloc(malloc_zone_t *_pZone, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1666,7 +1927,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_zone_free(malloc_zone_t *_pZone, void *_pMemory)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_free(malloc_zone_t *_pZone, void *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1677,7 +1938,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void *fg_Malterlib_malloc_zone_realloc(malloc_zone_t *_pZone, void *_pMemory, size_t _Size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_realloc(malloc_zone_t *_pZone, void *_pMemory, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1688,10 +1949,17 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export malloc_zone_t *fg_Malterlib_malloc_zone_from_ptr(void const *_pMemory)
+	assure_used DMibMalterlibOverrideMallocExport malloc_zone_t *fg_Malterlib_malloc_zone_from_ptr(void const *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		CMemoryManager *pMemoryManager;
+		if (unlikely(g_bHasForeignZones))
+		{
+			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
+			if (pMemoryManager)
+				return fg_Malterlib_ZoneFromMemoryManager(pMemoryManager);
+			return fg_GetForeignZone(_pMemory);
+		}
 		if (unlikely(g_bForeignZone))
 		{
 			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
@@ -1709,7 +1977,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void *fg_Malterlib_malloc_zone_memalign(malloc_zone_t *_pZone, size_t alignment, size_t size)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_memalign(malloc_zone_t *_pZone, size_t alignment, size_t size)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1720,7 +1988,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export unsigned fg_Malterlib_malloc_zone_batch_malloc(malloc_zone_t *_pZone, size_t size, void **results, unsigned num_requested)
+	assure_used DMibMalterlibOverrideMallocExport unsigned fg_Malterlib_malloc_zone_batch_malloc(malloc_zone_t *_pZone, size_t size, void **results, unsigned num_requested)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1731,7 +1999,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_zone_batch_free(malloc_zone_t *_pZone, void **to_be_freed, unsigned num)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_batch_free(malloc_zone_t *_pZone, void **to_be_freed, unsigned num)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1741,7 +2009,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export malloc_zone_t *fg_Malterlib_malloc_default_purgeable_zone(void)
+	assure_used DMibMalterlibOverrideMallocExport malloc_zone_t *fg_Malterlib_malloc_default_purgeable_zone(void)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1752,7 +2020,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_make_purgeable(void *ptr)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_make_purgeable(void *ptr)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1762,7 +2030,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export int fg_Malterlib_malloc_make_nonpurgeable(void *ptr)
+	assure_used DMibMalterlibOverrideMallocExport int fg_Malterlib_malloc_make_nonpurgeable(void *ptr)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1773,30 +2041,88 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_zone_register(malloc_zone_t *_pZone)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_register(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
+		if (unlikely(g_bForeignZone))
+			return g_OriginalFunctions.malloc_zone_register(_pZone);
 		if (_pZone == (malloc_zone_t *)&g_MalterlibMallocZone)
 			return;
-		g_OriginalFunctions.malloc_zone_register(_pZone);
-		fg_MakeForeign();
+		auto &State = *g_GlobalState;
+		DMibLock(State.m_ZoneListLock);
+		if (!g_bHasForeignZones)
+		{
+			State.m_ForeignZones.f_SetLen(256);
+			fg_MemClear(State.m_ForeignZones.f_GetArray(), State.m_ForeignZones.f_GetLen() * sizeof(malloc_zone_t *));
+			State.m_pForeignZones = State.m_ForeignZones.f_GetArray();
+		}
+		if (State.m_nForeignZones == 256)
+			DMibPDebugBreak; // Out of zones
+		
+		DMibOverrideTrace("FOREIGN zone registered\n");
+
+		NMib::NAtomic::fg_MemoryFence();
+		mint iNextZone = State.m_nForeignZones;
+		NMib::NAtomic::fg_MemoryFence();
+		State.m_pForeignZones[iNextZone] = _pZone;
+		NMib::NAtomic::fg_MemoryFence();
+		++State.m_nForeignZones;
+		NMib::NAtomic::fg_MemoryFence();
+		g_bHasForeignZones = true;
+		g_bOnlyDefaultZone = false;
+		NMib::NAtomic::fg_MemoryFence();
 #else
 		g_OriginalFunctions.malloc_zone_register(_pZone);
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_zone_unregister(malloc_zone_t *_pZone)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_unregister(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
+		if (unlikely(g_bForeignZone))
+			return g_OriginalFunctions.malloc_zone_unregister(_pZone);
 		if (_pZone == (malloc_zone_t *)&g_MalterlibMallocZone)
 			return;
-		return g_OriginalFunctions.malloc_zone_unregister(_pZone);
+		auto &State = *g_GlobalState;
+		DMibLock(State.m_ZoneListLock);
+		if (!g_bHasForeignZones)
+			return;
+		
+		mint iFoundZone = TCLimitsInt<mint>::mc_Max;
+		for (mint iZone = 0; iZone < State.m_nForeignZones; ++iZone)
+		{
+			if (State.m_pForeignZones[iZone] == _pZone)
+			{
+				iFoundZone = iZone;
+				break;
+			}
+		}
+		if (iFoundZone == TCLimitsInt<mint>::mc_Max)
+			return;
+			
+		if (State.m_nForeignZones == 1)
+		{
+			g_bHasForeignZones = false;
+			g_bOnlyDefaultZone = State.m_ZoneList.f_IsEmpty() && !g_bHasForeignZones;
+			State.m_nForeignZones = 0;
+			State.m_pForeignZones[iFoundZone] = nullptr;
+			return ;
+		}
+		
+		mint iLastZone = State.m_nForeignZones - 1;
+		NMib::NAtomic::fg_MemoryFence();
+		State.m_pForeignZones[iFoundZone] = State.m_pForeignZones[iLastZone]; 
+		NMib::NAtomic::fg_MemoryFence();
+		--State.m_nForeignZones;
+		NMib::NAtomic::fg_MemoryFence();
+		State.m_pForeignZones[iLastZone] = nullptr;
+		NMib::NAtomic::fg_MemoryFence();
 #else
 		return g_OriginalFunctions.malloc_zone_unregister(_pZone);
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_set_zone_name(malloc_zone_t *_pZone, const char *name)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_set_zone_name(malloc_zone_t *_pZone, const char *name)
 	{
 #ifdef DMemoryManagerIsSame
 		if (_pZone == (malloc_zone_t *)&g_MalterlibMallocZone)
@@ -1812,7 +2138,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export const char *fg_Malterlib_malloc_get_zone_name(malloc_zone_t *_pZone)
+	assure_used DMibMalterlibOverrideMallocExport const char *fg_Malterlib_malloc_get_zone_name(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1823,7 +2149,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export size_t fg_Malterlib_malloc_zone_pressure_relief(malloc_zone_t *_pZone, size_t goal)
+	assure_used DMibMalterlibOverrideMallocExport size_t fg_Malterlib_malloc_zone_pressure_relief(malloc_zone_t *_pZone, size_t goal)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1836,7 +2162,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export kern_return_t fg_Malterlib_malloc_get_all_zones(task_t task, memory_reader_t reader, vm_address_t **addresses, unsigned *count)
+	assure_used DMibMalterlibOverrideMallocExport kern_return_t fg_Malterlib_malloc_get_all_zones(task_t task, memory_reader_t reader, vm_address_t **addresses, unsigned *count)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1847,7 +2173,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_zone_print_ptr_info(void *ptr)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_print_ptr_info(void *ptr)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1857,7 +2183,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export boolean_t fg_Malterlib_malloc_zone_check(malloc_zone_t *_pZone)
+	assure_used DMibMalterlibOverrideMallocExport boolean_t fg_Malterlib_malloc_zone_check(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1868,7 +2194,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_zone_print(malloc_zone_t *_pZone, boolean_t verbose)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_print(malloc_zone_t *_pZone, boolean_t verbose)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1878,7 +2204,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_zone_statistics(malloc_zone_t *_pZone, malloc_statistics_t *stats)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_statistics(malloc_zone_t *_pZone, malloc_statistics_t *stats)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1888,7 +2214,7 @@ extern "C"
 #endif
 	}
 	
-	assure_used module_export void fg_Malterlib_malloc_zone_log(malloc_zone_t *_pZone, void *address)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_log(malloc_zone_t *_pZone, void *address)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1899,12 +2225,12 @@ extern "C"
 	}
 
 	/*
-	assure_used module_export struct mstats fg_Malterlib_mstats(void)
+	assure_used DMibMalterlibOverrideMallocExport struct mstats fg_Malterlib_mstats(void)
 	{
 		return g_OriginalFunctions.mstats();
 	}*/
 
-	assure_used module_export boolean_t fg_Malterlib_malloc_zone_enable_discharge_checking(malloc_zone_t *_pZone)
+	assure_used DMibMalterlibOverrideMallocExport boolean_t fg_Malterlib_malloc_zone_enable_discharge_checking(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1915,7 +2241,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_zone_disable_discharge_checking(malloc_zone_t *_pZone)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_disable_discharge_checking(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1925,7 +2251,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_zone_discharge(malloc_zone_t *_pZone, void *memory)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_discharge(malloc_zone_t *_pZone, void *memory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1935,7 +2261,7 @@ extern "C"
 #endif
 	}
 
-	assure_used module_export void fg_Malterlib_malloc_zone_enumerate_discharged_pointers(malloc_zone_t *_pZone, void (^report_discharged)(void *memory, void *info))
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_enumerate_discharged_pointers(malloc_zone_t *_pZone, void (^report_discharged)(void *memory, void *info))
 	{
 #ifdef DMemoryManagerIsSame
 		if (unlikely(g_bForeignZone))
@@ -1944,5 +2270,109 @@ extern "C"
 		return g_OriginalFunctions.malloc_zone_enumerate_discharged_pointers(_pZone, report_discharged);
 #endif
 	}
+
+	NAtomic::TCAtomic<mint> g_Sequence = {DAggregateInit};
+
+	assure_used mach_msg_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_mach_msg_trap
+		(
+			mach_msg_header_t *msg,
+			mach_msg_option_t option,
+			mach_msg_size_t send_size,
+			mach_msg_size_t rcv_size,
+			mach_port_name_t rcv_name,
+			mach_msg_timeout_t timeout,
+			mach_port_name_t notify
+		)
+	{
+#ifdef DMemoryManagerIsSame
+		if ((option & MACH_RCV_MSG) && msg->msgh_remote_port == 0)
+			fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.mach_msg_trap(msg, option, send_size, rcv_size, rcv_name, timeout, notify);
+	}
+	
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_timedwait_trap(mach_port_name_t wait_name, unsigned int sec, clock_res_t nsec)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.semaphore_timedwait_trap(wait_name, sec, nsec);
+	}
+	
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_wait_trap(mach_port_name_t wait_name)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.semaphore_wait_trap(wait_name);
+	}
+
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_wait_signal_trap(mach_port_name_t wait_name, mach_port_name_t signal_name)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.semaphore_wait_signal_trap(wait_name, signal_name);
+	}
+
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_timedwait_signal_trap(mach_port_name_t wait_name, mach_port_name_t signal_name, unsigned int sec, clock_res_t nsec)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.semaphore_timedwait_signal_trap(wait_name, signal_name, sec, nsec);
+	}
+
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib___workq_kernreturn(int options, user_addr_t item, int affinity, int prio)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.__workq_kernreturn(options, item, affinity, prio);
+	}
+	
+	assure_used uint32_t DMibMalterlibOverrideMallocExport fg_Malterlib___psynch_cvwait(user_addr_t cv, uint64_t cvlsgen, uint32_t cvugen, user_addr_t mutex, uint64_t mugen, uint32_t flags, int64_t sec, uint32_t nsec)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.__psynch_cvwait(cv, cvlsgen, cvugen, mutex, mugen, flags, sec, nsec);
+	}
 }
+
+extern "C"
+{
+	void fg_InterposeOverride()
+	{
+#define DMibMemoryInterpose_Hooks 
+	
+#define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
+		if (!NSys::g_FunctionHooks->f_SetHook((void **)&(g_OriginalFunctions.d_Function), (void *)&fg_Malterlib_##d_Function))\
+		{\
+			DMibOverrideTrace("Failed to hook " #d_Function ", aborting!\n", 0);\
+			DMibPDebugBreak;\
+		}
+
+#define DMibMemoryInterposeCpp1(d_Return, d_Function, ...)
+	
+#include "Malterlib_Memory_SystemOverride_OSXInterposeFunctions.h"
+	}
+
+	void fg_InterposeOverrideUnhook()
+	{
+	
+#define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
+		if (!NSys::g_FunctionHooks->f_Unhook((void **)&(g_OriginalFunctions.d_Function)))\
+		{\
+			DMibOverrideTrace("Failed to unhook " #d_Function ", aborting!\n", 0);\
+			DMibPDebugBreak;\
+		}
+
+#define DMibMemoryInterposeCpp1(d_Return, d_Function, ...)
+	
+#include "Malterlib_Memory_SystemOverride_OSXInterposeFunctions.h"
+#undef DMibMemoryInterpose_Hooks 
+	}
+}
+
 #endif

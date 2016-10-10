@@ -75,13 +75,6 @@ namespace
 
 		struct CAllocPattern_Random
 		{
-			NMib::NMisc::CRandomShiftRNG m_Random;
-			uint64 m_nIterations;
-			mint m_ArraySize;
-			mint m_MaxAllocatedMemory;
-			mint m_MaxAllocSize;
-			zbint m_bFailed;
-
 			struct CAllocationInfo
 			{
 //				DMibListLinkD_Link(CAllocationInfo, m_Link);
@@ -91,10 +84,18 @@ namespace
 				}
 				void *m_pAddress;
 			};
+			
+			NMib::NMisc::CRandomShiftRNG m_Random;
+			uint64 m_nIterations;
+			CAllocationInfo *m_pAllocations;
+			mint m_ArraySize;
+			mint m_MaxAllocatedMemory;
+			mint m_MaxAllocSize;
+			zbint m_bFailed;
+
 //			typedef DMibListLinkD_List(CAllocationInfo, m_Link) CAllocInfoList;
 	//		NMib::NMem::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMem::CPoolType_Growing> m_AllocationInfoPool;
 
-			CAllocationInfo *m_pAllocations;
 
 			CAllocPattern_Random()
 				: m_pAllocations(nullptr)
@@ -157,7 +158,6 @@ namespace
 			template <typename tf_CHeap>
 			uint64 f_Iterations(tf_CHeap &_Heap)
 			{
-#if 1
 				auto End = m_pAllocations + m_ArraySize + 1;
 				for (auto Iter = m_pAllocations; Iter != End; ++Iter)
 				{
@@ -172,40 +172,11 @@ namespace
 				uint64 Ret = m_nIterations;
 				m_nIterations = 0;
 				return Ret;
-#else
-				return m_nIterations;
-#endif
-			}
-			
-			template <typename tf_CHeap>
-			void f_Cleanup(tf_CHeap &_Heap)
-			{
-#if 0
-				auto End = m_pAllocations + m_ArraySize + 1;
-				for (auto Iter = m_pAllocations; Iter != End; ++Iter)
-				{
-					auto &Info = *Iter;
-					if (Info.m_pAddress)
-					{
-						_Heap.f_Free(Info.m_pAddress);
-//						++m_nIterations;
-					}
-				}
-				m_nIterations = 0;
-#endif
 			}
 		};
 
 		struct CAllocPattern_RandomAlignment
 		{
-			NMib::NMisc::CRandomShiftRNG m_Random;
-			uint64 m_nIterations;
-			mint m_ArraySize;
-			mint m_MaxAllocatedMemory;
-			mint m_MaxAllocSize;
-			mint m_AlignBits;
-			zbint m_bFailed;
-
 			struct CAllocationInfo
 			{
 //				DMibListLinkD_Link(CAllocationInfo, m_Link);
@@ -215,10 +186,19 @@ namespace
 				}
 				void *m_pAddress;
 			};
+
+			NMib::NMisc::CRandomShiftRNG m_Random;
+			uint64 m_nIterations;
+			CAllocationInfo *m_pAllocations;
+			mint m_ArraySize;
+			mint m_MaxAllocatedMemory;
+			mint m_MaxAllocSize;
+			mint m_AlignBits;
+			zbint m_bFailed;
+
 //			typedef DMibListLinkD_List(CAllocationInfo, m_Link) CAllocInfoList;
 	//		NMib::NMem::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMem::CPoolType_Growing> m_AllocationInfoPool;
 
-			CAllocationInfo *m_pAllocations;
 
 			CAllocPattern_RandomAlignment()
 				: m_pAllocations(nullptr)
@@ -292,7 +272,6 @@ namespace
 			template <typename tf_CHeap>
 			uint64 f_Iterations(tf_CHeap &_Heap)
 			{
-#if 1
 				auto End = m_pAllocations + m_ArraySize + 1;
 				for (auto Iter = m_pAllocations; Iter != End; ++Iter)
 				{
@@ -307,39 +286,12 @@ namespace
 				uint64 Ret = m_nIterations;
 				m_nIterations = 0;
 				return Ret;
-#else
-				return m_nIterations;
-#endif
 			}
 			
-			template <typename tf_CHeap>
-			void f_Cleanup(tf_CHeap &_Heap)
-			{
-#if 0
-				auto End = m_pAllocations + m_ArraySize + 1;
-				for (auto Iter = m_pAllocations; Iter != End; ++Iter)
-				{
-					auto &Info = *Iter;
-					if (Info.m_pAddress)
-					{
-						_Heap.f_Free(Info.m_pAddress);
-//						++m_nIterations;
-					}
-				}
-				m_nIterations = 0;
-#endif
-			}
 		};
 
 		struct CAllocPattern_OneSize
 		{
-			NMib::NMisc::CRandomShiftRNG m_Random;
-			uint64 m_nIterations;
-			mint m_ArraySize;
-			mint m_MaxAllocatedMemory;
-			mint m_MaxAllocSize;
-			zbint m_bFailed;
-
 			struct CAllocationInfo
 			{
 				CAllocationInfo()
@@ -348,8 +300,14 @@ namespace
 				}
 				void *m_pAddress;
 			};
-
+			
+			NMib::NMisc::CRandomShiftRNG m_Random;
+			uint64 m_nIterations;
 			CAllocationInfo *m_pAllocations;
+			mint m_ArraySize;
+			mint m_MaxAllocatedMemory;
+			mint m_MaxAllocSize;
+			zbint m_bFailed;
 
 			CAllocPattern_OneSize()
 				: m_pAllocations(nullptr)
@@ -410,7 +368,6 @@ namespace
 			template <typename tf_CHeap>
 			uint64 f_Iterations(tf_CHeap &_Heap)
 			{
-#if 1
 				auto End = m_pAllocations + m_ArraySize + 1;
 				for (auto Iter = m_pAllocations; Iter != End; ++Iter)
 				{
@@ -425,27 +382,38 @@ namespace
 				uint64 Ret = m_nIterations;
 				m_nIterations = 0;
 				return Ret;
-#else
-				return m_nIterations;
-#endif
 			}
-			
-			template <typename tf_CHeap>
-			void f_Cleanup(tf_CHeap &_Heap)
+		};
+
+		struct CAllocPattern_OneSizeLinear : public CAllocPattern_OneSize
+		{
+			CAllocPattern_OneSizeLinear()
 			{
-#if 0
-				auto End = m_pAllocations + m_ArraySize + 1;
-				for (auto Iter = m_pAllocations; Iter != End; ++Iter)
+			}
+
+			CAllocPattern_OneSizeLinear(mint _MaxAllocSize, mint _iThread, NMib::ENumaNode _NumaNode)
+				: CAllocPattern_OneSize(_MaxAllocSize, _iThread, _NumaNode)
+			{
+			}
+
+			template <typename tf_CHeap>
+			inline_small void f_Next(tf_CHeap &_Heap)
+			{
 				{
-					auto &Info = *Iter;
+					int32 iStart = m_nIterations & m_ArraySize;
+					CAllocationInfo &Info = m_pAllocations[iStart];
 					if (Info.m_pAddress)
 					{
 						_Heap.f_Free(Info.m_pAddress);
-//						++m_nIterations;
+						++m_nIterations;
+					}
+
+					{
+						mint Size = m_MaxAllocSize;
+						Info.m_pAddress = _Heap.f_Alloc(Size);
+						++m_nIterations;
 					}
 				}
-				m_nIterations = 0;
-#endif
 			}
 		};
 
@@ -478,7 +446,6 @@ namespace
 					NMib::NSys::fg_Thread_SetNumaAffinity(NMib::NSys::fg_Thread_GetCurrent(), m_iNumaNode);
 					m_pHeap->f_SetNumaNode(m_iNumaNode);
 				}
-				t_CAllocPattern Pattern(m_MaxAllocSize, m_iThread, m_iNumaNode);
 				// Init heap
 				m_pHeap->f_InitThread();
 				m_pHeap->f_Free(m_pHeap->f_Alloc(1));
@@ -489,28 +456,35 @@ namespace
 				auto Checkout = m_pHeap->f_Checkout();
 				(void)Checkout;
 				
-				uint64 nIterations = 0;
-				int nPattern = Pattern.f_GetIdealAllocations() / 32;
-				{
-					DMibTestScopeMeasure(m_Measure, nIterations);
-					for (int i = 0; i < nPattern; ++i)
+				auto fInnerLoop = [pHeapPointer = m_pHeap, this]() inline_never 
 					{
-						for (mint i = 0; i < 32; ++i)
+						auto pHeap = pHeapPointer; 
+						t_CAllocPattern Pattern(m_MaxAllocSize, m_iThread, m_iNumaNode);
+						int nPattern = Pattern.f_GetIdealAllocations() / 32;
+						uint64 nIterations = 0;
 						{
-							Pattern.f_Next(*m_pHeap);
-							//Pattern.f_Next(*m_pHeap);
-							//Pattern.f_Next(*m_pHeap);
-							//Pattern.f_Next(*m_pHeap);
+							DMibTestScopeMeasure(m_Measure, nIterations);
+							for (int i = 0; i < nPattern; ++i)
+							{
+								for (mint i = 0; i < 32; ++i)
+								{
+									Pattern.f_Next(*pHeap);
+									//Pattern.f_Next(*m_pHeap);
+									//Pattern.f_Next(*m_pHeap);
+									//Pattern.f_Next(*m_pHeap);
+								}
+								//if (*m_pStop)
+								//	break;
+							}
+							nIterations = Pattern.f_Iterations(*pHeap);
 						}
-						//if (*m_pStop)
-						//	break;
-					}
-					nIterations = Pattern.f_Iterations(*m_pHeap);
-				}
-				Pattern.f_Cleanup(*m_pHeap);
 
-				if (Pattern.m_bFailed)
-					DMibTest(!DMibExpr(Pattern.m_bFailed))(ETestFlag_Aggregated);
+						if (Pattern.m_bFailed)
+							DMibTest(!DMibExpr(Pattern.m_bFailed))(ETestFlag_Aggregated);
+					}
+				;
+				
+				fInnerLoop();
 
 				return 0;
 			}
@@ -944,6 +918,13 @@ namespace
 #ifdef DMemoryManagerTestEnable_OSX
 			f_DoTest<CMalterlibMemoryOSX, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "OSX", _MaxAllocSize, _nThreads);
 #endif
+#ifdef DMemoryManagerTestEnable_StdLib
+			f_DoTest<CMalterlibMemoryStdLib, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "StdLib", _MaxAllocSize, _nThreads);
+#endif
+#ifdef DMemoryManagerTestEnable_Application
+			f_DoTest<CMalterlibMemoryApplication, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "Application", _MaxAllocSize, _nThreads);
+#endif
+			
 #ifdef DMemoryManagerTestEnable_LLAlloc
 			f_DoTest<CMalterlibMemoryLLAlloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "LLAlloc", _MaxAllocSize, _nThreads);
 #endif
@@ -1073,6 +1054,7 @@ namespace
 		{
 			f_DoPattern("Random", CAllocPattern_Random());
 			f_DoPattern("OneSize", CAllocPattern_OneSize());
+			f_DoPattern("OneSizeLinear", CAllocPattern_OneSizeLinear());
 			f_DoPattern("RandomAligned", CAllocPattern_RandomAlignment());
 		}
 

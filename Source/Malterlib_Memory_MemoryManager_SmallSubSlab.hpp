@@ -115,16 +115,23 @@ namespace NMib
 		}
 
 		template <typename t_CParams>
-		void TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_Free(void *_pAlloc, mint _iAlloc, bool &_bWasFull, bool &_bFullyFree)
+		inline_small ESmallState TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_Free(void *_pAlloc, mint _iAlloc)
 		{
 			uint16 iAlloc = m_Params.m_FirstFreeList;
-			_bWasFull = iAlloc == 0xFFFF;
+			ESmallState SmallState;
+			if (iAlloc == 0xFFFF)
+				SmallState = ESmallState_WasFull;
+			else if (m_Params.m_nAllocated == 1)
+				SmallState = ESmallState_IsFullyFree;
+			else
+				SmallState = ESmallState_None;
 
 			DMibFastCheck(_iAlloc < ((t_CParams::mc_SubSlabSize - fg_AlignUp(sizeof(CParams), m_Params.m_Alignment)) / m_Params.m_AllocSize));
 			uint16 *pAlloc = (uint16 *)(_pAlloc);
 			*pAlloc = iAlloc;
 			m_Params.m_FirstFreeList = _iAlloc;
-			_bFullyFree = (--m_Params.m_nAllocated) == 0;
+			--m_Params.m_nAllocated;
+			return SmallState;
 		}
 
 		/////////////////////////////////////////////
@@ -134,16 +141,6 @@ namespace NMib
 		template <typename t_CParams, mint t_AllocSize>
 		TCMemoryManagerSubSlab_SmallSize<t_CParams, t_AllocSize>::TCMemoryManagerSubSlab_SmallSize() : TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>(t_AllocSize)
 		{
-		}
-
-		template <typename t_CParams, mint t_AllocSize>
-		inline_small void TCMemoryManagerSubSlab_SmallSize<t_CParams, t_AllocSize>::f_Free(void *_pAlloc, bool &_bWasFull, bool &_bFullyFree)
-		{
-			uint8 *pArray = this->f_GetArray();
-			mint iAlloc2 = ((uint8 *)_pAlloc - pArray) / t_AllocSize;
-			DMibFastCheck(iAlloc2 < mc_NumAllocs);
-
-			TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_Free(_pAlloc, iAlloc2, _bWasFull, _bFullyFree);
 		}
 
 		/////////////////////////////////////////////
@@ -238,13 +235,20 @@ namespace NMib
 		}
 
 		template <typename t_CParams>
-		inline_small void TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>::f_Free(void *_pAlloc, bool &_bWasFull, bool &_bFullyFree)
+		inline_small ESmallState TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>::f_Free(void *_pAlloc)
 		{
 			uint8 *pArray = f_GetArray();
 			mint Offset = (uint8 *)_pAlloc - pArray;
 			uint8 iAllocRegion = Offset / 255;
 			uint16 iAllocNext = m_Params.m_FirstFreeList;
-			_bWasFull = iAllocNext == 0xFF;
+			
+			ESmallState SmallState;
+			if (iAllocNext == 0xFF)
+				SmallState = ESmallState_WasFull;
+			else if (m_Params.m_nAllocated == 1)
+				SmallState = ESmallState_IsFullyFree;
+			else
+				SmallState = ESmallState_None;
 
 			mint iAlloc2 = Offset - iAllocRegion * 255;
 			DMibFastCheck(iAlloc2 < 255);
@@ -256,7 +260,8 @@ namespace NMib
 				m_Params.m_FreeListsNext[iAllocRegion] = iAllocNext;
 				m_Params.m_FirstFreeList = iAllocRegion;
 			}
-			_bFullyFree = (--m_Params.m_nAllocated) == 0;
+			--m_Params.m_nAllocated;
+			return SmallState;
 		}
 
 	}

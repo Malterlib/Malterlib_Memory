@@ -7,10 +7,16 @@ namespace NMib
 {
 	namespace NMem
 	{
+		enum ESmallState
+		{
+			ESmallState_None
+			, ESmallState_WasFull 
+			, ESmallState_IsFullyFree 
+		};
+		
 		template <typename t_CParams>
 		struct TCMemoryManagerSubSlab_SmallSizeShared
 		{
-
 			struct CParams
 			{
 				CMemoryManagerSubSlab_SmallSizeLink m_Link;
@@ -26,7 +32,7 @@ namespace NMib
 
 			uint8 *f_GetArray();
 			void *f_Alloc(bool &_bFull);
-			void f_Free(void *_pAlloc, mint _iAlloc, bool &_bWasFull, bool &_bFullyFree);
+			ESmallState f_Free(void *_pAlloc, mint _iAlloc);
 			void f_OnAlloc(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
 			void f_OnFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
 			void f_OnFillFree(TCMemoryManagerArena<t_CParams> &_Arena);
@@ -54,17 +60,15 @@ namespace NMib
 			;
 
 			static_assert(						mc_SmallSlabIndex < TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabs, "Out of range");
-			static_assert(t_AllocSize != 1 ||	mc_SmallSlabIndex == 0, "");
+			static_assert(t_AllocSize != 1, "");
 			static_assert(t_AllocSize != 2 ||	mc_SmallSlabIndex == 1, "");
 			static_assert(t_AllocSize != 4 ||	mc_SmallSlabIndex == 2, "");
 			static_assert(t_AllocSize != 8 ||	mc_SmallSlabIndex == 3, "");
 			static_assert(t_AllocSize != 12 ||	mc_SmallSlabIndex == 4, "");
-
+			static_assert(t_AllocSize != 16 ||	mc_SmallSlabIndex == 5, "");
 
 			TCMemoryManagerSubSlab_SmallSize();
-			void f_Free(void *_pAlloc, bool &_bWasFull, bool &_bFullyFree);
 		};
-
 
 		template <typename t_CParams>
 		struct TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>
@@ -89,7 +93,7 @@ namespace NMib
 
 			uint8 *f_GetArray();
 			void *f_Alloc(bool &_bFull);
-			void f_Free(void *_pAlloc, bool &_bWasFull, bool &_bFullyFree);
+			ESmallState f_Free(void *_pAlloc);
 			void f_OnAlloc(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
 			void f_OnFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
 			void f_OnFillFree(TCMemoryManagerArena<t_CParams> &_Arena);

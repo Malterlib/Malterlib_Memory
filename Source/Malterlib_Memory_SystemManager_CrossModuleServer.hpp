@@ -20,7 +20,9 @@ namespace NMib
 	void CSystem::fp_CreateNonTrackedMemoryManager()
 	{
 #if DMibConfig_MemoryManager_CrossModule_Enable
+#if !defined(DMibMemoryOverrideDll)
 		DMibFastCheck(!fg_GetSys()->f_IsDll());
+#endif
 #endif
 		NMem::CCrossModuleImplementationExtra::fs_CreateNonTrackedMemoryManager(&NMem::g_CrossModule);
 	}
@@ -39,7 +41,7 @@ namespace NMib
 	{
 		NMem::CCrossModuleImplementationExtra::fs_CreateMemoryManager(&NMem::g_CrossModule);
 
-#ifndef DMibDynamicLibrary
+#if !defined(DMibDynamicLibrary) || defined(DMibMemoryOverrideDll)
 		g_CrossModuleInterfaceServer.f_Construct();
 		NSys::fg_Process_SetCrossModuleMemoryManagerInterface(&*g_CrossModuleInterfaceServer);
 #endif
@@ -104,108 +106,111 @@ namespace NMib
 	
 	namespace NMem
 	{
-		void *fg_Alloc(mint &_Size)
+#if defined(DMibMemoryOverrideDll)
+#	define DMibMemory_MemoryManagerExport module_export
+#else
+#	define DMibMemory_MemoryManagerExport module_export
+#endif
+		
+		void * DMibMemory_MemoryManagerExport fg_Alloc(mint &_Size)
 		{
 			return CCrossModuleImplementationExtra::fs_Alloc(&g_CrossModule, _Size);
 		}
 
-		void *fg_AllocNoSize(mint _Size)
+		void * DMibMemory_MemoryManagerExport fg_AllocNoSize(mint _Size)
 		{
 			return CCrossModuleImplementationExtra::fs_Alloc(&g_CrossModule, _Size);
 		}
 
-		void *fg_AllocInitZero(mint &_Size)
+		void * DMibMemory_MemoryManagerExport fg_AllocInitZero(mint &_Size)
 		{
 			return CCrossModuleImplementationExtra::fs_AllocInitZero(&g_CrossModule, _Size);
 		}
 		
-		
-		void *fg_AllocInitZeroNoSize(mint _Size)
+		void * DMibMemory_MemoryManagerExport fg_AllocInitZeroNoSize(mint _Size)
 		{
 			return CCrossModuleImplementationExtra::fs_AllocInitZero(&g_CrossModule, _Size);
 		}
 
-		void *fg_AllocAligned(mint &_Size, mint _Alignment)
+		void * DMibMemory_MemoryManagerExport fg_AllocAligned(mint &_Size, mint _Alignment)
 		{
 			return CCrossModuleImplementationExtra::fs_AllocAligned(&g_CrossModule, _Size, _Alignment);
 		}
 		
-		void fg_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
+		void  DMibMemory_MemoryManagerExport fg_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 		{
 			return CCrossModuleImplementationExtra::fs_AllocBatchInternal(&g_CrossModule, _Size, _Alignment, _Functor);
 		}		
 
-		void fg_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
-		{
-			return CCrossModuleImplementationExtra::fs_AllocBatchDebugInternal(&g_CrossModule, _Size, _Alignment, _Functor, _pFile, _Line, _Flags);
-		}
-		
 #		if DMibConfig_MalterlibMemoryManager_Debug
-			void *fg_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+			void * DMibMemory_MemoryManagerExport fg_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 			{
 				return CCrossModuleImplementationExtra::fs_AllocDebug(&g_CrossModule, _Size, _pFile, _Line, _Flags);
 			}
-			void *fg_AllocAlignedDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+			void * DMibMemory_MemoryManagerExport fg_AllocAlignedDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 			{
 				return CCrossModuleImplementationExtra::fs_AllocAlignedDebug(&g_CrossModule, _Size, _Alignment, _pFile, _Line, _Flags);
 			}
-			void *fg_ReallocDebug(void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+			void * DMibMemory_MemoryManagerExport fg_ReallocDebug(void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 			{
 				return CCrossModuleImplementationExtra::fs_ReallocDebug(&g_CrossModule, _pMemory, _Size, _pFile, _Line, _Flags);
 			}
-			void *fg_ResizeDebug(void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+			void * DMibMemory_MemoryManagerExport fg_ResizeDebug(void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 			{
 				return CCrossModuleImplementationExtra::fs_ResizeDebug(&g_CrossModule, _pMemory, _Size, _pFile, _Line, _Flags);
 			}
+			void  DMibMemory_MemoryManagerExport fg_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+			{
+				return CCrossModuleImplementationExtra::fs_AllocBatchDebugInternal(&g_CrossModule, _Size, _Alignment, _Functor, _pFile, _Line, _Flags);
+			}
 #		endif
 
-		void *fg_Realloc(void *_pMemory, mint &_Size)
+		void * DMibMemory_MemoryManagerExport fg_Realloc(void *_pMemory, mint &_Size)
 		{
 			return CCrossModuleImplementationExtra::fs_Realloc(&g_CrossModule, _pMemory, _Size);
 		}
 
-		void *fg_Resize(void *_pMemory, mint &_Size)
+		void * DMibMemory_MemoryManagerExport fg_Resize(void *_pMemory, mint &_Size)
 		{
 			return CCrossModuleImplementationExtra::fs_Resize(&g_CrossModule, _pMemory, _Size);
 		}
 
-		void fg_Free(void *_pMemory)
+		void DMibMemory_MemoryManagerExport fg_Free(void *_pMemory)
 		{
 			return CCrossModuleImplementationExtra::fs_Free(&g_CrossModule, _pMemory);
 		}
 
-		mint fg_Size(const void *_pMemory)
+		mint DMibMemory_MemoryManagerExport fg_Size(const void *_pMemory)
 		{
 			return CCrossModuleImplementationExtra::fs_Size(&g_CrossModule, _pMemory);
 		}
 
-		mint fg_TrySize(const void *_pMemory)
+		mint DMibMemory_MemoryManagerExport fg_TrySize(const void *_pMemory)
 		{
 			return CCrossModuleImplementationExtra::fs_TrySize(&g_CrossModule, _pMemory);
 		}
 
-		mint fg_SizePadded(mint _Size)
+		mint DMibMemory_MemoryManagerExport fg_SizePadded(mint _Size)
 		{
 			return CCrossModuleImplementationExtra::fs_SizePadded(&g_CrossModule, _Size);
 		}
 		
-		fp32 fg_Overhead(void const *_pMemory)
+		fp32 DMibMemory_MemoryManagerExport fg_Overhead(void const *_pMemory)
 		{
 			return CCrossModuleImplementationExtra::fs_Overhead(&g_CrossModule, _pMemory);
 		}
 		
-		mint fg_Granularity()
+		mint DMibMemory_MemoryManagerExport fg_Granularity()
 		{
 			return CCrossModuleImplementationExtra::fs_Granularity(&g_CrossModule);
 		}
 
-		bool fg_ContainsBlock(void const* _pPtr)
+		bool DMibMemory_MemoryManagerExport fg_ContainsBlock(void const* _pPtr)
 		{
 			DMibPDebugBreak; // Cannot be implemented efficiently
 			return false;
 		}
-
-		void fg_DemandProtection()
+		void DMibMemory_MemoryManagerExport fg_DemandProtection()
 		{
 			return CCrossModuleImplementationExtra::fs_DemandProtection(&g_CrossModule);
 		}

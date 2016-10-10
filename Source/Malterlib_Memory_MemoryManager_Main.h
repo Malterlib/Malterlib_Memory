@@ -96,6 +96,9 @@ namespace NMib
 			void f_CheckinManual();
 			void f_CheckinManualLight();
 
+			void f_LazyReturnCheckout();
+			void f_CanDoLazyCheckout();
+
 			void f_SetNumaNode(ENumaNode _NumaNode);
 			void *f_Alloc(mint & _Size);
 			void *f_AllocInline(mint & _Size);
@@ -145,10 +148,13 @@ namespace NMib
 			void f_SetMaxArenas(mint _nArenas);
 			
 		private:
-			void *fp_AllocSlowPath(mint & _Size);
 			void *fp_AllocAlignedSlowPath(mint & _Size, mint _Alignment);
 			void fp_AllocBatchSlowPath(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
+
+			void fp_FreeSlowPath(void * _pMemory);
 			
+			TCMemoryManagerNumaArena<t_CParams> *fp_GetAnyNumaArena();
+		
 			TCMemoryManagerArena<t_CParams> *fp_CheckoutHelper(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal);
 			TCMemoryManagerArena<t_CParams> *fp_CheckoutHelperSlowPath(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal);
 			TCMemoryManagerArena<t_CParams> *fp_CheckoutHelperWaitForCleanup(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal);
@@ -157,8 +163,10 @@ namespace NMib
 			TCMemoryManagerCheckoutLight<t_CParams> fp_Checkout(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal);
 			
 			void *fp_AllocWithCheckout(mint &_Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena);
+			void *fp_AllocWithTempCheckout(mint &_Size);
 
 			void fp_AllocBatchWithCheckout(mint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
+			void fp_AllocBatchWithTempCheckout(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
 
 			void fp_ProcessArenaMessages();
 			
@@ -170,6 +178,7 @@ namespace NMib
 			void f_TemporaryGetBack() override;
 			void f_TakeOwnership() override;
 			void f_RelinquishOwnership() override;
+			void f_GarbageCollectLocalArena(bool _bDecommit) override;
 
 		private:
 			template <typename t_CParams2>
@@ -227,6 +236,8 @@ namespace NMib
 			
 			mutable NThread::CMutualManyRead m_HeapChunksLock;
 			NContainer::TCMap<uint8 *, TCMemoryManagerArenaHeapChunk<t_CParams>, NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_HeapChunks;
+			
+			bool m_bCanDoLazyCheckout = false;
 		};
 	}
 }

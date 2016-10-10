@@ -3,7 +3,7 @@
 
 #include <Mib/Core/Core>
 
-#ifndef DMibConfig_OverrideSystemMalloc
+#if !defined(DMibConfig_OverrideSystemMalloc) && !defined(DMibMemoryOverrideDll)
 void fg_MalterlibMallocOverrideInit()
 {
 }

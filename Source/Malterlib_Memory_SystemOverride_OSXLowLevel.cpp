@@ -1,7 +1,7 @@
 // Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
-#if defined(DMibConfig_OverrideSystemMalloc) && defined(DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport) 
+#if (defined(DMibConfig_OverrideSystemMalloc) || defined(DMibMemoryOverrideDll)) && defined(DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport) 
 
 #include <Mib/Core/Core>
 #include <dlfcn.h>

@@ -305,7 +305,7 @@ namespace NMib
 	}
 }
 
-#if defined(DMibDynamicLibrary) && DMibConfig_MemoryManager_CrossModule_Enable
+#if defined(DMibDynamicLibrary) && DMibConfig_MemoryManager_CrossModule_Enable && !defined(DMibMemoryOverrideDll)
 	#include "Malterlib_Memory_SystemManager_CrossModuleClient.hpp"
 #else
 	#include "Malterlib_Memory_SystemManager_CrossModuleServer.hpp"

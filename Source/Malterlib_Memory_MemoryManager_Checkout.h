@@ -11,7 +11,7 @@ namespace NMib
 		
 		enum 
 		{
-			ECMemoryManagerReturnCheckoutVersion = 0x101
+			ECMemoryManagerReturnCheckoutVersion = 0x102
 		};
 		struct ICMemoryManagerReturnCheckout
 		{
@@ -23,6 +23,7 @@ namespace NMib
 			virtual void f_TemporaryGetBack() = 0;
 			virtual void f_TakeOwnership() = 0;
 			virtual void f_RelinquishOwnership() = 0;
+			virtual void f_GarbageCollectLocalArena(bool _bDecommit) = 0;
 		};
 		
 		class CMemoryManagerCheckout
@@ -42,6 +43,7 @@ namespace NMib
 			void f_TakeOwnership();
 			void f_RelinquishOwnership();
 			void f_CheckMessages();
+			void f_GarbageCollectLocalArena(bool _bDecommit);
 		};
 	}
 }

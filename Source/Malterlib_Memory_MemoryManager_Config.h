@@ -170,7 +170,6 @@ namespace NMib
 #define DMalterlibMemoryConstExprWorkaround constexpr
 #endif
 
-
 		template <mint t_nSizesPerLevel>
 		struct TCDefaultMemoryManagerParams
 		{
@@ -190,7 +189,7 @@ namespace NMib
 			static constexpr bool mc_bBackgroundCleanup = true;
 			static constexpr EDeferCleanup mc_DeferCleanup = (EDeferCleanup)(constenum(EDeferCleanup_Allocs) | constenum(EDeferCleanup_Commit) | constenum(EDeferCleanup_OneSizeBlocks));
 			
-			static constexpr uint32 mc_BackgroundCleanupLifetime = 10*1000; // The number of milleseconds that garbage should be kept before being cleaned up.
+			static constexpr uint32 mc_BackgroundCleanupLifetime = 2*1000; // The number of milleseconds that garbage should be kept before being cleaned up.
 			
 			static constexpr mint mc_NumSizeLevels = TCHighestBitSetCorrect<mint, mc_MaxSlabAllocSize>::mc_Value + 1;
 			static constexpr mint mc_NumNormalSizeLevels = mc_NumSizeLevels - 4;

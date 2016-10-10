@@ -87,15 +87,19 @@ namespace NMib
 		}		
 
 		template <typename t_CParams>
-		int64 TCMemoryManagerNumaArena<t_CParams>::f_GarbageCollect(int64 _Timestamp, bool _bDecommit, bool _bHasNumaArenasLock)
+		int64 TCMemoryManagerNumaArena<t_CParams>::f_GarbageCollect(int64 _Timestamp, bool _bDecommit, bool _bHasNumaArenasLock, bool _bForceCleanup)
 		{
 			int64 EarliestTimestamp = TCLimitsInt<int64>::mc_Max;
 			
 			bool bIncremental = _Timestamp != TCLimitsInt<int64>::mc_Max;
 			
 			auto &ThreadLocal = *m_pMemoryManager->m_LocalArena;
+			auto ReentrantScope = ThreadLocal.f_Reentrant();
 			
 			ENumaArenaCleanup RequestedCleanup = (ENumaArenaCleanup)m_RequestedCleanup.f_Exchange(0);
+			if (_bForceCleanup)
+				RequestedCleanup |= ENumaArenaCleanup_HeapGarbage | ENumaArenaCleanup_HeapCommit | ENumaArenaCleanup_ProcessMessages | ENumaArenaCleanup_FreeSlabs;
+			
 			ENumaArenaCleanup NewCleanup = ENumaArenaCleanup_None;
 			if (RequestedCleanup & (ENumaArenaCleanup_HeapGarbage | ENumaArenaCleanup_HeapCommit))
 			{
@@ -135,78 +139,84 @@ namespace NMib
 
 			{
 				DMibLock(m_ArenasLock);
-				for (auto iArena = m_ArenasNeedCleanup.f_GetIterator(); iArena; )
-				{
-					auto Advance
-						= fg_OnScopeExit
-						(
-							[&]()
-							{
-								++iArena;
-							}
-						)
-					;
-					
-					auto pArena = &*iArena;
-					if (pArena != ThreadLocal.m_pArena)
+				auto fProcessArena = [&](TCMemoryManagerArena<t_CParams> &_Arena) -> bool 
 					{
-						if (bIncremental)
+						bool bRemove = false;
+						auto pArena = &_Arena;
+						if (pArena != ThreadLocal.m_pArena)
 						{
-							if (pArena->m_Locked.f_FetchOr(EArenaLockFlag_Cleanup, NAtomic::EMemoryOrder_Acquire) != EArenaLockFlag_None)
+							if (bIncremental)
 							{
-								EarliestTimestamp = fg_Min(EarliestTimestamp, _Timestamp); // Directly request another go
-								continue; // Already locked by some other thread, just leave it be
-							}
-						}
-						else
-						{
-							DMibUnlock(m_ArenasLock);
-							if (_bHasNumaArenasLock)
-							{
-								DMibUnlock(m_pMemoryManager->m_NumaArenasLock);
-								while (pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire) != EArenaLockFlag_None)
-									NSys::fg_Thread_SmallestSleep();
+								auto Locked = pArena->m_Locked.f_FetchOr(EArenaLockFlag_Cleanup, NAtomic::EMemoryOrder_Acquire);
+								if (Locked != EArenaLockFlag_None)
+								{
+									EarliestTimestamp = fg_Min(EarliestTimestamp, _Timestamp); // Directly request another go
+									return bRemove; // Already locked by some other thread, just leave it be
+								}
 							}
 							else
 							{
-								while (pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire) != EArenaLockFlag_None)
-									NSys::fg_Thread_SmallestSleep();
+								DMibUnlock(m_ArenasLock);
+								if (_bHasNumaArenasLock)
+								{
+									DMibUnlock(m_pMemoryManager->m_NumaArenasLock);
+									while (pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire) != EArenaLockFlag_None)
+										NSys::fg_Thread_SmallestSleep();
+								}
+								else
+								{
+									while (pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire) != EArenaLockFlag_None)
+										NSys::fg_Thread_SmallestSleep();
+								}
 							}
 						}
-					}
-					
-					
-					int64 ArenaEarliestTimestamp = TCLimitsInt<int64>::mc_Max;
-					
-
-					ArenaEarliestTimestamp = fg_Min(EarliestTimestamp, pArena->f_GarbageCollect(RequestedCleanup, _Timestamp));
-					if (_bDecommit)
-					{
-						ArenaEarliestTimestamp = fg_Min(EarliestTimestamp, pArena->f_DecommitDeferred(_Timestamp));
 						
-						if (ArenaEarliestTimestamp == TCLimitsInt<int64>::mc_Max)
+						int64 ArenaEarliestTimestamp = TCLimitsInt<int64>::mc_Max;
+						
+						ArenaEarliestTimestamp = fg_Min(EarliestTimestamp, pArena->f_GarbageCollect(RequestedCleanup, _Timestamp));
+						if (_bDecommit)
 						{
-							// Fully garbage collected, remove from list
-							Advance.f_Clear();
-							iArena.f_Remove();
-							pArena->m_bRequestedCleanup = false;
+							ArenaEarliestTimestamp = fg_Min(EarliestTimestamp, pArena->f_DecommitDeferred(_Timestamp));
+							
+							if (ArenaEarliestTimestamp == TCLimitsInt<int64>::mc_Max)
+							{
+								// Fully garbage collected, remove from list
+								bRemove = true;
+								pArena->m_bRequestedCleanup = false;
+							}
+						}				
+						EarliestTimestamp = fg_Min(EarliestTimestamp, ArenaEarliestTimestamp);
+						
+						if (pArena->m_bWantNumaFreeSlabsCleanup)
+						{
+							pArena->m_bWantNumaFreeSlabsCleanup = false;
+							if (!(RequestedCleanup & ENumaArenaCleanup_FreeSlabs))
+								RequestedCleanup |= ENumaArenaCleanup_FreeSlabs;
 						}
-					}				
-					EarliestTimestamp = fg_Min(EarliestTimestamp, ArenaEarliestTimestamp);
-					
-					if (pArena->m_bWantNumaFreeSlabsCleanup)
-					{
-						pArena->m_bWantNumaFreeSlabsCleanup = false;
-						if (!(RequestedCleanup & ENumaArenaCleanup_FreeSlabs))
-							RequestedCleanup |= ENumaArenaCleanup_FreeSlabs;
-					}
 
-					if (pArena != ThreadLocal.m_pArena)
-					{
-						auto LockResult = pArena->m_Locked.f_Exchange(EArenaLockFlag_None, NAtomic::EMemoryOrder_Release);
-						if (LockResult & EArenaLockFlag_Waiting)
-							f_ArenaAvailable(pArena);
+						if (pArena != ThreadLocal.m_pArena)
+						{
+							auto LockResult = pArena->m_Locked.f_Exchange(EArenaLockFlag_None, NAtomic::EMemoryOrder_Release);
+							if (LockResult & EArenaLockFlag_Waiting)
+								f_ArenaAvailable(pArena);
+						}
+						return bRemove;
 					}
+				;
+				if (!_bForceCleanup)
+				{
+					for (auto iArena = m_ArenasNeedCleanup.f_GetIterator(); iArena; )
+					{
+						if (fProcessArena(*iArena))
+							iArena.f_Remove();
+						else
+							++iArena;
+					}
+				}
+				else
+				{
+					for (auto iArena = m_Arenas.f_GetIterator(); iArena; ++iArena)
+						fProcessArena(*iArena);
 				}
 			}
 			
@@ -267,6 +277,7 @@ namespace NMib
 		bool TCMemoryManagerNumaArena<t_CParams>::f_ProcessArenaMessages(bool _bIncremental, bool & _oDeferred, bool _bHasNumaArenasLock)
 		{
 			auto &ThreadLocal = *m_pMemoryManager->m_LocalArena;
+			DMibFastCheck(ThreadLocal.m_Reentrant);
 			
 			bool bOneProcessed = false;
 			bool bProcessed = true;
@@ -365,9 +376,51 @@ namespace NMib
 		template <typename t_CParams>
 		TCMemoryManagerThreadLocal<t_CParams>::~TCMemoryManagerThreadLocal()
 		{
+			DMibFastCheck(!m_Reentrant);
+			
+			if (m_bOwnArena && m_pPreferredArena)
+			{
+				mint Owned = m_pPreferredArena->m_pNextArena.f_FetchAnd(~mint(1));
+				DMibFastCheck(Owned & 1);
+				(void)Owned;
+			}
+			
+			if (m_bLazyCheckout)
+			{
+				m_bLazyCheckout = false;
+				f_ReturnCheckout();
+			}
+			
 			DMibFastCheck(!m_pArena); // No arenas should be checked out here
 		}
 
+		template <typename t_CParams>
+		inline_always TCMemoryManagerThreadLocal<t_CParams>::CRentrantScope::CRentrantScope(TCMemoryManagerThreadLocal *_pThreadLocal)
+			: m_pThreadLocal(_pThreadLocal)
+		{
+			++_pThreadLocal->m_Reentrant;
+		}
+
+		template <typename t_CParams>
+		inline_always TCMemoryManagerThreadLocal<t_CParams>::CRentrantScope::~CRentrantScope()
+		{
+			DMibFastCheck(m_pThreadLocal->m_Reentrant);
+			--m_pThreadLocal->m_Reentrant;
+		}
+
+		template <typename t_CParams>
+		inline_always TCMemoryManagerThreadLocal<t_CParams>::CRentrantScope::CRentrantScope(CRentrantScope &&_Other)
+			: m_pThreadLocal(_Other.m_pThreadLocal) 
+		{
+			++m_pThreadLocal->m_Reentrant;
+		}
+		
+		template <typename t_CParams>
+		inline_always auto TCMemoryManagerThreadLocal<t_CParams>::f_Reentrant() -> CRentrantScope
+		{
+			return CRentrantScope(this);
+		}
+		
 		template <typename t_CParams>
 		void TCMemoryManagerThreadLocal<t_CParams>::f_ReturnCheckout()
 		{
@@ -419,16 +472,31 @@ namespace NMib
 		{
 			DMibFastCheck(m_pArena);
 			DMibFastCheck(!(m_pArena->m_pNextArena.f_Load() & 1));
-
-			m_pArena->m_pNextArena.f_FetchOr(1);
+			if ((m_pArena->m_pNextArena.f_FetchOr(1) & 1) == 0)
+				m_bOwnArena = true;
 		}
 
 		template <typename t_CParams>
 		void TCMemoryManagerThreadLocal<t_CParams>::f_RelinquishOwnership()
 		{
 			DMibFastCheck(m_pArena->m_pNextArena.f_Load() & 1);
+			if (m_pArena->m_pNextArena.f_FetchAnd(mint(~mint(1))) & 1)
+				m_bOwnArena = false;
+		}
 
-			m_pArena->m_pNextArena.f_FetchAnd(mint(~mint(1)));
+		template <typename t_CParams>
+		void TCMemoryManagerThreadLocal<t_CParams>::f_GarbageCollectLocalArena(bool _bDecommit)
+		{
+			m_pArena->fp_GarbageCollectFull();
+
+			if (_bDecommit)
+			{
+				ENumaArenaCleanup RequestedCleanup = ENumaArenaCleanup_None;
+				m_pArena->f_GarbageCollect(RequestedCleanup, 0);
+				m_pArena->f_DecommitDeferred(0);
+				if (RequestedCleanup)
+					m_pNumaArena->f_RequestCleanup(RequestedCleanup);
+			}
 		}
 	}
 }

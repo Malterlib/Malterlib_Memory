@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -131,6 +131,9 @@ namespace NMib
 		{
 			DMibFastCheck(m_NumaArenasLock.f_OwnsLock());
 
+			auto &ThreadLocal = *m_LocalArena;
+			auto ReentrantScope = ThreadLocal.f_Reentrant();
+
 			bool bProcessed = true;
 			while (bProcessed)
 			{
@@ -148,6 +151,7 @@ namespace NMib
 		void TCMemoryManager<t_CParams>::fp_EnumArenas(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArena<t_CParams> *)> const &_Functor, bool _bCleanup)
 		{
 			auto &ThreadLocal = *m_LocalArena;
+			auto ReentrantScope = ThreadLocal.f_Reentrant();
 
 			DMibLock(m_NumaArenasLock);
 			if (_bCleanup)
@@ -234,7 +238,7 @@ namespace NMib
 			DMibLock(m_NumaArenasLock);
 			for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 			{
-				while (iNumaArena->f_GarbageCollect(TCLimitsInt<int64>::mc_Max, _bDecommit, true) != TCLimitsInt<int64>::mc_Max)
+				while (iNumaArena->f_GarbageCollect(TCLimitsInt<int64>::mc_Max, _bDecommit, true, false) != TCLimitsInt<int64>::mc_Max)
 					;
 			}
 			
@@ -368,18 +372,54 @@ namespace NMib
 		template <typename t_CParams>
 		inline_never void *TCMemoryManager<t_CParams>::fp_AllocWithCheckout(mint &_Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena)
 		{
+			if (unlikely(m_bCanDoLazyCheckout))
+			{
+				++fp_CheckoutHelper(_LocalArena)->m_CheckoutCount;
+				_LocalArena.m_bLazyCheckout = true;
+				return f_AllocAligned(_Size, 1);
+			}
 			auto Checkout = fp_Checkout(_LocalArena);
+			return f_AllocAligned(_Size, 1);
+		}
 
-			return _LocalArena.m_pArena->f_Alloc(_Size);
+		template <typename t_CParams>
+		inline_never void *TCMemoryManager<t_CParams>::fp_AllocWithTempCheckout(mint &_Size)
+		{
+			TCMemoryManagerThreadLocal<t_CParams> TempArena{fp_GetAnyNumaArena()};
+			fp_CheckoutHelper(TempArena);
+			auto Cleanup = g_OnScopeExit > [&]
+				{
+					TempArena.f_ReturnCheckoutLight();
+				}
+			;
+			return TempArena.m_pArena->f_Alloc(_Size);
 		}
 		
 		template <typename t_CParams>
 		inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchWithCheckout(mint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 		{
+			if (unlikely(m_bCanDoLazyCheckout))
+			{
+				++fp_CheckoutHelper(_LocalArena)->m_CheckoutCount;
+				_LocalArena.m_bLazyCheckout = true;
+				return f_AllocBatch(_Size, 1, _Functor); 
+			}
 			auto Checkout = fp_Checkout(_LocalArena);
-			return _LocalArena.m_pArena->f_AllocBatch(_Size, _Functor);
+			return f_AllocBatch(_Size, 1, _Functor);
 		}
 		
+		template <typename t_CParams>
+		inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchWithTempCheckout(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
+		{
+			TCMemoryManagerThreadLocal<t_CParams> TempArena{fp_GetAnyNumaArena()};
+			fp_CheckoutHelper(TempArena);
+			auto Cleanup = g_OnScopeExit > [&]
+				{
+					TempArena.f_ReturnCheckoutLight();
+				}
+			;
+			TempArena.m_pArena->f_AllocBatch(_Size, _Functor);
+		}
 
 		template <typename t_CParams>
 		inline_never void *TCMemoryManager<t_CParams>::f_Realloc(void * _pMemory, mint &_Size)
@@ -398,11 +438,11 @@ namespace NMib
 				if (NewSize == Size)
 					return _pMemory;
 				
-				void *pMemory = f_Alloc(_Size);
+				void *pMemory = f_AllocAligned(_Size, 1);
 				f_Free(_pMemory);
 				return pMemory;
 			}
-			return f_Alloc(_Size);
+			return f_AllocAligned(_Size, 1);
 		}
 		
 		template <typename t_CParams>
@@ -421,7 +461,7 @@ namespace NMib
 				if (NewSize == Size)
 					return _pMemory;
 
-				void *pMemory = f_Alloc(_Size);
+				void *pMemory = f_AllocAligned(_Size, 1);
 
 				fg_MemCopy(pMemory, _pMemory, fg_Min(_Size, Size));
 				
@@ -430,7 +470,7 @@ namespace NMib
 				
 				return pMemory;
 			}
-			return f_Alloc(_Size);
+			return f_AllocAligned(_Size, 1);
 		}
 		
 		template <typename t_CParams>
@@ -638,37 +678,22 @@ namespace NMib
 		}
 		
 		template <typename t_CParams>
-		inline_never void *TCMemoryManager<t_CParams>::f_Alloc(mint &_Size)
+		inline_always void *TCMemoryManager<t_CParams>::f_Alloc(mint &_Size)
 		{
-			return f_AllocInline(_Size);
+			return f_AllocAligned(_Size, 1);
 		}
 
 		template <typename t_CParams>
-		inline_never void *TCMemoryManager<t_CParams>::fp_AllocSlowPath(mint & _Size)
+		TCMemoryManagerNumaArena<t_CParams> *TCMemoryManager<t_CParams>::fp_GetAnyNumaArena()
 		{
-			auto &LocalArena = (*m_LocalArena);
-			if (_Size <= t_CParams::mc_MaxHeapAllocSize)
-			{
-				return LocalArena.m_pNumaArena->m_Heap.f_Alloc(_Size);
-			}
-
-			auto pRet = m_Allocator.f_Alloc(_Size, t_CParams::mc_AllocationFlags, LocalArena.m_pNumaArena->m_NumaNode);
-			if (this->mc_EnableCallbacks)
-				this->f_OnAlloc((uint8 *)pRet, _Size);
-			return pRet;
+			DMibLock(m_NumaArenasLock);
+			return m_NumaArenas.f_FindSmallest();
 		}
-
+		
 		template <typename t_CParams>
 		inline_always void *TCMemoryManager<t_CParams>::f_AllocInline(mint &_Size)
 		{
-			if (likely(_Size <= t_CParams::mc_MaxSlabAllocSize))
-			{
-				auto &LocalArena = (*m_LocalArena);
-				if (likely(LocalArena.m_pArena))
-					return LocalArena.m_pArena->f_Alloc(_Size);
-				return fp_AllocWithCheckout(_Size, LocalArena);
-			}
-			return fp_AllocSlowPath(_Size);
+			return f_AllocAligned(_Size, 1);
 		}
 
 		template <typename t_CParams>
@@ -680,13 +705,39 @@ namespace NMib
 		template <typename t_CParams>
 		inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchSlowPath(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 		{
-			auto &LocalArena = (*m_LocalArena);
+			auto *pLocalArena = m_LocalArena.f_TryGet();
+			if (_Size <= t_CParams::mc_MaxSlabAllocSize)
+			{
+				if (unlikely(!pLocalArena))
+				{
+					if (unlikely(fg_GetSys()->f_ThreadDestroyed()))
+						return fp_AllocBatchWithTempCheckout(_Size, _Functor);
+					pLocalArena = &(*m_LocalArena);
+				}
+				auto &LocalArena = *pLocalArena;
+				auto ReentrantScope = LocalArena.f_Reentrant();
+				if (LocalArena.m_pArena)
+					return LocalArena.m_pArena->f_AllocBatch(_Size, _Functor);
+				return fp_AllocBatchWithCheckout(_Size, LocalArena, _Functor);
+			}
+			
+			TCMemoryManagerNumaArena<t_CParams> *pNumaArena;
+			if (unlikely(!pLocalArena))
+			{
+				if (unlikely(fg_GetSys()->f_ThreadDestroyed()))
+					pNumaArena = fp_GetAnyNumaArena();
+				else
+					pNumaArena = m_LocalArena->m_pNumaArena; 
+			}
+			else
+				pNumaArena = pLocalArena->m_pNumaArena;
+
 			if (_Size <= t_CParams::mc_MaxHeapAllocSize)
 			{
 				while (true)
 				{
 					mint Size = _Size;
-					auto pAlloc = LocalArena.m_pNumaArena->m_Heap.f_AllocAligned(Size, _Alignment);
+					auto pAlloc = pNumaArena->m_Heap.f_AllocAligned(Size, _Alignment);
 					if (!_Functor(pAlloc, Size))
 						break;
 				}				
@@ -695,7 +746,7 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
-				auto pRet = m_Allocator.f_AllocAligned(_Size, _Alignment, t_CParams::mc_AllocationFlags, LocalArena.m_pNumaArena->m_NumaNode);
+				auto pRet = m_Allocator.f_AllocAligned(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
 				if (this->mc_EnableCallbacks)
 					this->f_OnAlloc((uint8 *)pRet, _Size);
 				if (!_Functor(pRet, Size))
@@ -703,16 +754,39 @@ namespace NMib
 			}				
 		}
 		
-
 		template <typename t_CParams>
 		inline_never void *TCMemoryManager<t_CParams>::fp_AllocAlignedSlowPath(mint & _Size, mint _Alignment)
 		{
-			auto &LocalArena = (*m_LocalArena);
-			if (_Size <= t_CParams::mc_MaxHeapAllocSize)
+			auto *pLocalArena = m_LocalArena.f_TryGet();
+			if (_Size <= t_CParams::mc_MaxSlabAllocSize)
 			{
-				return LocalArena.m_pNumaArena->m_Heap.f_AllocAligned(_Size, _Alignment);
+				if (unlikely(!pLocalArena))
+				{
+					if (unlikely(fg_GetSys()->f_ThreadDestroyed()))
+						return fp_AllocWithTempCheckout(_Size);
+					pLocalArena = &(*m_LocalArena);
+				}
+				auto &LocalArena = *pLocalArena;
+				auto ReentrantScope = LocalArena.f_Reentrant();
+				if (LocalArena.m_pArena)
+					return LocalArena.m_pArena->f_Alloc(_Size);
+				return fp_AllocWithCheckout(_Size, LocalArena);
 			}
-			auto pRet = m_Allocator.f_AllocAligned(_Size, _Alignment, t_CParams::mc_AllocationFlags, LocalArena.m_pNumaArena->m_NumaNode);
+			
+			TCMemoryManagerNumaArena<t_CParams> *pNumaArena;
+			if (unlikely(!pLocalArena))
+			{
+				if (unlikely(fg_GetSys()->f_ThreadDestroyed()))
+					pNumaArena = fp_GetAnyNumaArena();
+				else
+					pNumaArena = m_LocalArena->m_pNumaArena; 
+			}
+			else
+				pNumaArena = pLocalArena->m_pNumaArena;
+			
+			if (_Size <= t_CParams::mc_MaxHeapAllocSize)
+				return pNumaArena->m_Heap.f_AllocAligned(_Size, _Alignment);
+			auto pRet = m_Allocator.f_AllocAligned(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
 			if (this->mc_EnableCallbacks)
 				this->f_OnAlloc((uint8 *)pRet, _Size);
 			return pRet;
@@ -723,14 +797,19 @@ namespace NMib
 		{
 			_Size = fg_AlignUp(_Size, _Alignment);
 			
-			if (_Size <= t_CParams::mc_MaxSlabAllocSize)
+			if (likely(_Size <= t_CParams::mc_MaxSlabAllocSize))
 			{
-				auto &LocalArena = (*m_LocalArena);
-				if (LocalArena.m_pArena)
+				auto *pLocalArena = m_LocalArena.f_TryGet();
+				if (unlikely(!pLocalArena))
+					goto l_SlowPath;
+				auto &LocalArena = *pLocalArena;
+				auto ReentrantScope = LocalArena.f_Reentrant();
+				if (likely(LocalArena.m_pArena))
 					return LocalArena.m_pArena->f_Alloc(_Size);
 				return fp_AllocWithCheckout(_Size, LocalArena);
 			}
 			
+		l_SlowPath:
 			return fp_AllocAlignedSlowPath(_Size, _Alignment);
 		}
 		
@@ -739,14 +818,19 @@ namespace NMib
 		{
 			_Size = fg_AlignUp(_Size, _Alignment);
 			
-			if (_Size <= t_CParams::mc_MaxSlabAllocSize)
+			if (likely(_Size <= t_CParams::mc_MaxSlabAllocSize))
 			{
-				auto &LocalArena = (*m_LocalArena);
+				auto *pLocalArena = m_LocalArena.f_TryGet();
+				if (unlikely(!pLocalArena))
+					goto l_SlowPath;
+				auto &LocalArena = *pLocalArena;
+				auto ReentrantScope = LocalArena.f_Reentrant();
 				if (LocalArena.m_pArena)
 					return LocalArena.m_pArena->f_AllocBatch(_Size, _Functor);
 				return fp_AllocBatchWithCheckout(_Size, LocalArena, _Functor);
 			}
 			
+		l_SlowPath:
 			return fp_AllocBatchSlowPath(_Size, _Alignment, _Functor);
 		}
 
@@ -768,23 +852,32 @@ namespace NMib
 		}
 
 		template <typename t_CParams>
-		inline_always void TCMemoryManager<t_CParams>::f_FreeInline(void *_pMemory)
+		inline_never void TCMemoryManager<t_CParams>::fp_FreeSlowPath(void * _pMemory)
 		{
-			if (!_pMemory)
-				return;
-
 			uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 			CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-			if (pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic))
+			if (likely(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic)))
 			{
-				auto &LocalArena = *m_LocalArena;
-
 				TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
+				
+				auto *pLocalArena = m_LocalArena.f_TryGet();
+				if (unlikely(!pLocalArena))
+				{
+					if (unlikely(fg_GetSys()->f_ThreadDestroyed()))
+					{
+						pSlab->m_pArena->f_FreeOtherThread(_pMemory, pSlab, nullptr);
+						return;
+					}
+					pLocalArena = &(*m_LocalArena);
+				}
+					
+				auto &LocalArena = *pLocalArena;
+				auto ReentrantScope = LocalArena.f_Reentrant();
 				if (pSlab->m_pArena == LocalArena.m_pArena)
 					pSlab->m_pArena->f_FreeThisThread(_pMemory, pSlab);
 				else
-					pSlab->m_pArena->f_FreeOtherThread(_pMemory, pSlab, LocalArena);
+					pSlab->m_pArena->f_FreeOtherThread(_pMemory, pSlab, &LocalArena);
 				return;
 			}
 			
@@ -805,6 +898,35 @@ namespace NMib
 			if (this->mc_EnableCallbacks)
 				this->f_OnFree((uint8 *)_pMemory);
 			m_Allocator.f_Free(_pMemory);
+		}
+
+		template <typename t_CParams>
+		inline_always void TCMemoryManager<t_CParams>::f_FreeInline(void *_pMemory)
+		{
+			if (!_pMemory)
+				return;
+
+			uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
+			CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
+
+			if (likely(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic)))
+			{
+				TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
+				
+				auto *pLocalArena = m_LocalArena.f_TryGet();
+				if (unlikely(!pLocalArena))
+					goto l_SlowPath;
+				auto &LocalArena = *pLocalArena;
+				auto ReentrantScope = LocalArena.f_Reentrant();
+				if (pSlab->m_pArena == LocalArena.m_pArena)
+					pSlab->m_pArena->f_FreeThisThread(_pMemory, pSlab);
+				else
+					pSlab->m_pArena->f_FreeOtherThread(_pMemory, pSlab, &LocalArena);
+				return;
+			}
+			
+		l_SlowPath:
+			fp_FreeSlowPath(_pMemory);
 		}
 
 		///
@@ -901,7 +1023,7 @@ namespace NMib
 							return pArena;
 						}
 						pArena = (TCMemoryManagerArena<t_CParams> *)(NextArena & mint(~mint(1)));
-					}				
+					}
 				}
 				
 				
@@ -954,7 +1076,6 @@ namespace NMib
 				++ThreadLocal.m_pArena->m_CheckoutCount;
 			else
 				++fp_CheckoutHelper(ThreadLocal)->m_CheckoutCount;
-			
 		}
 		
 		template <typename t_CParams>
@@ -973,6 +1094,25 @@ namespace NMib
 			DMibFastCheck(ThreadLocal.m_pArena);
 			
 			ThreadLocal.f_ReturnCheckoutLight();
+		}
+		
+		template <typename t_CParams>
+		void TCMemoryManager<t_CParams>::f_LazyReturnCheckout()
+		{
+			if (unlikely(!m_LocalArena.f_IsValid()))
+				return;
+			auto &ThreadLocal = *m_LocalArena;
+			if (ThreadLocal.m_bLazyCheckout && !ThreadLocal.m_Reentrant)
+			{
+				ThreadLocal.m_bLazyCheckout = false;
+				ThreadLocal.f_ReturnCheckout();
+			}
+		}
+
+		template <typename t_CParams>
+		void TCMemoryManager<t_CParams>::f_CanDoLazyCheckout()
+		{
+			m_bCanDoLazyCheckout = true;
 		}
 
 		template <typename t_CParams>
@@ -1009,6 +1149,13 @@ namespace NMib
 		{
 			auto &ThreadLocal = *m_LocalArena;
 			ThreadLocal.f_RelinquishOwnership();
+		}
+		
+		template <typename t_CParams>
+		void TCMemoryManager<t_CParams>::f_GarbageCollectLocalArena(bool _bDecommit)
+		{
+			auto &ThreadLocal = *m_LocalArena;
+			ThreadLocal.f_GarbageCollectLocalArena(_bDecommit);
 		}
 
 		template <typename t_CParams>

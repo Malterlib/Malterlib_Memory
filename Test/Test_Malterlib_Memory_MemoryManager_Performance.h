@@ -21,6 +21,10 @@
 #include "../../Memory/Source/Malterlib_Memory_Heap.h"
 #endif
 
+#ifdef DMemoryManagerTestEnable_Application
+#include <Mib/Core/Core>
+#endif
+
 #ifdef DMemoryManagerTestEnable_MalterlibNew
 #include <Mib/Memory/MemoryManager>
 #include <Mib/Memory/MemoryManagerDebug>
@@ -1363,12 +1367,9 @@ namespace
 #ifdef DMemoryManagerTestEnable_StdLib
 	class CMalterlibMemoryStdLib
 	{
-		NAllocator_DlMallocMultiThreaded::mspace m_Heap;
 	public:
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
 		{
-			if (_bAlignment)
-				return false;
 			return true;
 		}
 
@@ -1390,7 +1391,9 @@ namespace
 
 		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
 		{
-			return nullptr;
+			void *pPtr;
+			posix_memalign(&pPtr, _Alignment, _Size);
+			return pPtr;
 		}
 
 		inline_small void *f_Alloc(mint _Size)
@@ -1417,6 +1420,60 @@ namespace
 	};
 #endif
 
+#ifdef DMemoryManagerTestEnable_Application
+	class CMalterlibMemoryApplication
+	{
+	public:
+		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		{
+			return true;
+		}
+
+		void f_SetNumaNode(NMib::ENumaNode _Node)
+		{
+		}
+
+		bint f_Init(mint _nThreads, mint _MaxSize)
+		{
+			return true;
+		}
+		void f_InitThread()
+		{
+		}
+		int f_Checkout()
+		{
+			return 0;
+		}
+
+		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
+		{
+			return NMib::NMem::fg_AllocAligned(_Size, _Alignment);
+		}
+
+		inline_small void *f_Alloc(mint _Size)
+		{
+			return NMib::NMem::fg_Alloc(_Size);
+		}
+
+		inline_small void f_Free(void *_pMem)
+		{
+			return NMib::NMem::fg_Free(_pMem);
+		}
+
+		void f_Clear()
+		{
+		}
+		void f_CheckHeap()
+		{
+		}
+		NMib::NStr::CStr GetDesc()
+		{
+			NMib::NStr::CStr Str = "Application";
+			return Str;
+		}
+	};
+#endif
+	
 #ifdef DMemoryManagerTestEnable_WindowsDefault
 	template <bint t_bClear, bint t_bMultiThreaded>
 	class TCMalterlibMemoryWindows

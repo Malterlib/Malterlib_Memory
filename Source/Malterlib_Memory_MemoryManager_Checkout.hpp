@@ -68,5 +68,19 @@ namespace NMib
 				m_pThreadLocal->f_TemporaryGetBack();
 			}
 		}
+
+		inline void CMemoryManagerCheckout::f_GarbageCollectLocalArena(bool _bDecommit)
+		{
+			if (m_pThreadLocal)
+			{
+				if (m_pThreadLocal->m_Version < 0x102)
+				{
+					m_pThreadLocal->f_TemporaryReturn();
+					m_pThreadLocal->f_TemporaryGetBack();
+					return;
+				}
+				m_pThreadLocal->f_GarbageCollectLocalArena(_bDecommit);
+			}
+		}
 	}
 }

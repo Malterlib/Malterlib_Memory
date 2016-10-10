@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -68,7 +68,7 @@ namespace NMib
 				m_pNumaArena->f_ArenaAvailable(this);
 			if ((LockResult & EArenaLockFlag_Cleanup) || bNeedCleanup)
 				m_pNumaArena->f_OnNeedCleanup();
-		}		
+		}
 		
 		template <typename t_CParams>
 		TCMemoryManagerArena<t_CParams>::~TCMemoryManagerArena()
@@ -145,10 +145,10 @@ namespace NMib
 		{
 			//fp_CheckMessages();
 			void * pAlloc;
-			if (_Size <= mc_SmallSizeSlabsLargestSize)
-				pAlloc = fp_AllocSmallSize(_Size);
-			else
+			if (_Size > mc_SmallSizeSlabsLargestSize)
 				pAlloc = fp_AllocNormal(_Size);
+			else
+				pAlloc = fp_AllocSmallSize(_Size);
 
 			if (unlikely(m_bWantNumaFreeSlabsCleanup))
 				fp_CheckCleanupNumaFree();
@@ -158,10 +158,10 @@ namespace NMib
 		template <typename t_CParams>
 		void TCMemoryManagerArena<t_CParams>::f_AllocBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 		{
-			if (_Size <= mc_SmallSizeSlabsLargestSize)
-				fp_AllocSmallSizeBatch(_Size, _Functor);
-			else
+			if (_Size > mc_SmallSizeSlabsLargestSize)
 				fp_AllocNormalBatch(_Size, _Functor);
+			else
+				fp_AllocSmallSizeBatch(_Size, _Functor);
 
 			if (unlikely(m_bWantNumaFreeSlabsCleanup))
 				fp_CheckCleanupNumaFree();
@@ -183,14 +183,13 @@ namespace NMib
 		}
 
 		template <typename t_CParams>
-		inline_small void TCMemoryManagerArena<t_CParams>::f_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena)
+		inline_small void TCMemoryManagerArena<t_CParams>::f_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
 		{
-			fp_FreeOtherThread(_pMemory, _pSlab, _LocalArena);
+			fp_FreeOtherThread(_pMemory, _pSlab, _pLocalArena);
 		}
 
-
 		template <typename t_CParams>
-		inline_never void TCMemoryManagerArena<t_CParams>::fp_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena)
+		inline_never void TCMemoryManagerArena<t_CParams>::fp_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
 		{
 			auto SubSlab = mint((uint8 *)_pMemory - _pSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
 
@@ -216,10 +215,18 @@ namespace NMib
 #endif
 				{
 					TCMemoryManagerCheckoutLight<t_CParams> Checkout(nullptr);
-					if (_LocalArena.m_pArena == nullptr)
+					if (_pLocalArena && _pLocalArena->m_pArena == nullptr)
 					{
-						Checkout = m_pMemoryManager->fp_Checkout(_LocalArena);
-						if (_LocalArena.m_pArena == _pSlab->m_pArena)
+						auto &LocalArena = *_pLocalArena;
+						auto &MemoryManager = *m_pMemoryManager;
+						if (MemoryManager.m_bCanDoLazyCheckout)
+						{
+							++MemoryManager.fp_CheckoutHelper(LocalArena)->m_CheckoutCount;
+							LocalArena.m_bLazyCheckout = true;
+						}
+						else
+							Checkout = MemoryManager.fp_Checkout(LocalArena);
+						if (LocalArena.m_pArena == _pSlab->m_pArena)
 						{
 							f_FreeThisThread(_pMemory, _pSlab);
 							return;
@@ -228,7 +235,7 @@ namespace NMib
 					
 					FreeLinkType = EMessageType_FreeSmallBlock;
 					mint Size = sizeof(CMessage_FreeSmallBlock);
-					CMessage_FreeSmallBlock *pFreeLinkSmallBlock = (CMessage_FreeSmallBlock *)m_pMemoryManager->f_Alloc(Size);
+					CMessage_FreeSmallBlock *pFreeLinkSmallBlock = (CMessage_FreeSmallBlock *)m_pMemoryManager->f_AllocAligned(Size, 1);
 					pFreeLinkSmallBlock->m_pBlock = _pMemory;
 					pFreeLink = pFreeLinkSmallBlock;
 				}
@@ -241,40 +248,18 @@ namespace NMib
 		template <typename t_CParams>
 		inline_small mint TCMemoryManagerArena<t_CParams>::fs_GetAllocSize(mint _Size)
 		{
-			if (_Size <= mc_SmallSizeSlabsLargestSize)
-			{
-				mint iSlab = fps_GetSlabTypeFromSizeSmall(_Size);
-				switch (iSlab)
-				{
-				case 0:
-					return 1;
-				case 1:
-					return 2;
-				case 2:
-					return 4;
-				case 3:
-					return 8;
-				case 4:
-					if (mc_MinAlignment == 4)
-						return 12;
-					else
-						return 16;
-				case 5:
-					if (mc_MinAlignment == 4)
-						return 16;
-				default:
-					DMibFastCheck(false);
-					break;
-				}
-				return 0;
-			}
-			else
+			if (_Size > mc_SmallSizeSlabsLargestSize)
 			{
 				mint Size = fg_AlignUp(_Size, mc_MinNormalSizeAlignment);
 				DMibFastCheck(Size >= sizeof(void *) * 2);
 				mint SlabBucket = NMib::fg_GetHighestBitSetNoZero(Size);
 				mint SlabBucketGranularity = (mint(1) << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
 				return fg_AlignUp(Size, SlabBucketGranularity);
+			}
+			else
+			{
+				fsp_GetSlabTypeFromSizeSmall(_Size);
+				return _Size;
 			}
 			return 0;
 		}
@@ -329,7 +314,7 @@ namespace NMib
 				CMemoryManagerSubSlab_Free *pFreeSubSlab = (CMemoryManagerSubSlab_Free *)pStart;
 				pFreeSubSlab = new(pFreeSubSlab) CMemoryManagerSubSlab_Free();
 				_pSlab->m_FreeSubSlabs.f_UnsafeInsert(pFreeSubSlab);
-				fp_SlabHasGarbage(_pSlab);
+				fp_SlabHasGarbageInline(_pSlab);
 				++_pSlab->m_nFreeSubSlabs;
 			}
  

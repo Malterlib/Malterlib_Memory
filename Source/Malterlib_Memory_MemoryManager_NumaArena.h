@@ -25,15 +25,34 @@ namespace NMib
 		template <typename t_CParams>
 		struct align_cacheline TCMemoryManagerThreadLocal
 		{
-			TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
 			TCMemoryManagerArena<t_CParams> *m_pArena;
+			mint m_Reentrant = 0;
 			TCMemoryManagerArena<t_CParams> *m_pPreferredArena;
 			mint m_TemporaryReturnCheckoutCount;
+			TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
+			bool m_bLazyCheckout = false;
+			bool m_bOwnArena = false;
+			
 			TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal const& _Other);
+			
+			struct CRentrantScope
+			{
+				CRentrantScope(TCMemoryManagerThreadLocal *_pThreadLocal);
+				~CRentrantScope();
+				CRentrantScope(CRentrantScope &&_Other);
+				
+				CRentrantScope(CRentrantScope const &_Other) = delete;
+				CRentrantScope &operator =(CRentrantScope &&_Other) = delete;
+				CRentrantScope &operator =(CRentrantScope const &_Other) = delete;
+				
+				TCMemoryManagerThreadLocal *m_pThreadLocal;
+			};
 		public:
 			TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal && _Other, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
 			TCMemoryManagerThreadLocal(TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
 			~TCMemoryManagerThreadLocal();
+			
+			CRentrantScope f_Reentrant();
 
 			void f_ReturnCheckout();
 			void f_ReturnCheckoutLight();
@@ -41,6 +60,7 @@ namespace NMib
 			void f_TemporaryGetBack();
 			void f_TakeOwnership();
 			void f_RelinquishOwnership();
+			void f_GarbageCollectLocalArena(bool _bDecommit);
 		};
 		
 		template <typename t_CParams>
@@ -72,7 +92,7 @@ namespace NMib
 			void f_RequestCleanup(ENumaArenaCleanup _Cleanup);
 			void f_RequestCleanupWeak(ENumaArenaCleanup _Cleanup);
 			
-			int64 f_GarbageCollect(int64 _Timestamp, bool _bDecommit, bool _bHasNumaArenasLock);
+			int64 f_GarbageCollect(int64 _Timestamp, bool _bDecommit, bool _bHasNumaArenasLock, bool _bForceCleanup);
 			
 			bool f_ProcessArenaMessages(bool _bIncremental, bool & _oDeferred, bool _bHasNumaArenasLock);
 			

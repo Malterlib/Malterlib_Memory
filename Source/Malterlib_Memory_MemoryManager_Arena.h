@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -46,7 +46,7 @@ namespace NMib
 			bool f_ProcessMessages();
 			void f_AddMessage(CMessage *_pMessage, EMessageType _MessageType);
 
-			void f_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena);
+			void f_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 			void f_FreeThisThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 			mint f_Size(void const *_pMemory, TCMemoryManagerSlabShared<t_CParams> const *_pSlab);
 			fp32 f_Overhead(void const *_pMemory, TCMemoryManagerSlabShared<t_CParams> const *_pSlab);
@@ -107,17 +107,18 @@ namespace NMib
 			TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> *fp_AllocSmallNoSlab();
 
 			template <mint tf_Size>
-			void *fp_AllocSmall();
+			static void *fsp_AllocSmall(TCMemoryManagerArena *_pThis);
+
+			static void *fsp_AllocSmallShared(TCMemoryManagerArena *_pThis, mint _Index);
 
 			template <mint tf_Size>
 			bool fp_CheckFreeSmall(bool _bBreak);
 			
 			void fp_FreeSmallSubSlabs(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
+			
+			void fp_FreeSmallShared(TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *_pSubSlab, TCMemoryManagerSlab<t_CParams, 0> *_pSlab, mint _Index, ESmallState _SmallState);
 
-			template <mint tf_Size>
-			void fp_FreeSmall(void *_pAlloc, TCMemoryManagerSlab<t_CParams, 0> *_pSlab);
-
-			static mint fps_GetSlabTypeFromSizeSmall(mint _Size);
+			static mint fsp_GetSlabTypeFromSizeSmall(mint &o_Size);
 
 			void *fp_AllocSmallSize(mint &_Size);
 
@@ -128,6 +129,7 @@ namespace NMib
 
 			void fp_AllocNormalBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
 			
+			void fp_SlabHasGarbageInline(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 			void fp_SlabHasGarbage(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 			void fp_CheckSlabNoLongerGarbage(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 			void fp_SubSlabNoLongerPending(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab);
@@ -156,7 +158,7 @@ namespace NMib
 			bool fp_CheckCleanup();
 			bool fp_CheckCleanupNumaFree();
 
-			void fp_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena);
+			void fp_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 			
 			void fp_RequestCleanup();
 		public:
@@ -173,6 +175,18 @@ namespace NMib
 			static constexpr mint mc_NumSubSlabSizeLevels = t_CParams::mc_NumSizeLevels - TCHighestBitSetCorrect<mint, t_CParams::mc_SubSlabSize>::mc_Value;
 			
 		private:
+			
+			using FSmallAllocJump = void *(*)(TCMemoryManagerArena *);
+			static constexpr FSmallAllocJump mc_SmallAllocCategoryJumpTable[6] =
+				{
+					&fsp_AllocSmall<1>
+					, &fsp_AllocSmall<2>
+					, &fsp_AllocSmall<4>
+					, &fsp_AllocSmall<8>
+					, &fsp_AllocSmall<12>
+					, &fsp_AllocSmall<16>
+				}
+			;
 			
 			DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_FreeSlabs;
 			DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_PartiallyFreeSlabs[t_CParams::mc_NumSizesPerLevel][mc_NumSubSlabSizeLevels];

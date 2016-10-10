@@ -33,12 +33,14 @@ namespace NMib
 				if (!CSystem::ms_bDisableMemoryManagerLeakReport)
 					g_MainHeap->f_ReportLeaks();
 #			endif
+#if !defined(DMibMemoryOverrideDll)
 			if (fg_GetSys()->f_IsDll())
 			{
 				g_MainHeap.f_Destruct(); // We only need to destroy the heap if we are a DLL. Not doing this in exes can significantly speed up exit times
 				g_MemoryManagerForkLock.f_Destruct();
 			}
 			else
+#endif
 			{
 				if (!g_bMemoryManagerNeededAfterDestroy)
 				{
@@ -236,19 +238,18 @@ namespace NMib
 
 		inline_always void *CCrossModuleImplementation::fs_Alloc(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
-			return g_MainHeap->f_AllocInline(_Size);
+			return g_MainHeap->f_AllocAligned(_Size, 1);
 		}
 
 		inline_always void *CCrossModuleImplementation::fs_AllocInitZero(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
-			return fg_MemClear(fg_Alloc(_Size), _Size);
+			return fg_MemClear(g_MainHeap->f_AllocAligned(_Size, 1), _Size);
 		}
 
 		inline_always void *CCrossModuleImplementation::fs_AllocAligned(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Align)
 		{
 			return g_MainHeap->f_AllocAligned(_Size, _Align);
 		}
-
 
 		inline_always void *CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
 		{
@@ -262,7 +263,7 @@ namespace NMib
 
 		inline_always void CCrossModuleImplementation::fs_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
-			g_MainHeap->f_FreeInline(_pMemory);
+			g_MainHeap->f_Free(_pMemory);
 		}
 
 		inline_always mint CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, const void *_pMemory)

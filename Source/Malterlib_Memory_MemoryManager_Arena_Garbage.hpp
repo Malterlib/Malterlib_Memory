@@ -176,7 +176,7 @@ namespace NMib
 		}
 		
 		template <typename t_CParams>
-		inline_always void TCMemoryManagerArena<t_CParams>::fp_SlabHasGarbage(TCMemoryManagerSlabShared<t_CParams> *_pSlab)
+		inline_always void TCMemoryManagerArena<t_CParams>::fp_SlabHasGarbageInline(TCMemoryManagerSlabShared<t_CParams> *_pSlab)
 		{
 			if (_pSlab->m_nPendingSubSlabs + _pSlab->m_nFreeSubSlabs == 0)
 				m_SlabsToGarbageCollect[_pSlab->m_SlabType].f_Insert(_pSlab);
@@ -184,6 +184,12 @@ namespace NMib
 			if (t_CParams::mc_bBackgroundCleanup)
 				_pSlab->m_HasGarbageTimestamp = m_pNumaArena->f_GetTimestamp();
 			this->fp_RequestCleanup();
+		}
+
+		template <typename t_CParams>
+		inline_never void TCMemoryManagerArena<t_CParams>::fp_SlabHasGarbage(TCMemoryManagerSlabShared<t_CParams> *_pSlab)
+		{
+			return fp_SlabHasGarbageInline(_pSlab);
 		}
 		
 		template <typename t_CParams>

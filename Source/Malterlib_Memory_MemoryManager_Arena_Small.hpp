@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -7,155 +7,94 @@ namespace NMib
 {
 	namespace NMem
 	{
-
 		template <typename t_CParams>
-		inline_small void *TCMemoryManagerArena<t_CParams>::fp_AllocSmallSize(mint &_Size)
+		inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocSmallSize(mint &_Size)
 		{
-			
-			mint iSlab = fps_GetSlabTypeFromSizeSmall(_Size);
-			switch (iSlab)
-			{
-			case 0:
-				_Size = 1;
-				return fp_AllocSmall<1>();
-			case 1:
-				_Size = 2;
-				return fp_AllocSmall<2>();
-			case 2:
-				_Size = 4;
-				return fp_AllocSmall<4>();
-			case 3:
-				_Size = 8;
-				return fp_AllocSmall<8>();
-			case 4:
-				if (mc_MinAlignment == 4)
-				{
-					_Size = 12;
-					return fp_AllocSmall<12>();
-				}
-				else
-				{
-					_Size = 16;
-					return fp_AllocSmall<16>();
-				}
-			case 5:
-				if (mc_MinAlignment == 4)
-				{
-					_Size = 16;
-					return fp_AllocSmall<16>();
-				}
-			default:
-				DMibFastCheck(false);
-				break;
-			}
-			return nullptr;
+			mint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
+			if (unlikely(iSlab == 0))
+				return fsp_AllocSmall<1>(this);
+			return fsp_AllocSmallShared(this, iSlab);					
 		}
 		
 		template <typename t_CParams>
-		void TCMemoryManagerArena<t_CParams>::fp_AllocSmallSizeBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
+		inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocSmallSizeBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 		{
-			mint iSlab = fps_GetSlabTypeFromSizeSmall(_Size);
-			switch (iSlab)
+			mint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
+			if (unlikely(iSlab == 0))
 			{
-			case 0:
 				while (true)
 				{
-					auto *pAlloc = fp_AllocSmall<1>();
+					auto *pAlloc = fsp_AllocSmall<1>(this);
 					if (!_Functor(pAlloc, 1))
 						break;
 				}
 				return;
-			case 1:
-				while (true)
-				{
-					auto *pAlloc = fp_AllocSmall<2>();
-					if (!_Functor(pAlloc, 2))
-						break;
-				}
-				return;
-			case 2:
-				while (true)
-				{
-					auto *pAlloc = fp_AllocSmall<4>();
-					if (!_Functor(pAlloc, 4))
-						break;
-				}
-				return;
-			case 3:
-				while (true)
-				{
-					auto *pAlloc = fp_AllocSmall<8>();
-					if (!_Functor(pAlloc, 8))
-						break;
-				}
-				return;
-			case 4:
-				if (mc_MinAlignment == 4)
-				{
-					while (true)
-					{
-						auto *pAlloc = fp_AllocSmall<12>();
-						if (!_Functor(pAlloc, 12))
-							break;
-					}
-					return;
-				}
-				else
-				{
-					while (true)
-					{
-						auto *pAlloc = fp_AllocSmall<16>();
-						if (!_Functor(pAlloc, 16))
-							break;
-					}
-					return;
-				}
-			case 5:
-				if (mc_MinAlignment == 4)
-				{
-					while (true)
-					{
-						auto *pAlloc = fp_AllocSmall<16>();
-						if (!_Functor(pAlloc, 16))
-							break;
-					}
-					return;
-				}
-			default:
-				DMibFastCheck(false);
-				break;
 			}
+			while (true)
+			{
+				auto *pAlloc = fsp_AllocSmallShared(this, iSlab);
+				if (!_Functor(pAlloc, _Size))
+					break;
+			}
+			return;
 		}
-		
 		
 		template <typename t_CParams>
 		inline_never void TCMemoryManagerArena<t_CParams>::fp_FreeSmall(void *_pMemory, TCMemoryManagerSlab<t_CParams, 0> *_pSlab, mint _SlabType)
 		{
 			// Small slabs
-			switch (_SlabType)
-			{
-			case 0:
-				return fp_FreeSmall<1>(_pMemory, _pSlab);
-			case 1:
-				return fp_FreeSmall<2>(_pMemory, _pSlab);
-			case 2:
-				return fp_FreeSmall<4>(_pMemory, _pSlab);
-			case 3:
-				return fp_FreeSmall<8>(_pMemory, _pSlab);
-			case 4:
-				if (mc_MinAlignment == 4)
-					return fp_FreeSmall<12>(_pMemory, _pSlab);
-				else
-					return fp_FreeSmall<16>(_pMemory, _pSlab);
-			case 5:
-				if (mc_MinAlignment == 4)
-					return fp_FreeSmall<16>(_pMemory, _pSlab);
-			default:
-				DMibFastCheck(false);
-				break;
-			}
-		}
+			ESmallState SmallState;
+			mint Index;
+			TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *pSubSlab = fg_AlignDown((TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *)_pMemory, t_CParams::mc_SubSlabSize);
 
+			if (unlikely(_SlabType == 0))
+			{
+				Index = 0;
+				TCMemoryManagerSubSlab_SmallSize<t_CParams, 1> *pSubSlab1 = (TCMemoryManagerSubSlab_SmallSize<t_CParams, 1> *)pSubSlab;
+				if (this->mc_EnableCallbacks)
+					pSubSlab1->f_OnFree(*this, _pMemory);
+				SmallState = pSubSlab1->f_Free(_pMemory);
+			}
+			else
+			{
+				if (this->mc_EnableCallbacks)
+					pSubSlab->f_OnFree(*this, _pMemory);
+				
+				mint Offset = (uint8 *)_pMemory - pSubSlab->f_GetArray();
+				mint iAlloc;
+				switch (_SlabType)
+				{
+				case 1:
+					Index = 1;
+					iAlloc = Offset / 2;
+					break;
+				case 2:
+					Index = 2;
+					iAlloc = Offset / 4;
+					break;
+				case 3:
+					Index = 3;
+					iAlloc = Offset / 8;
+					break;
+				case 4:
+					if (mc_MinAlignment == 4)
+					{
+						Index = 4;
+						iAlloc = Offset / 12;
+						break;
+					}
+					// Intentional fall through
+				case 5:
+					Index = 5;
+					iAlloc = Offset / 16;
+					break;
+				}
+				SmallState = pSubSlab->f_Free(_pMemory, iAlloc);
+			}
+			
+			if (unlikely(SmallState != ESmallState_None))
+				fp_FreeSmallShared(pSubSlab, _pSlab, Index, SmallState);
+		}
 
 		template <typename t_CParams>
 		mint TCMemoryManagerArena<t_CParams>::fp_SizeSmall(void const * _pMemory, TCMemoryManagerSlab<t_CParams, 0> const * _pSlab, mint _SlabType) const
@@ -214,42 +153,109 @@ namespace NMib
 		}
 		
 		template <typename t_CParams>
-		inline_small mint TCMemoryManagerArena<t_CParams>::fps_GetSlabTypeFromSizeSmall(mint _Size)
+		inline_small mint TCMemoryManagerArena<t_CParams>::fsp_GetSlabTypeFromSizeSmall(mint &o_Size)
 		{
+			mint Size = o_Size;
 			mint iSlab;
-			if (_Size < 2)
+			if (Size < 2)
 				iSlab = 0;
-			else if (_Size <= TCMemoryManagerArena<t_CParams>::mc_MinAlignment)
-				iSlab = NMib::fg_GetHighestBitSetNoZero(_Size - 1) + 1;
+			else if (Size <= TCMemoryManagerArena<t_CParams>::mc_MinAlignment)
+				iSlab = NMib::fg_GetHighestBitSetNoZero(Size - 1) + 1;
 			else
-				iSlab = TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabsAligned + (_Size - (TCMemoryManagerArena<t_CParams>::mc_MinAlignment + 1)) / TCMemoryManagerArena<t_CParams>::mc_MinAlignment;
-
+				iSlab = TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabsAligned + (Size - (TCMemoryManagerArena<t_CParams>::mc_MinAlignment + 1)) / TCMemoryManagerArena<t_CParams>::mc_MinAlignment;
+			
+			switch (iSlab)
+			{
+			case 0:
+				Size = 1;
+				break;
+			case 1:
+				Size = 2;
+				break;
+			case 2:
+				Size = 4;
+				break;
+			case 3:
+				Size = 8;
+				break;
+			case 4:
+				if (mc_MinAlignment == 4)
+				{
+					Size = 12;
+					break;
+				}
+				else
+				{
+					++iSlab;
+					Size = 16;
+					break;
+				}
+			case 5:
+				if (mc_MinAlignment == 4)
+				{
+					Size = 16;
+					break;
+				}
+#if DMibEnableSafeCheck > 0
+			default:
+				DMibFastCheck(false);
+				Size = 1;
+				break;
+#endif
+			}
+			o_Size = Size;
 			return iSlab;
 		}
 
 		template <typename t_CParams>
-		template <mint tf_Size>
-		inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocSmall()
+		inline_always void *TCMemoryManagerArena<t_CParams>::fsp_AllocSmallShared(TCMemoryManagerArena *_pThis, mint _Index)
 		{
-			typedef TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> CSubSlab;
-
-			auto &Slabs = m_SmallSizeSlabs[CSubSlab::mc_SmallSlabIndex];
+			typedef TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> CSubSlab;
+			auto &Slabs = _pThis->m_SmallSizeSlabs[_Index];
 			CSubSlab *pSlab = (CSubSlab *)Slabs.f_GetFirst();
-			if (!pSlab)
-				pSlab = fp_AllocSmallNoSlab<tf_Size>();
+			if (unlikely(!pSlab))
+				return mc_SmallAllocCategoryJumpTable[_Index](_pThis);
 
 			bool bFull;
 			void *pAlloc = pSlab->f_Alloc(bFull);
-			if (this->mc_EnableCallbacks)
+			if (_pThis->mc_EnableCallbacks)
 			{
-				pSlab->f_OnCheckFree(*this, pAlloc, true);
-				pSlab->f_OnAlloc(*this, pAlloc);
+				pSlab->f_OnCheckFree(*_pThis, pAlloc, true);
+				pSlab->f_OnAlloc(*_pThis, pAlloc);
+			}
+
+			if (unlikely(bFull))
+			{
+				pSlab->m_Params.m_Link.m_Link.f_UnsafeUnlink();
+				_pThis->m_SmallSizeSlabsFull.f_UnsafeInsertFirst(pSlab->m_Params.m_Link);
+			}
+
+			return pAlloc;
+		}
+		
+		template <typename t_CParams>
+		template <mint tf_Size>
+		inline_never void *TCMemoryManagerArena<t_CParams>::fsp_AllocSmall(TCMemoryManagerArena *_pThis)
+		{
+			typedef TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> CSubSlab;
+
+			auto &Slabs = _pThis->m_SmallSizeSlabs[CSubSlab::mc_SmallSlabIndex];
+			CSubSlab *pSlab = (CSubSlab *)Slabs.f_GetFirst();
+			if (!pSlab)
+				pSlab = _pThis->fp_AllocSmallNoSlab<tf_Size>();
+
+			bool bFull;
+			void *pAlloc = pSlab->f_Alloc(bFull);
+			if (_pThis->mc_EnableCallbacks)
+			{
+				pSlab->f_OnCheckFree(*_pThis, pAlloc, true);
+				pSlab->f_OnAlloc(*_pThis, pAlloc);
 			}
 
 			if (bFull)
 			{
 				pSlab->m_Params.m_Link.m_Link.f_UnsafeUnlink();
-				m_SmallSizeSlabsFull.f_UnsafeInsertFirst(pSlab->m_Params.m_Link);
+				_pThis->m_SmallSizeSlabsFull.f_UnsafeInsertFirst(pSlab->m_Params.m_Link);
 			}
 
 			return pAlloc;
@@ -305,41 +311,35 @@ namespace NMib
 		}
 		
 		template <typename t_CParams>
-		template <mint tf_Size>
-		inline_small void TCMemoryManagerArena<t_CParams>::fp_FreeSmall(void *_pAlloc, TCMemoryManagerSlab<t_CParams, 0> *_pSlab)
+		inline_never void TCMemoryManagerArena<t_CParams>::fp_FreeSmallShared
+			(
+				TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *_pSubSlab
+				, TCMemoryManagerSlab<t_CParams, 0> *_pSlab
+				, mint _Index
+				, ESmallState _SmallState
+			)
 		{
-			typedef TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> CSubSlab;
-
-			CSubSlab *pSlab = fg_AlignDown((CSubSlab *)_pAlloc, t_CParams::mc_SubSlabSize);
-
-			if (this->mc_EnableCallbacks)
-				pSlab->f_OnFree(*this, _pAlloc);
-
-			bool bWasFull;
-			bool bIsFullyFree;
-			pSlab->f_Free(_pAlloc, bWasFull, bIsFullyFree);
-
-			if (bIsFullyFree)
+			if (_SmallState == ESmallState_IsFullyFree)
 			{
-				pSlab->m_Params.m_Link.m_Link.f_UnsafeUnlink();
-				CMemoryManagerSubSlab_Free *pFreeSubSlab = (CMemoryManagerSubSlab_Free *)pSlab;
+				_pSubSlab->m_Params.m_Link.m_Link.f_UnsafeUnlink();
+				CMemoryManagerSubSlab_Free *pFreeSubSlab = (CMemoryManagerSubSlab_Free *)_pSubSlab;
 				pFreeSubSlab = new(pFreeSubSlab) CMemoryManagerSubSlab_Free();
 				_pSlab->m_FreeSubSlabs.f_UnsafeInsert(pFreeSubSlab);
 				if (t_CParams::mc_DeferCleanup & EDeferCleanup_OneSizeBlocks)
-					fp_SlabHasGarbage(_pSlab);
+					fp_SlabHasGarbageInline(_pSlab);
 				else
 					fp_FreeSmallSubSlabs(_pSlab);
 				++_pSlab->m_nFreeSubSlabs;
 				--_pSlab->m_nAllocatedSubSlabs;
 			}
-			else if (bWasFull)
+			else
 			{
-				pSlab->m_Params.m_Link.m_Link.f_UnsafeUnlink();
+				DMibFastCheck(_SmallState == ESmallState_WasFull);
+				_pSubSlab->m_Params.m_Link.m_Link.f_UnsafeUnlink();
 
-				m_SmallSizeSlabs[CSubSlab::mc_SmallSlabIndex].f_UnsafeInsert(pSlab->m_Params.m_Link);
+				m_SmallSizeSlabs[_Index].f_UnsafeInsert(_pSubSlab->m_Params.m_Link);
 			}
 		}
-		
 		
 		template <typename t_CParams>
 		template <mint tf_Size>

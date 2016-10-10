@@ -9,15 +9,6 @@
 		{
 			!!MalterlibPostCopyProject ""
 		}
-		MalterlibNeedsMallocOverrideLibrary true
-		{
-			&
-			{
-				TargetIsExecutable true
-				PlatformIsDarwin true
-			}
-		}	
-		MalterlibForceExecutable true
 	}
 	Target
 	{
@@ -27,8 +18,39 @@
 	%Group Source
 	{
 		%File "Source/*"
+		%File "../../Source/Malterlib_Memory_SystemOverride_OSXLibSystem.cpp"
+		{
+			!!MalterlibMemoryManager_OverrideDll true
+		}
 	}
 	%Dependency "Lib_Malterlib"
 }
 
-Property.Malterlib_Memory_App_Targets "Malterlib_Memory_MalterlibMalloc;@(Malterlib_Memory_App_Targets)"
+%Workspace "Malterlib_Memory_Malloc"
+{
+	&
+	{
+		MalterlibEnableInternalWorkspaces true
+	}
+	Property.MalterlibMemoryManager_OverrideDll true
+	Compile
+	{
+		!!CompileDialect C
+		PreprocessorDefines "DMibMemoryOverrideDll;@(Compile.PreprocessorDefines)"
+	}
+	
+	%Target "Malterlib_Memory_MalterlibMalloc"
+}
+
+%Workspace "Malterlib_Memory_MallocDummy"
+{
+	&
+	{
+		MalterlibEnableInternalWorkspaces true
+	}
+	
+	%Target "Malterlib_Memory_MalterlibMalloc"
+	{
+		Property.MalterlibPostCopyProject "MalterlibMallocDummy"
+	}
+}

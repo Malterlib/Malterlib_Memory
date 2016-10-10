@@ -509,10 +509,21 @@ namespace NMib
 		template <typename t_CData1>
 		inline_large t_CData1 *fg_MemClear(t_CData1 *_pFirst, mint _Size)
 		{
-			int DoSize = _Size / sizeof(mint);
+#ifdef	DMibPIntrinsicMemSet
+#if 1
+			DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
+#else
+			mint DoSize = _Size & (~mint(sizeof(mint)-1));
+			DMibPIntrinsicMemSet((uint8 *)_pFirst, 0, DoSize);
+			DMibPIntrinsicMemSet((uint8 *)_pFirst + DoSize, 0, _Size - DoSize);
+#endif
+			return _pFirst;
+#else
+			mint DoSize = _Size / sizeof(mint);
 			fg_ObjectSet((mint *)_pFirst, 0, DoSize);
 			fg_ObjectSet((uint8 *)_pFirst + (DoSize * sizeof(mint)), 0, _Size - (DoSize * sizeof(mint)));
 			return _pFirst;
+#endif
 		}
 
 		template <typename t_CData1>

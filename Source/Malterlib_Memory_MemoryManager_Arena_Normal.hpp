@@ -187,7 +187,7 @@ namespace NMib
 					DMibFastCheck(iAlloc < pSlab->f_GetNumSubSlabs());
 					
 					DMibFastCheck(pData[iAlloc].m_Allocated.m_nAllocs < 1024);
-					if (++pData[iAlloc].m_Allocated.m_nAllocs == 1)
+					if (unlikely(++pData[iAlloc].m_Allocated.m_nAllocs == 1))
 						fp_SubSlabNoLongerPending(pSlab, iAlloc);
 						
 	//					DMibTrace("++{} {} {}" DMibNewLine, pData[iAlloc].m_Allocated.m_nAllocs << iAlloc << pSlab->m_SlabType);
@@ -423,13 +423,7 @@ namespace NMib
 			mint iSubSlab;
 			mint SlabBucket;
 
-			if (unlikely(SlabType > 0))
-			{
-				iSubSlab = t_CParams::fs_DivideBySlabMultiplier(SubSlab, SlabType);
-				DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
-				SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
-			}
-			else
+			if (SlabType == 0)
 			{
 				iSubSlab = SubSlab;
 				DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
@@ -439,6 +433,12 @@ namespace NMib
 					fp_FreeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> *)_pSlab, SlabBucket);
 					return;
 				}
+			}
+			else
+			{
+				iSubSlab = t_CParams::fs_DivideBySlabMultiplier(SubSlab, SlabType);
+				DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
+				SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
 			}
 
 

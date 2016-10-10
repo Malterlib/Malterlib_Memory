@@ -107,7 +107,8 @@ Property
 			!!MalterlibEnableThirdPartyComparisonTests true
 		}
 		MemoryManagerTestEnable_MalterlibOld true
-//			MemoryManagerTestEnable_StdLib true
+		MemoryManagerTestEnable_Application true
+		MemoryManagerTestEnable_StdLib true
 //			MemoryManagerTestEnable_Virtual true
 		MemoryManagerTestEnable_WindowsDefault true
 		{
@@ -171,6 +172,10 @@ Property
 		PreprocessorDefines "DMemoryManagerTestEnable_StdLib;@(Compile.PreprocessorDefines)"
 		{
 			!!MemoryManagerTestEnable_StdLib "true"
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_Application;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_Application "true"
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_DlMalloc;@(Compile.PreprocessorDefines)"
 		{

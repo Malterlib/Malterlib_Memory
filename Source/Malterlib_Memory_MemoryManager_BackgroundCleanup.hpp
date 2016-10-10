@@ -50,8 +50,8 @@ namespace NMib
 					mp_pThread->m_EventWantQuit.f_Signal();				
 			}
 		}
-
 		
+//#define DMibMemory_CleanupOnUSR1Signal
 		template <typename t_CParams>
 		void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::fp_StartupThread()
 		{
@@ -66,12 +66,25 @@ namespace NMib
 							NSys::fg_Thread_SetNumaAffinity(NMib::NSys::fg_Thread_GetCurrent(), mp_pNumaArena->m_NumaNode);
 							mp_pMemoryManager->f_SetNumaNode(mp_pNumaArena->m_NumaNode);
 						}
-
+						bool bForceFullGarbageCollection = false;
 						int64 MSLifetime = t_CParams::mc_BackgroundCleanupLifetime;
 						fp32 WaitTime = fp32(MSLifetime) / fp32(1000.0f);
 						int64 LifeTime = MSLifetime * NTime::CSystem_Time::fs_CyclesFrequency() / 1000;
 						int64 NextCleanup = mp_Clock.f_GetCycles() + LifeTime;
 
+#ifdef DMibMemory_CleanupOnUSR1Signal
+						auto pSubscription = NSys::fg_System_RegisterForSignal
+							(
+								30
+								, [&]()
+								{
+									bForceFullGarbageCollection = true;
+									NextCleanup = 0;
+									_pThread->m_EventWantQuit.f_Signal();
+								}
+							)
+						;
+#endif
 						bool bNeedUpdate = true;
 						while (_pThread->f_GetState() != NThread::EThreadState_EventWantQuit)
 						{
@@ -82,7 +95,8 @@ namespace NMib
 			//					DMibTraceSafe("{}\n", mp_Clock.f_GetTime());
 
 								int64 RemoveTime = mp_Clock.f_GetCycles() - LifeTime;
-								int64 NextUpdate = mp_pNumaArena->f_GarbageCollect(RemoveTime, true, false);
+								int64 NextUpdate = mp_pNumaArena->f_GarbageCollect(RemoveTime, true, false, bForceFullGarbageCollection);
+								bForceFullGarbageCollection = false;
 							
 								bNeedUpdate = NextUpdate != TCLimitsInt<int64>::mc_Max;
 								NextCleanup = Time + LifeTime;
@@ -97,6 +111,9 @@ namespace NMib
 							}
 							
 						}
+#ifdef DMibMemory_CleanupOnUSR1Signal
+						pSubscription.f_Clear();
+#endif
 						return 0;
 						
 					}

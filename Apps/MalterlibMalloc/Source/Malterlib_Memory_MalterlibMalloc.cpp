@@ -9,7 +9,6 @@ struct CTest
 {
 	CTest()
 	{
-		DMibConOut2("Whata!\n");
 		fg_MalterlibMallocOverrideInit();
 	}
 	
