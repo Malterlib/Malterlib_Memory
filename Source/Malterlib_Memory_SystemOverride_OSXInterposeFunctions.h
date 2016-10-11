@@ -143,6 +143,8 @@ DMibMemoryInterpose2(kern_return_t, semaphore_wait_signal_trap, mach_port_name_t
 DMibMemoryInterpose4(kern_return_t, semaphore_timedwait_signal_trap, mach_port_name_t _0, mach_port_name_t _1, unsigned int _2, clock_res_t _3)
 DMibMemoryInterpose4(int, __workq_kernreturn, int _0, user_addr_t _1, int _2, int _3)
 DMibMemoryInterpose8(uint32_t, __psynch_cvwait, user_addr_t _0, uint64_t _1, uint32_t _2, user_addr_t _3, uint64_t _4, uint32_t _5, int64_t _6, uint32_t _7)
+DMibMemoryInterpose6(int, kevent, int _0, const struct kevent *_1, int _2, struct kevent *_3, int _4, const struct timespec *_5)
+DMibMemoryInterpose7(int, kevent64, int _0, const struct kevent64_s *_1, int _2, struct kevent64_s *_3, int _4, unsigned int _5, const struct timespec *_6)
 
 #undef DMibMemoryInterpose0
 #undef DMibMemoryInterpose1

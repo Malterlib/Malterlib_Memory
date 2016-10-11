@@ -2,6 +2,7 @@
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <mach/message.h>
+#include <sys/event.h>
 
 extern "C" void * _Znam (size_t) __attribute__((weak_import));  // operator new
 extern "C" void * _Znwm (size_t)__attribute__((weak_import));  // operator new

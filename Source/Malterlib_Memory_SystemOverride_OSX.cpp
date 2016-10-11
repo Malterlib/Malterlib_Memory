@@ -2338,6 +2338,22 @@ extern "C"
 #endif
 		return g_OriginalFunctions.__psynch_cvwait(cv, cvlsgen, cvugen, mutex, mugen, flags, sec, nsec);
 	}
+	
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_kevent(int kq, const struct kevent *changelist, int nchanges, struct kevent *eventlist, int nevents, const struct timespec *timeout)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.kevent(kq, changelist, nchanges, eventlist, nevents, timeout);
+	}
+	
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_kevent64(int kq, const struct kevent64_s *changelist, int nchanges, struct kevent64_s *eventlist, int nevents, unsigned int flags, const struct timespec *timeout)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.kevent64(kq, changelist, nchanges, eventlist, nevents, flags, timeout);
+	}
 }
 
 extern "C"
