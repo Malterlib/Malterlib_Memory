@@ -320,13 +320,15 @@ namespace NMib
 						bProcessed = true;
 						bOneProcessed = true;
 					}
-					pArena->fp_CheckCleanup();
+					bool bNeedCleanup = pArena->fp_CheckCleanup();
 					
 					if (pArena != ThreadLocal.m_pArena)
 					{
 						auto LockResult = pArena->m_Locked.f_Exchange(EArenaLockFlag_None, NAtomic::EMemoryOrder_Release);
 						if (LockResult & EArenaLockFlag_Waiting)
 							f_ArenaAvailable(pArena);
+						if ((LockResult & EArenaLockFlag_Cleanup) || bNeedCleanup)
+							f_OnNeedCleanup();
 					}
 				}
 				
@@ -429,6 +431,7 @@ namespace NMib
 			if (pArena->f_ReturnCheckout())
 			{
 				m_pArena = nullptr;
+				DMibFastCheck(!m_bOwnArena || !m_pPreferredArena || m_pPreferredArena == pArena);
 				m_pPreferredArena = pArena;				
 			}
 		}		
@@ -440,6 +443,7 @@ namespace NMib
 			DMibFastCheck(pArena);
 			pArena->f_ReturnCheckoutLight();
 			m_pArena = nullptr;
+			DMibFastCheck(!m_bOwnArena || !m_pPreferredArena || m_pPreferredArena == pArena);
 			m_pPreferredArena = pArena;				
 		}
 
@@ -453,6 +457,7 @@ namespace NMib
 			pArena->m_CheckoutCount = 1;
 			pArena->f_ReturnCheckout();
 			m_pArena = nullptr;
+			DMibFastCheck(!m_bOwnArena || !m_pPreferredArena || m_pPreferredArena == pArena);
 			m_pPreferredArena = pArena;				
 			
 		}

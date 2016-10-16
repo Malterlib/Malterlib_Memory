@@ -181,6 +181,8 @@ namespace NMib
 						auto LockResult = pArena->m_Locked.f_Exchange(EArenaLockFlag_None, NAtomic::EMemoryOrder_Release);
 						if (LockResult & EArenaLockFlag_Waiting)
 							iNumaArena->f_ArenaAvailable(pArena);
+						if (LockResult & EArenaLockFlag_Cleanup)
+							iNumaArena->f_OnNeedCleanup();
 					}
 				}
 			}
@@ -952,7 +954,7 @@ namespace NMib
 					_ThreadLocal.m_pArena = _ThreadLocal.m_pPreferredArena;
 					return _ThreadLocal.m_pPreferredArena;
 				}
-				else if (!(CheckoutResult & EArenaLockFlag_Cleanup)) // Another checkout got inbetween
+				else if (!_ThreadLocal.m_bOwnArena && !(CheckoutResult & EArenaLockFlag_Cleanup)) // Another checkout got inbetween
 					return fp_CheckoutHelperSlowPath(_ThreadLocal);
 				yield_cpu;
 			}
@@ -970,7 +972,7 @@ namespace NMib
 					_ThreadLocal.m_pArena = _ThreadLocal.m_pPreferredArena;
 					return _ThreadLocal.m_pPreferredArena;
 				}
-				else if (CheckoutResult == EArenaLockFlag_Cleanup)
+				else if (CheckoutResult == EArenaLockFlag_Cleanup || _ThreadLocal.m_bOwnArena)
 					return fp_CheckoutHelperWaitForCleanup(_ThreadLocal);
 			}
 			return fp_CheckoutHelperSlowPath(_ThreadLocal);
@@ -1054,6 +1056,7 @@ namespace NMib
 					{
 						// Put in list
 						TCMemoryManagerArena<t_CParams> *pOldFirst = (TCMemoryManagerArena<t_CParams> *)pNumaArena->m_pFirstArena.f_Load(NAtomic::EMemoryOrder_Acquire);
+						DMibFastCheck(!(pArena->m_pNextArena.f_Load() & 1));
 						pArena->m_pNextArena.f_Store((mint)pOldFirst, NAtomic::EMemoryOrder_Release);
 						if (pNumaArena->m_pFirstArena.f_CompareExchangeWeak(pOldFirst, pArena, NAtomic::EMemoryOrder_SequentiallyConsistent))
 							break;
