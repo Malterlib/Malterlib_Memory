@@ -1953,6 +1953,13 @@ extern "C"
 	{
 #ifdef DMemoryManagerIsSame
 		CMemoryManager *pMemoryManager;
+		if (unlikely(g_bForeignZone))
+		{
+			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
+			if (!pMemoryManager)
+				return g_OriginalFunctions.malloc_zone_from_ptr(_pMemory);
+		}
+		
 		if (unlikely(g_bHasForeignZones))
 		{
 			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
@@ -1960,17 +1967,15 @@ extern "C"
 				return fg_Malterlib_ZoneFromMemoryManager(pMemoryManager);
 			return fg_GetForeignZone(_pMemory);
 		}
-		if (unlikely(g_bForeignZone))
-		{
-			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
-			if (!pMemoryManager)
-				return g_OriginalFunctions.malloc_zone_from_ptr(_pMemory);
-		}
 		else
-			pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
+		{
+			// Unfortunately we need the safe variant here, because some OSX code sends in garbage here
+			if ((uint8 *)_pMemory != fg_AlignUp((uint8 *)_pMemory, 16))
+				return nullptr;
+			pMemoryManager = fg_Malterlib_Safe_GetMemoryManager(_pMemory);
+		}
 		if (pMemoryManager)
 			return fg_Malterlib_ZoneFromMemoryManager(pMemoryManager);
-		
 		return nullptr;
 #else
 		return g_OriginalFunctions.malloc_zone_from_ptr(_pMemory);
