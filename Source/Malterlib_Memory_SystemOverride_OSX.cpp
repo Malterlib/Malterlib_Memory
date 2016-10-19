@@ -839,19 +839,19 @@ void *fg_Malterlib_zone_valloc(struct _malloc_zone_t *_pZone, size_t size) /* sa
 {
 	DMibOSXOverrideZoneCheck(_pZone);
 
-	mint Alignmnt = NSys::NPrivate::g_PageSize;
-	mint Size = fg_AlignUp(fg_Max(size, 1), Alignmnt);
+	mint Alignment = NSys::NPrivate::g_PageSize;
+	mint Size = fg_AlignUp(fg_Max(size, 1), Alignment);
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, Alignmnt);
+	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, Alignment);
 #endif
 #else
 #if DEnableDebugMemoryManager
-	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, Alignmnt, DMibPFile, DMibPLine, g_DebugFlags);
+	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, Alignmnt);
+	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, Alignment);
 #endif
 #endif
 
