@@ -15,28 +15,34 @@ namespace NMib
 		|| Heap alloc functions
 		||______________________________________________________________________________________________||
 		\************************************************************************************************/
-		
-		only_parameters_aliased return_not_aliased void *fg_Alloc(mint &_Size);
-		only_parameters_aliased return_not_aliased void *fg_AllocNoSize(mint _Size);
-		only_parameters_aliased return_not_aliased void *fg_AllocInitZeroNoSize(mint _Size);
-		only_parameters_aliased return_not_aliased void *fg_AllocInitZero(mint &_Size);
-		only_parameters_aliased return_not_aliased void *fg_AllocAligned(mint &_Size, mint _Align);
-		only_parameters_aliased void fg_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
-		only_parameters_aliased return_not_aliased void *fg_Realloc(void *_pMemory, mint &_Size);
-		only_parameters_aliased return_not_aliased void *fg_Resize(void *_pMemory, mint &_Size);
-		only_parameters_aliased void fg_Free(void *_pMemory);
-		only_parameters_aliased mint fg_Size(const void *_pMemory);
-		only_parameters_aliased mint fg_TrySize(const void *_pMemory);
-		only_parameters_aliased mint fg_SizePadded(mint _Size);
-		only_parameters_aliased fp32 fg_Overhead(void const *_pMemory);
-		only_parameters_aliased mint fg_Granularity();
+
+#if defined(DMibMemoryOverrideDll)
+#	define DMibMemory_MemoryManagerExport module_export
+#else
+#	define DMibMemory_MemoryManagerExport
+#endif
+
+		DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_Alloc(mint &_Size);
+		DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_AllocNoSize(mint _Size);
+		DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_AllocInitZeroNoSize(mint _Size);
+		DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_AllocInitZero(mint &_Size);
+		DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_AllocAligned(mint &_Size, mint _Align);
+		DMibMemory_MemoryManagerExport only_parameters_aliased void fg_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
+		DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_Realloc(void *_pMemory, mint &_Size);
+		DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_Resize(void *_pMemory, mint &_Size);
+		DMibMemory_MemoryManagerExport only_parameters_aliased void fg_Free(void *_pMemory);
+		DMibMemory_MemoryManagerExport only_parameters_aliased mint fg_Size(const void *_pMemory);
+		DMibMemory_MemoryManagerExport only_parameters_aliased mint fg_TrySize(const void *_pMemory);
+		DMibMemory_MemoryManagerExport only_parameters_aliased mint fg_SizePadded(mint _Size);
+		DMibMemory_MemoryManagerExport only_parameters_aliased fp32 fg_Overhead(void const *_pMemory);
+		DMibMemory_MemoryManagerExport only_parameters_aliased mint fg_Granularity();
 		
 #			if DMibConfig_MalterlibMemoryManager_Debug
-				only_parameters_aliased return_not_aliased void *fg_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
-				only_parameters_aliased return_not_aliased void *fg_AllocAlignedDebug(mint &_Size, mint _Align, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
-				only_parameters_aliased void fg_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
-				only_parameters_aliased return_not_aliased void *fg_ReallocDebug(void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
-				only_parameters_aliased return_not_aliased void *fg_ResizeDebug(void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
+				DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
+				DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_AllocAlignedDebug(mint &_Size, mint _Align, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
+				DMibMemory_MemoryManagerExport only_parameters_aliased void fg_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
+				DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_ReallocDebug(void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
+				DMibMemory_MemoryManagerExport only_parameters_aliased return_not_aliased void *fg_ResizeDebug(void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
 #			else
 				only_parameters_aliased return_not_aliased static inline_small void *fg_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None)
 				{
