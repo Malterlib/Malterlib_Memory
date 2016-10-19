@@ -107,4 +107,8 @@ extern "C"
 	}
 }
 
+void fg_MalterlibMallocOverride_CanStartThreads()
+{
+}
+
 #endif
