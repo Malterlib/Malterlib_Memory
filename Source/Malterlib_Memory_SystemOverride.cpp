@@ -20,4 +20,10 @@ bool fg_MalterlibMallocOverride_Enabled()
 {
 	return false;
 }
+void NMib::NSys::fg_Mem_DisableLazyReturnCheckout()
+{
+}
+void NMib::NSys::fg_Mem_EnableLazyReturnCheckout()
+{
+}
 #endif

@@ -111,4 +111,12 @@ void fg_MalterlibMallocOverride_CanStartThreads()
 {
 }
 
+void NMib::NSys::fg_Mem_DisableLazyReturnCheckout()
+{
+}
+
+void NMib::NSys::fg_Mem_EnableLazyReturnCheckout()
+{
+}
+
 #endif

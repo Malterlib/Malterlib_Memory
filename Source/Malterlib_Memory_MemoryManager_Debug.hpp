@@ -233,7 +233,14 @@ namespace NMib
 		template <typename t_CParams, bool t_bException, typename t_COptions>
 		bool TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ReportingLeaks()
 		{
-			return *m_bReportingLeaks;
+			auto *pReportingLeaks = m_bReportingLeaks.f_TryGet();
+			if (!pReportingLeaks)
+			{
+				if (fg_GetSys()->f_ThreadDestroyed())
+					return false;
+				return *m_bReportingLeaks;
+			}
+			return *pReportingLeaks;
 		};
 			
 
@@ -264,7 +271,7 @@ namespace NMib
 		template <typename t_CParams, bool t_bException, typename t_COptions>
 		inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocDebug(mint & _Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
 		{
-			DMibFastCheck(!*m_bReportingLeaks);
+			DMibFastCheck(!f_ReportingLeaks());
 			if (t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes)
 			{
 				mint PreBytes = sizeof(CPreBlock);
@@ -325,7 +332,7 @@ namespace NMib
 		template <typename t_CParams, bool t_bException, typename t_COptions>
 		void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
 		{
-			DMibFastCheck(!*m_bReportingLeaks);
+			DMibFastCheck(!f_ReportingLeaks());
 			if (t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes)
 			{
 				struct CFunctorOptions
@@ -424,7 +431,7 @@ namespace NMib
 		template <typename t_CParams, bool t_bException, typename t_COptions>
 		inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocAlignedDebug(mint & _Size, mint _Alignment, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
 		{
-			DMibFastCheck(!*m_bReportingLeaks);
+			DMibFastCheck(!f_ReportingLeaks());
 			if (t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes)
 			{
 				mint PreBytes = fg_AlignUp(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), _Alignment);
@@ -500,14 +507,14 @@ namespace NMib
 		template <typename t_CParams, bool t_bException, typename t_COptions>
 		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_Realloc(void * _pMemory, mint & _Size)
 		{
-			DMibFastCheck(!*m_bReportingLeaks);
+			DMibFastCheck(!f_ReportingLeaks());
 			return f_ReallocDebug(_pMemory, _Size, nullptr, 0, EHeapDebugFlag_None);
 		}
 
 		template <typename t_CParams, bool t_bException, typename t_COptions>
 		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ReallocInline(void * _pMemory, mint & _Size)
 		{
-			DMibFastCheck(!*m_bReportingLeaks);
+			DMibFastCheck(!f_ReportingLeaks());
 			return f_ReallocDebug(_pMemory, _Size, nullptr, 0, EHeapDebugFlag_None);
 		}
 
@@ -516,7 +523,7 @@ namespace NMib
 		{
 			if (!_pMemory)
 				return f_AllocDebug(_Size, _pFile, _Line, _Flags);
-			DMibFastCheck(!*m_bReportingLeaks);
+			DMibFastCheck(!f_ReportingLeaks());
 			if (t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes)
 			{
 				fsp_CheckGuard((uint8 *)_pMemory, true);
@@ -582,7 +589,7 @@ namespace NMib
 		{
 			if (!_pMemory)
 				return f_AllocDebug(_Size, _pFile, _Line, _Flags);
-			DMibFastCheck(!*m_bReportingLeaks);
+			DMibFastCheck(!f_ReportingLeaks());
 			if (t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes)
 			{
 				fsp_CheckGuard((uint8 *)_pMemory, true);
@@ -726,7 +733,7 @@ namespace NMib
 		{
 			if (!_pMemory)
 				return;
-			DMibFastCheck(!*m_bReportingLeaks);
+			DMibFastCheck(!f_ReportingLeaks());
 			fsp_CheckGuard((uint8 *)_pMemory, true);
 	
 			uint8 * pOldMemory = fsp_GetRealMemory((uint8 *)_pMemory);

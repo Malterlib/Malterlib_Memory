@@ -163,17 +163,19 @@ namespace
 	};
 	
 	static_assert(__builtin_offsetof(CMemoryManagerZone, m_MallocZone) == 0, "");
-	
-	struct CGlobalState
+
+	struct CLowLevelGlobalState
 	{
-		CGlobalState()
+		CLowLevelGlobalState()
 		{
 			m_iThreadLocal = NSys::fg_Thread_AllocLocal();
+			m_iThreadLocalReentrant = NSys::fg_Thread_AllocLocal();
 		}
 		
-		~CGlobalState()
+		~CLowLevelGlobalState()
 		{
 			NSys::fg_Thread_FreeLocal(m_iThreadLocal);
+			NSys::fg_Thread_FreeLocal(m_iThreadLocalReentrant);
 		}
 		
 		jmp_buf *f_GetJumpBuffer()
@@ -186,12 +188,40 @@ namespace
 			return NSys::fg_Thread_SetLocal(m_iThreadLocal, _pBuffer);
 		}
 		
+		mint f_GetRentrant()
+		{
+			return (mint)NSys::fg_Thread_GetLocal(m_iThreadLocalReentrant);
+		}
+
+		void f_IncRentrant()
+		{
+			NSys::fg_Thread_SetLocal(m_iThreadLocalReentrant, (void *)(f_GetRentrant() + 1));
+		}
+
+		void f_DecRentrant()
+		{
+			NSys::fg_Thread_SetLocal(m_iThreadLocalReentrant, (void *)(f_GetRentrant() - 1));
+		}
+		
+		mint m_iThreadLocal;
+		mint m_iThreadLocalReentrant;
+	};
+	
+	NAggregate::TCAggregateSimple<CLowLevelGlobalState> g_LowLevelGlobalState = {DAggregateInit};
+	
+	struct CGlobalState
+	{
 		NThread::CMutualManyRead m_ZoneListLock;
 		DMibListLinkDS_List(CMemoryManagerZone, m_Link) m_ZoneList;
 		NContainer::TCVector<malloc_zone_t *> m_ForeignZones;
 		malloc_zone_t **m_pForeignZones = nullptr;
 		mint m_nForeignZones = 0;
-		mint m_iThreadLocal;
+#ifdef DMemoryManagerIsSame
+		NMib::NThread::CMutualAggregate m_ForkLock;
+		mint m_ForkedCount = 0;
+		bool m_Unforked = false;
+		sigset_t m_ForkSigMask;
+#endif
 	};
 	
 	NAggregate::TCAggregateSimple<CGlobalState> g_GlobalState = {DAggregateInit};
@@ -302,8 +332,8 @@ extern "C"
 	{
 		DMibOverrideTrace("fg_InstallAllocInterposers!\n");
 
+		g_LowLevelGlobalState.f_Construct();
 		NSys::fg_CreateSystemMalloc(true);
-
 		g_GlobalState.f_Construct();
 		
 		NSys::g_FunctionHooks.f_Construct();
@@ -513,7 +543,7 @@ struct sigaction g_OldSignalHandlerSegv;
 
 void fg_HandleCrashSignalBus(int signal)
 {
-	auto *pJumpBuffer = g_GlobalState->f_GetJumpBuffer();
+	auto *pJumpBuffer = g_LowLevelGlobalState->f_GetJumpBuffer();
 	if (pJumpBuffer)
 	{
 #ifdef DOptimizeSetJmp
@@ -535,7 +565,7 @@ void fg_HandleCrashSignalBus(int signal)
 
 void fg_HandleCrashSignalSegv(int signal)
 {
-	auto *pJumpBuffer = g_GlobalState->f_GetJumpBuffer();
+	auto *pJumpBuffer = g_LowLevelGlobalState->f_GetJumpBuffer();
 	if (pJumpBuffer)
 	{
 #ifdef DOptimizeSetJmp
@@ -583,7 +613,7 @@ extern "C"
 		if (!g_MalterlibMallocOveriddenInstalled)
 			return true;
 		
-		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((mint)_pThread, g_GlobalState->m_iThreadLocal);
+		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((mint)_pThread, g_LowLevelGlobalState->m_iThreadLocal);
 		if (pJumpBuffer)
 			return false;
 		else
@@ -599,7 +629,7 @@ size_t fg_Malterlib_zone_size(struct _malloc_zone_t *_pZone, const void *ptr) /*
 	
 	uint8 *pMalterlibAlloc = (uint8 *)ptr;
 	
-	auto &State = *g_GlobalState;
+	auto &State = *g_LowLevelGlobalState;
 	jmp_buf JumpBuffer;
 	DMibFastCheck(!State.f_GetJumpBuffer());
 	State.f_SetJumpBuffer(&JumpBuffer);
@@ -976,6 +1006,12 @@ extern "C" bool g_bForeignZone = false;
 extern "C" bool g_bHasForeignZones = false;
 extern "C" bool g_bOnlyDefaultZone = true;
 
+extern bint g_bRegisteredAtFork;
+
+void fg_Override_PrepareFork();
+void fg_Override_ForkedChild();
+void fg_Override_ForkedParent();
+
 void fg_MalterlibMallocOverrideEnable()
 {
 	if (g_MalterlibMallocOveriddenInstalled)
@@ -991,6 +1027,7 @@ void fg_MalterlibMallocOverrideEnable()
 			fg_InstallAllocInterposers(false);
 		else
 		{
+			g_LowLevelGlobalState.f_Construct();
 			NSys::fg_CreateSystemMalloc(false);
 			g_GlobalState.f_Construct();
 		}
@@ -1048,7 +1085,12 @@ void fg_MalterlibMallocOverrideEnable()
 	}
 	
 	malloc_set_zone_name((malloc_zone_t *)&g_MalterlibMallocZone, "MalterlibMemoryManager");
-	pthread_atfork(&NSys::fg_MalterlibSystem_ForkPrepare, &NSys::fg_MalterlibSystem_ForkParent, &NSys::fg_MalterlibSystem_ForkChild);
+	DMibFastCheck(!g_bRegisteredAtFork);
+	if (!g_bRegisteredAtFork)
+	{
+		g_bRegisteredAtFork = true;
+		pthread_atfork(&fg_Override_PrepareFork, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
+	}
 }
 
 void fg_MalterlibMallocOverrideDisable()
@@ -1080,6 +1122,139 @@ void fg_MalterlibMallocOverride_CanStartThreads()
 		Zone.m_MemoryManager.f_CanStartThreads();
 }
 
+void NMib::NSys::fg_Mem_DisableLazyReturnCheckout()
+{
+	if (!g_MalterlibMallocOveriddenInterposersInstalled)
+		return;
+	auto &State = *g_LowLevelGlobalState;
+	State.f_IncRentrant();
+}
+
+void NMib::NSys::fg_Mem_EnableLazyReturnCheckout()
+{
+	if (!g_MalterlibMallocOveriddenInterposersInstalled)
+		return;
+	auto &State = *g_LowLevelGlobalState;
+	State.f_DecRentrant();
+}
+
+void fg_Override_PrepareFork()
+{
+#ifdef DMemoryManagerIsSame
+	do
+	{
+		auto &LowLevelState = *g_LowLevelGlobalState;
+		auto &State = *g_GlobalState;
+		{
+			DMibLockRead(State.m_ZoneListLock);
+		}
+		{
+			DMibLock(State.m_ZoneListLock);
+		}
+		LowLevelState.f_IncRentrant();
+		State.m_ForkLock.f_Lock();
+		if (++State.m_ForkedCount > 1)
+			break;
+		State.m_ForkLock.f_PrepareFork();
+
+		State.m_Unforked = false;
+		
+		State.m_ZoneListLock.f_Lock();
+		State.m_ZoneListLock.f_PrepareFork();
+		
+		if (!g_bOnlyDefaultZone)
+		{
+			for (auto &Zone : State.m_ZoneList)
+			{
+				Zone.m_MemoryManager.f_Lock();
+				Zone.m_MemoryManager.f_CheckoutManual();
+				Zone.m_MemoryManager.f_PrepareFork();
+			}
+		}
+		sigset_t NewMask;
+		sigfillset(&NewMask);
+		pthread_sigmask(SIG_SETMASK, &NewMask, &State.m_ForkSigMask);
+	}
+	while (false)
+		;
+#endif
+	NSys::fg_MalterlibSystem_ForkPrepare();
+}
+
+void fg_Override_ForkedChild()
+{
+	NSys::fg_MalterlibSystem_ForkChild();
+#ifdef DMemoryManagerIsSame
+	do
+	{
+		auto &LowLevelState = *g_LowLevelGlobalState;
+		auto &State = *g_GlobalState;
+		--State.m_ForkedCount;
+		if (State.m_Unforked)
+		{
+			State.m_ForkLock.f_Unlock();
+			break;
+		}
+		State.m_ZoneListLock.f_ForkedChild();
+		State.m_ForkLock.f_ForkedChild();
+		State.m_Unforked = true;
+		if (!g_bOnlyDefaultZone)
+		{
+			for (auto &Zone : State.m_ZoneList)
+			{
+				Zone.m_MemoryManager.f_ForkedChild();
+				Zone.m_MemoryManager.f_CheckinManual();
+				Zone.m_MemoryManager.f_Unlock();
+			}
+		}
+		State.m_ZoneListLock.f_Unlock();
+		
+		LowLevelState.f_DecRentrant();
+		pthread_sigmask(SIG_SETMASK, &State.m_ForkSigMask, nullptr);
+		State.m_ForkLock.f_Unlock();
+	}
+	while (false)
+		;
+#endif
+}
+
+void fg_Override_ForkedParent()
+{
+	NSys::fg_MalterlibSystem_ForkParent();
+#ifdef DMemoryManagerIsSame
+	do
+	{
+		auto &LowLevelState = *g_LowLevelGlobalState;
+		auto &State = *g_GlobalState;
+		--State.m_ForkedCount;
+		if (State.m_Unforked)
+		{
+			State.m_ForkLock.f_Unlock();
+			break;
+		}
+		State.m_ZoneListLock.f_ForkedParent();
+		State.m_ForkLock.f_ForkedParent();
+		State.m_Unforked = true;
+		if (!g_bOnlyDefaultZone)
+		{
+			for (auto &Zone : State.m_ZoneList)
+			{
+				Zone.m_MemoryManager.f_ForkedParent();
+				Zone.m_MemoryManager.f_CheckinManual();
+				Zone.m_MemoryManager.f_Unlock();
+			}
+		}
+		State.m_ZoneListLock.f_Unlock();
+
+		LowLevelState.f_DecRentrant();
+		pthread_sigmask(SIG_SETMASK, &State.m_ForkSigMask, nullptr);
+		State.m_ForkLock.f_Unlock();
+	}
+	while (false)
+		;
+#endif
+}
+
 // Direct overrides
 extern "C"
 {
@@ -1100,14 +1275,25 @@ extern "C"
 	{
 		if (!g_MalterlibMallocOveriddenInterposersInstalled)
 			return;
+		auto &LowLevelState = *g_LowLevelGlobalState;
+		auto &State = *g_GlobalState;
+#ifdef DMemoryManagerIsSame
+		if (LowLevelState.f_GetRentrant())
+			return;
+		LowLevelState.f_IncRentrant();
+		auto Cleanup = g_OnScopeExit > [&]
+			{
+				LowLevelState.f_DecRentrant();
+			}
+		;
 #ifdef DFullArenasForSecondary
 		if (!g_bOnlyDefaultZone)
 		{
-			auto &State = *g_GlobalState;
 			DMibLockRead(State.m_ZoneListLock);
 			for (auto &Zone : State.m_ZoneList)
 				Zone.m_MemoryManager.f_LazyReturnCheckout();
 		}
+#endif
 #endif
 		g_MainHeap->f_LazyReturnCheckout();
 	}
@@ -1116,15 +1302,15 @@ extern "C"
 	{
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 		
-		auto &State = *g_GlobalState;
+		auto &LowLevelState = *g_LowLevelGlobalState;
 		jmp_buf JumpBuffer;
-		DMibFastCheck(!State.f_GetJumpBuffer());
-		State.f_SetJumpBuffer(&JumpBuffer);
+		DMibFastCheck(!LowLevelState.f_GetJumpBuffer());
+		LowLevelState.f_SetJumpBuffer(&JumpBuffer);
 		auto Cleanup = fg_OnScopeExit
 			(
 				[&]()
 				{
-					State.f_SetJumpBuffer(nullptr);
+					LowLevelState.f_SetJumpBuffer(nullptr);
 				}
 			)
 		;
@@ -1139,15 +1325,15 @@ extern "C"
 
 	CMemoryManager *fg_Malterlib_Safe_GetDefaultMemoryManager(void const *_pMemory)
 	{
-		auto &State = *g_GlobalState;
+		auto &LowLevelState = *g_LowLevelGlobalState;
 		jmp_buf JumpBuffer;
-		DMibFastCheck(!State.f_GetJumpBuffer());
-		State.f_SetJumpBuffer(&JumpBuffer);
+		DMibFastCheck(!LowLevelState.f_GetJumpBuffer());
+		LowLevelState.f_SetJumpBuffer(&JumpBuffer);
 		auto Cleanup = fg_OnScopeExit
 			(
 				[&]()
 				{
-					State.f_SetJumpBuffer(nullptr);
+					LowLevelState.f_SetJumpBuffer(nullptr);
 				}
 			)
 		;
@@ -1163,15 +1349,16 @@ extern "C"
 	}
 	CMemoryManager *fg_Malterlib_Safe_GetOtherMemoryManager(void const *_pMemory)
 	{
+		auto &LowLevelState = *g_LowLevelGlobalState;
 		auto &State = *g_GlobalState;
 		jmp_buf JumpBuffer;
-		DMibFastCheck(!State.f_GetJumpBuffer());
-		State.f_SetJumpBuffer(&JumpBuffer);
+		DMibFastCheck(!LowLevelState.f_GetJumpBuffer());
+		LowLevelState.f_SetJumpBuffer(&JumpBuffer);
 		auto Cleanup = fg_OnScopeExit
 			(
 				[&]()
 				{
-					State.f_SetJumpBuffer(nullptr);
+					LowLevelState.f_SetJumpBuffer(nullptr);
 				}
 			)
 		;

@@ -974,6 +974,8 @@ namespace
 		template <typename tf_CAllocPattern>
 		void f_DoTests(tf_CAllocPattern const &_Pattern, mint _nThreads)
 		{
+			mint nPhysicalCores = NMib::NSys::fg_Thread_GetPhysicalCores();
+			mint nVirtualCores = NMib::NSys::fg_Thread_GetVirtualCores();
 			for 
 #if 1
 				(
@@ -996,10 +998,21 @@ namespace
 			{
 				if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
 				{
-					DMibTestSuite(NMib::NStr::CStr::CFormat("Max Alloc({})") << i)
+					if (i == 512 && (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores))
 					{
-						f_DoTests(i, _Pattern, _nThreads);
-					};
+						DMibTestSuite(NMib::NStr::CStr::CFormat("Max Alloc({})") << i)
+						{
+							f_DoTests(i, _Pattern, _nThreads);
+						};
+						
+					}
+					else
+					{
+						DMibTestSuite(CTestCategory(NMib::NStr::CStr::CFormat("Max Alloc({})") << i) << CTestGroup("Manual"))
+						{
+							f_DoTests(i, _Pattern, _nThreads);
+						};
+					}
 				}
 				else
 				{
@@ -1014,40 +1027,63 @@ namespace
 		template <typename tf_CAllocPattern>
 		void f_DoPattern(ch8 const *_pPattern, tf_CAllocPattern const &_Pattern)
 		{
-			DMibTestCategory(_pPattern)
+			auto fRunTests = [&]
+				{
+					mint nPhysicalCores = NMib::NSys::fg_Thread_GetPhysicalCores();
+					mint nCores = m_nCores;
+					//nCores = 1;
+					mint i = 1;
+					for (; i < nCores; i = i << 1)
+					{
+						DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << i)
+						{
+							f_DoTests(_Pattern, i);
+						};
+					}
+					if (!NMib::fg_IsPowerOfTwo(nPhysicalCores))
+					{
+						DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << nPhysicalCores)
+						{
+							f_DoTests(_Pattern, nPhysicalCores);
+						};
+					}
+					i = nCores;
+					DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << i)
+					{
+						f_DoTests(_Pattern, i);
+					};
+					i = i << 1;
+					mint nEndCores = nCores * 2;
+	#if 0
+					mint nEndCores = NMib::fg_Min(nCores*1024, 64u); // Max 4096 threads as it taskes some time to start threads
+					//mint nEndCores = NMib::fg_Min(nCores*1024, 4096u); // Max 4096 threads as it taskes some time to start threads
+					if (NMib::NSys::fg_System_BeingDebugged() && !(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
+						nEndCores = NMib::fg_Min(nEndCores, 128u); // Running in debugger the debugger makes creating threads really slow
+	#endif
+					
+					for (; i <= nEndCores; i = i << 1)
+					{
+						DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << i)
+						{
+							f_DoTests(_Pattern, i);
+						};
+					}
+				}
+			;
+			if (NMib::NStr::fg_StrCmp(_pPattern, "Random") == 0)
 			{
-				mint nCores = m_nCores;
-				//nCores = 1;
-				mint i = 1;
-				for (; i < nCores; i = i << 1)
+				DMibTestCategory(_pPattern)
 				{
-					DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << i)
-					{
-						f_DoTests(_Pattern, i);
-					};
-				}
-				i = nCores;
-				DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << i)
-				{
-					f_DoTests(_Pattern, i);
+					fRunTests();
 				};
-				i = i << 1;
-				mint nEndCores = nCores * 2;
-#if 0
-				mint nEndCores = NMib::fg_Min(nCores*1024, 64u); // Max 4096 threads as it taskes some time to start threads
-				//mint nEndCores = NMib::fg_Min(nCores*1024, 4096u); // Max 4096 threads as it taskes some time to start threads
-				if (NMib::NSys::fg_System_BeingDebugged() && !(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
-					nEndCores = NMib::fg_Min(nEndCores, 128u); // Running in debugger the debugger makes creating threads really slow
-#endif
-				
-				for (; i <= nEndCores; i = i << 1)
+			}
+			else
+			{
+				DMibTestCategory(CTestCategory(_pPattern) << CTestGroup("Manual"))
 				{
-					DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << i)
-					{
-						f_DoTests(_Pattern, i);
-					};
-				}
-			};
+					fRunTests();
+				};
+			}
 		}
 
 		void f_DoPatterns()
