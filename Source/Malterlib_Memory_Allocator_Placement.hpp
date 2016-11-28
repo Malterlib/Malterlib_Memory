@@ -139,12 +139,12 @@ namespace NMib
 			DMibPDebugBreak; // Not supported
 			return nullptr;
 		}
-		only_parameters_aliased return_not_aliased void *CAllocator_Placement::f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased void *CAllocator_Placement::f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibPDebugBreak; // Not supported
 			return nullptr;
 		}
-		only_parameters_aliased return_not_aliased void *CAllocator_Placement::f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased void *CAllocator_Placement::f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibPDebugBreak; // Not supported
 			return nullptr;

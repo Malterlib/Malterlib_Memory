@@ -282,7 +282,7 @@ namespace NMib
 			return CCrossModuleImplementationExtra::fs_NonTracked_Realloc(&g_CrossModule, _pMemory, _Size);
 		}
 
-		only_parameters_aliased return_not_aliased void *CAllocator_NonTrackedHeap::f_Resize(void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased void *CAllocator_NonTrackedHeap::f_Resize(void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return CCrossModuleImplementationExtra::fs_NonTracked_Resize(&g_CrossModule, _pMemory, _Size);
 		}

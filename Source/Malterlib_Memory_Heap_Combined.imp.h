@@ -365,7 +365,7 @@ namespace NMib
 		}
 
 		template <aint t_VirtualLimit, typename t_CParams16Bit, typename t_CParamArchSize, aint t_EnableHeapsFlags>
-		only_parameters_aliased return_not_aliased void *TCHeap_Combined<t_VirtualLimit, t_CParams16Bit, t_CParamArchSize, t_EnableHeapsFlags>::f_Resize(void *_pMemory, mint &_NewSize)
+		only_parameters_aliased void *TCHeap_Combined<t_VirtualLimit, t_CParams16Bit, t_CParamArchSize, t_EnableHeapsFlags>::f_Resize(void *_pMemory, mint &_NewSize)
 		{
 			DMibMemoryGoingToReportScope(this, m_pDebugName != nullptr);
 			DMibMemoryReportSaveVar(RequestedSize, _NewSize);

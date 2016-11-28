@@ -279,7 +279,7 @@ namespace NMib
 			only_parameters_aliased inline_small mint f_Size(const void *_pMemory);
 			only_parameters_aliased inline_small fp32 f_Overhead(void const *_pMemory);
 			only_parameters_aliased return_not_aliased void *f_Realloc(void *_pMemory, mint &_NewSize);
-			only_parameters_aliased return_not_aliased void *f_Resize(void *_pMemory, mint &_NewSize);
+			only_parameters_aliased void *f_Resize(void *_pMemory, mint &_NewSize);
 			inline_small bint f_CheckHeap(bint _bBreak);
 			template <typename t_CReportFunc> // ReportFunc = void (t_CDebugData* _pDebugData, void* _pMem)
 			void f_TraceAllocated(t_CReportFunc const &_ReportFunc, bint _bAllowIgnore = true, bool _bFreeBlocks = true);

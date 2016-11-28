@@ -156,13 +156,13 @@ namespace NMib
 		}
 
 		template <typename t_CParams>
-		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return m_pMemoryManager->f_Resize(_pMem, _Size);
 		}
 
 		template <typename t_CParams>
-		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return m_pMemoryManager->f_Resize(_Size);
 		}

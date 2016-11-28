@@ -37,7 +37,7 @@ namespace NMib
 			only_parameters_aliased inline_small mint f_Size(const void *_pMemory);
 			only_parameters_aliased inline_small fp32 f_Overhead(void const *_pMemory);
 			only_parameters_aliased return_not_aliased inline_small void *f_Realloc(void *_pMemory, mint &_NewSize);
-			only_parameters_aliased return_not_aliased inline_small void *f_Resize(void *_pMemory, mint &_NewSize);
+			only_parameters_aliased inline_small void *f_Resize(void *_pMemory, mint &_NewSize);
 			inline_small bint f_CheckHeap(bint _bBreak);
 			
 			using t_CHeapParams::CLock::f_Lock;

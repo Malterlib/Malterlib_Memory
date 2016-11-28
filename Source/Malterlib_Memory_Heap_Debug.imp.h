@@ -674,7 +674,7 @@ namespace NMib
 		}
 
 		template <class t_CParams16Bit, class t_CParamArchSize, mint t_MaxHeapTraceDepth, class t_CDebugData>
-		only_parameters_aliased return_not_aliased void *TCHeap_CombinedDebug<t_CParams16Bit, t_CParamArchSize, t_MaxHeapTraceDepth, t_CDebugData>::f_Resize(void *_pMemory, mint &_NewSize)
+		only_parameters_aliased void *TCHeap_CombinedDebug<t_CParams16Bit, t_CParamArchSize, t_MaxHeapTraceDepth, t_CDebugData>::f_Resize(void *_pMemory, mint &_NewSize)
 		{
 			DMibMemoryGoingToReportScope(this, m_pDebugName != nullptr);
 			DMibMemoryReportSaveVar(RequestedSize, _NewSize);

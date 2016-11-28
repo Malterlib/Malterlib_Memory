@@ -211,7 +211,7 @@ namespace NMib
 		}
 
 		template <class t_CHeapParams>
-		only_parameters_aliased return_not_aliased inline_small void *TCHeap_StandAlone<t_CHeapParams>::f_Resize(void *_pMemory, mint &_NewSize)
+		only_parameters_aliased inline_small void *TCHeap_StandAlone<t_CHeapParams>::f_Resize(void *_pMemory, mint &_NewSize)
 		{
 			DMibMemoryReportSaveVar(RequestedSize, _NewSize);
 			DMibMemoryGoingToReportScope(this, m_pDebugName != nullptr);

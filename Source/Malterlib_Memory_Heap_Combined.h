@@ -68,7 +68,7 @@ namespace NMib
 			only_parameters_aliased mint f_Size(const void *_pMemory);
 			only_parameters_aliased fp32 f_Overhead(void const *_pMemory);
 			only_parameters_aliased return_not_aliased void *f_Realloc(void *_pMemory, mint &_NewSize);
-			only_parameters_aliased return_not_aliased void *f_Resize(void *_pMemory, mint &_NewSize);
+			only_parameters_aliased void *f_Resize(void *_pMemory, mint &_NewSize);
 			mint f_Get8BitLargest();
 			bint f_CheckHeap(bint _bBreak);
 			void f_TraceLeaks(bool _bFreeBlocks);
