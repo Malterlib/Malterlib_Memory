@@ -152,7 +152,9 @@ namespace NMib
 
 			bool fp_CheckFree(CMemoryManagerSubSlab_NormalLink *_pLink, bool _bBreak);
 
-			bool fp_ProcessMessages();
+			bool fp_ProcessMessages(CNormalFreeList *_pFreeList);
+			bool fp_ProcessMessageList(CNormalFreeList *_pFreeList, mint &o_MessageList);
+			
 
 			void fp_CheckMessages();
 			bool fp_CheckCleanup();
@@ -201,6 +203,7 @@ namespace NMib
 			align_cacheline NAtomic::TCAtomic<mint> m_pNextArena;
 			align_cacheline NAtomic::TCAtomic<uint32> m_Locked;
 			align_cacheline NAtomic::TCAtomic<mint> m_Messages;
+			mint m_DeferredMessages = 0;
 			
 			uint64 m_Magic;
 			

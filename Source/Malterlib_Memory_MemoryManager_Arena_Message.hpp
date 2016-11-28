@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -22,35 +22,30 @@ namespace NMib
 				yield_cpu;
 			}
 		}
-
+		
 		template <typename t_CParams>
-		inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessages()
+		inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessageList(CNormalFreeList *_pFreeList, mint &o_MessageList)
 		{
-			mint Messages = m_Messages.f_Exchange(0);
-			bool bDoneSomething = false;
+			mint Messages = o_MessageList;
+			
+			smint nToProcess = TCLimitsInt<smint>::mc_Max;
+			
+			bool bFound;
 
-			// Reverse list
-			mint MessagesReverse = 0;
+			if (_pFreeList)
+			{
+				bFound = false;
+				nToProcess = 1024;
+			}
+			else
+				bFound = true;
+
 			while (Messages)
 			{
 				EMessageType FreeLinkType = (EMessageType)(Messages & 3);
 				CMessage *pFreeBlock = (CMessage *)(Messages & (~mint(3)));
 				mint NextMessage = pFreeBlock->m_Next;
-				pFreeBlock->m_Next = MessagesReverse;
-				MessagesReverse = (mint)pFreeBlock | mint(FreeLinkType);
 
-				Messages = NextMessage;
-			}
-
-
-			while (MessagesReverse)
-			{
-				EMessageType FreeLinkType = (EMessageType)(MessagesReverse & 3);
-				CMessage *pFreeBlock = (CMessage *)(MessagesReverse & (~mint(3)));
-				mint NextMessage = pFreeBlock->m_Next;
-
-				bDoneSomething = true;
-					
 				switch (FreeLinkType)
 				{
 				case EMessageType_FreeNormalBlock:
@@ -80,8 +75,49 @@ namespace NMib
 					break;
 				}
 
-				MessagesReverse = NextMessage;
+				Messages = NextMessage;
+				
+				if (!bFound)
+				{
+					if (!_pFreeList->f_IsEmpty())
+						bFound = true;
+					--nToProcess;
+				}
+				else if (--nToProcess <= 0)
+					break;
 			}
+			o_MessageList = Messages;
+			return bFound;
+		}
+
+		template <typename t_CParams>
+		inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessages(CNormalFreeList *_pFreeList)
+		{
+			if (_pFreeList)
+			{
+				if (m_DeferredMessages)
+				{
+					if (fp_ProcessMessageList(_pFreeList, m_DeferredMessages))
+						return true;
+				}
+				m_DeferredMessages = m_Messages.f_Exchange(0);
+				return fp_ProcessMessageList(_pFreeList, m_DeferredMessages);
+			}
+			
+			bool bDoneSomething = false;
+			
+			if (m_DeferredMessages)
+			{
+				bDoneSomething = true;
+				fp_ProcessMessageList(_pFreeList, m_DeferredMessages);
+			}
+
+			if (auto Messages = m_Messages.f_Exchange(0))
+			{
+				bDoneSomething = true;
+				fp_ProcessMessageList(_pFreeList, Messages);
+			}
+			
 			return bDoneSomething;
 		}
 
@@ -90,7 +126,7 @@ namespace NMib
 		{
 			if (m_Messages.f_Load(NAtomic::EMemoryOrder_Relaxed))
 			{
-				fp_ProcessMessages();
+				fp_ProcessMessages(nullptr);
 			}
 		}
 
@@ -133,7 +169,7 @@ namespace NMib
 		{
 			if (m_Messages.f_Load(NAtomic::EMemoryOrder_Relaxed))
 			{
-				return fp_ProcessMessages();
+				return fp_ProcessMessages(nullptr);
 			}
 			return false;
 		}

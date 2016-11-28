@@ -152,6 +152,7 @@ namespace NMib
 				
 				auto &List = *pList;
 
+			l_Retry:
 				auto pAlloc = List.f_GetFirst();
 				
 				if (likely(pAlloc))
@@ -206,6 +207,11 @@ namespace NMib
 						this->f_OnAlloc((uint8 *)pAlloc, AlignedSize);
 					_Size = AlignedSize;
 					return pAlloc;
+				}
+				else
+				{
+					if (fp_ProcessMessages(pList))
+						goto l_Retry;
 				}
 			}
 
@@ -486,8 +492,8 @@ namespace NMib
 			
 			DMibFastCheck(pData[iSubSlab].m_Allocated.m_nAllocs > 0);
  			
-			pList->f_UnsafeInsertFirst(pFreeMemory);
 			pFreeMemory->m_nBlocks = 1;
+			pList->f_UnsafeInsertFirst(pFreeMemory);
 
 			if (unlikely((--pData[iSubSlab].m_Allocated.m_nAllocs) == 0))
 			{
