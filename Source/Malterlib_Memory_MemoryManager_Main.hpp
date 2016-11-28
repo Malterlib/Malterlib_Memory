@@ -1014,9 +1014,12 @@ namespace NMib
 
 				for (mint i = 0; i < 2; ++i)
 				{
-					pArena = pNumaArena->m_pFirstArena.f_Load();
+					mint nArenas = m_nArenas; 
+					pArena = _ThreadLocal.m_pPreferredArena;
+					if (!pArena)
+						pArena = pNumaArena->m_pFirstArena.f_Load();
 					
-					while (pArena)
+					for (mint i = 0; i < nArenas; ++i)
 					{
 						mint NextArena = pArena->m_pNextArena.f_Load(NAtomic::EMemoryOrder_Acquire);
 						if ((!(NextArena & 1)) && pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire) == EArenaLockFlag_None)
@@ -1025,6 +1028,8 @@ namespace NMib
 							return pArena;
 						}
 						pArena = (TCMemoryManagerArena<t_CParams> *)(NextArena & mint(~mint(1)));
+						if (!pArena)
+							pArena = pNumaArena->m_pFirstArena.f_Load();
 					}
 				}
 				

@@ -186,7 +186,6 @@ namespace
 
 		void f_Clear()
 		{
-
 		}
 		void f_CheckHeap()
 		{
@@ -448,6 +447,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -474,8 +474,8 @@ namespace
 
 		void f_Clear()
 		{
-
 		}
+		
 		void f_CheckHeap()
 		{
 		}

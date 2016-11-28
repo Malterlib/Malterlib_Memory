@@ -12,6 +12,8 @@ namespace
 	using namespace NMib::NTest;
 	using namespace NMib::NMem;
 	
+	constexpr mint gc_TestSize = 512;
+	
 #if 0
 	struct CDisplayStats
 	{
@@ -101,8 +103,8 @@ namespace
 				: m_pAllocations(nullptr)
 			{
 			}
-			CAllocPattern_Random(mint _MaxAllocSize, mint _iThread, NMib::ENumaNode _NumaNode)
-				: m_Random(55556 + _iThread)
+			CAllocPattern_Random(mint _MaxAllocSize, mint _iThread, mint _iRepetition, NMib::ENumaNode _NumaNode)
+				: m_Random(55556, _iThread, _iRepetition)
 				, m_pAllocations(nullptr)
 				, m_MaxAllocSize(_MaxAllocSize - 1)
 				, m_nIterations(0)
@@ -149,6 +151,7 @@ namespace
 						mint Size = (m_Random.f_GetValue<uint32>() & m_MaxAllocSize) + 1;
 						//mint Size = m_MaxAllocSize + 1;
 						Info.m_pAddress = _Heap.f_Alloc(Size);
+						*((uint8 *)Info.m_pAddress) = iStart;
 						//NMib::NMem::fg_MemClear((uint8 *)Info.m_pAddress, Size);
 						++m_nIterations;
 					}
@@ -204,8 +207,8 @@ namespace
 				: m_pAllocations(nullptr)
 			{
 			}
-			CAllocPattern_RandomAlignment(mint _MaxAllocSize, mint _iThread, NMib::ENumaNode _NumaNode)
-				: m_Random(55556 + _iThread)
+			CAllocPattern_RandomAlignment(mint _MaxAllocSize, mint _iThread, mint _iRepetition, NMib::ENumaNode _NumaNode)
+				: m_Random(55556, _iThread, _iRepetition)
 				, m_pAllocations(nullptr)
 				, m_MaxAllocSize(_MaxAllocSize - 1)
 				, m_nIterations(0)
@@ -259,6 +262,7 @@ namespace
 						//mint Size = m_MaxAllocSize + 1;
 						mint Alignment = mint(1) << AlignmentBits;
 						Info.m_pAddress = _Heap.f_AllocAligned(Size, Alignment);
+						*((uint8 *)Info.m_pAddress) = iStart;
 						if ((mint)Info.m_pAddress & (Alignment - 1))
 						{
 							m_bFailed = true;
@@ -313,8 +317,8 @@ namespace
 				: m_pAllocations(nullptr)
 			{
 			}
-			CAllocPattern_OneSize(mint _MaxAllocSize, mint _iThread, NMib::ENumaNode _NumaNode)
-				: m_Random(55556 + _iThread)
+			CAllocPattern_OneSize(mint _MaxAllocSize, mint _iThread, mint _iRepetition, NMib::ENumaNode _NumaNode)
+				: m_Random(55556, _iThread, _iRepetition)
 				, m_pAllocations(nullptr)
 				, m_MaxAllocSize(_MaxAllocSize)
 				, m_nIterations(0)
@@ -360,6 +364,7 @@ namespace
 					{
 						mint Size = m_MaxAllocSize;
 						Info.m_pAddress = _Heap.f_Alloc(Size);
+						*((uint8 *)Info.m_pAddress) = iStart;
 						++m_nIterations;
 					}
 				}
@@ -391,8 +396,8 @@ namespace
 			{
 			}
 
-			CAllocPattern_OneSizeLinear(mint _MaxAllocSize, mint _iThread, NMib::ENumaNode _NumaNode)
-				: CAllocPattern_OneSize(_MaxAllocSize, _iThread, _NumaNode)
+			CAllocPattern_OneSizeLinear(mint _MaxAllocSize, mint _iThread, mint _iRepetition, NMib::ENumaNode _NumaNode)
+				: CAllocPattern_OneSize(_MaxAllocSize, _iThread, _iRepetition, _NumaNode)
 			{
 			}
 
@@ -411,6 +416,7 @@ namespace
 					{
 						mint Size = m_MaxAllocSize;
 						Info.m_pAddress = _Heap.f_Alloc(Size);
+						*((uint8 *)Info.m_pAddress) = iStart;
 						++m_nIterations;
 					}
 				}
@@ -424,7 +430,6 @@ namespace
 				: m_Measure("Baseline")
 				, m_pWakeEvent(nullptr)
 				, m_iThread(0)
-				, m_pStop(nullptr)
 				, m_MaxAllocSize(0)
 				, m_pHeap(nullptr)
 				, m_iNumaNode(NMib::ENumaNode_Default)
@@ -435,8 +440,8 @@ namespace
 			NMib::NThread::CEvent *m_pWakeEvent;
 			CTestPerformanceMeasure m_Measure;
 			NMib::NThread::CEvent m_StartedEvent;
-			bint volatile *m_pStop;
 			mint m_iThread;
+			mint m_iRepetition;
 			mint m_MaxAllocSize;
 			NMib::ENumaNode m_iNumaNode;
 			virtual aint f_Main()
@@ -459,7 +464,7 @@ namespace
 				auto fInnerLoop = [pHeapPointer = m_pHeap, this]() inline_never 
 					{
 						auto pHeap = pHeapPointer; 
-						t_CAllocPattern Pattern(m_MaxAllocSize, m_iThread, m_iNumaNode);
+						t_CAllocPattern Pattern(m_MaxAllocSize, m_iThread, m_iRepetition, m_iNumaNode);
 						int nPattern = Pattern.f_GetIdealAllocations() / 32;
 						uint64 nIterations = 0;
 						{
@@ -473,8 +478,6 @@ namespace
 									//Pattern.f_Next(*m_pHeap);
 									//Pattern.f_Next(*m_pHeap);
 								}
-								//if (*m_pStop)
-								//	break;
 							}
 							nIterations = Pattern.f_Iterations(*pHeap);
 						}
@@ -508,7 +511,6 @@ namespace
 			CTestPerformanceMeasure Measure(_pName);
 
 			NMib::NThread::CEvent WakeEvent;
-			bint volatile bStop = false;
 
 			mint nNodes = NMib::NSys::fg_Mem_GetNumNumaNodes();
 			NMib::NContainer::TCVector<NMib::ENumaNode> Nodes;
@@ -519,11 +521,10 @@ namespace
 			}
 
 
-			for (mint i = 0; i < nTests; ++i)
+			for (mint iRepetition = 0; iRepetition < nTests; ++iRepetition)
 			{
 				// Reset started
 				WakeEvent.f_ResetSignaled();
-				bStop = false;
 				NMib::NContainer::TCLinkedList<TCThreadTest<tf_CHeap, tf_CAllocPattern>> Tests;
 				// Start threads
 				int32 iNode = 0;
@@ -532,7 +533,7 @@ namespace
 					auto &Test = Tests.f_Insert();
 					Test.m_pWakeEvent = &WakeEvent;
 					Test.m_iThread = i;
-					Test.m_pStop = &bStop;
+					Test.m_iRepetition = iRepetition;
 					Test.m_MaxAllocSize = _MaxAllocSize;
 					Test.m_pHeap = &Heap;
 					if (nNodes)
@@ -552,32 +553,6 @@ namespace
 				WakeEvent.f_SetSignaled();
 				if (_nThreads > m_nCores)
 					Measure.f_Start();
-				// Let run for allotted time
-				{
-					NMib::NTime::CClock Clock;
-					Clock.f_Start();
-					{
-						fp64 Runtime;
-						if (_nThreads < m_nCores)
-							Runtime = 0.4;
-						else if (_nThreads == m_nCores)
-							Runtime = 0.5;
-						else
-							Runtime = 1.0;
-						/*else
-							Runtime = 2.0 * (_nThreads / m_nCores);*/
-						/*
-						Runtime = 5.0;
-						fp64 TimeLeft = Runtime - Clock.f_GetTime();
-						while (TimeLeft > 0.0)
-						{
-							NMib::NSys::fg_Thread_Sleep(TimeLeft);
-							TimeLeft = Runtime - Clock.f_GetTime();
-						}*/
-					}
-					// Stop all threads
-					bStop = true;
-				}
 
 				// Wait for all threads to stop
 				for (auto Iter = Tests.f_GetIterator(); Iter; ++Iter)
@@ -589,7 +564,7 @@ namespace
 					for (auto Iter = Tests.f_GetIterator(); Iter; ++Iter)
 						nIterations += Iter->m_Measure.f_Iterations();
 
-					Measure.f_Stop(nIterations, _nThreads);
+					Measure.f_Stop(nIterations, NMib::fg_Min(_nThreads, NMib::NSys::fg_Thread_GetPhysicalCores()));
 				}
 				else
 				{
@@ -998,7 +973,7 @@ namespace
 			{
 				if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
 				{
-					if (i == 512 && (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores))
+					if (i == gc_TestSize && (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores || _nThreads == nPhysicalCores * 2))
 					{
 						DMibTestSuite(NMib::NStr::CStr::CFormat("Max Alloc({})") << i)
 						{
@@ -1040,7 +1015,7 @@ namespace
 							f_DoTests(_Pattern, i);
 						};
 					}
-					if (!NMib::fg_IsPowerOfTwo(nPhysicalCores))
+					if (!NMib::fg_IsPowerOfTwo(nPhysicalCores) && nPhysicalCores != nCores)
 					{
 						DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << nPhysicalCores)
 						{

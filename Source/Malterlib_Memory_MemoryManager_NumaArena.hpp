@@ -205,12 +205,24 @@ namespace NMib
 				;
 				if (!_bForceCleanup)
 				{
-					for (auto iArena = m_ArenasNeedCleanup.f_GetIterator(); iArena; )
+					bool bTryAgain = true;
+					while (bTryAgain)
 					{
-						if (fProcessArena(*iArena))
-							iArena.f_Remove();
-						else
-							++iArena;
+						bTryAgain = false;
+						for (auto pArena = m_ArenasNeedCleanup.f_GetFirst(); pArena; )
+						{
+							if (!pArena->m_CleanupLink.f_IsInList())
+							{
+								// Another thread collected garbage
+								bTryAgain = true;
+								break;
+							}
+							auto *pNext = m_ArenasNeedCleanup.fs_GetNext(pArena);
+							if (fProcessArena(*pArena))
+								pArena->m_CleanupLink.f_Unlink();
+							
+							pArena = pNext;
+						}
 					}
 				}
 				else
