@@ -1,9 +1,19 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <stdlib.h>
 #include <malloc.h>
 
+#ifdef DArchitechture_x86
+	#define DMibMemoryAssumeAlignment 8
+#elif defined(DArchitechture_x64)
+	#define DMibMemoryAssumeAlignment 16
+#else
+	#define DMibMemoryAssumeAlignment 8
+#endif
+
+//#define DMibMemoryCorrectAlignment
+//#define DMibMemoryCorectSize
 
 namespace NMib
 {
@@ -38,7 +48,9 @@ namespace NMib
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
 			void *pRet = malloc(_Size);
+#ifdef DMibMemoryCorectSize
 			_Size = malloc_usable_size(pRet);
+#endif
 			DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
@@ -50,13 +62,23 @@ namespace NMib
 
 		inline_always void * CCrossModuleImplementation::fs_AllocAligned(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
 		{
+#ifdef DMibMemoryCorrectAlignment
+#ifdef DMibMemoryAssumeAlignment
+			if (_Alignment <= DMibMemoryAssumeAlignment)
+				return CCrossModuleImplementation::fs_Alloc(_pModule, _Size);
+#endif
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
 			void *pRet = memalign(_Alignment, _Size);
 			DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
+#ifdef DMibMemoryCorectSize
 			_Size = malloc_usable_size(pRet);
+#endif
 			DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, _Alignment, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
+#else
+			return CCrossModuleImplementation::fs_Alloc(_pModule, _Size);
+#endif
 		}
 
 		inline_always void * CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
@@ -65,7 +87,9 @@ namespace NMib
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
 			DMibMemoryReportExpression(mint Size = fs_Size(_pModule, _pMemory));
 			void *pRet = realloc(_pMemory, _Size);
+#ifdef DMibMemoryCorectSize
 			_Size = malloc_usable_size(pRet);
+#endif
 			DMibMemoryReportRealloc(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
@@ -76,7 +100,9 @@ namespace NMib
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
 			DMibMemoryReportExpression(mint Size = fs_Size(_pModule, _pMemory));
 			void *pRet = realloc(_pMemory, _Size);
+#ifdef DMibMemoryCorectSize
 			_Size = malloc_usable_size(pRet);
+#endif
 			DMibMemoryReportResize(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
