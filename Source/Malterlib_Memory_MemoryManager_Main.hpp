@@ -1014,12 +1014,12 @@ namespace NMib
 
 				for (mint i = 0; i < 2; ++i)
 				{
-					mint nArenas = m_nArenas; 
+					mint nArenas = m_nArenas; // This is racy, so we can get > 0 arenas while pArena is still nullptr
 					pArena = _ThreadLocal.m_pPreferredArena;
 					if (!pArena)
 						pArena = pNumaArena->m_pFirstArena.f_Load();
 					
-					for (mint i = 0; i < nArenas; ++i)
+					for (mint i = 0; i < nArenas && pArena; ++i)
 					{
 						mint NextArena = pArena->m_pNextArena.f_Load(NAtomic::EMemoryOrder_Acquire);
 						if ((!(NextArena & 1)) && pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire) == EArenaLockFlag_None)
