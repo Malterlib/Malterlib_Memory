@@ -16,6 +16,12 @@ void fg_MalterlibMallocOverride_AtExitCalled()
 void fg_MalterlibMallocOverride_CanStartThreads()
 {
 }
+void fg_MalterlibMallocOverride_DestroyThreads()
+{
+}
+void fg_MalterlibMallocOverride_PreDestroyNonTrackedMemoryManager()
+{
+}
 bool fg_MalterlibMallocOverride_Enabled()
 {
 	return false;

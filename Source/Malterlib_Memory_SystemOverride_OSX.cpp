@@ -247,29 +247,33 @@ extern "C"
 	
 	void fg_MalterlibSystem_DestroyLate()
 	{
-		NSys::g_FunctionHooks->f_Suspend();
-#ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
-		if (CSystem::ms_PlatformVersion < 10'11'00)
-		{
-			if (malloc_reenter)
-			{
-				NSys::g_FunctionHooks->f_Unhook((void **)&malloc_reenter);
-				malloc_reenter = nullptr;
-			}
-		}
-#endif
-		NSys::g_FunctionHooks->f_Unhook((void **)&exit_reenter);
-		
-		fg_InterposeOverrideUnhook();
-		
-		NSys::g_FunctionHooks->f_Resume();
-		
-		NSys::g_FunctionHooks.f_Destruct();
 		g_bMemoryManagerNeededAfterDestroy = true;
 		fg_MalterlibMallocOverrideDisable();
 		NSys::fg_DestroySystem();
 	}
+}
 
+void fg_MalterlibMallocOverride_PreDestroyNonTrackedMemoryManager()
+{
+	NSys::g_FunctionHooks->f_Suspend();
+#ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
+	if (CSystem::ms_PlatformVersion < 10'11'00)
+	{
+		if (malloc_reenter)
+		{
+			NSys::g_FunctionHooks->f_Unhook((void **)&malloc_reenter);
+			malloc_reenter = nullptr;
+		}
+	}
+#endif
+	NSys::g_FunctionHooks->f_Unhook((void **)&exit_reenter);
+	fg_InterposeOverrideUnhook();
+	NSys::g_FunctionHooks->f_Resume();
+	NSys::g_FunctionHooks.f_Destruct();
+}
+
+extern "C"
+{
 #ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
 	void *fg_MalterlibSystem_Hooked_Malloc(size_t _Size)
 	{
@@ -1110,6 +1114,14 @@ void fg_MalterlibMallocOverrideDisable()
 		malloc_zone_unregister((malloc_zone_t *)&g_MalterlibMallocZone);
 	}
 #endif
+}
+
+void fg_MalterlibMallocOverride_DestroyThreads()
+{
+	auto &State = *g_GlobalState;
+	DMibLockRead(State.m_ZoneListLock);
+	for (auto &Zone : State.m_ZoneList)
+		Zone.m_MemoryManager.f_DestroyCleanupThreads();
 }
 
 void fg_MalterlibMallocOverride_CanStartThreads()

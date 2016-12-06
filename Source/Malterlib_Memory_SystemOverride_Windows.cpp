@@ -912,6 +912,14 @@ void fg_MalterlibMallocOverride_CanStartThreads()
 {
 }
 
+void fg_MalterlibMallocOverride_DestroyThreads()
+{
+}
+
+void fg_MalterlibMallocOverride_PreDestroyNonTrackedMemoryManager()
+{
+}
+
 void NMib::NSys::fg_Mem_DisableLazyReturnCheckout()
 {
 }
