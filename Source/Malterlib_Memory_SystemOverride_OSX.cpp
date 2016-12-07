@@ -255,6 +255,8 @@ extern "C"
 
 void fg_MalterlibMallocOverride_PreDestroyNonTrackedMemoryManager()
 {
+	if (!g_MalterlibMallocOveriddenInterposersInstalled)
+		return;
 	NSys::g_FunctionHooks->f_Suspend();
 #ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
 	if (CSystem::ms_PlatformVersion < 10'11'00)
@@ -1118,6 +1120,8 @@ void fg_MalterlibMallocOverrideDisable()
 
 void fg_MalterlibMallocOverride_DestroyThreads()
 {
+	if (!g_MalterlibMallocOveriddenInterposersInstalled)
+		return;
 	auto &State = *g_GlobalState;
 	DMibLockRead(State.m_ZoneListLock);
 	for (auto &Zone : State.m_ZoneList)
