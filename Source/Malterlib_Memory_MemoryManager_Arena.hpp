@@ -222,6 +222,7 @@ namespace NMib
 						if (MemoryManager.m_bCanDoLazyCheckout)
 						{
 							++MemoryManager.fp_CheckoutHelper(LocalArena)->m_CheckoutCount;
+							DMibFastCheck(fg_GetSys()->f_ThreadCreated());
 							LocalArena.m_bLazyCheckout = true;
 						}
 						else

@@ -269,9 +269,11 @@ void fg_MalterlibMallocOverride_PreDestroyNonTrackedMemoryManager()
 	}
 #endif
 	NSys::g_FunctionHooks->f_Unhook((void **)&exit_reenter);
-	fg_InterposeOverrideUnhook();
+	if (!g_bMemoryManagerNeededAfterDestroy)
+		fg_InterposeOverrideUnhook();
 	NSys::g_FunctionHooks->f_Resume();
-	NSys::g_FunctionHooks.f_Destruct();
+	if (!g_bMemoryManagerNeededAfterDestroy)
+		NSys::g_FunctionHooks.f_Destruct();
 }
 
 extern "C"

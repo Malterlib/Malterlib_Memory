@@ -377,6 +377,7 @@ namespace NMib
 			if (unlikely(m_bCanDoLazyCheckout))
 			{
 				++fp_CheckoutHelper(_LocalArena)->m_CheckoutCount;
+				DMibFastCheck(fg_GetSys()->f_ThreadCreated());
 				_LocalArena.m_bLazyCheckout = true;
 				return f_AllocAligned(_Size, 1);
 			}
@@ -391,6 +392,7 @@ namespace NMib
 			fp_CheckoutHelper(TempArena);
 			auto Cleanup = g_OnScopeExit > [&]
 				{
+					DMibFastCheck(!TempArena.m_bLazyCheckout);
 					TempArena.f_ReturnCheckoutLight();
 				}
 			;
@@ -403,6 +405,7 @@ namespace NMib
 			if (unlikely(m_bCanDoLazyCheckout))
 			{
 				++fp_CheckoutHelper(_LocalArena)->m_CheckoutCount;
+				DMibFastCheck(fg_GetSys()->f_ThreadCreated());
 				_LocalArena.m_bLazyCheckout = true;
 				return f_AllocBatch(_Size, 1, _Functor); 
 			}
@@ -417,6 +420,7 @@ namespace NMib
 			fp_CheckoutHelper(TempArena);
 			auto Cleanup = g_OnScopeExit > [&]
 				{
+					DMibFastCheck(!TempArena.m_bLazyCheckout);
 					TempArena.f_ReturnCheckoutLight();
 				}
 			;
