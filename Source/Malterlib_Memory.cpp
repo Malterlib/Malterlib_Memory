@@ -107,6 +107,7 @@ namespace NMib
 				"CFUniCharGetBitmapPtrForPlane",
 				"CFUniCharGetMappingData",
 				"__CFUniCharLoadDecompositionTable",
+				"tlv_allocate_and_initialize_for_key",
 	#elif defined(DPlatformFamily_Linux)
 				"qt_load_library_runtime",
 				"qt_set_x11_resources",
