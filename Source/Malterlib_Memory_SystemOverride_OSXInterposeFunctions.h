@@ -136,7 +136,6 @@ DMibMemoryInterposeCpp1(void , _ZdlPvRKSt9nothrow_t, void *_0)
 
 #endif
 
-DMibMemoryInterpose7(mach_msg_return_t ,mach_msg_trap, mach_msg_header_t *_0, mach_msg_option_t _1, mach_msg_size_t _2, mach_msg_size_t _3, mach_port_name_t _4, mach_msg_timeout_t _5, mach_port_name_t _6)
 DMibMemoryInterpose3(kern_return_t, semaphore_timedwait_trap, mach_port_name_t _0, unsigned int _1, clock_res_t _2)
 DMibMemoryInterpose1(kern_return_t, semaphore_wait_trap, mach_port_name_t _0)
 DMibMemoryInterpose2(kern_return_t, semaphore_wait_signal_trap, mach_port_name_t _0, mach_port_name_t _1)
@@ -145,6 +144,7 @@ DMibMemoryInterpose4(int, __workq_kernreturn, int _0, user_addr_t _1, int _2, in
 DMibMemoryInterpose8(uint32_t, __psynch_cvwait, user_addr_t _0, uint64_t _1, uint32_t _2, user_addr_t _3, uint64_t _4, uint32_t _5, int64_t _6, uint32_t _7)
 DMibMemoryInterpose6(int, kevent, int _0, const struct kevent *_1, int _2, struct kevent *_3, int _4, const struct timespec *_5)
 DMibMemoryInterpose7(int, kevent64, int _0, const struct kevent64_s *_1, int _2, struct kevent64_s *_3, int _4, unsigned int _5, const struct timespec *_6)
+DMibMemoryInterpose7(mach_msg_return_t ,mach_msg_trap, mach_msg_header_t *_0, mach_msg_option_t _1, mach_msg_size_t _2, mach_msg_size_t _3, mach_port_name_t _4, mach_msg_timeout_t _5, mach_port_name_t _6)
 
 #undef DMibMemoryInterpose0
 #undef DMibMemoryInterpose1
