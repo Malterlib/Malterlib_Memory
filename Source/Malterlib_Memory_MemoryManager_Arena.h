@@ -179,6 +179,9 @@ namespace NMib
 		private:
 			
 			using FSmallAllocJump = void *(*)(TCMemoryManagerArena *);
+#ifdef DCompiler_MSVC
+			static FSmallAllocJump mc_SmallAllocCategoryJumpTable[6];
+#else
 			static constexpr FSmallAllocJump mc_SmallAllocCategoryJumpTable[6] =
 				{
 					&fsp_AllocSmall<1>
@@ -189,6 +192,7 @@ namespace NMib
 					, &fsp_AllocSmall<16>
 				}
 			;
+#endif
 			
 			DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_FreeSlabs;
 			DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_PartiallyFreeSlabs[t_CParams::mc_NumSizesPerLevel][mc_NumSubSlabSizeLevels];

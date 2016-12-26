@@ -7,6 +7,20 @@ namespace NMib
 {
 	namespace NMem
 	{
+#ifdef DCompiler_MSVC
+		template <typename t_CParams>
+		typename TCMemoryManagerArena<t_CParams>::FSmallAllocJump TCMemoryManagerArena<t_CParams>::mc_SmallAllocCategoryJumpTable[6] =
+			{
+				&fsp_AllocSmall<1>
+				, &fsp_AllocSmall<2>
+				, &fsp_AllocSmall<4>
+				, &fsp_AllocSmall<8>
+				, &fsp_AllocSmall<12>
+				, &fsp_AllocSmall<16>
+			}
+		;
+#endif
+
 		template <typename t_CParams>
 		inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocSmallSize(mint &_Size)
 		{

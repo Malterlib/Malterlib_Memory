@@ -1370,6 +1370,10 @@ namespace
 	public:
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
 		{
+#ifdef DPlatformFamily_Windows
+			if (_bAlignment)
+				return false;
+#endif
 			return true;
 		}
 
@@ -1391,9 +1395,13 @@ namespace
 
 		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
 		{
+#ifdef DPlatformFamily_Windows
+			return nullptr;
+#else
 			void *pPtr;
 			posix_memalign(&pPtr, _Alignment, _Size);
 			return pPtr;
+#endif
 		}
 
 		inline_small void *f_Alloc(mint _Size)
