@@ -398,22 +398,22 @@ namespace NMib
 				{
 					DMibFastCheck(m_bLazyCheckout); // Will be returned below
 					auto pArena = m_pArena;
-					DMibFastCheck(pArena = m_pPreferredArena);
+					DMibFastCheck(pArena == m_pPreferredArena);
 
-					DMibFastCheck(m_pPreferredArena->m_pOwningThreadLocal == this);
-					m_pPreferredArena->m_pOwningThreadLocal = nullptr;
-					mint Owned = m_pPreferredArena->m_pNextArena.f_FetchAnd(~mint(1));
+					DMibFastCheck(pArena->m_pOwningThreadLocal == this);
+					pArena->m_pOwningThreadLocal = nullptr;
+					mint Owned = pArena->m_pNextArena.f_FetchAnd(~mint(1));
 					DMibFastCheck(Owned & 1);
 					(void)Owned;
 				}
 				else
 				{
 					auto pArena = m_pNumaArena->m_pMemoryManager->fp_CheckoutHelperWaitForCleanup(*this);
-					DMibFastCheck(pArena = m_pPreferredArena);
+					DMibFastCheck(pArena == m_pPreferredArena);
 
-					DMibFastCheck(m_pPreferredArena->m_pOwningThreadLocal == this);
-					m_pPreferredArena->m_pOwningThreadLocal = nullptr;
-					mint Owned = m_pPreferredArena->m_pNextArena.f_FetchAnd(~mint(1));
+					DMibFastCheck(pArena->m_pOwningThreadLocal == this);
+					pArena->m_pOwningThreadLocal = nullptr;
+					mint Owned = pArena->m_pNextArena.f_FetchAnd(~mint(1));
 					DMibFastCheck(Owned & 1);
 					(void)Owned;
 					f_ReturnCheckoutLight();
