@@ -108,6 +108,7 @@ namespace NMib
 				"CFUniCharGetMappingData",
 				"__CFUniCharLoadDecompositionTable",
 				"tlv_allocate_and_initialize_for_key",
+				"tzsetwall_basic",
 	#elif defined(DPlatformFamily_Linux)
 				"qt_load_library_runtime",
 				"qt_set_x11_resources",
