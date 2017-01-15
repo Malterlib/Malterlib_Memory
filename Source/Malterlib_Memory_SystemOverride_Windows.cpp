@@ -49,6 +49,7 @@
 #undef _calloc_crt
 #undef _realloc_crt
 #undef _recalloc_crt
+#undef _recalloc_base
 
 #undef _aligned_free
 #undef _aligned_malloc
@@ -219,6 +220,15 @@ extern "C"
 		return addr;
 	}
 
+	_Success_(return != 0) _Check_return_ _Ret_maybenull_ _Post_writable_byte_size_(_Count * _Size)
+	_ACRTIMP _CRTALLOCATOR _CRTRESTRICT
+	void * __cdecl _recalloc_base(_Pre_maybenull_ _Post_invalid_ void *_Ptr, _In_ size_t _Count, _In_ size_t _Size)
+	{
+		mint Size = _Count * _Size;
+		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
+		void * addr = NMib::NMem::fg_Resize(_Ptr, Size);
+		return addr;
+	}
 		
 /*************************************************************************************************\
 |¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯

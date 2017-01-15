@@ -205,7 +205,7 @@ namespace NMib
 
 			
 			align_cacheline NAtomic::TCAtomic<mint> m_pNextArena;
-			align_cacheline NAtomic::TCAtomic<uint32> m_Locked;
+			align_cacheline NAtomic::TCAtomic<mint> m_Locked;
 			align_cacheline NAtomic::TCAtomic<mint> m_Messages;
 			mint m_DeferredMessages = 0;
 			
@@ -221,6 +221,7 @@ namespace NMib
 			
 			TCMemoryManager<t_CParams> *m_pMemoryManager;
 			TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
+			TCMemoryManagerThreadLocal<t_CParams> *m_pOwningThreadLocal = nullptr;
 			ENumaNode m_NumaNode;
 			
 			bool m_bWantCleanup;

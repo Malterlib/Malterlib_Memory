@@ -952,11 +952,19 @@ namespace NMib
 		{
 			while (true)
 			{
-				auto CheckoutResult = _ThreadLocal.m_pPreferredArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire);
+				auto pArena = _ThreadLocal.m_pPreferredArena;
+				auto CheckoutResult = pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire);
 				if (CheckoutResult == EArenaLockFlag_None)
 				{
-					_ThreadLocal.m_pArena = _ThreadLocal.m_pPreferredArena;
-					return _ThreadLocal.m_pPreferredArena;
+					if (pArena->m_pOwningThreadLocal && pArena->m_pOwningThreadLocal != &_ThreadLocal)
+					{
+						pArena->f_ReturnCheckoutLight();
+						_ThreadLocal.m_pPreferredArena = nullptr;
+						return fp_CheckoutHelperSlowPath(_ThreadLocal);
+					}
+
+					_ThreadLocal.m_pArena = pArena;
+					return pArena;
 				}
 				else if (!_ThreadLocal.m_bOwnArena && !(CheckoutResult & EArenaLockFlag_Cleanup)) // Another checkout got inbetween
 					return fp_CheckoutHelperSlowPath(_ThreadLocal);
@@ -968,13 +976,20 @@ namespace NMib
 		inline_always TCMemoryManagerArena<t_CParams> *TCMemoryManager<t_CParams>::fp_CheckoutHelper(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal)
 		{
 			DMibFastCheck(!_ThreadLocal.m_pArena);
-			if (_ThreadLocal.m_pPreferredArena)
+			auto pArena = _ThreadLocal.m_pPreferredArena;
+			if (pArena)
 			{
-				auto CheckoutResult = _ThreadLocal.m_pPreferredArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire);
+				auto CheckoutResult = pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire);
 				if (CheckoutResult == EArenaLockFlag_None)
 				{
-					_ThreadLocal.m_pArena = _ThreadLocal.m_pPreferredArena;
-					return _ThreadLocal.m_pPreferredArena;
+					if (pArena->m_pOwningThreadLocal && pArena->m_pOwningThreadLocal != &_ThreadLocal)
+					{
+						pArena->f_ReturnCheckoutLight();
+						_ThreadLocal.m_pPreferredArena = nullptr;
+						return fp_CheckoutHelperSlowPath(_ThreadLocal);
+					}
+					_ThreadLocal.m_pArena = pArena;
+					return pArena;
 				}
 				else if (CheckoutResult == EArenaLockFlag_Cleanup || _ThreadLocal.m_bOwnArena)
 					return fp_CheckoutHelperWaitForCleanup(_ThreadLocal);
@@ -996,8 +1011,13 @@ namespace NMib
 					mint NextArena = pArena->m_pNextArena.f_Load(NAtomic::EMemoryOrder_Acquire);
 					if ((!(NextArena & 1)) && pArena->m_Locked.f_FetchOr(EArenaLockFlag_Waiting, NAtomic::EMemoryOrder_Acquire) == EArenaLockFlag_None)
 					{
-						_ThreadLocal.m_pArena = pArena;
-						return pArena;
+						if (pArena->m_pOwningThreadLocal && pArena->m_pOwningThreadLocal != &_ThreadLocal)
+							pArena->f_ReturnCheckoutLight();
+						else
+						{
+							_ThreadLocal.m_pArena = pArena;
+							return pArena;
+						}
 					}
 					
 					pArena = (TCMemoryManagerArena<t_CParams> *)(NextArena & mint(~mint(1)));
@@ -1025,11 +1045,16 @@ namespace NMib
 					
 					for (mint i = 0; i < nArenas && pArena; ++i)
 					{
-						mint NextArena = pArena->m_pNextArena.f_Load(NAtomic::EMemoryOrder_Acquire);
+						mint NextArena = pArena->m_pNextArena.f_Load(NAtomic::EMemoryOrder_Relaxed);
 						if ((!(NextArena & 1)) && pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire) == EArenaLockFlag_None)
 						{
-							_ThreadLocal.m_pArena = pArena;
-							return pArena;
+							if (pArena->m_pOwningThreadLocal && pArena->m_pOwningThreadLocal != &_ThreadLocal)
+								pArena->f_ReturnCheckoutLight();
+							else
+							{
+								_ThreadLocal.m_pArena = pArena;
+								return pArena;
+							}
 						}
 						pArena = (TCMemoryManagerArena<t_CParams> *)(NextArena & mint(~mint(1)));
 						if (!pArena)

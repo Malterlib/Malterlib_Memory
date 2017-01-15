@@ -394,9 +394,30 @@ namespace NMib
 			
 			if (m_bOwnArena && m_pPreferredArena)
 			{
-				mint Owned = m_pPreferredArena->m_pNextArena.f_FetchAnd(~mint(1));
-				DMibFastCheck(Owned & 1);
-				(void)Owned;
+				if (m_pArena)
+				{
+					DMibFastCheck(m_bLazyCheckout); // Will be returned below
+					auto pArena = m_pArena;
+					DMibFastCheck(pArena = m_pPreferredArena);
+
+					DMibFastCheck(m_pPreferredArena->m_pOwningThreadLocal == this);
+					m_pPreferredArena->m_pOwningThreadLocal = nullptr;
+					mint Owned = m_pPreferredArena->m_pNextArena.f_FetchAnd(~mint(1));
+					DMibFastCheck(Owned & 1);
+					(void)Owned;
+				}
+				else
+				{
+					auto pArena = m_pNumaArena->m_pMemoryManager->fp_CheckoutHelperWaitForCleanup(*this);
+					DMibFastCheck(pArena = m_pPreferredArena);
+
+					DMibFastCheck(m_pPreferredArena->m_pOwningThreadLocal == this);
+					m_pPreferredArena->m_pOwningThreadLocal = nullptr;
+					mint Owned = m_pPreferredArena->m_pNextArena.f_FetchAnd(~mint(1));
+					DMibFastCheck(Owned & 1);
+					(void)Owned;
+					f_ReturnCheckoutLight();
+				}
 			}
 			
 			if (m_bLazyCheckout)
@@ -488,15 +509,28 @@ namespace NMib
 		void TCMemoryManagerThreadLocal<t_CParams>::f_TakeOwnership()
 		{
 			DMibFastCheck(m_pArena);
-			DMibFastCheck(!(m_pArena->m_pNextArena.f_Load() & 1));
+			DMibFastCheck(m_pArena->m_pOwningThreadLocal == nullptr);
+			DMibFastCheck(m_pArena->m_Locked.f_Load());
 			if ((m_pArena->m_pNextArena.f_FetchOr(1) & 1) == 0)
+			{
+				m_pArena->m_pOwningThreadLocal = this;
 				m_bOwnArena = true;
+				m_pPreferredArena = m_pArena;
+			}
+			else
+			{
+				DMibFastCheck(false);
+			}
 		}
 
 		template <typename t_CParams>
 		void TCMemoryManagerThreadLocal<t_CParams>::f_RelinquishOwnership()
 		{
 			DMibFastCheck(m_pArena->m_pNextArena.f_Load() & 1);
+			DMibFastCheck(m_pArena->m_pOwningThreadLocal == this);
+			DMibFastCheck(m_pArena->m_Locked.f_Load());
+			DMibFastCheck(m_pArena == m_pPreferredArena);
+			m_pArena->m_pOwningThreadLocal = nullptr;
 			if (m_pArena->m_pNextArena.f_FetchAnd(mint(~mint(1))) & 1)
 				m_bOwnArena = false;
 		}
