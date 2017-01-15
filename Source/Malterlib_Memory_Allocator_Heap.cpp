@@ -46,59 +46,136 @@ namespace NMib
 
 #if defined(DMibPOverrideOperatorNew) && !defined(DCompiler_MSVC)
 
-		only_parameters_aliased return_not_aliased void * calling_convention_c operator new (mint _Size)
+	only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size)
+	{
+		return NMib::NMem::fg_Alloc(_Size);
+	}
+
+	only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::nothrow_t const &) noexcept
+	{
+		try
 		{
 			return NMib::NMem::fg_Alloc(_Size);
 		}
-
-		only_parameters_aliased void calling_convention_c operator delete (void *_pToDelete) noexcept
+		catch (NMib::NException::CException const &)
 		{
-			NMib::NMem::fg_Free(_pToDelete);
+			return nullptr;
 		}
+	}
 
-		only_parameters_aliased return_not_aliased void * calling_convention_c operator new[] (mint _Size)
+	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
+
+	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::nothrow_t const &) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
+
+	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
+
+
+	only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size)
+	{
+		return NMib::NMem::fg_Alloc(_Size);
+	}
+
+	only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::nothrow_t const &) noexcept
+	{
+		try
 		{
 			return NMib::NMem::fg_Alloc(_Size);
 		}
-
-		only_parameters_aliased void calling_convention_c operator delete[] (void *_pToDelete) noexcept
+		catch (NMib::NException::CException const &)
 		{
-			NMib::NMem::fg_Free(_pToDelete);
+			return nullptr;
 		}
+	}
 
-		only_parameters_aliased return_not_aliased void * calling_convention_c operator new (mint _Size, const std::nothrow_t &) noexcept
-		{
-			try
-			{
-				return NMib::NMem::fg_Alloc(_Size);
-			}
-			catch (...)
-			{
-				return nullptr;
-			}
-		}
+	only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
 
-		only_parameters_aliased void calling_convention_c operator delete (void *_pToDelete, const std::nothrow_t &) noexcept
-		{
-			NMib::NMem::fg_Free(_pToDelete);
-		}
+	only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::nothrow_t const &) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
 
-		only_parameters_aliased return_not_aliased void * calling_convention_c operator new[] (mint _Size, const std::nothrow_t &) noexcept
-		{
-			try
-			{
-				return NMib::NMem::fg_Alloc(_Size);
-			}
-			catch (...)
-			{
-				return nullptr;
-			}
-		}
+	only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::size_t _Size) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
 
-		only_parameters_aliased void calling_convention_c operator delete[] (void *_pToDelete, const std::nothrow_t &) noexcept
+
+	only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment)
+	{
+		return NMib::NMem::fg_AllocAligned(_Size, (mint)_Alignment);
+	}
+
+	only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+	{
+		try
 		{
-			NMib::NMem::fg_Free(_pToDelete);
+			return NMib::NMem::fg_AllocAligned(_Size, (mint)_Alignment);
 		}
+		catch (NMib::NException::CException const &)
+		{
+			return nullptr;
+		}
+	}
+
+	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
+
+	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
+
+	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
+
+
+	only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment)
+	{
+		return NMib::NMem::fg_AllocAligned(_Size, (mint)_Alignment);
+	}
+
+	only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+	{
+		try
+		{
+			return NMib::NMem::fg_AllocAligned(_Size, (mint)_Alignment);
+		}
+		catch (NMib::NException::CException const &)
+		{
+			return nullptr;
+		}
+	}
+
+	only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
+
+	only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
+
+	only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::size_t _Size, std::align_val_t) noexcept
+	{
+		NMib::NMem::fg_Free(_pMemory);
+	}
 #endif
 
 
