@@ -480,51 +480,52 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 			NMib::NMem::fg_Free(_pMemory);
 		}
 
+#		ifndef DCompiler_MSVC
+			inline_always only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment)
+			{
+				return NMib::NMem::fg_AllocAligned(_Size, (mint)_Alignment);
+			}
 
-		inline_always only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment)
-		{
-			return NMib::NMem::fg_AllocAligned(_Size, (mint)_Alignment);
-		}
+			only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
 
-		only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+			inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment) noexcept
+			{
+				NMib::NMem::fg_Free(_pMemory);
+			}
 
-		inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment) noexcept
-		{
-			NMib::NMem::fg_Free(_pMemory);
-		}
+			inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+			{
+				NMib::NMem::fg_Free(_pMemory);
+			}
 
-		inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
-		{
-			NMib::NMem::fg_Free(_pMemory);
-		}
-
-		inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept
-		{
-			NMib::NMem::fg_Free(_pMemory);
-		}
+			inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept
+			{
+				NMib::NMem::fg_Free(_pMemory);
+			}
 
 
-		inline_always only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment)
-		{
-			return NMib::NMem::fg_AllocAligned(_Size, (mint)_Alignment);
-		}
+			inline_always only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment)
+			{
+				return NMib::NMem::fg_AllocAligned(_Size, (mint)_Alignment);
+			}
 
-		only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+			only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
 
-		inline_always only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment) noexcept
-		{
-			NMib::NMem::fg_Free(_pMemory);
-		}
+			inline_always only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment) noexcept
+			{
+				NMib::NMem::fg_Free(_pMemory);
+			}
 
-		inline_always only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
-		{
-			NMib::NMem::fg_Free(_pMemory);
-		}
+			inline_always only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+			{
+				NMib::NMem::fg_Free(_pMemory);
+			}
 
-		inline_always only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::size_t _Size, std::align_val_t) noexcept
-		{
-			NMib::NMem::fg_Free(_pMemory);
-		}
+			inline_always only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::size_t _Size, std::align_val_t) noexcept
+			{
+				NMib::NMem::fg_Free(_pMemory);
+			}
+#		endif
 
 #	else
 		only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size);
@@ -537,16 +538,18 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 		only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory) noexcept;
 		only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::nothrow_t const &) noexcept;
 		only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::size_t _Size) noexcept;
-		only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment);
-		only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
-		only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment) noexcept;
-		only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
-		only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept;
-		only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment);
-		only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
-		only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment) noexcept;
-		only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
-		only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::size_t _Size, std::align_val_t) noexcept;
+#		ifndef DCompiler_MSVC
+			only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment);
+			only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+			only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment) noexcept;
+			only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+			only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept;
+			only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment);
+			only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+			only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment) noexcept;
+			only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+			only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::size_t _Size, std::align_val_t) noexcept;
+#		endif
 #	endif
 #endif
 
