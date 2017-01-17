@@ -46,12 +46,12 @@ namespace NMib
 
 #if defined(DMibPOverrideOperatorNew) && !defined(DCompiler_MSVC)
 
-	only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size)
+	only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size)
 	{
 		return NMib::NMem::fg_Alloc(_Size);
 	}
 
-	only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::nothrow_t const &) noexcept
+	only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size, std::nothrow_t const &) noexcept
 	{
 		try
 		{
@@ -79,12 +79,12 @@ namespace NMib
 	}
 
 
-	only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size)
+	only_parameters_aliased malloc_like void * calling_convention_c operator new[](std::size_t _Size)
 	{
 		return NMib::NMem::fg_Alloc(_Size);
 	}
 
-	only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::nothrow_t const &) noexcept
+	only_parameters_aliased malloc_like void * calling_convention_c operator new[](std::size_t _Size, std::nothrow_t const &) noexcept
 	{
 		try
 		{
@@ -112,12 +112,12 @@ namespace NMib
 	}
 
 
-	only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment)
+	only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment)
 	{
 		return NMib::NMem::fg_AllocAligned(_Size, (mint)_Alignment);
 	}
 
-	only_parameters_aliased return_not_aliased void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+	only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
 	{
 		try
 		{
@@ -145,12 +145,12 @@ namespace NMib
 	}
 
 
-	only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment)
+	only_parameters_aliased malloc_like void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment)
 	{
 		return NMib::NMem::fg_AllocAligned(_Size, (mint)_Alignment);
 	}
 
-	only_parameters_aliased return_not_aliased void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+	only_parameters_aliased malloc_like void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
 	{
 		try
 		{

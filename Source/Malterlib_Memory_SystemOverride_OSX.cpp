@@ -136,7 +136,7 @@ namespace
 	class CAllocatorIgnore : public CAllocator_Heap
 	{
 	public:
-		only_parameters_aliased return_not_aliased static void *f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased malloc_like static void *f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return CAllocator_Heap::f_AllocAlignedDebug(_Size, _Alignment, DMibPFile, DMibPLine, EHeapDebugFlag_Ignore, _AllocFlags, _NumaNode);
 		}

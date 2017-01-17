@@ -234,28 +234,28 @@ namespace NMib
 			return g_CrossModule.m_fNonTracked_Overhead(&g_CrossModule, _pMemory);
 		}
 		
-		only_parameters_aliased return_not_aliased void *CAllocator_NonTrackedHeap::f_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return g_CrossModule.m_fNonTracked_AllocDebug(&g_CrossModule, _Size, _pFile, _Line, _Flags);
 		}
-		only_parameters_aliased return_not_aliased void *CAllocator_NonTrackedHeap::f_ReallocDebug(void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_ReallocDebug(void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return g_CrossModule.m_fNonTracked_ReallocDebug(&g_CrossModule, _pMemory, _Size, _pFile, _Line, _Flags);
 		}
-		only_parameters_aliased return_not_aliased void *CAllocator_NonTrackedHeap::f_ResizeDebug(void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_ResizeDebug(void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return g_CrossModule.m_fNonTracked_ResizeDebug(&g_CrossModule,_pMemory, _Size, _pFile, _Line, _Flags);
 		}
-		only_parameters_aliased return_not_aliased void *CAllocator_NonTrackedHeap::f_AllocAlignedDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocAlignedDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return g_CrossModule.m_fNonTracked_AllocAlignedDebug(&g_CrossModule, _Size, _Alignment, _pFile, _Line, _Flags);
 		}
 		
-		only_parameters_aliased return_not_aliased void *CAllocator_NonTrackedHeap::f_Alloc(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_Alloc(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return g_CrossModule.m_fNonTracked_Alloc(&g_CrossModule, _Size);
 		}
-		only_parameters_aliased return_not_aliased void *CAllocator_NonTrackedHeap::f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return g_CrossModule.m_fNonTracked_AllocAligned(&g_CrossModule, _Size, _Alignment);
 		}
@@ -269,7 +269,7 @@ namespace NMib
 			return g_CrossModule.m_fNonTracked_AllocBatchDebug(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_Functor, _pFile, _Line, _Flags);
 		}			
 		
-		only_parameters_aliased return_not_aliased void *CAllocator_NonTrackedHeap::f_Realloc(void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_Realloc(void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return g_CrossModule.m_fNonTracked_Realloc(&g_CrossModule, _pMemory, _Size);
 		}

@@ -13,7 +13,7 @@
 #include "Malterlib_Memory_Heap_THeap.imp.h"
 
 template <typename t_CHeapParams>
-only_parameters_aliased return_not_aliased void * operator new(mint _Size, NMib::NMem::TCHeap_StandAlone<t_CHeapParams> &_Heap)
+only_parameters_aliased malloc_like void * operator new(mint _Size, NMib::NMem::TCHeap_StandAlone<t_CHeapParams> &_Heap)
 {
 	return _Heap.f_Alloc(_Size);
 }
