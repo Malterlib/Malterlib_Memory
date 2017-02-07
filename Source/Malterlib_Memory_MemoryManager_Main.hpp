@@ -966,7 +966,7 @@ namespace NMib
 					_ThreadLocal.m_pArena = pArena;
 					return pArena;
 				}
-				else if (!_ThreadLocal.m_bOwnArena && !(CheckoutResult & EArenaLockFlag_Cleanup)) // Another checkout got inbetween
+				else if (!_ThreadLocal.m_bOwnArena && pArena->m_CheckoutCount > 0) // Another checkout got inbetween
 					return fp_CheckoutHelperSlowPath(_ThreadLocal);
 				yield_cpu;
 			}
