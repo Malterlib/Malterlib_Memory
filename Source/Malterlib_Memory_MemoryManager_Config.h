@@ -187,7 +187,7 @@ namespace NMib
 			static constexpr mint mc_HeapBlockSize = 64*1024;
 			static constexpr bool mc_bRandomizeSlabHeader = false;
 			static constexpr bool mc_bBackgroundCleanup = true;
-			static constexpr EDeferCleanup mc_DeferCleanup = (EDeferCleanup)(constenum(EDeferCleanup_Allocs) | constenum(EDeferCleanup_Commit) | constenum(EDeferCleanup_OneSizeBlocks));
+			static constexpr EDeferCleanup mc_DeferCleanup = (EDeferCleanup)(EDeferCleanup_Allocs | EDeferCleanup_Commit | EDeferCleanup_OneSizeBlocks);
 			
 			static constexpr uint32 mc_BackgroundCleanupLifetime = 2*1000; // The number of milleseconds that garbage should be kept before being cleaned up.
 			

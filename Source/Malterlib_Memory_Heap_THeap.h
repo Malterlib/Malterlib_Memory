@@ -19,7 +19,7 @@ namespace NMib
 			{
 				 EAlignBitsIn = t_CHeapParams::EAlignBits
 				,EAlignBits = EAlignBitsIn < 2 ? 2 : EAlignBitsIn
-				,EAlign = 1 << constenum(EAlignBits)
+				,EAlign = 1 << int(EAlignBits)
 				,EAlignAnd = (~((1 << EAlignBits) - 1))
 				,EAlignAdd = (1 << EAlignBits) - 1
 				,ENeedExtendedBlocks = t_CHeapParams::CBlock::ENeedExtendedBlocks
@@ -429,32 +429,32 @@ namespace NMib
 
 			enum
 			{
-				 EUseableBits = t_CHeapParams::CBlock::EUseableBits
-				,ELargestBlockBits = (EUseableBits + EAlignBits) >= sizeof(mint)*8 ? 0 : EUseableBits + EAlignBits
-				,ESmallestBlock = sizeof(CBlock_Free)
-				,EBlockSize = sizeof(CBlock)
-				,EBlockExtraSize = (t_CHeapParams::EExtraSpace + EAlign - 1) & (~constenum(EAlign - 1))
-				,EBlockNonGuardSize = EBlockSize + EBlockExtraSize
-				,EBlockPreGuardSize = (t_CHeapParams::EGuardPreSize + EAlign - 1) & (~constenum(EAlign - 1))
-				,EBlockExtraOffset = EBlockExtraSize + EBlockPreGuardSize
-				,EBlockPreGuardOffset = EBlockPreGuardSize
-				,EBlockPreSize = EBlockSize + EBlockExtraSize + EBlockPreGuardSize
-				,EBlockPostSize = t_CHeapParams::EGuardPostSize
-				,EBlockPostGuardSize = EBlockPostSize
-				,EBlockWholeSize = EBlockPreSize + EBlockPostSize
-				,EBlockNonAllocSize = EBlockSize
-				,EBlockFreeSize = sizeof(CBlock_Free)
-				,EBlockFreeExtendedSize = t_CHeapParams::EbOptimizeForSize ? sizeof(CBlock_FreeExtendedBucket) : sizeof(CBlock_FreeExtended)
-				,EBlockFreeExtendedSizeEnd = sizeof(TCDynamicPtr<CPtrHolder, CBlock>)
-				,EBlockFreeExtendedSizeStart = EBlockFreeExtendedSize - EBlockFreeExtendedSizeEnd
-				,EBlockFirstAdd = constenum(EBlockNonAllocSize) > constenum(EAlign) ? constenum(EBlockNonAllocSize) : constenum(EAlign)
-				,EBlockMinNext = constenum(EAlign) > constenum(EBlockSize) ? constenum(EAlign) : constenum(EBlockSize)
-				,EBlockCacheSize = t_CHeapParams::EBlockCacheSize
-				,EMaxCachedBlockSize = ((EBlockCacheSize + EAlignAdd) & EAlignAnd)
-				,ECachedBlocks = EMaxCachedBlockSize ? (constenum(EMaxCachedBlockSize - ESmallestBlock) >> constenum(EAlignBits)) + 1 : 1
-				,ETLSFStartBits = 7
-				,ETLSFPrimarySize = sizeof(void *) * 8 - ETLSFStartBits
-				,ETLSFSecondarySize = 8
+				EUseableBits = t_CHeapParams::CBlock::EUseableBits
+				, ELargestBlockBits = (EUseableBits + EAlignBits) >= sizeof(mint)*8 ? 0 : EUseableBits + EAlignBits
+				, ESmallestBlock = sizeof(CBlock_Free)
+				, EBlockSize = sizeof(CBlock)
+				, EBlockExtraSize = (t_CHeapParams::EExtraSpace + EAlign - 1) & (~mint(EAlign - 1))
+				, EBlockNonGuardSize = EBlockSize + EBlockExtraSize
+				, EBlockPreGuardSize = (t_CHeapParams::EGuardPreSize + EAlign - 1) & (~mint(EAlign - 1))
+				, EBlockExtraOffset = EBlockExtraSize + EBlockPreGuardSize
+				, EBlockPreGuardOffset = EBlockPreGuardSize
+				, EBlockPreSize = EBlockSize + EBlockExtraSize + EBlockPreGuardSize
+				, EBlockPostSize = t_CHeapParams::EGuardPostSize
+				, EBlockPostGuardSize = EBlockPostSize
+				, EBlockWholeSize = EBlockPreSize + EBlockPostSize
+				, EBlockNonAllocSize = EBlockSize
+				, EBlockFreeSize = sizeof(CBlock_Free)
+				, EBlockFreeExtendedSize = t_CHeapParams::EbOptimizeForSize ? sizeof(CBlock_FreeExtendedBucket) : sizeof(CBlock_FreeExtended)
+				, EBlockFreeExtendedSizeEnd = sizeof(TCDynamicPtr<CPtrHolder, CBlock>)
+				, EBlockFreeExtendedSizeStart = EBlockFreeExtendedSize - EBlockFreeExtendedSizeEnd
+				, EBlockFirstAdd = mint(EBlockNonAllocSize) > mint(EAlign) ? mint(EBlockNonAllocSize) : mint(EAlign)
+				, EBlockMinNext = mint(EAlign) > mint(EBlockSize) ? mint(EAlign) : mint(EBlockSize)
+				, EBlockCacheSize = t_CHeapParams::EBlockCacheSize
+				, EMaxCachedBlockSize = ((EBlockCacheSize + EAlignAdd) & EAlignAnd)
+				, ECachedBlocks = EMaxCachedBlockSize ? EMaxCachedBlockSize - ESmallestBlock : 1
+				, ETLSFStartBits = 7
+				, ETLSFPrimarySize = sizeof(void *) * 8 - ETLSFStartBits
+				, ETLSFSecondarySize = 8
 			};
 			
 			static constexpr EAllocationFlag mc_AllocationFlags = t_CHeapParams::mc_AllocationFlags;

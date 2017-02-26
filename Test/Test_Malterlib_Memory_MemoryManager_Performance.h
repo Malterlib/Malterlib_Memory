@@ -82,7 +82,7 @@ namespace
 			<
 				uint8 *
 				, NMib::NMem::CAllocator_Heap
-				, (NMib::NThread::EThreadLocalFlag)(constenum(NMib::NThread::EThreadLocalFlag_AlwaysCreated) | constenum(NMib::NThread::EThreadLocalFlag_FastThreadLocal))
+				, (NMib::NThread::EThreadLocalFlag)(NMib::NThread::EThreadLocalFlag_AlwaysCreated | NMib::NThread::EThreadLocalFlag_FastThreadLocal)
 			>
 			m_pMemory
 		;
@@ -308,10 +308,10 @@ namespace
 			static constexpr NMib::NMem::EDeferCleanup mc_DeferCleanup
 				= NMib::NMem::EDeferCleanup
 				(
-					constenum(NMib::NMem::EDeferCleanup_NoCleanup)
-					| constenum(NMib::NMem::EDeferCleanup_OneSizeBlocks)
-					| constenum(NMib::NMem::EDeferCleanup_Commit)
-					| constenum(NMib::NMem::EDeferCleanup_Allocs)
+					NMib::NMem::EDeferCleanup_NoCleanup
+					| NMib::NMem::EDeferCleanup_OneSizeBlocks
+					| NMib::NMem::EDeferCleanup_Commit
+					| NMib::NMem::EDeferCleanup_Allocs
 				)
 			;
 		};
