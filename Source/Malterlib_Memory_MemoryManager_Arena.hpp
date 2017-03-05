@@ -27,8 +27,8 @@ namespace NMib
 			, m_bWantNumaFreeSlabsCleanup(false)
 			, m_Locked(EArenaLockFlag_None)
 		{
-			DMibFastCheck((uint8 *)&m_Locked == fg_AlignUp((uint8 *)&m_Locked, DMibPMemoryCacheLineSize));
-			DMibFastCheck((uint8 *)&m_Messages == fg_AlignUp((uint8 *)&m_Messages, DMibPMemoryCacheLineSize));
+			DMibFastCheck((uint8 *)&m_Locked == fg_AlignUp((uint8 *)&m_Locked, mint(DMibPMemoryCacheLineSize)));
+			DMibFastCheck((uint8 *)&m_Messages == fg_AlignUp((uint8 *)&m_Messages, mint(DMibPMemoryCacheLineSize)));
 		}
 		
 		template <typename t_CParams>
