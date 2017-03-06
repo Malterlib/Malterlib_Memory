@@ -1,5 +1,5 @@
 ﻿
-<link href="../Markdown.css" type="text/css" rel="stylesheet"></link>
+\page p_Malterlib_Memory_MemoryManager Memory Manager
 
 The Malterlib memory manager overall design goal is to allow concurrent memory allocations with minimal interaction between threads. Space-wise it's designed to minimize overhead and by default keep worst case internal fragmentation below 12.5%.
 
@@ -8,9 +8,7 @@ Overall architecture
 
 The memory manager is optionally numa-aware and employs three allocation strategies:
 
-
-![Overall](MemoryManager.svg "Memory manager")
-
+\image html MemoryManager.svg
 
 Numa arena
 ----------
@@ -33,7 +31,7 @@ On 32 bit architectures the number of arenas are limited to 8 by default. See [U
 
 When memory is allocated in an arena it will always come from a slab. A slab is a fixed size block of aligned memory that is divided into sub slabs:
 
-![Slab](MemoryManagerSlab.svg "Slab")
+\image html MemoryManagerSlab.svg
 
 The slab is aligned on a 16 MiB address. This is to allow quick constant time calculation of the slab header with pointer arithmetic from an allocation address.
 
@@ -65,7 +63,7 @@ Depending on the desired maximum internal fragmentation each power of two alloca
 |	120	|	Type	7	|	61440	|	512	|
 
 
-For detailed slab allocation sizes and overhead info see [Slab types](./MemoryManagerSlabs.md).
+For detailed slab allocation sizes and overhead info see \ref p_Malterlib_Memory_MemoryManagerSlabs "Slab types".
 
 All allocations returned from the slab allocator are returned with the inherent alignment of the size requested.
 

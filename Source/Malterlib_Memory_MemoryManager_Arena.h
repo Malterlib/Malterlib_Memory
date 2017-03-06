@@ -195,12 +195,16 @@ namespace NMib
 #endif
 			
 			DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_FreeSlabs;
+#ifndef DDocumentation_Doxygen
 			DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_PartiallyFreeSlabs[t_CParams::mc_NumSizesPerLevel][mc_NumSubSlabSizeLevels];
+#endif
 			NContainer::TCBitArray<mc_NumSubSlabSizeLevels> m_PartiallyFreeSlabsAvailable[t_CParams::mc_NumSizesPerLevel];
 
 			DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_FullSlabs;
 
+#ifndef DDocumentation_Doxygen
 			DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link1) m_SlabsToGarbageCollect[t_CParams::mc_NumSizesPerLevel];
+#endif
 			DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link2) m_SlabsNeedingDecommit;
 
 			

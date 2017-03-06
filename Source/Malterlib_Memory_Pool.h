@@ -192,7 +192,9 @@ namespace NMib
 				union
 				{
 					void *m_pChunk;
+#ifndef DDocumentation_Doxygen
 					DMibListLinkAllocatorSA_Member(m_FreeLink, t_CAllocator);
+#endif
 				};
 			};
 

@@ -36,6 +36,20 @@ Import "Apps/*/*.MHeader"
 		%Group Documentation
 		{
 			%File "Documentation/*"
+			%File "Documentation/*.md"
+			{
+				Compile.Type "C++"
+				{
+					!!DocumentationEnabled true
+				}
+			}
+			%File "Documentation/*.svg"
+			{
+				Compile.Type "C++"
+				{
+					!!DocumentationEnabled true
+				}
+			}
 		}
 	}
 }

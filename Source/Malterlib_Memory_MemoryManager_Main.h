@@ -30,28 +30,30 @@ namespace NMib
 		template <typename t_CParams>
 		class TCMemoryManagerCheckout
 		{
-			TCMemoryManager<t_CParams> * m_pMemoryManager;
+			TCMemoryManager<t_CParams> *m_pMemoryManager;
 
-			TCMemoryManagerCheckout(TCMemoryManagerCheckout const &_Other);
-			TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout const& _Other);
+			TCMemoryManagerCheckout(TCMemoryManagerCheckout const &) = delete;
+			TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout const &) = delete;
+
 		public:
-			TCMemoryManagerCheckout(TCMemoryManagerCheckout && _Other);
-			TCMemoryManagerCheckout(TCMemoryManager<t_CParams> * _pMemoryManager);
-			TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout && _Other);
+			TCMemoryManagerCheckout(TCMemoryManagerCheckout &&_Other);
+			TCMemoryManagerCheckout(TCMemoryManager<t_CParams> *_pMemoryManager);
+			TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout<t_CParams> &&_Other);
 			~TCMemoryManagerCheckout();
 		};
 
 		template <typename t_CParams>
 		class TCMemoryManagerCheckoutLight
 		{
-			TCMemoryManager<t_CParams> * m_pMemoryManager;
+			TCMemoryManager<t_CParams> *m_pMemoryManager;
 
-			TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight const& _Other);
-			TCMemoryManagerCheckoutLight & operator = (TCMemoryManagerCheckoutLight const& _Other);
+			TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight const &) = delete;
+			TCMemoryManagerCheckoutLight &operator = (TCMemoryManagerCheckoutLight const &) = delete;
+
 		public:
-			TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight && _Other);
-			TCMemoryManagerCheckoutLight(TCMemoryManager<t_CParams> * _pMemoryManager);
-			TCMemoryManagerCheckoutLight & operator = (TCMemoryManagerCheckoutLight && _Other);
+			TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight &&_Other);
+			TCMemoryManagerCheckoutLight(TCMemoryManager<t_CParams> *_pMemoryManager);
+			TCMemoryManagerCheckoutLight &operator = (TCMemoryManagerCheckoutLight<t_CParams> &&_Other);
 			~TCMemoryManagerCheckoutLight();
 		};
 		

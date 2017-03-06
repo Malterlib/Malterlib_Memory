@@ -4,3 +4,16 @@
 /**	\namespace NMib::NMemory
 	\brief Memory namespace
  */
+
+/**
+
+\page p_Malterlib Modules
+- \subpage p_Malterlib_Memory
+ 
+\page p_Malterlib_Memory Memory
+
+- \subpage p_Malterlib_Memory_MemoryManager
+- \subpage p_Malterlib_Memory_MemoryManagerSlabs
+
+*/
+
