@@ -540,12 +540,17 @@ namespace NMib
 			return _Data;
 		}
 
-		template <typename t_CData1, typename t_CData2>
-		inline_medium aint fg_MemCmp(const t_CData1 *_pFirst, const t_CData2 *_pSecond, mint _NumElements)
+#ifdef DMibPIntrinsicMemCmp
+		static inline_always aint fg_MemCmp(uint8 const *_pFirst, uint8 const *_pSecond, mint _Size)
 		{
-			const t_CData1 *pFirst = _pFirst;
-			const t_CData2 *pSecond = _pSecond;
-			const t_CData1 *pFirstEnd = pFirst + _NumElements;
+			return DMibPIntrinsicMemCmp(_pFirst, _pSecond, _Size);
+		}
+#else
+		static inline_medium aint fg_MemCmp(uint8 const *_pFirst, uint8 const *_pSecond, mint _Size)
+		{
+			uint8 const *pFirst = _pFirst;
+			uint8 const *pSecond = _pSecond;
+			uint8 const *pFirstEnd = pFirst + _Size;
 			
 			while ((pFirstEnd - pFirst))
 			{
@@ -557,12 +562,12 @@ namespace NMib
 
 			return 0;
 		}
+#endif
 
-		template <typename t_CData1, typename t_CData2>
-		inline_medium aint fg_MemCmpOne(const t_CData1 *_pFirst, const t_CData2 _Second, mint _NumElements)
+		static inline_medium aint fg_MemCmpOne(uint8 const *_pFirst, const uint8 _Second, mint _Size)
 		{
-			const t_CData1 *pFirst = _pFirst;
-			const t_CData1 *pFirstEnd = pFirst + _NumElements;
+			uint8 const *pFirst = _pFirst;
+			uint8 const *pFirstEnd = pFirst + _Size;
 			
 			while ((pFirstEnd - pFirst))
 			{
