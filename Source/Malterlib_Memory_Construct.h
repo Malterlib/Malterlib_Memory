@@ -108,6 +108,27 @@ namespace NMib
 	{
 		return fg_Move((TCConstruct<typename tf_TCTransformConstruct<tf_CType>::CType, tfp_CParams...> &)_In);
 	}
+
+	template 
+	<
+		typename tf_CDefaultType
+		, typename tf_CType
+		, typename... tfp_CParams
+	>
+	TCConstruct<tf_CType, tfp_CParams...> &&fg_MakeConcreteConstruct(TCConstruct<tf_CType, tfp_CParams...> &&_In)
+	{
+		return fg_Move(_In);
+	}
+
+	template 
+	<
+		typename tf_CDefaultType
+		, typename... tfp_CParams
+	>
+	TCConstruct<tf_CDefaultType, tfp_CParams...> &&fg_MakeConcreteConstruct(TCConstruct<void, tfp_CParams...> &&_In)
+	{
+		return fg_Move((TCConstruct<tf_CDefaultType, tfp_CParams...> &)_In);
+	}
 		
 	template <typename tf_CType, typename... tfp_CParams>
 	inline_small TCConstruct<tf_CType, tfp_CParams...> fg_Construct(tfp_CParams &&... p_Params)
