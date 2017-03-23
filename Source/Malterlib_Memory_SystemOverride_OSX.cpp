@@ -2157,6 +2157,9 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport malloc_zone_t *fg_Malterlib_malloc_zone_from_ptr(void const *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
+		if (_pMemory == nullptr)
+			return nullptr;
+		
 		CMemoryManager *pMemoryManager;
 		if (unlikely(g_bForeignZone))
 		{
