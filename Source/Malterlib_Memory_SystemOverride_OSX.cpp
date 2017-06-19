@@ -68,7 +68,7 @@ extern "C"
 	extern void fg_MalterlibSystem_InitHelper() __attribute__((weak_import));
 }
 
-EHeapDebugFlag g_DebugFlags = EHeapDebugFlag_Ignore;
+EHeapDebugFlag g_DebugFlags = EHeapDebugFlag_None;
 
 void fg_MalterlibMallocOverrideInit()
 {
