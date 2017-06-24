@@ -109,6 +109,13 @@ namespace NMib
 				"__CFUniCharLoadDecompositionTable",
 				"tlv_allocate_and_initialize_for_key",
 				"tzsetwall_basic",
+				"_CFRuntimeCreateInstance",
+				"CGCMSConverterCreate",
+				"_objc_rootAlloc",
+				"-[__NSPlaceholderArray initWithObjects:count:]",
+				"-[_NSXPCConnectionClassCache addClass:]",
+				"__NSFontInstanceInfoInitializeMetricsInfo",
+				"_NSXPCConnectionClassCache",
 	#elif defined(DPlatformFamily_Linux)
 				"qt_load_library_runtime",
 				"qt_set_x11_resources",
