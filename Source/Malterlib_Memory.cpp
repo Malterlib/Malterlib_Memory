@@ -116,6 +116,7 @@ namespace NMib
 				"-[_NSXPCConnectionClassCache addClass:]",
 				"__NSFontInstanceInfoInitializeMetricsInfo",
 				"_NSXPCConnectionClassCache",
+				"CGPathMoveToPoint",
 	#elif defined(DPlatformFamily_Linux)
 				"qt_load_library_runtime",
 				"qt_set_x11_resources",
