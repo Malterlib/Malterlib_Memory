@@ -36,6 +36,11 @@ namespace NMib
 				m_pThreadLocal->f_ReturnCheckoutVirtual();
 		}
 
+		inline bool CMemoryManagerCheckout::f_IsCheckedOut() const
+		{
+			return m_pThreadLocal != nullptr;
+		}
+		
 		inline void CMemoryManagerCheckout::f_TemporaryReturn()
 		{
 			if (m_pThreadLocal)

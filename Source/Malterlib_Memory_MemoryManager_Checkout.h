@@ -37,6 +37,8 @@ namespace NMib
 			CMemoryManagerCheckout(ICMemoryManagerReturnCheckout *_pThreadLocal);
 			CMemoryManagerCheckout &operator = (CMemoryManagerCheckout &&_Other);
 			~CMemoryManagerCheckout();
+			
+			bool f_IsCheckedOut() const;
 
 			void f_TemporaryReturn();
 			void f_TemporaryGetBack();
