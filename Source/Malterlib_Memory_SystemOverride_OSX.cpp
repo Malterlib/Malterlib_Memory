@@ -366,7 +366,9 @@ extern "C"
 		}
 		
 		fg_InterposeOverride();
+#ifdef DMemoryManagerIsSame
 		g_MainHeap->f_CanDoLazyCheckout();
+#endif
 
 		NSys::g_FunctionHooks->f_Resume();
 	}
