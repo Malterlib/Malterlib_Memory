@@ -523,7 +523,7 @@ namespace
 
 			DMibTestSuite("Commit")
 			{
-				mint LastAlloc = 0;
+				[[maybe_unused]] mint LastAlloc = 0;
 				TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
 
 				{

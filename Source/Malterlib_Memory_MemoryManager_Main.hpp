@@ -51,7 +51,7 @@ namespace NMib
 						return pArena;
 					}
 				}	
-				, [this] (TCMemoryManagerThreadLocal<t_CParams> *_pArena)
+				, [] (TCMemoryManagerThreadLocal<t_CParams> *_pArena)
 				{
 					TCMemoryManagerNumaArena<t_CParams> *pNumaArena = _pArena->m_pNumaArena;
 					pNumaArena->m_PoolThreadLocal.f_Delete(_pArena);
