@@ -383,9 +383,9 @@ namespace NMib
 							((CPreBlock *)pMemory)->m_Offset = pPreBlock->m_Offset;
 							((CPreBlock *)pMemory)->m_Magic = pPreBlock->m_Magic;
 
-							if (t_COptions::mc_nPreGuardBytes)
+							if (t_COptions::mc_nPreGuardBytes != 0)
 								CParams::fs_FillGuard(pPreBlock->f_GetPreGuard(), t_COptions::mc_nPreGuardBytes);
-							if (t_COptions::mc_bFillAllocated)
+							if (t_COptions::mc_bFillAllocated != 0)
 								CParams::fs_FillAllocated(pMemory + PreBytes, RetSize);
 							if (PostBytes)
 								CParams::fs_FillGuard(pMemory + PreBytes + RetSize, t_COptions::mc_nPostGuardBytes);

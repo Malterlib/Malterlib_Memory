@@ -98,7 +98,7 @@ namespace NMib
 						if (StartBit < EndBit)
 						{
 							m_CommittedSubSlabs.template f_SetBitRange<true>(StartBit, EndBit - StartBit);
-							if (t_CParams::mc_DeferCleanup & EDeferCleanup_Commit)
+							if ((t_CParams::mc_DeferCleanup & EDeferCleanup_Commit) != 0)
 								m_DeferredDecommitSubSlabs.template f_SetBitRange<true>(StartBit, EndBit - StartBit);
 						}
 						return true;
