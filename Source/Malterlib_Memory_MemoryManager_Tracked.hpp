@@ -90,6 +90,7 @@ namespace NMib
 					, _Alignment
 					, [this, &Options](void * _pAlloc, mint _Size)
 					{
+						(void)this;
 						DMibMemoryGoingToReportScope(this, true);
 						DMibMemoryReportAlloc(this, mp_pName, _pAlloc, Options.m_Alignment, Options.m_RequestedSize, _Size, this->f_Overhead(_pAlloc), nullptr);
 						return (*Options.m_pFunctor)(_pAlloc, _Size);
@@ -126,6 +127,7 @@ namespace NMib
 					, _Alignment
 					, [this, &Options](void * _pAlloc, mint _Size)
 					{
+						(void)this;
 						DMibMemoryGoingToReportScope(this, true);
 						DMibMemoryReportAlloc(this, mp_pName, _pAlloc, Options.m_Alignment, Options.m_RequestedSize, _Size, this->f_Overhead(_pAlloc), nullptr);
 						return (*Options.m_pFunctor)(_pAlloc, _Size);
