@@ -1019,6 +1019,7 @@ extern "C" bool g_bOnlyDefaultZone = true;
 extern bint g_bRegisteredAtFork;
 
 void fg_Override_PrepareFork();
+void fg_Override_PrepareForkDummy();
 void fg_Override_ForkedChild();
 void fg_Override_ForkedParent();
 
@@ -1099,7 +1100,10 @@ void fg_MalterlibMallocOverrideEnable()
 	if (!g_bRegisteredAtFork)
 	{
 		g_bRegisteredAtFork = true;
-		pthread_atfork(&fg_Override_PrepareFork, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
+		if (g_OriginalFunctions._malloc_fork_prepare)
+			pthread_atfork(&fg_Override_PrepareForkDummy, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
+		else
+			pthread_atfork(&fg_Override_PrepareFork, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
 	}
 }
 
@@ -1199,6 +1203,18 @@ void fg_Override_PrepareFork()
 		;
 #endif
 	NSys::fg_MalterlibSystem_ForkPrepare();
+}
+
+void fg_Override_PrepareForkDummy()
+{
+}
+
+assure_used extern "C" DMibMalterlibOverrideMallocExport void fg_Malterlib__malloc_fork_prepare()
+{
+	if (g_OriginalFunctions._malloc_fork_prepare)
+		g_OriginalFunctions._malloc_fork_prepare();
+
+	fg_Override_PrepareFork();
 }
 
 void fg_Override_ForkedChild()

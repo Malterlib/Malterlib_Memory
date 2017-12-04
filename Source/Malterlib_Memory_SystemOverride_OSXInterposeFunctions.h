@@ -145,6 +145,8 @@ DMibMemoryInterpose8(uint32_t, __psynch_cvwait, user_addr_t _0, uint64_t _1, uin
 DMibMemoryInterpose6(int, kevent, int _0, const struct kevent *_1, int _2, struct kevent *_3, int _4, const struct timespec *_5)
 DMibMemoryInterpose7(int, kevent64, int _0, const struct kevent64_s *_1, int _2, struct kevent64_s *_3, int _4, unsigned int _5, const struct timespec *_6)
 DMibMemoryInterpose7(mach_msg_return_t ,mach_msg_trap, mach_msg_header_t *_0, mach_msg_option_t _1, mach_msg_size_t _2, mach_msg_size_t _3, mach_port_name_t _4, mach_msg_timeout_t _5, mach_port_name_t _6)
+DMibMemoryInterpose0(void,_malloc_fork_prepare)
+
 
 #undef DMibMemoryInterpose0
 #undef DMibMemoryInterpose1
