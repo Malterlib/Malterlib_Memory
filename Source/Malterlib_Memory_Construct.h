@@ -23,8 +23,8 @@ namespace NMib
 	template <typename tf_ObjectType, typename tf_CAllocator, typename... tfp_CParams>
 	tf_ObjectType *fg_ConstructObject(tf_CAllocator &&_Allocator, tfp_CParams&&... p_Params)
 	{
-		static_assert(sizeof(tf_ObjectType) > 0, "");
-		static_assert(!NTraits::TCIsAbstract<tf_ObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_ObjectType>::mc_Value, "");
+		static_assert(sizeof(tf_ObjectType) > 0);
+		static_assert(!NTraits::TCIsAbstract<tf_ObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_ObjectType>::mc_Value);
 		mint Size = sizeof(tf_ObjectType);
 		auto Memory = fg_Forward<tf_CAllocator>(_Allocator).f_AllocSafe(Size, NTraits::TCAlignmentOf<tf_ObjectType>::mc_Value);
 		auto pReturn = new(Memory.f_Get()) tf_ObjectType(fg_Forward<tfp_CParams>(p_Params)...);
@@ -35,8 +35,8 @@ namespace NMib
 	template <typename tf_CObjectType, typename tf_CAllocator>
 	void fg_DeleteObject(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject)
 	{
-		static_assert(sizeof(tf_CObjectType) > 0, "");
-		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value, "");
+		static_assert(sizeof(tf_CObjectType) > 0);
+		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
 		_pObject->~tf_CObjectType();
 		fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject);
 	}
@@ -54,7 +54,7 @@ namespace NMib
 	template <typename t_CType>
 	inline_small void fg_Delete(t_CType * &_pToDelete)
 	{
-		static_assert(!NTraits::TCIsAbstract<t_CType>::mc_Value || NTraits::TCHasVirtualDestructor<t_CType>::mc_Value, "");
+		static_assert(!NTraits::TCIsAbstract<t_CType>::mc_Value || NTraits::TCHasVirtualDestructor<t_CType>::mc_Value);
 		if (_pToDelete)
 		{
 			delete _pToDelete;

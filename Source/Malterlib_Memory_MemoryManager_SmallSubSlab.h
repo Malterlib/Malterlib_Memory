@@ -60,12 +60,12 @@ namespace NMib
 			;
 
 			static_assert(						mc_SmallSlabIndex < TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabs, "Out of range");
-			static_assert(t_AllocSize != 1, "");
-			static_assert(t_AllocSize != 2 ||	mc_SmallSlabIndex == 1, "");
-			static_assert(t_AllocSize != 4 ||	mc_SmallSlabIndex == 2, "");
-			static_assert(t_AllocSize != 8 ||	mc_SmallSlabIndex == 3, "");
-			static_assert(t_AllocSize != 12 ||	mc_SmallSlabIndex == 4, "");
-			static_assert(t_AllocSize != 16 ||	mc_SmallSlabIndex == 5, "");
+			static_assert(t_AllocSize != 1);
+			static_assert(t_AllocSize != 2 ||	mc_SmallSlabIndex == 1);
+			static_assert(t_AllocSize != 4 ||	mc_SmallSlabIndex == 2);
+			static_assert(t_AllocSize != 8 ||	mc_SmallSlabIndex == 3);
+			static_assert(t_AllocSize != 12 ||	mc_SmallSlabIndex == 4);
+			static_assert(t_AllocSize != 16 ||	mc_SmallSlabIndex == 5);
 
 			TCMemoryManagerSubSlab_SmallSize();
 		};

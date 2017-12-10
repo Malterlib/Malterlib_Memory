@@ -162,7 +162,7 @@ namespace
 		}
 	};
 	
-	static_assert(__builtin_offsetof(CMemoryManagerZone, m_MallocZone) == 0, "");
+	static_assert(__builtin_offsetof(CMemoryManagerZone, m_MallocZone) == 0);
 
 	struct CLowLevelGlobalState
 	{

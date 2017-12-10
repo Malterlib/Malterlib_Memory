@@ -179,7 +179,7 @@ namespace NMib
 		private:
 			
 			using FSmallAllocJump = void *(*)(TCMemoryManagerArena *);
-#ifdef DCompiler_MSVC
+#ifdef DCompiler_MSVC_Workaround
 			static FSmallAllocJump mc_SmallAllocCategoryJumpTable[6];
 #else
 			static constexpr FSmallAllocJump mc_SmallAllocCategoryJumpTable[6] =

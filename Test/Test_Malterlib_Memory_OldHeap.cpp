@@ -20,7 +20,7 @@ namespace
 	class TCLocalHeapParams : public NMib::NMem::CHeapDefaultParams
 	{
 	public:
-		static_assert((1 << t_AlignBits) >= int(sizeof(void *)), "");
+		static_assert((1 << t_AlignBits) >= int(sizeof(void *)));
 		enum
 		{
 			EGrowSize = 4*1024*1024

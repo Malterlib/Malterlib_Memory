@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
@@ -44,7 +44,7 @@ namespace NMib
 \************************************************************************************************/
 
 
-#if defined(DMibPOverrideOperatorNew) && !defined(DCompiler_MSVC)
+#if defined(DMibPOverrideOperatorNew)
 
 	only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size)
 	{
@@ -177,7 +177,3 @@ namespace NMib
 		NMib::NMem::fg_Free(_pMemory);
 	}
 #endif
-
-
-
-

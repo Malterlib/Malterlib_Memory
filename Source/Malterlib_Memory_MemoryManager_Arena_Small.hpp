@@ -7,7 +7,7 @@ namespace NMib
 {
 	namespace NMem
 	{
-#ifdef DCompiler_MSVC
+#ifdef DCompiler_MSVC_Workaround
 		template <typename t_CParams>
 		typename TCMemoryManagerArena<t_CParams>::FSmallAllocJump TCMemoryManagerArena<t_CParams>::mc_SmallAllocCategoryJumpTable[6] =
 			{
