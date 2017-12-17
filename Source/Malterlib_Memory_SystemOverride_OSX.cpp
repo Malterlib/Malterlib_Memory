@@ -346,8 +346,7 @@ extern "C"
 		
 		NSys::g_FunctionHooks.f_Construct();
 
-		g_MalterlibMallocOveriddenInterposersInstalled = true;
-		
+
 		NSys::g_FunctionHooks->f_Suspend();
 #ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
 		if (_bNeedMalloc && CSystem::ms_PlatformVersion < 10'11'00)
@@ -366,11 +365,14 @@ extern "C"
 		}
 		
 		fg_InterposeOverride();
+
+		NSys::g_FunctionHooks->f_Resume();
+
+		g_MalterlibMallocOveriddenInterposersInstalled = true;
+
 #ifdef DMemoryManagerIsSame
 		g_MainHeap->f_CanDoLazyCheckout();
 #endif
-
-		NSys::g_FunctionHooks->f_Resume();
 	}
 
 	assure_used DMibMalterlibOverrideMallocExport void fg_MalterlibSystem_InitAfterMalloc()
