@@ -120,7 +120,6 @@ Property
 		{
 			!!MalterlibEnableThirdPartyComparisonTests true
 		}
-		MemoryManagerTestEnable_MalterlibOld true
 		MemoryManagerTestEnable_Application true
 		MemoryManagerTestEnable_StdLib true
 //			MemoryManagerTestEnable_Virtual true
@@ -202,10 +201,6 @@ Property
 		PreprocessorDefines "DMemoryManagerTestEnable_Virtual;@(Compile.PreprocessorDefines)"
 		{
 			!!MemoryManagerTestEnable_Virtual "true"
-		}
-		PreprocessorDefines "DMemoryManagerTestEnable_MalterlibOld;@(Compile.PreprocessorDefines)"
-		{
-			!!MemoryManagerTestEnable_MalterlibOld "true"
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_WindowsDefault;@(Compile.PreprocessorDefines)"
 		{
@@ -374,7 +369,6 @@ Property
 		}
 
 		%File Test/Test_Malterlib_Memory_DebugMemoryManager.cpp
-		%File Test/Test_Malterlib_Memory_OldHeap.cpp
 		%File Test/Test_Malterlib_Memory_MemoryManager_Basics.cpp
 		%File Test/Test_Malterlib_Memory_MemoryManager_Debug.cpp
 		%File Test/Test_Malterlib_Memory_Pool.cpp

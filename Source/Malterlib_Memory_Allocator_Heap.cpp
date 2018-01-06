@@ -3,7 +3,6 @@
 
 #include <Mib/Core/Core>
 #include "Malterlib_Memory_Allocator_Heap.h"
-#include "Malterlib_Memory_Heap.h"
 
 #ifndef DMibNoInlineNew
 #	error "You must define this when compling this file"
@@ -22,12 +21,6 @@ namespace NMib
 		
 		bint g_MalterlibMemoryManager_Debug_EnableStackTrace = DMibConfig_MalterlibMemoryManager_Debug_EnableStackTrace;
 		
-		bool CHeap_FillDebug::ms_bDisableFillChecks 
-			= DMibConfig_MalterlibMemoryManager_Debug_EnableFreedGuards 
-			| DMibConfig_MalterlibMemoryManager_Debug_EnableAllocatedFill 
-			| DMibConfig_MalterlibMemoryManager_Debug_EnableEdgeGuards
-		;
-
 		ch8 CAllocator_Virtual::ms_HeapName[] = "Virtual";
 
 #if DMibConfig_Memory_Shims_Enable

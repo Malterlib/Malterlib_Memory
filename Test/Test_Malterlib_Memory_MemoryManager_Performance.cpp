@@ -920,18 +920,6 @@ namespace
 			f_DoTest<TCMalterlibMemoryWindowsLF<false>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "WindowsLF", _MaxAllocSize, _nThreads);
 #endif
 
-#ifdef DMemoryManagerTestEnable_MalterlibOld
-			f_DoTest<TCMalterlibMemoryImp<CHeap_StandAlone_Commit1_Clear1_Lock0>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "MalterlibOld_ST", _MaxAllocSize, _nThreads);
-			f_DoTest<TCMalterlibMemoryImp<CHeap_Combined_Commit1_Clear1_Lock1>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "MalterlibOld_Combined", _MaxAllocSize, _nThreads);
-
-//			f_DoTest<TCMalterlibMemoryImp<CHeap_StandAlone_Commit1_Clear1_Lock1>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "MalterlibMT", _MaxAllocSize, _nThreads);
-//			f_DoTest<TCMalterlibMemoryImp<CHeap_Combined_Commit1_Clear1_Lock0>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "MalterlibCombined", _MaxAllocSize, _nThreads);
-/*			f_DoTest<TCMalterlibMemoryImp<CHeapSmall_StandAlone_Commit1_Clear1_Lock0>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "MalterlibSmall", _MaxAllocSize, _nThreads);
-			f_DoTest<TCMalterlibMemoryImp<CHeapSmall_Combined_Commit1_Clear1_Lock0>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "MalterlibSmallCombined", _MaxAllocSize, _nThreads);
-			f_DoTest<TCMalterlibMemoryImp<CHeapSmall_StandAlone_Commit1_Clear1_Lock1>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "MalterlibSmallMT", _MaxAllocSize, _nThreads);
-			f_DoTest<TCMalterlibMemoryImp<CHeapSmall_Combined_Commit1_Clear1_Lock1>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "MalterlibSmallCombinedMT", _MaxAllocSize, _nThreads);*/
-#endif
-
 			if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
 			{
 				DMibTest(DMibExpr(PerfTest));
