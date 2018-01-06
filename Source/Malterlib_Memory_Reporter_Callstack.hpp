@@ -24,6 +24,13 @@ namespace NMib
 
 		void CCallstackMemoryReporter::f_Report(bool _bFullReport)
 		{
+			COperation Alloc;
+			Alloc.m_OpType = _bFullReport ? COperation::EOpType_FullReport : COperation::EOpType_Report;
+			fp_PushToQueue(Alloc);
+		}
+
+		void CCallstackMemoryReporter::fp_Report(bool _bFullReport)
+		{
 			m_LockRequests.f_FetchAdd(1);
 			DMibLock(ms_pThis->m_Lock);
 			auto CleanUpLock = fg_OnScopeExit([&] 
@@ -32,10 +39,13 @@ namespace NMib
 				}
 			);
 
+			NStr::CStrNonTracked ProgramDir = NFile::CFile::fs_GetProgramDirectoryNonTracked();
+			
 			{
+				NFile::CFile::fs_CreateDirectory(ProgramDir + "/CrashDumps");
 				// Export TSV
 				NFile::CFile ExportFile;
-				ExportFile.f_Open(CStrNonTracked("CrashDumps/MemoryReport.tsv"), NFile::EFileOpen_Write | NFile::EFileOpen_DontTruncate);
+				ExportFile.f_Open(ProgramDir + "/CrashDumps/MemoryReport.tsv", NFile::EFileOpen_Write | NFile::EFileOpen_DontTruncate);
 				ExportFile.f_SetPositionFromEnd(0);
 
 				for (auto const& Callstack : m_Callstacks)
@@ -43,7 +53,16 @@ namespace NMib
 					if (!Callstack.m_Total.m_nBytes)
 						continue;
 
-					CStrNonTracked Data = fg_Format<CStrNonTracked>("{}\t{}\t{}\t{}\t{}\n", m_nReports, Callstack.m_Hash, Callstack.m_Allocator, Callstack.m_Total.m_nBytes, Callstack.m_Total.m_nAllocations);
+					NStr::CStrNonTracked Data = NStr::fg_Format<NStr::CStrNonTracked>
+						(
+						 	"{}\t{}\t{}\t{}\t{}\n"
+						 	, m_nReports
+						 	, Callstack.m_Hash
+						 	, Callstack.m_Allocator
+						 	, Callstack.m_Total.m_nBytes
+						 	, Callstack.m_Total.m_nAllocations
+						)
+					;
 					ExportFile.f_Write(Data.f_GetStr(), Data.f_GetLen());
 				}
 
@@ -54,12 +73,12 @@ namespace NMib
 			{
 				// Export TSV
 				NFile::CFile ExportFile;
-				ExportFile.f_Open(CStrNonTracked("CrashDumps/Allocators.tsv"), NFile::EFileOpen_Write);
+				ExportFile.f_Open(ProgramDir + "/CrashDumps/Allocators.tsv", NFile::EFileOpen_Write);
 
 
 				for (auto iAllocator = m_Allocators.f_GetIterator(); iAllocator; ++iAllocator)
 				{
-					CStrNonTracked Data = fg_Format<CStrNonTracked>("{}\t{}\n",  iAllocator.f_GetKey(), iAllocator->m_Name);
+					NStr::CStrNonTracked Data = NStr::fg_Format<NStr::CStrNonTracked>("{}\t{}\n",  iAllocator.f_GetKey(), iAllocator->m_Name);
 					ExportFile.f_Write(Data.f_GetStr(), Data.f_GetLen());
 				}
 
@@ -71,8 +90,8 @@ namespace NMib
 				return;
 
 			// These variables will be included in dump explicitly
-			TCVector<CCallstack, CAllocator_NonTrackedHeap>	Callstacks;
-			TCVector<CAllocator, CAllocator_NonTrackedHeap>	Allocators;
+			NContainer::TCVector<CCallstack, CAllocator_NonTrackedHeap>	Callstacks;
+			NContainer::TCVector<CAllocator, CAllocator_NonTrackedHeap>	Allocators;
 			auto & Errors = m_Errors;
 
 			for (auto const& Callstack : m_Callstacks)
@@ -88,7 +107,7 @@ namespace NMib
 			;
 
 			Allocators.f_SetLen(m_Allocators.f_GetLen());
-			TCMap<mint, CAllocator*, CSort_Default, CAllocator_NonTrackedHeap> AllocatorMap;
+			NContainer::TCMap<mint, CAllocator *, CSort_Default, CAllocator_NonTrackedHeap> AllocatorMap;
 
 			mint iRow = 0;
 			for (auto iAllocator = m_Allocators.f_GetIterator(); iAllocator; ++iAllocator, ++iRow)
@@ -257,7 +276,6 @@ namespace NMib
 		static mint const gc_QueueBitInv = ~(gc_QueueBitReset | gc_QueueBitResetFinished);
 		void CCallstackMemoryReporter::fp_PushToQueue(COperation const& _Op)
 		{
-			
 			mint QueueSize = ++m_QueueSize;
 			mint SizeAnd = QueueSize & gc_QueueBitInv;
 
@@ -276,7 +294,12 @@ namespace NMib
 			}
 
 			if (SizeAnd == EProcessQueueThreshold)
+			{
+				while (!mp_pThread)
+					fp_StartupThread();
+
 				mp_pThread->m_EventWantQuit.f_Signal();
+			}
 
 			if (SizeAnd >= EProcessQueueSize)
 			{
@@ -289,6 +312,7 @@ namespace NMib
 			}
 
 			m_OperationQueue.f_Push(_Op);
+
 		}
 
 		void CCallstackMemoryReporter::f_GetSize(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo)
@@ -309,20 +333,29 @@ namespace NMib
 
 		void CCallstackMemoryReporter::fp_StartupThread()
 		{
-			mp_pThread = NThread::CThreadObjectNonTracked::fs_StartThread
-				(
-					[this](NThread::CThreadObjectNonTracked *_pThread) -> aint
-					{
-						while (_pThread->f_GetState() != NThread::EThreadState_EventWantQuit)
+			if (mp_pThread || !g_bCanStartThreads || !NTime::CSystem_Time::fs_TimeInitDone())
+				return;
+
+			{
+				DMibLock(mp_ThreadLock);
+				if (mp_pThread)
+					return;
+
+				mp_pThread = NThread::CThreadObjectNonTracked::fs_StartThread
+					(
+						[this](NThread::CThreadObjectNonTracked *_pThread) -> aint
 						{
-							fp_ProcessQueue();
-							_pThread->m_EventWantQuit.f_WaitTimeout(0.5);
+							while (_pThread->f_GetState() != NThread::EThreadState_EventWantQuit)
+							{
+								fp_ProcessQueue();
+								_pThread->m_EventWantQuit.f_WaitTimeout(0.5);
+							}
+							return 0;
 						}
-						return 0;
-					}
-					, "Memory reporter queue processor"
-				)
-			;
+						, "Memory reporter queue processor"
+					)
+				;
+			}
 		}
 
 		void CCallstackMemoryReporter::fp_ProcessQueue()
@@ -367,6 +400,9 @@ namespace NMib
 						else
 						{
 							DMibTraceSafe("Unknown allocation freed during resize/realloc {} {}, possible loss of {} bytes {\n}", Op.m_MemoryAllocator << Op.m_OldAlloc.m_Address << Op.m_OldAlloc.m_Size);
+							uint64 Hash = fsp_GetStackFingerprint(Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack).f_FoldToInt<uint64>();
+							auto & Callstack = fp_GetCallstack(Op.m_MemoryAllocator, Hash, Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack);
+							fp_RegisterAllocation(Op.m_MemoryAllocator, Op.m_Address, Op.m_Size, &Callstack);
 						}
 					}
 					break;
@@ -393,9 +429,19 @@ namespace NMib
 						Allocator.m_Name = Op.m_AllocatorName;
 					}
 					break;
+				case COperation::EOpType_Report:
+					{
+						fp_Report(false);
+					}
+					break;
+				case COperation::EOpType_FullReport:
+					{
+						fp_Report(true);
+					}
+					break;
 
 				default:
-					DNeverGetHere;
+					DMibNeverGetHere;
 				}
 				++nProcessed;
 
@@ -405,7 +451,7 @@ namespace NMib
 
 			if (nProcessed)
 			{
-				NSys::fg_DebugOutput(fg_Format<CStrNonTracked>("Processed {} operations{\n}", nProcessed));
+				NSys::fg_DebugOutput(NStr::fg_Format<NStr::CStrNonTracked>("Processed {} operations{\n}", nProcessed));
 			}
 		}
 		
@@ -416,7 +462,7 @@ namespace NMib
 			return CallStack;
 		}
 
-		CHashDigest_MD5 CCallstackMemoryReporter::fsp_GetStackFingerprint(CMibCodeAddress *_pStack, mint _nStack)
+		NDataProcessing::CHashDigest_MD5 CCallstackMemoryReporter::fsp_GetStackFingerprint(CMibCodeAddress *_pStack, mint _nStack)
 		{
 			NDataProcessing::CHash_MD5 Digest;
 			NDataProcessing::TCBinaryStreamHashRef<NDataProcessing::CHash_MD5> Stream;

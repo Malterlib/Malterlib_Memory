@@ -104,6 +104,8 @@ namespace NMib
 
 		private:
 
+			void fp_Report(bool _bFullReport);
+
 			struct CAllocator
 			{
 				NStr::CStrNonTracked m_Name;
@@ -132,6 +134,8 @@ namespace NMib
 					, EOpType_Realloc
 					, EOpType_Free
 					, EOpType_Allocator
+					, EOpType_Report
+					, EOpType_FullReport
 				} m_OpType;
 
 				struct Callstack
@@ -146,7 +150,7 @@ namespace NMib
 					mint m_Size;
 				} m_OldAlloc;
 
-				CStrNonTracked m_AllocatorName;
+				NStr::CStrNonTracked m_AllocatorName;
 			};
 
 			void fp_PushToQueue(COperation const& _Op);
@@ -188,6 +192,7 @@ namespace NMib
 			// Thread related
 
 			NPtr::TCUniquePointer<NThread::CThreadObjectNonTracked, NMem::CAllocator_NonTrackedHeap> mp_pThread;
+			NThread::CSpinLock mp_ThreadLock;
 
 			struct CCallstack
 			{
@@ -211,11 +216,11 @@ namespace NMib
 
 				CSize m_Total;
 			};
-			TCMap<uint64, CCallstack, CSort_Default, CAllocator_NonTrackedHeap> m_Callstacks;
-			TCVector<CCallstack, NMem::CAllocator_NonTrackedHeap> m_Errors;
+			NContainer::TCMap<uint64, CCallstack, CSort_Default, CAllocator_NonTrackedHeap> m_Callstacks;
+			NContainer::TCVector<CCallstack, NMem::CAllocator_NonTrackedHeap> m_Errors;
 
 			CCallstack& fp_GetCallstack(mint _MemoryAllocator, mint _Hash, CMibCodeAddress *_pStack, mint _nStack);
-			static CHashDigest_MD5 fsp_GetStackFingerprint(CMibCodeAddress *_pStack, mint _nStack);
+			static NDataProcessing::CHashDigest_MD5 fsp_GetStackFingerprint(CMibCodeAddress *_pStack, mint _nStack);
 
 
 			struct CAllocation
@@ -230,7 +235,7 @@ namespace NMib
 				CCallstack* m_pCallstack;
 				mint m_nIgnoreFree = 0;
 			};
-			TCMap<CAllocationKey, CAllocation, CSort_Default, CAllocator_NonTrackedHeap> m_Allocations;
+			NContainer::TCMap<CAllocationKey, CAllocation, CSort_Default, CAllocator_NonTrackedHeap> m_Allocations;
 			bool fp_RegisterAllocation(mint _MemoryAllocator, mint _Address, mint _Size, CCallstack* _pCallstack);
 			CCallstack* fp_RemoveAllocation(mint _MemoryAllocator, mint _Address);
 

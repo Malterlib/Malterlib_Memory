@@ -475,7 +475,7 @@ namespace NMib
 			pCurrentCategory->m_nBytes += _Size;
 			++pCurrentCategory->m_nAllocations;
 #if 0
-			if (g_bCanStartThreads && fg_GetSys()->f_TimeInitDone())
+			if (g_bCanStartThreads && NTime::CSystem_Time::fs_TimeInitDone())
 			{
 				int64 Cycles = NTime::NPlatform::fg_Timer_CyclesFast();
 				int64 CurrentValue = g_CyclesTimer.f_Load();
