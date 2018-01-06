@@ -607,29 +607,29 @@ namespace NMib
 		template <typename t_CParams>
 		void TCMemoryManager<t_CParams>::f_PrepareFork()
 		{
-			auto &ThreadLocal = *m_LocalArena;
-			auto pNumaArena = ThreadLocal.m_pNumaArena;
-
 			m_NumaArenasLock.f_PrepareFork();
 			m_HeapChunksLock.f_PrepareFork();
-			pNumaArena->m_ArenasLock.f_PrepareFork();
-			pNumaArena->m_FreeSlabsLock.f_PrepareFork();
-			pNumaArena->m_Pool.f_PrepareFork();
-			pNumaArena->m_PoolThreadLocal.f_PrepareFork();
-			pNumaArena->m_BackgroundCleanup.f_PrepareFork();
+			for (auto &Arena : m_NumaArenas)
+			{
+				Arena.m_ArenasLock.f_PrepareFork();
+				Arena.m_FreeSlabsLock.f_PrepareFork();
+				Arena.m_Pool.f_PrepareFork();
+				Arena.m_PoolThreadLocal.f_PrepareFork();
+				Arena.m_BackgroundCleanup.f_PrepareFork();
+			}
 		}
 		
 		template <typename t_CParams>
 		void TCMemoryManager<t_CParams>::f_ForkedChild()
 		{
-			auto &ThreadLocal = *m_LocalArena;
-			auto pNumaArena = ThreadLocal.m_pNumaArena;
-
-			pNumaArena->m_BackgroundCleanup.f_ForkedChild();;
-			pNumaArena->m_PoolThreadLocal.f_ForkedChild();
-			pNumaArena->m_Pool.f_ForkedChild();
-			pNumaArena->m_FreeSlabsLock.f_ForkedChild();
-			pNumaArena->m_ArenasLock.f_ForkedChild();
+			for (auto &Arena : m_NumaArenas)
+			{
+				Arena.m_BackgroundCleanup.f_ForkedChild();;
+				Arena.m_PoolThreadLocal.f_ForkedChild();
+				Arena.m_Pool.f_ForkedChild();
+				Arena.m_FreeSlabsLock.f_ForkedChild();
+				Arena.m_ArenasLock.f_ForkedChild();
+			}
 			m_HeapChunksLock.f_ForkedChild();
 			m_NumaArenasLock.f_ForkedChild();
 
@@ -638,49 +638,46 @@ namespace NMib
 		template <typename t_CParams>
 		void TCMemoryManager<t_CParams>::f_ForkedParent()
 		{
-			auto &ThreadLocal = *m_LocalArena;
-			auto pNumaArena = ThreadLocal.m_pNumaArena;
-			
-			pNumaArena->m_BackgroundCleanup.f_ForkedParent();
-			pNumaArena->m_PoolThreadLocal.f_ForkedParent();
-			pNumaArena->m_Pool.f_ForkedParent();
-			pNumaArena->m_FreeSlabsLock.f_ForkedParent();
-			pNumaArena->m_ArenasLock.f_ForkedParent();
+			for (auto &Arena : m_NumaArenas)
+			{
+				Arena.m_BackgroundCleanup.f_ForkedParent();
+				Arena.m_PoolThreadLocal.f_ForkedParent();
+				Arena.m_Pool.f_ForkedParent();
+				Arena.m_FreeSlabsLock.f_ForkedParent();
+				Arena.m_ArenasLock.f_ForkedParent();
+			}
 			m_HeapChunksLock.f_ForkedParent();
 			m_NumaArenasLock.f_ForkedParent();
-			
-			
 		}
 		
 		template <typename t_CParams>
 		void TCMemoryManager<t_CParams>::f_Lock()
 		{
-			auto &ThreadLocal = *m_LocalArena;
-			auto pNumaArena = ThreadLocal.m_pNumaArena;
-
 			m_NumaArenasLock.f_Lock();
 			m_HeapChunksLock.f_Lock();
-			
-			pNumaArena->m_ArenasLock.f_Lock();
-			pNumaArena->m_FreeSlabsLock.f_Lock();
-			pNumaArena->m_Pool.f_Lock();
-			pNumaArena->m_PoolThreadLocal.f_Lock();
+
+			for (auto &Arena : m_NumaArenas)
+			{
+				Arena.m_ArenasLock.f_Lock();
+				Arena.m_FreeSlabsLock.f_Lock();
+				Arena.m_Pool.f_Lock();
+				Arena.m_PoolThreadLocal.f_Lock();
+			}
 		}
 		
 		template <typename t_CParams>
 		void TCMemoryManager<t_CParams>::f_Unlock()
 		{
-			auto &ThreadLocal = *m_LocalArena;
-			auto pNumaArena = ThreadLocal.m_pNumaArena;
-
-			pNumaArena->m_PoolThreadLocal.f_Unlock();
-			pNumaArena->m_Pool.f_Unlock();
-			pNumaArena->m_FreeSlabsLock.f_Unlock();
-			pNumaArena->m_ArenasLock.f_Unlock();
+			for (auto &Arena : m_NumaArenas)
+			{
+				Arena.m_PoolThreadLocal.f_Unlock();
+				Arena.m_Pool.f_Unlock();
+				Arena.m_FreeSlabsLock.f_Unlock();
+				Arena.m_ArenasLock.f_Unlock();
+			}
 
 			m_HeapChunksLock.f_Unlock();
 			m_NumaArenasLock.f_Unlock();
-			
 		}
 		
 		template <typename t_CParams>
@@ -1132,7 +1129,7 @@ namespace NMib
 			
 			ThreadLocal.f_ReturnCheckoutLight();
 		}
-		
+
 		template <typename t_CParams>
 		void TCMemoryManager<t_CParams>::f_LazyReturnCheckout()
 		{

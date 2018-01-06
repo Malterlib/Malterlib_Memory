@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -69,17 +69,20 @@ namespace NMib
 
 	void CSystem::f_MemoryManager_PrepareFork()
 	{
-		return NMem::CCrossModuleImplementationExtra::fs_MemoryManager_PrepareFork(&NMem::g_CrossModule);
+		NSys::fg_Mem_PrepareFork();
+		NMem::CCrossModuleImplementationExtra::fs_MemoryManager_PrepareFork(&NMem::g_CrossModule);
 	}
 	
 	void CSystem::f_MemoryManager_ForkedParent()
 	{
-		return NMem::CCrossModuleImplementationExtra::fs_MemoryManager_ForkedParent(&NMem::g_CrossModule);
+		NMem::CCrossModuleImplementationExtra::fs_MemoryManager_ForkedParent(&NMem::g_CrossModule);
+		NSys::fg_Mem_ForkedParent();
 	}
 	
 	void CSystem::f_MemoryManager_ForkedChild()
 	{
-		return NMem::CCrossModuleImplementationExtra::fs_MemoryManager_ForkedChild(&NMem::g_CrossModule);
+		NMem::CCrossModuleImplementationExtra::fs_MemoryManager_ForkedChild(&NMem::g_CrossModule);
+		NSys::fg_Mem_ForkedChild();
 	}
 	
 	void CSystem::f_MemoryManager_DestroyThreads()

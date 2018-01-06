@@ -1166,44 +1166,6 @@ void NMib::NSys::fg_Mem_EnableLazyReturnCheckout()
 
 void fg_Override_PrepareFork()
 {
-#ifdef DMemoryManagerIsSame
-	do
-	{
-		auto &LowLevelState = *g_LowLevelGlobalState;
-		auto &State = *g_GlobalState;
-		{
-			DMibLockRead(State.m_ZoneListLock);
-		}
-		{
-			DMibLock(State.m_ZoneListLock);
-		}
-		LowLevelState.f_IncRentrant();
-		State.m_ForkLock.f_Lock();
-		if (++State.m_ForkedCount > 1)
-			break;
-		State.m_ForkLock.f_PrepareFork();
-
-		State.m_Unforked = false;
-		
-		State.m_ZoneListLock.f_Lock();
-		State.m_ZoneListLock.f_PrepareFork();
-		
-		if (!g_bOnlyDefaultZone)
-		{
-			for (auto &Zone : State.m_ZoneList)
-			{
-				Zone.m_MemoryManager.f_Lock();
-				Zone.m_MemoryManager.f_CheckoutManual();
-				Zone.m_MemoryManager.f_PrepareFork();
-			}
-		}
-		sigset_t NewMask;
-		sigfillset(&NewMask);
-		pthread_sigmask(SIG_SETMASK, &NewMask, &State.m_ForkSigMask);
-	}
-	while (false)
-		;
-#endif
 	NSys::fg_MalterlibSystem_ForkPrepare();
 }
 
@@ -1222,6 +1184,51 @@ assure_used extern "C" DMibMalterlibOverrideMallocExport void fg_Malterlib__mall
 void fg_Override_ForkedChild()
 {
 	NSys::fg_MalterlibSystem_ForkChild();
+}
+
+void NMib::NSys::fg_Mem_PrepareFork()
+{
+#ifdef DMemoryManagerIsSame
+	do
+	{
+		auto &LowLevelState = *g_LowLevelGlobalState;
+		auto &State = *g_GlobalState;
+		{
+			DMibLockRead(State.m_ZoneListLock);
+		}
+		{
+			DMibLock(State.m_ZoneListLock);
+		}
+		LowLevelState.f_IncRentrant();
+		State.m_ForkLock.f_Lock();
+		if (++State.m_ForkedCount > 1)
+			break;
+		State.m_ForkLock.f_PrepareFork();
+
+		State.m_Unforked = false;
+
+		State.m_ZoneListLock.f_Lock();
+		State.m_ZoneListLock.f_PrepareFork();
+
+		if (!g_bOnlyDefaultZone)
+		{
+			for (auto &Zone : State.m_ZoneList)
+			{
+				Zone.m_MemoryManager.f_CheckoutManual();
+				Zone.m_MemoryManager.f_Lock();
+				Zone.m_MemoryManager.f_PrepareFork();
+			}
+		}
+		sigset_t NewMask;
+		sigfillset(&NewMask);
+		pthread_sigmask(SIG_SETMASK, &NewMask, &State.m_ForkSigMask);
+	}
+	while (false)
+		;
+#endif
+}
+void NMib::NSys::fg_Mem_ForkedChild()
+{
 #ifdef DMemoryManagerIsSame
 	do
 	{
@@ -1246,7 +1253,7 @@ void fg_Override_ForkedChild()
 			}
 		}
 		State.m_ZoneListLock.f_Unlock();
-		
+
 		LowLevelState.f_DecRentrant();
 		pthread_sigmask(SIG_SETMASK, &State.m_ForkSigMask, nullptr);
 		State.m_ForkLock.f_Unlock();
@@ -1255,10 +1262,8 @@ void fg_Override_ForkedChild()
 		;
 #endif
 }
-
-void fg_Override_ForkedParent()
+void NMib::NSys::fg_Mem_ForkedParent()
 {
-	NSys::fg_MalterlibSystem_ForkParent();
 #ifdef DMemoryManagerIsSame
 	do
 	{
@@ -1291,6 +1296,11 @@ void fg_Override_ForkedParent()
 	while (false)
 		;
 #endif
+}
+
+void fg_Override_ForkedParent()
+{
+	NSys::fg_MalterlibSystem_ForkParent();
 }
 
 // Direct overrides

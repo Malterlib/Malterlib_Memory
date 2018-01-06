@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
@@ -30,6 +30,15 @@ void NMib::NSys::fg_Mem_DisableLazyReturnCheckout()
 {
 }
 void NMib::NSys::fg_Mem_EnableLazyReturnCheckout()
+{
+}
+void NMib::NSys::fg_Mem_PrepareFork()
+{
+}
+void NMib::NSys::fg_Mem_ForkedChild()
+{
+}
+void NMib::NSys::fg_Mem_ForkedParent()
 {
 }
 #endif
