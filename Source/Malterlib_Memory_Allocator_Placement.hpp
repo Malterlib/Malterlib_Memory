@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -74,51 +74,60 @@ namespace NMib
 
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibPDebugBreak; // Not supported
 			return nullptr;
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocDebug(const mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibPDebugBreak; // Not supported
 			return nullptr;
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_Alloc(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibPDebugBreak; // Not supported
 			return nullptr;
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_Alloc(const mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_Alloc(mint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibPDebugBreak; // Not supported
 			return nullptr;
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibPDebugBreak; // Not supported
 			return nullptr;
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocAligned(const mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibPDebugBreak; // Not supported
 			return nullptr;
 		}
 		
-		only_parameters_aliased inline_small auto CAllocator_Placement::f_AllocSafe(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
+		only_parameters_aliased inline_small auto CAllocator_Placement::f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
 		{
 			DMibPDebugBreak; // Not supported
-			
+
 			CAutoDestroy AutoDestroy;
-			
+
 			return fg_Move(AutoDestroy);
 		}
-		
+
+		only_parameters_aliased inline_small auto CAllocator_Placement::f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
+		{
+			DMibPDebugBreak; // Not supported
+
+			CAutoDestroy AutoDestroy;
+
+			return fg_Move(AutoDestroy);
+		}
+
 		only_parameters_aliased inline_small void CAllocator_Placement::f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibPDebugBreak; // Not supported
@@ -159,6 +168,10 @@ namespace NMib
 		}
 
 		only_parameters_aliased inline_small void CAllocator_Placement::f_Free(void *_pBlock, mint _Size)
+		{
+		}
+
+		only_parameters_aliased inline_small void CAllocator_Placement::f_FreeNoSize(void *_pBlock)
 		{
 		}
 	}

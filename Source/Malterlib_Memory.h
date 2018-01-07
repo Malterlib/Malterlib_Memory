@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -276,12 +276,87 @@ namespace NMib
 
 		class CAllocator_Base
 		{
+		public:
+			enum
+			{
+				mc_bIsDefault = false
+			};
 		};
+
+
+		struct CAllocator_AutoDestroy
+		{
+			void *m_pMemory;
+			mint m_Size;
+
+			CAllocator_AutoDestroy(CAllocator_AutoDestroy &&_Other)
+				: m_pMemory(_Other.m_pMemory)
+				, m_Size(_Other.m_Size)
+			{
+				_Other.m_pMemory = nullptr;
+			}
+
+			CAllocator_AutoDestroy &operator =(CAllocator_AutoDestroy &&_Other)
+			{
+				m_pMemory = _Other.m_pMemory;
+				m_Size = _Other.m_Size;
+				_Other.m_pMemory = nullptr;
+				return *this;
+			}
+
+			CAllocator_AutoDestroy()
+				: m_pMemory(nullptr)
+			{
+			}
+
+			only_parameters_aliased malloc_like void *f_Get() const
+			{
+				return m_pMemory;
+			}
+
+			void f_Claim()
+			{
+				m_pMemory = nullptr;
+			}
+		};
+
+		template <typename t_CAllocator>
+		struct TCAllocator_AutoDestroyStatic : public CAllocator_AutoDestroy
+		{
+			TCAllocator_AutoDestroyStatic(TCAllocator_AutoDestroyStatic &&) = default;
+			TCAllocator_AutoDestroyStatic &operator = (TCAllocator_AutoDestroyStatic &&) = default;
+			TCAllocator_AutoDestroyStatic() = default;
+			~TCAllocator_AutoDestroyStatic()
+			{
+				if (this->m_pMemory)
+					t_CAllocator::f_Free(this->m_pMemory, this->m_Size);
+			}
+		};
+
+		template <typename t_CAllocator>
+		struct TCAllocator_AutoDestroy : public CAllocator_AutoDestroy
+		{
+			TCAllocator_AutoDestroy(TCAllocator_AutoDestroy &&) = default;
+			TCAllocator_AutoDestroy &operator = (TCAllocator_AutoDestroy &&) = default;
+			TCAllocator_AutoDestroy(t_CAllocator &_Allocator)
+				: m_Allocator(_Allocator)
+			{
+			};
+			~TCAllocator_AutoDestroy()
+			{
+				if (this->m_pMemory)
+					m_Allocator.f_Free(this->m_pMemory, this->m_Size);
+			}
+			t_CAllocator &m_Allocator;
+		};
+
 		class CAllocator_Empty : public CAllocator_Base
 		{
 		public:
 			
 			typedef CDefaultPointerHolder CPtrHolder;
+
+			using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Empty>;
 
 			static inline_small mint f_GranularityAlloc(bint _bLargePages = false)
 			{
@@ -333,7 +408,17 @@ namespace NMib
 
 			}
 
+			static inline_small void *f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			{
+				return nullptr;
+			}
+
 			static inline_small void *f_Alloc(mint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			{
+				return nullptr;
+			}
+
+			static inline_small void *f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 			{
 				return nullptr;
 			}
@@ -342,19 +427,35 @@ namespace NMib
 			{
 				return nullptr;
 			}
+
+			static inline_small void *f_AllocAlignedWithSizeDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			{
+				return nullptr;
+			}
+
+			static inline_small void *f_AllocAlignedDebug(mint _Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			{
+				return nullptr;
+			}
+
 			static inline_small void f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 			{
 			}
+
 			static inline_small void f_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 			{
 			}
 
+			static inline_small void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			{
+				return nullptr;
+			}
 			static inline_small void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 			{
 				return nullptr;
 			}
 
-			static inline_small void *f_Realloc(void *_pMem, mint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			static inline_small void *f_Realloc(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 			{
 				return nullptr;
 			}
@@ -369,7 +470,7 @@ namespace NMib
 				return nullptr;
 			}
 
-			static inline_small void *f_Resize(void *_pMem, mint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			static inline_small void *f_Resize(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 			{
 				return nullptr;
 			}
@@ -382,10 +483,23 @@ namespace NMib
 			{
 			}
 
-			static inline_small void f_Free(void *_pBlock)
+			static inline_small void f_Free(void *_pBlock, mint _Size)
 			{
 			}
-		};		
+
+			static inline_small void f_FreeNoSize(void *_pBlock)
+			{
+			}
+
+			only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			{
+				return {};
+			}
+			only_parameters_aliased static CAutoDestroy f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			{
+				return {};
+			}
+		};
 
 		class CAllocator_Disable : public CAllocator_Base
 		{

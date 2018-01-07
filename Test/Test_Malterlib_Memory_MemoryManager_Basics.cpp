@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Test/Memory>
@@ -18,6 +18,12 @@ namespace
 		CBasics_Tests()
 		{
 		}
+
+		struct CAlloc
+		{
+			void *m_pAlloc;
+			mint m_Size;
+		};
 		
 		void f_NonFinished()
 		{
@@ -37,7 +43,7 @@ namespace
 					if (Size != LastSlab)
 					{
 						mint SizeAlloc = Size;
-						auto pMem0 = MemoryManager.f_Alloc(SizeAlloc);
+						auto pMem0 = MemoryManager.f_AllocWithSize(SizeAlloc);
 						Allocated.f_Insert(pMem0);
 						LastSlab = Size;
 					}
@@ -45,7 +51,7 @@ namespace
 				for (int i = CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize + 1; i <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize * 16; i += CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize)
 				{
 					mint Size = i;
-					auto pMem0 = MemoryManager.f_Alloc(Size);
+					auto pMem0 = MemoryManager.f_AllocWithSize(Size);
 					Allocated.f_Insert(pMem0);
 				}
 
@@ -65,7 +71,7 @@ namespace
 							if (Size != LastSlab)
 							{
 								mint SizeAlloc = Size;
-								auto pMem0 = MemoryManager.f_Alloc(SizeAlloc);
+								auto pMem0 = MemoryManager.f_AllocWithSize(SizeAlloc);
 								Allocated.f_Insert(pMem0);
 								LastSlab = Size;
 							}
@@ -108,21 +114,21 @@ namespace
 				}
 
 				mint Size = 17;
-				auto pMem0 = MemoryManager.f_Alloc(Size);
+				auto pMem0 = MemoryManager.f_AllocWithSize(Size);
 				Size = 11;
-				auto pMem1 = MemoryManager.f_Alloc(Size);
+				auto pMem1 = MemoryManager.f_AllocWithSize(Size);
 				Size = 2;
-				auto pMem2 = MemoryManager.f_Alloc(Size);
+				auto pMem2 = MemoryManager.f_AllocWithSize(Size);
 				Size = 32;
-				auto pMem3 = MemoryManager.f_Alloc(Size);
+				auto pMem3 = MemoryManager.f_AllocWithSize(Size);
 				Size = 28;
-				auto pMem4 = MemoryManager.f_Alloc(Size);
+				auto pMem4 = MemoryManager.f_AllocWithSize(Size);
 				MemoryManager.f_Free(pMem4);
-				pMem4 = MemoryManager.f_Alloc(Size);
+				pMem4 = MemoryManager.f_AllocWithSize(Size);
 				MemoryManager.f_Free(pMem4);
-				pMem4 = MemoryManager.f_Alloc(Size);
+				pMem4 = MemoryManager.f_AllocWithSize(Size);
 				MemoryManager.f_Free(pMem4);
-				pMem4 = MemoryManager.f_Alloc(Size);
+				pMem4 = MemoryManager.f_AllocWithSize(Size);
 				MemoryManager.f_Free(pMem4);
 				MemoryManager.f_Free(pMem0);
 				MemoryManager.f_Free(pMem1);
@@ -331,7 +337,7 @@ namespace
 			{
 				CTestMemoryMeasure MeasureMemory("Alloc");
 				
-				NMib::NContainer::TCVector<void *> Allocs;
+				NMib::NContainer::TCVector<CAlloc> Allocs;
 				
 				MeasureMemory.f_Start();
 				
@@ -346,7 +352,7 @@ namespace
 						{
 							LastAlloc = AllocSize;
 							mint Size = MemorySize;
-							auto pMemory = MemoryManager.f_Alloc(Size);
+							auto pMemory = MemoryManager.f_AllocWithSize(Size);
 							mint ReturnedSize = MemoryManager.f_Size(pMemory);
 							mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 							
@@ -355,15 +361,15 @@ namespace
 
 								NMib::NMem::CDisableMemoryReporterScope DisableReport;
 #endif
-								Allocs.f_Insert(pMemory);
+								Allocs.f_Insert({pMemory, Size});
 								DMibTest(DMibExpr(AllocSize) == DMibExpr(Size))(ETestFlag_Aggregated);
 								DMibTest(DMibExpr(Size) >= DMibExpr(MemorySize))(ETestFlag_Aggregated);
 								DMibTest(DMibExpr(ReturnedSize) == DMibExpr(Size))(ETestFlag_Aggregated);
 							}
 						}
 					}
-					for (void *pAlloc : Allocs)
-						MemoryManager.f_Free(pAlloc);
+					for (auto &Alloc : Allocs)
+						MemoryManager.f_Free(Alloc.m_pAlloc, Alloc.m_Size);
 					
 					MemoryManager.f_GarbageCollect(true);
 				}
@@ -382,7 +388,7 @@ namespace
 			{
 				CTestMemoryMeasure MeasureMemory("Alloc");
 				
-				NMib::NContainer::TCVector<void *> Allocs;
+				NMib::NContainer::TCVector<CAlloc> Allocs;
 				
 				MeasureMemory.f_Start();
 				
@@ -411,7 +417,7 @@ namespace
 											NMib::NMem::CDisableMemoryReporterScope DisableReport;
 #endif
 											DMibTest(DMibExpr(_Size) >= DMibExpr(MemorySize))(ETestFlag_Aggregated);
-											Allocs.f_Insert(_pAlloc);
+											Allocs.f_Insert({_pAlloc, _Size});
 										}
 										
 										if ((nAllocs--) == 0) 
@@ -424,9 +430,9 @@ namespace
 							}
 						}
 					}
-					for (void *pAlloc : Allocs)
-						MemoryManager.f_Free(pAlloc);
-					
+					for (auto &Alloc : Allocs)
+						MemoryManager.f_Free(Alloc.m_pAlloc, Alloc.m_Size);
+
 					MemoryManager.f_GarbageCollect(true);
 				}
 				
@@ -454,9 +460,9 @@ namespace
 						DMibTestPath(NMib::NStr::CStr::CFormat("{}") << AllocSize);
 						
 						mint Size = AllocSize;
-						auto pAlloc = MemoryManager.f_Alloc(Size);
+						auto pAlloc = MemoryManager.f_AllocWithSize(Size);
 						DMibTest(DMibExpr(true));
-						MemoryManager.f_Free(pAlloc);
+						MemoryManager.f_Free(pAlloc, Size);
 					}
 				}
 			};
@@ -478,16 +484,16 @@ namespace
 						TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
 						auto Checkout = MemoryManager.f_Checkout();
 						mint nAlloc = (CDefaultMemoryManagerParams_Tests::mc_SlabSize * 4) / MemorySize;
-						NMib::NContainer::TCVector<void *> lAlloc;
-						lAlloc.f_SetLen(nAlloc);
+						NMib::NContainer::TCVector<void *> Allocs;
+						Allocs.f_SetLen(nAlloc);
 						for (mint i = 0; i < nAlloc; ++i)
 						{
 							mint Size = AllocSize;
-							lAlloc[i] = MemoryManager.f_Alloc(Size);
+							Allocs[i] = MemoryManager.f_AllocWithSize(Size);
 						}
 						for (mint i = 0; i < nAlloc; ++i)
 						{
-							MemoryManager.f_Free(lAlloc[i]);
+							MemoryManager.f_Free(Allocs[i], AllocSize);
 						}
 						DMibTest(DMibExpr(true));
 					}
@@ -497,6 +503,7 @@ namespace
 			DMibTestSuite("Aligned")
 			{
 				mint LastAlloc = 0;
+				mint LastAlignment = 1;
 				TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
 				auto Checkout = MemoryManager.f_Checkout();
 				uint8 * pLast = nullptr;
@@ -505,20 +512,21 @@ namespace
 					mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 					if (AllocSize != LastAlloc)
 					{
-						LastAlloc = AllocSize;
 						for (mint Alignment = 1; Alignment <= CDefaultMemoryManagerParams_Tests::mc_MaxHeapAllocSize * 2; Alignment <<= 1)
 						{
 							if (pLast)
-								MemoryManager.f_Free(pLast);
+								MemoryManager.f_Free(pLast, NMib::fg_AlignUp(LastAlloc, LastAlignment));
 
 							mint Size = AllocSize;
-							pLast = (uint8 *)MemoryManager.f_AllocAligned(Size, Alignment);
+							pLast = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, Alignment);
+							LastAlloc = AllocSize;
+							LastAlignment = Alignment;
 							DMibTest(DMibExpr(pLast) == DMibExpr(NMib::fg_AlignUp(pLast, Alignment)))(ETestFlag_Aggregated);
 						}
 					}
 				}
 				if (pLast)
-					MemoryManager.f_Free(pLast);
+					MemoryManager.f_Free(pLast, NMib::fg_AlignUp(LastAlloc, LastAlignment));
 			};
 
 			DMibTestSuite("Commit")
@@ -530,7 +538,7 @@ namespace
 					DMibTestPath("Alloc1");
 					auto Checkout = MemoryManager.f_Checkout();
 					mint nAllocs = (8*1024*1024) / 256;
-					NMib::NContainer::TCVector<void *> Allocs;
+					NMib::NContainer::TCVector<CAlloc> Allocs;
 					
 					Allocs.f_SetLen(nAllocs);
 
@@ -541,12 +549,12 @@ namespace
 					for (mint i = 0; i < nAllocs; ++i)
 					{
 						mint Size = 256;
-						Allocs[i] = MemoryManager.f_Alloc(Size);
+						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
 					for (mint i = 0; i < nAllocs; ++i)
 					{
-						MemoryManager.f_Free(Allocs[i]);
+						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
 					}
 					
 					MeasureMemory.f_Stop(1);
@@ -563,7 +571,7 @@ namespace
 					DMibTestPath("Alloc2");
 					auto Checkout = MemoryManager.f_Checkout();
 					mint nAllocs = (8*1024*1024) / 384;
-					NMib::NContainer::TCVector<void *> Allocs;
+					NMib::NContainer::TCVector<CAlloc> Allocs;
 					
 					Allocs.f_SetLen(nAllocs);
 
@@ -574,12 +582,12 @@ namespace
 					for (mint i = 0; i < nAllocs; ++i)
 					{
 						mint Size = 384;
-						Allocs[i] = MemoryManager.f_Alloc(Size);
+						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
 					for (mint i = 0; i < nAllocs; ++i)
 					{
-						MemoryManager.f_Free(Allocs[i]);
+						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
 					}
 					
 					MeasureMemory.f_Stop(1);
@@ -597,7 +605,7 @@ namespace
 					DMibTestPath("Alloc3");
 					auto Checkout = MemoryManager.f_Checkout();
 					mint nAllocs = (8*1024*1024) / 256;
-					NMib::NContainer::TCVector<void *> Allocs;
+					NMib::NContainer::TCVector<CAlloc> Allocs;
 					
 					Allocs.f_SetLen(nAllocs);
 
@@ -608,12 +616,12 @@ namespace
 					for (mint i = 0; i < nAllocs; ++i)
 					{
 						mint Size = 256;
-						Allocs[i] = MemoryManager.f_Alloc(Size);
+						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
 					for (mint i = 0; i < nAllocs; ++i)
 					{
-						MemoryManager.f_Free(Allocs[i]);
+						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
 					}
 					
 					MeasureMemory.f_Stop(1);
@@ -643,7 +651,7 @@ namespace
 						if (i == 1)
 							pPath = "Second Pass";
 						DMibTestPath(pPath);
-						NMib::NContainer::TCVector<void *> Allocs;
+						NMib::NContainer::TCVector<CAlloc> Allocs;
 						
 						for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize; ++MemorySize)
 						{
@@ -652,9 +660,9 @@ namespace
 							{
 								LastAlloc = AllocSize;
 								mint Size = MemorySize;
-								auto pMemory = MemoryManager.f_Alloc(Size);
+								auto pMemory = MemoryManager.f_AllocWithSize(Size);
 								mint ReturnedSize = MemoryManager.f_Size(pMemory);
-								Allocs.f_Insert(pMemory);
+								Allocs.f_Insert({pMemory, MemorySize});
 								mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 								DMibTest(DMibExpr(AllocSize) == DMibExpr(Size))(ETestFlag_Aggregated);
 								DMibTest(DMibExpr(Size) >= DMibExpr(MemorySize))(ETestFlag_Aggregated);
@@ -668,16 +676,16 @@ namespace
 							{
 								LastAlloc = AllocSize;
 								mint Size = AllocSize;
-								auto pAlloc = MemoryManager.f_Alloc(Size);
-								Allocs.f_Insert(pAlloc);
+								auto pAlloc = MemoryManager.f_AllocWithSize(Size);
+								Allocs.f_Insert({pAlloc, AllocSize});
 							}
 						}
 						
 						DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) > DMibExpr(2u));
 						DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) == DMibExpr(0));
 						
-						for (auto * pAlloc : Allocs)
-							MemoryManager.f_Free(pAlloc);
+						for (auto &Alloc : Allocs)
+							MemoryManager.f_Free(Alloc.m_pAlloc, Alloc.m_Size);
 
 						CTestMemoryMeasure MeasureMemory("Alloc");
 						MeasureMemory.f_Start();
@@ -708,8 +716,8 @@ namespace
 						if (i == 1)
 							pPath = "Second Pass";
 						DMibTestPath(pPath);
-						NMib::NContainer::TCVector<void *> Allocs;
-						NMib::NContainer::TCVector<void *> BigAllocs;
+						NMib::NContainer::TCVector<CAlloc> Allocs;
+						NMib::NContainer::TCVector<CAlloc> BigAllocs;
 						
 						for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize; ++MemorySize)
 						{
@@ -718,9 +726,9 @@ namespace
 							{
 								LastAlloc = AllocSize;
 								mint Size = MemorySize;
-								auto pMemory = MemoryManager.f_Alloc(Size);
+								auto pMemory = MemoryManager.f_AllocWithSize(Size);
 								mint ReturnedSize = MemoryManager.f_Size(pMemory);
-								Allocs.f_Insert(pMemory);
+								Allocs.f_Insert({pMemory, MemorySize});
 								mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 								DMibTest(DMibExpr(AllocSize) == DMibExpr(Size))(ETestFlag_Aggregated);
 								DMibTest(DMibExpr(Size) >= DMibExpr(MemorySize))(ETestFlag_Aggregated);
@@ -734,8 +742,8 @@ namespace
 							{
 								LastAlloc = AllocSize;
 								mint Size = AllocSize;
-								auto pAlloc = MemoryManager.f_Alloc(Size);
-								BigAllocs.f_Insert(pAlloc);
+								auto pAlloc = MemoryManager.f_AllocWithSize(Size);
+								BigAllocs.f_Insert({pAlloc, AllocSize});
 							}
 						}
 						
@@ -743,7 +751,7 @@ namespace
 						DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) == DMibExpr(0));
 						
 						for (mint i = 1; i < Allocs.f_GetLen(); ++i)
-							MemoryManager.f_Free(Allocs[i]);
+							MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
 
 						{
 							CTestMemoryMeasure MeasureMemory("Alloc");
@@ -758,7 +766,7 @@ namespace
 						}
 
 						for (mint i = 1; i < BigAllocs.f_GetLen(); ++i)
-							MemoryManager.f_Free(BigAllocs[i]);
+							MemoryManager.f_Free(BigAllocs[i].m_pAlloc, BigAllocs[i].m_Size);
 
 						CTestMemoryMeasure MeasureMemory("Alloc");
 						MeasureMemory.f_Start();
@@ -778,8 +786,8 @@ namespace
 #endif
 						DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) == DMibExpr(1u));
 
-						MemoryManager.f_Free(Allocs[0]);
-						MemoryManager.f_Free(BigAllocs[0]);
+						MemoryManager.f_Free(Allocs[0].m_pAlloc, Allocs[0].m_Size);
+						MemoryManager.f_Free(BigAllocs[0].m_pAlloc, BigAllocs[0].m_Size);
 
 						MemoryManager.f_GarbageCollect(true);
 
@@ -814,9 +822,9 @@ namespace
 									
 									for (int i = 0; i < 64; ++i)
 									{
-										NMib::NContainer::TCVector<void *> Allocs;
-										NMib::NContainer::TCVector<void *> BigAllocs;
-										NMib::NContainer::TCVector<void *> HugeAllocs;
+										NMib::NContainer::TCVector<CAlloc> Allocs;
+										NMib::NContainer::TCVector<CAlloc> BigAllocs;
+										NMib::NContainer::TCVector<CAlloc> HugeAllocs;
 										auto Checkout = MemoryManager.f_Checkout();
 										mint LastAlloc = 0;
 										for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize; ++MemorySize)
@@ -826,8 +834,8 @@ namespace
 											{
 												LastAlloc = AllocSize;
 												mint Size = MemorySize;
-												auto pMemory = MemoryManager.f_Alloc(Size);
-												Allocs.f_Insert(pMemory);
+												auto pMemory = MemoryManager.f_AllocWithSize(Size);
+												Allocs.f_Insert({pMemory, MemorySize});
 											}
 										}
 										
@@ -838,8 +846,8 @@ namespace
 											{
 												LastAlloc = AllocSize;
 												mint Size = AllocSize;
-												auto pAlloc = MemoryManager.f_Alloc(Size);
-												BigAllocs.f_Insert(pAlloc);
+												auto pAlloc = MemoryManager.f_AllocWithSize(Size);
+												BigAllocs.f_Insert({pAlloc, AllocSize});
 											}
 										}
 										
@@ -850,17 +858,17 @@ namespace
 											{
 												LastAlloc = AllocSize;
 												mint Size = AllocSize;
-												auto pAlloc = MemoryManager.f_Alloc(Size);
-												HugeAllocs.f_Insert(pAlloc);
+												auto pAlloc = MemoryManager.f_AllocWithSize(Size);
+												HugeAllocs.f_Insert({pAlloc, AllocSize});
 											}
 										}
 										
-										for (void *pAlloc : Allocs)
-											MemoryManager.f_Free(pAlloc);
-										for (void *pAlloc : BigAllocs)
-											MemoryManager.f_Free(pAlloc);
-										for (void *pAlloc : HugeAllocs)
-											MemoryManager.f_Free(pAlloc);
+										for (auto &Alloc : Allocs)
+											MemoryManager.f_Free(Alloc.m_pAlloc, Alloc.m_Size);
+										for (auto &Alloc : BigAllocs)
+											MemoryManager.f_Free(Alloc.m_pAlloc, Alloc.m_Size);
+										for (auto &Alloc : HugeAllocs)
+											MemoryManager.f_Free(Alloc.m_pAlloc, Alloc.m_Size);
 										NMib::NSys::fg_Thread_Sleep(fp64(0.005) + NMib::NMisc::fg_GetRandomFloat()*0.005);
 									}
 									

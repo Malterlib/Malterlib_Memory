@@ -55,20 +55,20 @@ extern "C"
 #		if DMibConfig_MalterlibMemoryManager_Debug
 			return NMib::NMem::CAllocator_NonTrackedHeap::f_ResizeDebug(__ptr, __size, 0, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
 #		else
-			return NMib::NMem::CAllocator_NonTrackedHeap::f_Resize(__ptr, __size);
+			return NMib::NMem::CAllocator_NonTrackedHeap::f_Resize(__ptr, __size, 0);
 #		endif
 	}
 	
 	module_export void free (void *__ptr) __THROW
 	{
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
-		NMib::NMem::CAllocator_NonTrackedHeap::f_Free(__ptr);
+		NMib::NMem::CAllocator_NonTrackedHeap::f_FreeNoSize(__ptr);
 	}
 
 	module_export void cfree (void *__ptr) __THROW
 	{
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
-		NMib::NMem::CAllocator_NonTrackedHeap::f_Free(__ptr);
+		NMib::NMem::CAllocator_NonTrackedHeap::f_FreeNoSize(__ptr);
 	}
 	module_export void *memalign (size_t __alignment, size_t __size) __THROW __wur
 	{

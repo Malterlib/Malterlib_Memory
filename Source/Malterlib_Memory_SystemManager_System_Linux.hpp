@@ -13,12 +13,12 @@
 #endif
 
 //#define DMibMemoryCorrectAlignment
-//#define DMibMemoryCorectSize
+#define DMibMemoryCorectSize
 
 namespace NMib
 {
 
-	ch8 const* g_pMemoryManagerName = "OSX system memory manager";
+	ch8 const* g_pMemoryManagerName = "Linux system memory manager";
 	
 	namespace NMem
 	{
@@ -42,8 +42,40 @@ namespace NMib
 			{
 				DMibMemoryReportAllocatorDelete(g_pMemoryManagerName, g_pMemoryManagerName);
 			}
+
+			inline_always static void *fs_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
+			{
+				DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
+				DMibMemoryReportSaveVar(RequestedSize, _Size);
+				void *pRet = malloc(_Size);
+				DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
+				return pRet;
+			}
+
+			inline_always static void *fs_AllocInitZero(CMemoryManagerCrossModule *_pModule, mint _Size)
+			{
+				return fg_MemClear(fs_Alloc(_pModule, _Size), _Size);
+			}
+
+			inline_always static void *fs_AllocAligned(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment)
+			{
+	#ifdef DMibMemoryCorrectAlignment
+	#ifdef DMibMemoryAssumeAlignment
+				if (_Alignment <= DMibMemoryAssumeAlignment)
+					return CCrossModuleImplementation::fs_Alloc(_pModule, _Size);
+	#endif
+				DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
+				DMibMemoryReportSaveVar(RequestedSize, _Size);
+				void *pRet = memalign(_Alignment, _Size);
+				DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
+				DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, _Alignment, RequestedSize, _Size, 0.0, nullptr);
+				return pRet;
+	#else
+				return CCrossModuleImplementation::fs_Alloc(_pModule, _Size);
+	#endif
+			}
 		};
-		inline_always void * CCrossModuleImplementation::fs_Alloc(CMemoryManagerCrossModule *_pModule, mint &_Size)
+		inline_always void * CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -55,17 +87,17 @@ namespace NMib
 			return pRet;
 		}
 
-		inline_always void * CCrossModuleImplementation::fs_AllocInitZero(CMemoryManagerCrossModule *_pModule, mint &_Size)
+		inline_always void * CCrossModuleImplementation::fs_AllocInitZeroWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
-			return fg_MemClear(fs_Alloc(_pModule, _Size), _Size);
+			return fg_MemClear(fs_AllocWithSize(_pModule, _Size), _Size);
 		}
 
-		inline_always void * CCrossModuleImplementation::fs_AllocAligned(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
+		inline_always void * CCrossModuleImplementation::fs_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
 		{
 #ifdef DMibMemoryCorrectAlignment
 #ifdef DMibMemoryAssumeAlignment
 			if (_Alignment <= DMibMemoryAssumeAlignment)
-				return CCrossModuleImplementation::fs_Alloc(_pModule, _Size);
+				return CCrossModuleImplementation::fs_AllocWithSize(_pModule, _Size);
 #endif
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -77,37 +109,50 @@ namespace NMib
 			DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, _Alignment, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 #else
-			return CCrossModuleImplementation::fs_Alloc(_pModule, _Size);
+			return CCrossModuleImplementation::fs_AllocWithSize(_pModule, _Size);
 #endif
 		}
 
-		inline_always void * CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		inline_always void * CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
-			DMibMemoryReportExpression(mint Size = fs_Size(_pModule, _pMemory));
+			DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
 			void *pRet = realloc(_pMemory, _Size);
 #ifdef DMibMemoryCorectSize
-			_Size = malloc_usable_size(pRet);
+			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+				_Size = malloc_usable_size(pRet);
 #endif
 			DMibMemoryReportRealloc(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
 
-		inline_always void * CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		inline_always void * CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
-			DMibMemoryReportExpression(mint Size = fs_Size(_pModule, _pMemory));
+			DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
 			void *pRet = realloc(_pMemory, _Size);
 #ifdef DMibMemoryCorectSize
-			_Size = malloc_usable_size(pRet);
+			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+				_Size = malloc_usable_size(pRet);
 #endif
 			DMibMemoryReportResize(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
 
-		inline_always void CCrossModuleImplementation::fs_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+		inline_always void CCrossModuleImplementation::fs_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
+		{
+			if (!_pMemory)
+				return;
+
+			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
+			DMibMemoryReportSaveVar(Size, fs_SizePadded(_pModule, _Size));
+			free(_pMemory);
+			DMibMemoryReportFree(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr);
+		}
+
+		inline_always void CCrossModuleImplementation::fs_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
 			if (!_pMemory)
 				return;

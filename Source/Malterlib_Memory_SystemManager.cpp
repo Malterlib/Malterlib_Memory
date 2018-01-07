@@ -1,12 +1,12 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
 
 #include "Malterlib_Memory_SystemManager_CrossModule.h"
 
-#if defined(DMibConfig_MemoryManager_UseNew)
-#	include "Malterlib_Memory_SystemManager_New.hpp"
+#if defined(DMibConfig_MemoryManager_UseMalterlib)
+#	include "Malterlib_Memory_SystemManager_Malterlib.hpp"
 #elif defined(DMibConfig_MemoryManager_UseSystem)
 #	include "Malterlib_Memory_SystemManager_System.hpp"
 #elif defined(DMibConfig_MemoryManager_UseOverwriteCheck)

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #if defined(DPlatformFamily_Windows)
@@ -121,7 +121,7 @@ namespace
 			return (*m_pMemory);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 		}
 
@@ -175,9 +175,9 @@ namespace
 			return m_MemoryManager.f_Alloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_Free(_pMem);
+			m_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -228,9 +228,9 @@ namespace
 			return m_MemoryManager.f_Alloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_Free(_pMem);
+			m_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -283,9 +283,9 @@ namespace
 			return m_MemoryManager.f_Alloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_Free(_pMem);
+			m_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -350,9 +350,9 @@ namespace
 			return m_MemoryManager.f_Alloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_Free(_pMem);
+			m_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -409,9 +409,9 @@ namespace
 			return m_MemoryManager.f_Alloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_Free(_pMem);
+			m_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -463,9 +463,9 @@ namespace
 			return m_MemoryManager.f_Alloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_Free(_pMem);
+			m_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -516,9 +516,9 @@ namespace
 			return m_MemoryManager.f_Alloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_Free(_pMem);
+			m_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -586,7 +586,7 @@ namespace
 			return NAllocator_PtMalloc::malloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			NAllocator_PtMalloc::free(_pMem);
 		}
@@ -647,7 +647,7 @@ namespace
 			return tc_malloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			tc_free(_pMem);
 		}
@@ -709,7 +709,7 @@ namespace
 			return llalloc_malloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			llalloc_free(_pMem);
 		}
@@ -781,7 +781,7 @@ namespace
 			return NAllocator_DlMalloc::mspace_memalign(m_Heap, _Size, _Alignment);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			NAllocator_DlMalloc::mspace_free(m_Heap, _pMem);
 		}
@@ -851,7 +851,7 @@ namespace
 		}
 
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			NAllocator_DlMalloc::mspace_free(m_Heap, _pMem);
 		}
@@ -920,7 +920,7 @@ namespace
 			return NAllocator_DlMallocMultiThreaded::mspace_malloc(m_Heap, _Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			NAllocator_DlMallocMultiThreaded::mspace_free(m_Heap, _pMem);
 		}
@@ -986,7 +986,7 @@ namespace
 			return NAllocator_DlMallocMultiThreaded::mspace_malloc(m_Heap, _Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			NAllocator_DlMallocMultiThreaded::mspace_free(m_Heap, _pMem);
 		}
@@ -1061,7 +1061,7 @@ namespace
 			return m_pMallocZone->malloc(m_pMallocZone, _Size);
 		}
 		
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			m_pMallocZone->free(m_pMallocZone, _pMem);
 		}
@@ -1125,7 +1125,7 @@ namespace
 			return malloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			free(_pMem);
 		}
@@ -1179,9 +1179,9 @@ namespace
 			return NMib::NMem::fg_Alloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			return NMib::NMem::fg_Free(_pMem);
+			return NMib::NMem::fg_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -1249,7 +1249,7 @@ namespace
 			return HeapAlloc(m_Heap, 0, _Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			HeapFree(m_Heap, 0, _pMem);
 		}
@@ -1326,7 +1326,7 @@ namespace
 			return HeapAlloc(m_Heap, 0, _Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			HeapFree(m_Heap, 0, _pMem);
 		}
@@ -1384,9 +1384,9 @@ namespace
 			return NMib::NMem::CAllocator_Virtual::f_Alloc(_Size);
 		}
 
-		inline_small void f_Free(void *_pMem)
+		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			NMib::NMem::CAllocator_Virtual::f_Free(_pMem);
+			NMib::NMem::CAllocator_Virtual::f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()

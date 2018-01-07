@@ -234,7 +234,7 @@ namespace NMib
 #	endif
 
 #	if DMibConfig_Memory_Shims_EnableLocal
-			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed())
+			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed() || fg_GetSys()->f_ThreadDestroyed())
 				return;
 			CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 			CReportMemory *pReportTo = Info.m_pReportTo;
@@ -281,7 +281,7 @@ namespace NMib
 
 #	if DMibConfig_Memory_Shims_EnableLocal
 
-			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed())
+			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed() || fg_GetSys()->f_ThreadDestroyed())
 				return;
 			CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 			CReportMemory *pReportTo = Info.m_pReportTo;
@@ -327,7 +327,7 @@ namespace NMib
 #	endif
 
 #	if DMibConfig_Memory_Shims_EnableLocal
-			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed())
+			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed() || fg_GetSys()->f_ThreadDestroyed())
 				return;
 			CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 			CReportMemory *pReportTo = Info.m_pReportTo;
@@ -354,7 +354,7 @@ namespace NMib
 #	endif
 
 #	if DMibConfig_Memory_Shims_EnableLocal
-			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed())
+			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed() || fg_GetSys()->f_ThreadDestroyed())
 				return;
 			CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 			CReportMemory *pReportTo = Info.m_pReportTo;
@@ -382,7 +382,7 @@ namespace NMib
 #	endif
 
 #	if DMibConfig_Memory_Shims_EnableLocal
-			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed())
+			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed() || fg_GetSys()->f_ThreadDestroyed())
 				return;
 			CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 			CReportMemory *pReportTo = Info.m_pReportTo;
@@ -410,7 +410,7 @@ namespace NMib
 #	endif
 
 #	if DMibConfig_Memory_Shims_EnableLocal
-			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed())
+			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed() || fg_GetSys()->f_ThreadDestroyed())
 				return;
 			CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 			CReportMemory *pReportTo = Info.m_pReportTo;
@@ -438,7 +438,7 @@ namespace NMib
 #	endif
 
 #	if DMibConfig_Memory_Shims_EnableLocal
-			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed())
+			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed() || fg_GetSys()->f_ThreadDestroyed())
 				return;
 			CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 			CReportMemory *pReportTo = Info.m_pReportTo;
@@ -464,7 +464,7 @@ namespace NMib
 #	endif
 
 #	if DMibConfig_Memory_Shims_EnableLocal
-			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed())
+			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed() || fg_GetSys()->f_ThreadDestroyed())
 				return;
 			CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 			CReportMemory *pReportTo = Info.m_pReportTo;
@@ -500,7 +500,7 @@ namespace NMib
 #	endif
 
 #	if DMibConfig_Memory_Shims_EnableLocal
-			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed())
+			if (g_MemoryReporter.f_WasDestructed() || !g_MemoryReporter.f_IsConstructed() || fg_GetSys()->f_ThreadDestroyed())
 				return;
 			CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 
@@ -511,7 +511,7 @@ namespace NMib
 		void fg_ReportMemoryGoingToReportExit(mint _MemoryAllocator)
 		{
 #		if DMibConfig_Memory_Shims_EnableLocal
-			if (!g_MemoryReporter.f_WasDestructed() && g_MemoryReporter.f_IsConstructed())
+			if (!g_MemoryReporter.f_WasDestructed() && g_MemoryReporter.f_IsConstructed() && !fg_GetSys()->f_ThreadDestroyed())
 			{
 				CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 				--Info.m_ReportDepth;

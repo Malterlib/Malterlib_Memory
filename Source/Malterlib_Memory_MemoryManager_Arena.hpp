@@ -141,7 +141,7 @@ namespace NMib
 
 
 		template <typename t_CParams>
-		inline_small void *TCMemoryManagerArena<t_CParams>::f_Alloc(mint &_Size)
+		inline_small void *TCMemoryManagerArena<t_CParams>::f_AllocWithSize(mint &_Size)
 		{
 			//fp_CheckMessages();
 			void * pAlloc;
@@ -235,8 +235,7 @@ namespace NMib
 					}
 					
 					FreeLinkType = EMessageType_FreeSmallBlock;
-					mint Size = sizeof(CMessage_FreeSmallBlock);
-					CMessage_FreeSmallBlock *pFreeLinkSmallBlock = (CMessage_FreeSmallBlock *)m_pMemoryManager->f_AllocAligned(Size, 1);
+					CMessage_FreeSmallBlock *pFreeLinkSmallBlock = (CMessage_FreeSmallBlock *)m_pMemoryManager->f_AllocAligned(sizeof(CMessage_FreeSmallBlock), 1);
 					pFreeLinkSmallBlock->m_pBlock = _pMemory;
 					pFreeLink = pFreeLinkSmallBlock;
 				}

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -110,8 +110,8 @@ namespace NMib
 			
 			void f_Destroy();
 			
-			void *f_Alloc(mint &_Size);
-			void *f_AllocAligned(mint &_Size, mint _Alignment);
+			void *f_AllocWithSize(mint &_Size);
+			void *f_AllocAlignedWithSize(mint &_Size, mint _Alignment);
 			void f_Free(void *_pMem, TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk);
 			mint f_Size(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
 			fp32 f_Overhead(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;

@@ -31,9 +31,8 @@ namespace NMib
 						pNumaArena = m_NumaArenas.f_FindEqual(NumaNode);
 						if (!pNumaArena)
 						{
-							mint Size = sizeof(TCMemoryManagerNumaArena<t_CParams>);
-							pNumaArena = 
-								new(m_Allocator.f_Alloc(Size, EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags, NumaNode)) 
+							pNumaArena =
+								new(m_Allocator.f_Alloc(sizeof(TCMemoryManagerNumaArena<t_CParams>), EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags, NumaNode))
 								TCMemoryManagerNumaArena<t_CParams>(NumaNode, this, m_Magic)
 							;
 							m_NumaArenas.f_Insert(pNumaArena);
@@ -379,10 +378,10 @@ namespace NMib
 				++fp_CheckoutHelper(_LocalArena)->m_CheckoutCount;
 				DMibFastCheck(fg_GetSys()->f_ThreadCreated());
 				_LocalArena.m_bLazyCheckout = true;
-				return f_AllocAligned(_Size, 1);
+				return f_AllocAlignedWithSize(_Size, 1);
 			}
 			auto Checkout = fp_Checkout(_LocalArena);
-			return f_AllocAligned(_Size, 1);
+			return f_AllocAlignedWithSize(_Size, 1);
 		}
 
 		template <typename t_CParams>
@@ -396,7 +395,7 @@ namespace NMib
 					TempArena.f_ReturnCheckoutLight();
 				}
 			;
-			return TempArena.m_pArena->f_Alloc(_Size);
+			return TempArena.m_pArena->f_AllocWithSize(_Size);
 		}
 		
 		template <typename t_CParams>
@@ -428,55 +427,55 @@ namespace NMib
 		}
 
 		template <typename t_CParams>
-		inline_never void *TCMemoryManager<t_CParams>::f_Realloc(void * _pMemory, mint &_Size)
+		inline_never void *TCMemoryManager<t_CParams>::f_Realloc(void * _pMemory, mint &_Size, mint _OldSize)
 		{
-			return f_ReallocInline(_pMemory, _Size);
+			return f_ReallocInline(_pMemory, _Size, _OldSize);
 		}
 
 		template <typename t_CParams>
-		inline_always void *TCMemoryManager<t_CParams>::f_ReallocInline(void * _pMemory, mint &_Size)
+		inline_always void *TCMemoryManager<t_CParams>::f_ReallocInline(void * _pMemory, mint &_Size, mint _OldSize)
 		{
 			if (_pMemory)
 			{
 				mint NewSize = f_SizePadded(_Size);
-				mint Size = f_Size(_pMemory);
+				mint Size = _OldSize ? _OldSize : f_Size(_pMemory);
 				
-				if (NewSize == Size)
+				if (NewSize == f_SizePadded(Size))
 					return _pMemory;
 				
-				void *pMemory = f_AllocAligned(_Size, 1);
-				f_Free(_pMemory);
+				void *pMemory = f_AllocAlignedWithSize(_Size, 1);
+				f_Free(_pMemory, Size);
 				return pMemory;
 			}
-			return f_AllocAligned(_Size, 1);
+			return f_AllocAlignedWithSize(_Size, 1);
 		}
 		
 		template <typename t_CParams>
-		inline_never void *TCMemoryManager<t_CParams>::f_Resize(void * _pMemory, mint &_Size)
+		inline_never void *TCMemoryManager<t_CParams>::f_Resize(void * _pMemory, mint &_Size, mint _OldSize)
 		{
-			return f_ResizeInline(_pMemory, _Size);
+			return f_ResizeInline(_pMemory, _Size, _OldSize);
 		}
 
 		template <typename t_CParams>
-		inline_always void *TCMemoryManager<t_CParams>::f_ResizeInline(void * _pMemory, mint &_Size)
+		inline_always void *TCMemoryManager<t_CParams>::f_ResizeInline(void * _pMemory, mint &_Size, mint _OldSize)
 		{
 			if (_pMemory)
 			{
-				mint Size = f_Size(_pMemory);
+				mint Size = _OldSize ? _OldSize : f_Size(_pMemory);
 				mint NewSize = f_SizePadded(_Size);
-				if (NewSize == Size)
+				if (NewSize == f_SizePadded(Size))
 					return _pMemory;
 
-				void *pMemory = f_AllocAligned(_Size, 1);
+				void *pMemory = f_AllocAlignedWithSize(_Size, 1);
 
 				fg_MemCopy(pMemory, _pMemory, fg_Min(_Size, Size));
 				
 				if (_pMemory)
-					f_Free(_pMemory);
+					f_Free(_pMemory, Size);
 				
 				return pMemory;
 			}
-			return f_AllocAligned(_Size, 1);
+			return f_AllocAlignedWithSize(_Size, 1);
 		}
 		
 		template <typename t_CParams>
@@ -681,7 +680,19 @@ namespace NMib
 		}
 		
 		template <typename t_CParams>
-		inline_always void *TCMemoryManager<t_CParams>::f_Alloc(mint &_Size)
+		inline_always void *TCMemoryManager<t_CParams>::f_AllocWithSize(mint &_Size)
+		{
+			return f_AllocAlignedWithSize(_Size, 1);
+		}
+
+		template <typename t_CParams>
+		inline_always void *TCMemoryManager<t_CParams>::f_Alloc(mint _Size)
+		{
+			return f_AllocAligned(_Size, 1);
+		}
+
+		template <typename t_CParams>
+		inline_always void *TCMemoryManager<t_CParams>::f_AllocInline(mint _Size)
 		{
 			return f_AllocAligned(_Size, 1);
 		}
@@ -694,17 +705,23 @@ namespace NMib
 		}
 		
 		template <typename t_CParams>
-		inline_always void *TCMemoryManager<t_CParams>::f_AllocInline(mint &_Size)
+		inline_always void *TCMemoryManager<t_CParams>::f_AllocWithSizeInline(mint &_Size)
 		{
-			return f_AllocAligned(_Size, 1);
+			return f_AllocAlignedWithSize(_Size, 1);
 		}
 
 		template <typename t_CParams>
-		inline_never void *TCMemoryManager<t_CParams>::f_AllocAligned(mint &_Size, mint _Alignment)
+		inline_never void *TCMemoryManager<t_CParams>::f_AllocAlignedWithSize(mint &_Size, mint _Alignment)
+		{
+			return f_AllocAlignedWithSizeInline(_Size, _Alignment);
+		}
+
+		template <typename t_CParams>
+		inline_always void *TCMemoryManager<t_CParams>::f_AllocAligned(mint _Size, mint _Alignment)
 		{
 			return f_AllocAlignedInline(_Size, _Alignment);
 		}
-		
+
 		template <typename t_CParams>
 		inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchSlowPath(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 		{
@@ -740,7 +757,7 @@ namespace NMib
 				while (true)
 				{
 					mint Size = _Size;
-					auto pAlloc = pNumaArena->m_Heap.f_AllocAligned(Size, _Alignment);
+					auto pAlloc = pNumaArena->m_Heap.f_AllocAlignedWithSize(Size, _Alignment);
 					if (!_Functor(pAlloc, Size))
 						break;
 				}				
@@ -749,7 +766,7 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
-				auto pRet = m_Allocator.f_AllocAligned(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
+				auto pRet = m_Allocator.f_AllocAlignedWithSize(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
 				if (this->mc_EnableCallbacks)
 					this->f_OnAlloc((uint8 *)pRet, _Size);
 				if (!_Functor(pRet, Size))
@@ -758,7 +775,7 @@ namespace NMib
 		}
 		
 		template <typename t_CParams>
-		inline_never void *TCMemoryManager<t_CParams>::fp_AllocAlignedSlowPath(mint & _Size, mint _Alignment)
+		inline_never void *TCMemoryManager<t_CParams>::fp_AllocAlignedSlowPath(mint &_Size, mint _Alignment)
 		{
 			auto *pLocalArena = m_LocalArena.f_TryGet();
 			if (_Size <= t_CParams::mc_MaxSlabAllocSize)
@@ -772,7 +789,7 @@ namespace NMib
 				auto &LocalArena = *pLocalArena;
 				auto ReentrantScope = LocalArena.f_Reentrant();
 				if (LocalArena.m_pArena)
-					return LocalArena.m_pArena->f_Alloc(_Size);
+					return LocalArena.m_pArena->f_AllocWithSize(_Size);
 				return fp_AllocWithCheckout(_Size, LocalArena);
 			}
 			
@@ -788,15 +805,36 @@ namespace NMib
 				pNumaArena = pLocalArena->m_pNumaArena;
 			
 			if (_Size <= t_CParams::mc_MaxHeapAllocSize)
-				return pNumaArena->m_Heap.f_AllocAligned(_Size, _Alignment);
-			auto pRet = m_Allocator.f_AllocAligned(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
+				return pNumaArena->m_Heap.f_AllocAlignedWithSize(_Size, _Alignment);
+			auto pRet = m_Allocator.f_AllocAlignedWithSize(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
 			if (this->mc_EnableCallbacks)
 				this->f_OnAlloc((uint8 *)pRet, _Size);
 			return pRet;
 		}
-		
+
 		template <typename t_CParams>
-		inline_always void *TCMemoryManager<t_CParams>::f_AllocAlignedInline(mint &_Size, mint _Alignment)
+		inline_always void *TCMemoryManager<t_CParams>::f_AllocAlignedInline(mint _Size, mint _Alignment)
+		{
+			_Size = fg_AlignUp(_Size, _Alignment);
+
+			if (likely(_Size <= t_CParams::mc_MaxSlabAllocSize))
+			{
+				auto *pLocalArena = m_LocalArena.f_TryGet();
+				if (unlikely(!pLocalArena))
+					goto l_SlowPath;
+				auto &LocalArena = *pLocalArena;
+				auto ReentrantScope = LocalArena.f_Reentrant();
+				if (likely(LocalArena.m_pArena))
+					return LocalArena.m_pArena->f_AllocWithSize(_Size);
+				return fp_AllocWithCheckout(_Size, LocalArena);
+			}
+
+		l_SlowPath:
+			return fp_AllocAlignedSlowPath(_Size, _Alignment);
+		}
+
+		template <typename t_CParams>
+		inline_always void *TCMemoryManager<t_CParams>::f_AllocAlignedWithSizeInline(mint &_Size, mint _Alignment)
 		{
 			_Size = fg_AlignUp(_Size, _Alignment);
 			
@@ -808,7 +846,7 @@ namespace NMib
 				auto &LocalArena = *pLocalArena;
 				auto ReentrantScope = LocalArena.f_Reentrant();
 				if (likely(LocalArena.m_pArena))
-					return LocalArena.m_pArena->f_Alloc(_Size);
+					return LocalArena.m_pArena->f_AllocWithSize(_Size);
 				return fp_AllocWithCheckout(_Size, LocalArena);
 			}
 			
@@ -849,19 +887,27 @@ namespace NMib
 		}
 
 		template <typename t_CParams>
-		inline_never void TCMemoryManager<t_CParams>::f_Free(void *_pMemory)
+		inline_never void TCMemoryManager<t_CParams>::f_Free(void *_pMemory, mint _Size)
 		{
-			return f_FreeInline(_pMemory);
+			return f_FreeInline(_pMemory, _Size);
 		}
 
 		template <typename t_CParams>
-		inline_never void TCMemoryManager<t_CParams>::fp_FreeSlowPath(void * _pMemory)
+		inline_never void TCMemoryManager<t_CParams>::f_FreeNoSize(void *_pMemory)
+		{
+			return f_FreeNoSizeInline(_pMemory);
+		}
+
+		template <typename t_CParams>
+		inline_never void TCMemoryManager<t_CParams>::fp_FreeSlowPath(void * _pMemory, mint _Size)
 		{
 			uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 			CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-			if (likely(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic)))
+			if (likely((_Size != 0 && _Size <= t_CParams::mc_MaxSlabAllocSize) || pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic)))
 			{
+				DMibFastCheck(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+
 				TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 				
 				auto *pLocalArena = m_LocalArena.f_TryGet();
@@ -883,28 +929,66 @@ namespace NMib
 					pSlab->m_pArena->f_FreeOtherThread(_pMemory, pSlab, &LocalArena);
 				return;
 			}
-			
+
+			if (_Size == 0 || _Size <= t_CParams::mc_MaxHeapAllocSize)
 			{
 				TCMemoryManagerArenaHeapChunk<t_CParams> *pChunk;
 				{
 					DMibLockRead(m_HeapChunksLock);
 					pChunk = m_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
 				}
-				
+
 				if (pChunk && (uint8 *)_pMemory < pChunk->f_GetEndAddress())
 				{
 					pChunk->f_GetHeap()->f_Free(_pMemory, pChunk);
 					return;
 				}
+				else
+				{
+					DMibFastCheck(_Size == 0);
+				}
 			}
 			
 			if (this->mc_EnableCallbacks)
 				this->f_OnFree((uint8 *)_pMemory);
-			m_Allocator.f_Free(_pMemory);
+			m_Allocator.f_Free(_pMemory, _Size);
 		}
 
 		template <typename t_CParams>
-		inline_always void TCMemoryManager<t_CParams>::f_FreeInline(void *_pMemory)
+		inline_always void TCMemoryManager<t_CParams>::f_FreeInline(void *_pMemory, mint _Size)
+		{
+			if (!_pMemory)
+				return;
+
+			DMibFastCheck(_Size != 0);
+
+			if (likely(_Size <= t_CParams::mc_MaxSlabAllocSize))
+			{
+				uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
+				CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
+
+				DMibFastCheck(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+
+				TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
+
+				auto *pLocalArena = m_LocalArena.f_TryGet();
+				if (unlikely(!pLocalArena))
+					goto l_SlowPath;
+				auto &LocalArena = *pLocalArena;
+				auto ReentrantScope = LocalArena.f_Reentrant();
+				if (pSlab->m_pArena == LocalArena.m_pArena)
+					pSlab->m_pArena->f_FreeThisThread(_pMemory, pSlab);
+				else
+					pSlab->m_pArena->f_FreeOtherThread(_pMemory, pSlab, &LocalArena);
+				return;
+			}
+
+		l_SlowPath:
+			fp_FreeSlowPath(_pMemory, _Size);
+		}
+
+		template <typename t_CParams>
+		inline_always void TCMemoryManager<t_CParams>::f_FreeNoSizeInline(void *_pMemory)
 		{
 			if (!_pMemory)
 				return;
@@ -929,7 +1013,7 @@ namespace NMib
 			}
 			
 		l_SlowPath:
-			fp_FreeSlowPath(_pMemory);
+			fp_FreeSlowPath(_pMemory, 0);
 		}
 
 		///

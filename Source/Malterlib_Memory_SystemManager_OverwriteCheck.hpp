@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include "Malterlib_Memory_DebugMemoryManager.h"
@@ -115,39 +115,47 @@ namespace NMib
 			}
 		};
 		
-		inline_always void *CCrossModuleImplementation::fs_Alloc(CMemoryManagerCrossModule *_pModule, mint &_Size)
+		inline_always void *CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
-			return g_DebugMemoryManager->f_Alloc(_Size, 1);
+			return g_DebugMemoryManager->f_AllocWithSize(_Size, 1);
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_AllocInitZero(CMemoryManagerCrossModule *_pModule, mint &_Size)
+		inline_always void *CCrossModuleImplementation::fs_AllocInitZeroWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
-			return fg_MemClear(g_DebugMemoryManager->f_Alloc(_Size, 0), _Size);
+			return fg_MemClear(g_DebugMemoryManager->f_AllocWithSize(_Size, 0), _Size);
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_AllocAligned(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Align)
+		inline_always void *CCrossModuleImplementation::fs_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Align)
 		{
-			return g_DebugMemoryManager->f_Alloc(_Size, _Align);
+			return g_DebugMemoryManager->f_AllocWithSize(_Size, _Align);
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		inline_always void *CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
-			fs_Free(_pModule, _pMemory);
-			return fs_Alloc(_pModule, _Size);
+			if (_OldSize)
+				fs_Free(_pModule, _pMemory, _OldSize);
+			else
+				fs_FreeNoSize(_pModule, _pMemory);
+			return fs_AllocWithSize(_pModule, _Size);
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		inline_always void *CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
-			void *pRet = fs_Alloc(_pModule, _Size);
-			mint OldSize = fs_Size(_pModule, _pMemory);
+			void *pRet = fs_AllocWithSize(_pModule, _Size);
+			mint OldSize = _OldSize ? _OldSize : fs_Size(_pModule, _pMemory);
 			fg_MemCopy(pRet, _pMemory, fg_Min(OldSize, _Size));
-			fs_Free(_pModule, _pMemory);
+			fs_Free(_pModule, _pMemory, OldSize);
 			return pRet;
 		}
 
-		inline_always void CCrossModuleImplementation::fs_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+		inline_always void CCrossModuleImplementation::fs_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
 		{
-			g_DebugMemoryManager->f_Free(_pMemory);
+			g_DebugMemoryManager->f_Free(_pMemory, _Size);
+		}
+
+		inline_always void CCrossModuleImplementation::fs_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+		{
+			g_DebugMemoryManager->f_FreeNoSize(_pMemory);
 		}
 
 		inline_always mint CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, const void *_pMemory)

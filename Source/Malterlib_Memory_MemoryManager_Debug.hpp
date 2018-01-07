@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -219,15 +219,21 @@ namespace NMib
 		}
 
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocInline(mint & _Size)
+		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocWithSizeInline(mint &_Size)
 		{
-			return f_Alloc(_Size);
+			return f_AllocWithSize(_Size);
 		}
-		
+
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_Alloc(mint & _Size)
+		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocWithSize(mint &_Size)
 		{
-			return f_AllocDebug(_Size, nullptr, 0, EHeapDebugFlag_None);
+			return f_AllocWithSizeDebug(_Size, nullptr, 0, EHeapDebugFlag_None);
+		}
+
+		template <typename t_CParams, bool t_bException, typename t_COptions>
+		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_Alloc(mint _Size)
+		{
+			return f_AllocWithSizeDebug(_Size, nullptr, 0, EHeapDebugFlag_None);
 		}
 
 		template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -269,7 +275,7 @@ namespace NMib
 		}		
 		
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocDebug(mint & _Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+		inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocWithSizeDebug(mint &_Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
 		{
 			DMibFastCheck(!f_ReportingLeaks());
 			if (t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes)
@@ -277,14 +283,16 @@ namespace NMib
 				mint PreBytes = sizeof(CPreBlock);
 				mint PostBytes = t_COptions::mc_nPostGuardBytes;
 				mint Size = _Size + PreBytes + PostBytes;
-				uint8 * pMemory = (uint8 *)CSuper::f_Alloc(Size);
-				
+				uint8 * pMemory = (uint8 *)CSuper::f_AllocWithSize(Size);
+
+				mint RequestedSize = _Size;
 				_Size = Size - (PreBytes + PostBytes);
 				
 				CPreBlock *pPreBlock = (CPreBlock *)(pMemory + PreBytes - sizeof(CPreBlock));
 				
 				pPreBlock->m_PreCheck = PreBytes;
 				pPreBlock->m_PostCheck = PostBytes;
+				pPreBlock->m_RequestedSize = RequestedSize;
 				pPreBlock->m_Size = _Size;
 				pPreBlock->m_Offset = PreBytes - sizeof(CPreBlock);
 				pPreBlock->m_pFile = _pFile;
@@ -305,22 +313,28 @@ namespace NMib
 
 				return pMemory + PreBytes;
 			}
-			uint8* pMemory = (uint8*)CSuper::f_Alloc(_Size);
+			uint8* pMemory = (uint8*)CSuper::f_AllocWithSize(_Size);
 			if (t_COptions::mc_bFillAllocated)
 				CParams::fs_FillAllocated(pMemory, _Size);
 			return pMemory;
 		}
 		
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocAligned(mint & _Size, mint _Alignment)
+		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocAlignedWithSize(mint &_Size, mint _Alignment)
 		{
-			return f_AllocAlignedDebug(_Size, _Alignment, nullptr, 0, EHeapDebugFlag_None);
+			return f_AllocAlignedWithSizeDebug(_Size, _Alignment, nullptr, 0, EHeapDebugFlag_None);
 		}
-		
+
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocAlignedInline(mint & _Size, mint _Alignment)
+		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocAligned(mint _Size, mint _Alignment)
 		{
-			return f_AllocAlignedDebug(_Size, _Alignment, nullptr, 0, EHeapDebugFlag_None);
+			return f_AllocAlignedWithSizeDebug(_Size, _Alignment, nullptr, 0, EHeapDebugFlag_None);
+		}
+
+		template <typename t_CParams, bool t_bException, typename t_COptions>
+		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocAlignedWithSizeInline(mint &_Size, mint _Alignment)
+		{
+			return f_AllocAlignedWithSizeDebug(_Size, _Alignment, nullptr, 0, EHeapDebugFlag_None);
 		}
 		
 		template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -341,6 +355,7 @@ namespace NMib
 					uint32 m_Line;
 					EHeapDebugFlag m_Flags;
 					mint m_Alignment;
+					mint m_RequestedSize;
 					NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const *m_pFunctor;
 				};
 				
@@ -351,6 +366,7 @@ namespace NMib
 				Options.m_Flags = _Flags;
 				Options.m_pFunctor = &_Functor;
 				Options.m_Alignment = _Alignment;
+				Options.m_RequestedSize = fg_AlignUp(_Size, _Alignment);
 				
 				mint PreBytes = fg_AlignUp(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), _Alignment);
 				mint PostBytes = fg_AlignUp(t_COptions::mc_nPostGuardBytes, _Alignment);
@@ -372,6 +388,7 @@ namespace NMib
 							
 							pPreBlock->m_PreCheck = PreBytes;
 							pPreBlock->m_PostCheck = PostBytes;
+							pPreBlock->m_RequestedSize = Options.m_RequestedSize;
 							pPreBlock->m_Size = RetSize;
 							pPreBlock->m_Offset = PreBytes - sizeof(CPreBlock);
 							pPreBlock->m_pFile = Options.m_pFile;
@@ -429,7 +446,7 @@ namespace NMib
 		
 		
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocAlignedDebug(mint & _Size, mint _Alignment, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+		inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocAlignedWithSizeDebug(mint &_Size, mint _Alignment, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
 		{
 			DMibFastCheck(!f_ReportingLeaks());
 			if (t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes)
@@ -437,14 +454,16 @@ namespace NMib
 				mint PreBytes = fg_AlignUp(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), _Alignment);
 				mint PostBytes = fg_AlignUp(t_COptions::mc_nPostGuardBytes, _Alignment);
 				mint Size = _Size + PreBytes + PostBytes;
-				uint8 * pMemory = (uint8 *)CSuper::f_AllocAligned(Size, _Alignment);
-				
+				uint8 * pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, _Alignment);
+
+				mint RequestedSize = fg_AlignUp(_Size, _Alignment);
 				_Size = Size - (PreBytes + PostBytes);
-				
+
 				CPreBlock *pPreBlock = (CPreBlock *)(pMemory + PreBytes - sizeof(CPreBlock));
 				
 				pPreBlock->m_PreCheck = PreBytes;
 				pPreBlock->m_PostCheck = PostBytes;
+				pPreBlock->m_RequestedSize = RequestedSize;
 				pPreBlock->m_Size = _Size;
 				pPreBlock->m_Offset = PreBytes - sizeof(CPreBlock);
 				pPreBlock->m_pFile = _pFile;
@@ -465,7 +484,7 @@ namespace NMib
 
 				return pMemory + PreBytes;
 			}
-			uint8* pMemory = (uint8*)CSuper::f_AllocAligned(_Size, _Alignment);
+			uint8* pMemory = (uint8*)CSuper::f_AllocAlignedWithSize(_Size, _Alignment);
 			if (t_COptions::mc_bFillAllocated)
 				CParams::fs_FillAllocated(pMemory, _Size);
 			return pMemory;
@@ -505,24 +524,24 @@ namespace NMib
 		}
 
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_Realloc(void * _pMemory, mint & _Size)
+		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_Realloc(void * _pMemory, mint &_Size, mint _OldSize)
 		{
 			DMibFastCheck(!f_ReportingLeaks());
-			return f_ReallocDebug(_pMemory, _Size, nullptr, 0, EHeapDebugFlag_None);
+			return f_ReallocDebug(_pMemory, _Size, _OldSize, nullptr, 0, EHeapDebugFlag_None);
 		}
 
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ReallocInline(void * _pMemory, mint & _Size)
+		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ReallocInline(void * _pMemory, mint &_Size, mint _OldSize)
 		{
 			DMibFastCheck(!f_ReportingLeaks());
-			return f_ReallocDebug(_pMemory, _Size, nullptr, 0, EHeapDebugFlag_None);
+			return f_ReallocDebug(_pMemory, _Size, _OldSize, nullptr, 0, EHeapDebugFlag_None);
 		}
 
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ReallocDebug(void * _pMemory, mint & _Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+		inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ReallocDebug(void * _pMemory, mint &_Size, mint _OldSize, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
 		{
 			if (!_pMemory)
-				return f_AllocDebug(_Size, _pFile, _Line, _Flags);
+				return f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags);
 			DMibFastCheck(!f_ReportingLeaks());
 			if (t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes)
 			{
@@ -534,17 +553,27 @@ namespace NMib
 				mint PreBytes = sizeof(CPreBlock);
 				mint PostBytes = t_COptions::mc_nPostGuardBytes;
 				mint Size = _Size + PreBytes + PostBytes;
-				uint8 * pMemory = (uint8 *)CSuper::f_Realloc(pOldMemory, Size);
+
+				mint OldPaddedSize = 0;
+				if (_OldSize)
+				{
+					DMibFastCheck(_OldSize == pOldPreBlock->m_Size || _OldSize == pOldPreBlock->m_RequestedSize);
+					OldPaddedSize = _OldSize + PreBytes + PostBytes;
+				}
+
+				uint8 * pMemory = (uint8 *)CSuper::f_Realloc(pOldMemory, Size, OldPaddedSize);
 				
 				if (pMemory == pOldMemory)
 					return _pMemory;
 				
+				mint RequestedSize = _Size;
 				_Size = Size - (PreBytes + PostBytes);
 				
 				CPreBlock *pPreBlock = (CPreBlock *)(pMemory + PreBytes - sizeof(CPreBlock));
 				
 				pPreBlock->m_PreCheck = PreBytes;
 				pPreBlock->m_PostCheck = PostBytes;
+				pPreBlock->m_RequestedSize = RequestedSize;
 				pPreBlock->m_Size = _Size;
 				pPreBlock->m_Offset = PreBytes - sizeof(CPreBlock);
 				pPreBlock->m_pFile = _pFile;
@@ -566,29 +595,29 @@ namespace NMib
 				return pMemory + PreBytes;
 			}
 			
-			uint8* pMemory = (uint8*)CSuper::f_Realloc(_pMemory, _Size);
+			uint8* pMemory = (uint8*)CSuper::f_Realloc(_pMemory, _Size, _OldSize);
 			if (t_COptions::mc_bFillAllocated)
 				CParams::fs_FillAllocated(pMemory, _Size);
 			return pMemory;
 		}
 		
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_Resize(void * _pMemory, mint & _Size)
+		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_Resize(void * _pMemory, mint &_Size, mint _OldSize)
 		{
-			return f_ResizeDebug(_pMemory, _Size, nullptr, 0, EHeapDebugFlag_None);
+			return f_ResizeDebug(_pMemory, _Size, _OldSize, nullptr, 0, EHeapDebugFlag_None);
 		}
 
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ResizeInline(void * _pMemory, mint & _Size)
+		void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ResizeInline(void * _pMemory, mint &_Size, mint _OldSize)
 		{
-			return f_ResizeDebug(_pMemory, _Size, nullptr, 0, EHeapDebugFlag_None);
+			return f_ResizeDebug(_pMemory, _Size, _OldSize, nullptr, 0, EHeapDebugFlag_None);
 		}
 		
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ResizeDebug(void * _pMemory, mint & _Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+		inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ResizeDebug(void * _pMemory, mint &_Size, mint _OldSize, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
 		{
 			if (!_pMemory)
-				return f_AllocDebug(_Size, _pFile, _Line, _Flags);
+				return f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags);
 			DMibFastCheck(!f_ReportingLeaks());
 			if (t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes)
 			{
@@ -601,17 +630,27 @@ namespace NMib
 				mint PreBytes = pOldPreBlock->m_PreCheck;
 				mint PostBytes = t_COptions::mc_nPostGuardBytes;
 				mint Size = _Size + PreBytes + PostBytes;
-				uint8 * pMemory = (uint8 *)CSuper::f_Resize(pOldMemory, Size);
+
+				mint OldPaddedSize = 0;
+				if (_OldSize)
+				{
+					DMibFastCheck(_OldSize == pOldPreBlock->m_Size || _OldSize == pOldPreBlock->m_RequestedSize);
+					OldPaddedSize = _OldSize + PreBytes + PostBytes;
+				}
+
+				uint8 * pMemory = (uint8 *)CSuper::f_Resize(pOldMemory, Size, OldPaddedSize);
 				
 				if (pMemory == pOldMemory)
 					return _pMemory;
 				
+				mint RequestedSize = _Size;
 				_Size = Size - (PreBytes + PostBytes);
 				
 				CPreBlock *pPreBlock = (CPreBlock *)(pMemory + PreBytes - sizeof(CPreBlock));
 				
 				pPreBlock->m_PreCheck = PreBytes;
 				pPreBlock->m_PostCheck = PostBytes;
+				pPreBlock->m_RequestedSize = RequestedSize;
 				pPreBlock->m_Size = _Size;
 				pPreBlock->m_Offset = PreBytes - sizeof(CPreBlock);
 				pPreBlock->m_pFile = _pFile;
@@ -635,7 +674,7 @@ namespace NMib
 
 				return pMemory + PreBytes;
 			}
-			return CSuper::f_Resize(_pMemory, _Size);
+			return CSuper::f_Resize(_pMemory, _Size, _OldSize);
 		}
 		
 		template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -729,18 +768,45 @@ namespace NMib
 		}
 
 		template <typename t_CParams, bool t_bException, typename t_COptions>
-		inline_never void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_Free(void * _pMemory)
+		inline_never void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_Free(void *_pMemory, mint _Size)
+		{
+			if (!_pMemory)
+				return;
+			DMibFastCheck(_Size != 0);
+			DMibFastCheck(!f_ReportingLeaks());
+			fsp_CheckGuard((uint8 *)_pMemory, true);
+
+			if (t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes)
+			{
+				CPreBlock *pPreBlock = ((CPreBlock *)_pMemory) - 1;
+				uint8 * pOldMemory = (uint8 *)_pMemory - pPreBlock->m_PreCheck;
+
+				mint PreBytes = sizeof(CPreBlock);
+				mint PostBytes = t_COptions::mc_nPostGuardBytes;
+				mint Size = _Size + PreBytes + PostBytes;
+
+				DMibFastCheck(_Size == pPreBlock->m_Size || _Size == pPreBlock->m_RequestedSize);
+				return CSuper::f_Free(pOldMemory, Size);
+			}
+			else
+			{
+				uint8 * pOldMemory = fsp_GetRealMemory((uint8 *)_pMemory);
+				return CSuper::f_Free(pOldMemory, _Size);
+			}
+		}
+
+		template <typename t_CParams, bool t_bException, typename t_COptions>
+		inline_never void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_FreeNoSize(void *_pMemory)
 		{
 			if (!_pMemory)
 				return;
 			DMibFastCheck(!f_ReportingLeaks());
 			fsp_CheckGuard((uint8 *)_pMemory, true);
-	
-			uint8 * pOldMemory = fsp_GetRealMemory((uint8 *)_pMemory);
 
-			return CSuper::f_Free(pOldMemory);
+			uint8 * pOldMemory = fsp_GetRealMemory((uint8 *)_pMemory);
+			return CSuper::f_FreeNoSize(pOldMemory);
 		}
-		
+
 		template <typename t_CParams, bool t_bException, typename t_COptions>
 		mint TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_SizePadded(mint _Size)
 		{

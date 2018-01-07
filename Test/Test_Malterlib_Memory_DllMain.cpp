@@ -10,6 +10,11 @@ NMib::NThread::TCThreadLocal<NMib::NStr::CStr, NMib::NMem::CAllocator_Heap, NMib
 
 extern "C"
 {
+	struct CAlloc
+	{
+		void *m_pAlloc;
+		mint m_Size;
+	};
 	module_export void calling_convention_c fg_TestMemory()
 	{
 		*g_ThreadLocal = NMib::NStr::CStr::fs_ToStr(NMib::NSys::fg_Thread_GetCurrentUID());
@@ -28,9 +33,9 @@ extern "C"
 							
 							for (int i = 0; i < 2; ++i)
 							{
-								NMib::NContainer::TCVector<void *> Allocs;
-								NMib::NContainer::TCVector<void *> BigAllocs;
-								NMib::NContainer::TCVector<void *> HugeAllocs;
+								NMib::NContainer::TCVector<CAlloc> Allocs;
+								NMib::NContainer::TCVector<CAlloc> BigAllocs;
+								NMib::NContainer::TCVector<CAlloc> HugeAllocs;
 								auto Checkout = NMib::fg_GetSys()->f_MemoryManager_Checkout();
 								mint LastAlloc = 0;
 								for (mint MemorySize = 1; MemorySize <= 512*1024; ++MemorySize)
@@ -40,8 +45,8 @@ extern "C"
 									{
 										LastAlloc = AllocSize;
 										mint Size = MemorySize;
-										auto pMemory = NMib::NMem::fg_Alloc(Size);
-										Allocs.f_Insert(pMemory);
+										auto pMemory = NMib::NMem::fg_AllocWithSize(Size);
+										Allocs.f_Insert({pMemory, Size});
 									}
 								}
 								
@@ -52,8 +57,8 @@ extern "C"
 									{
 										LastAlloc = AllocSize;
 										mint Size = AllocSize;
-										auto pAlloc = NMib::NMem::fg_Alloc(Size);
-										BigAllocs.f_Insert(pAlloc);
+										auto pAlloc = NMib::NMem::fg_AllocWithSize(Size);
+										BigAllocs.f_Insert({pAlloc, Size});
 									}
 								}
 								
@@ -64,17 +69,17 @@ extern "C"
 									{
 										LastAlloc = AllocSize;
 										mint Size = AllocSize;
-										auto pAlloc = NMib::NMem::fg_Alloc(Size);
-										HugeAllocs.f_Insert(pAlloc);
+										auto pAlloc = NMib::NMem::fg_AllocWithSize(Size);
+										HugeAllocs.f_Insert({pAlloc, Size});
 									}
 								}
 								
-								for (void *pAlloc : Allocs)
-									NMib::NMem::fg_Free(pAlloc);
-								for (void *pAlloc : BigAllocs)
-									NMib::NMem::fg_Free(pAlloc);
-								for (void *pAlloc : HugeAllocs)
-									NMib::NMem::fg_Free(pAlloc);
+								for (auto &Alloc : Allocs)
+									NMib::NMem::fg_Free(Alloc.m_pAlloc, Alloc.m_Size);
+								for (auto &Alloc : BigAllocs)
+									NMib::NMem::fg_Free(Alloc.m_pAlloc, Alloc.m_Size);
+								for (auto &Alloc : HugeAllocs)
+									NMib::NMem::fg_Free(Alloc.m_pAlloc, Alloc.m_Size);
 								NMib::NSys::fg_Thread_Sleep(fp64(0.005) + NMib::NMisc::fg_GetRandomFloat()*0.005);
 							}
 							

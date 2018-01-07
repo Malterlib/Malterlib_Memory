@@ -209,14 +209,14 @@ extern "C"
 	_CRTIMP __checkReturn __bcount_opt(_Size) void * __cdecl _realloc_crt(__inout_opt void *_Ptr, __in size_t _Size)
 	{
 		_Size = NMib::fg_AlignUp(_Size, DMibSystemAlignment);
-		void * addr = NMib::NMem::fg_Resize(_Ptr, _Size);
+		void * addr = NMib::NMem::fg_Resize(_Ptr, _Size, 0);
 		return addr;
 	}
 	_CRTIMP __checkReturn __bcount_opt(_Size*_Count) void * __cdecl _recalloc_crt(__inout_opt void *_Ptr, __in size_t _Count, __in size_t _Size)
 	{
 		mint Size = _Count * _Size;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
-		void * addr = NMib::NMem::fg_Resize(_Ptr, Size);
+		void * addr = NMib::NMem::fg_Resize(_Ptr, Size, 0);
 		return addr;
 	}
 
@@ -226,7 +226,7 @@ extern "C"
 	{
 		mint Size = _Count * _Size;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
-		void * addr = NMib::NMem::fg_Resize(_Ptr, Size);
+		void * addr = NMib::NMem::fg_Resize(_Ptr, Size, 0);
 		return addr;
 	}
 		
@@ -238,17 +238,17 @@ extern "C"
 
 	MemDeclNa void DDefaultCallingConv free (void * ptr)
 	{
-		NMib::NMem::fg_Free(ptr);
+		NMib::NMem::fg_FreeNoSize(ptr);
 	}
 
 	void DDefaultCallingConv _free_base (void * ptr)
 	{
-		NMib::NMem::fg_Free(ptr);
+		NMib::NMem::fg_FreeNoSize(ptr);
 	}
 
 	void DDefaultCallingConv _free_dbg (void * ptr, int) 
 	{
-		NMib::NMem::fg_Free(ptr);
+		NMib::NMem::fg_FreeNoSize(ptr);
 	}	
 	
 	
@@ -272,26 +272,26 @@ extern "C"
 	MemDeclNaR void * DDefaultCallingConv realloc (void * ptr, size_t sz)
 	{
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
-		return NMib::NMem::fg_Resize(ptr, sz);
+		return NMib::NMem::fg_Resize(ptr, sz, 0);
 	}
 	
 	void * DDefaultCallingConv _realloc_base (void * ptr, size_t sz)
 	{
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
-		return NMib::NMem::fg_Resize(ptr, sz);
+		return NMib::NMem::fg_Resize(ptr, sz, 0);
 	}
 	
 	void * DDefaultCallingConv _realloc_dbg (void * ptr, size_t sz, int BlockType, const char *Filename, int Line) 
 	{
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
-		return NMib::NMem::fg_ResizeDebug(ptr, sz, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
+		return NMib::NMem::fg_ResizeDebug(ptr, sz, 0, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 	}
 
 	MemDeclNaR void * DDefaultCallingConv _recalloc(void * memblock,size_t count,size_t size)
 	{
 		mint Size = size * count;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
-		return NMib::NMem::fg_Resize(memblock, Size);
+		return NMib::NMem::fg_Resize(memblock, Size, 0);
 
 	}
 

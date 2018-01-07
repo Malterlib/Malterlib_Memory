@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -7,10 +7,10 @@
 #include "../../Core/Source/Malterlib_Core_General.h"
 #include <Mib/Storage/Tuple>
 #include <Mib/Meta/Meta>
+#include "Malterlib_Memory_CaptureDefaultDelete.h"
 
 namespace NMib
 {
-
 	namespace NPrivate
 	{
 		template <typename t_CTypeExplicit, typename t_CTypeImplicit>
@@ -20,25 +20,67 @@ namespace NMib
 		};
 	}
 
-	template <typename tf_ObjectType, typename tf_CAllocator, typename... tfp_CParams>
-	tf_ObjectType *fg_ConstructObject(tf_CAllocator &&_Allocator, tfp_CParams&&... p_Params)
+	template <typename tf_CObjectType, typename tf_CAllocator, typename... tfp_CParams>
+	tf_CObjectType *fg_ConstructObject(tf_CAllocator &&_Allocator, tfp_CParams&&... p_Params)
 	{
-		static_assert(sizeof(tf_ObjectType) > 0);
-		static_assert(!NTraits::TCIsAbstract<tf_ObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_ObjectType>::mc_Value);
-		mint Size = sizeof(tf_ObjectType);
-		auto Memory = fg_Forward<tf_CAllocator>(_Allocator).f_AllocSafe(Size, NTraits::TCAlignmentOf<tf_ObjectType>::mc_Value);
-		auto pReturn = new(Memory.f_Get()) tf_ObjectType(fg_Forward<tfp_CParams>(p_Params)...);
-		Memory.f_Claim();
-		return pReturn;
+		static_assert(sizeof(tf_CObjectType) > 0);
+		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
+
+		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault)
+			return new tf_CObjectType(fg_Forward<tfp_CParams>(p_Params)...);
+		else
+		{
+			mint Size = sizeof(tf_CObjectType);
+			auto Memory = fg_Forward<tf_CAllocator>(_Allocator).f_AllocSafe(Size, NTraits::TCAlignmentOf<tf_CObjectType>::mc_Value);
+			auto pReturn = new(Memory.f_Get()) tf_CObjectType(fg_Forward<tfp_CParams>(p_Params)...);
+			Memory.f_Claim();
+			return pReturn;
+		}
 	}
 
 	template <typename tf_CObjectType, typename tf_CAllocator>
-	void fg_DeleteObject(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject)
+	void fg_DeleteObject(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject, mint _Alignment = 1)
+	{
+		static_assert(sizeof(tf_CObjectType) > 0);
+		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
+		if constexpr (NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value)
+		{
+			if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault)
+				delete _pObject;
+			else
+			{
+				static_assert(!NTraits::TCHasOperatorDelete<tf_CObjectType>::mc_Value);
+#if defined(DMibPOverrideOperatorNew)
+
+				NMem::CCaptureDefaultDelete Captured;
+				delete _pObject;
+
+				DMibFastCheck(Captured.m_pMemory);
+
+				if (Captured.m_Size)
+					fg_Forward<tf_CAllocator>(_Allocator).f_Free(Captured.m_pMemory, fg_AlignUp(Captured.m_Size, _Alignment));
+				else
+					fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(Captured.m_pMemory);
+#else
+				_pObject->~tf_CObjectType();
+				fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(_pObject);
+#endif
+			}
+		}
+		else
+		{
+			_pObject->~tf_CObjectType();
+			fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, fg_AlignUp(sizeof(tf_CObjectType), _Alignment));
+		}
+	}
+
+	template <typename tf_CObjectType, typename tf_CAllocator>
+	void fg_DeleteObjectDefiniteType(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject, mint _Alignment = 1)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
 		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
 		_pObject->~tf_CObjectType();
-		fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject);
+		fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, fg_AlignUp(sizeof(tf_CObjectType), _Alignment));
 	}
 
 	template <typename t_CType, typename t_CAllocator>

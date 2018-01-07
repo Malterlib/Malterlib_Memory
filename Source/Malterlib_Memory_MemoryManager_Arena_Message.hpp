@@ -70,7 +70,7 @@ namespace NMib
 						DMibFastCheck(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
 						TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 						fp_Free(pBlock->m_pBlock, pSlab);
-						m_pMemoryManager->f_Free(pBlock);
+						m_pMemoryManager->f_Free(pBlock, sizeof(CMessage_FreeSmallBlock));
 					}
 					break;
 				}

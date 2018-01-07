@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -129,21 +129,23 @@ namespace NMib
 			
 			~TCMemoryManagerDebug();
 
-			void *f_Alloc(mint & _Size);
-			void *f_AllocInline(mint & _Size);
-			void *f_AllocDebug(mint & _Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
-			void *f_AllocAligned(mint & _Size, mint _Alignment);
-			void *f_AllocAlignedInline(mint & _Size, mint _Alignment);
-			void *f_AllocAlignedDebug(mint & _Size, mint _Alignment, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
+			void *f_AllocWithSize(mint &_Size);
+			void *f_Alloc(mint _Size);
+			void *f_AllocWithSizeInline(mint &_Size);
+			void *f_AllocWithSizeDebug(mint &_Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
+			void *f_AllocAlignedWithSize(mint &_Size, mint _Alignment);
+			void *f_AllocAligned(mint _Size, mint _Alignment);
+			void *f_AllocAlignedWithSizeInline(mint &_Size, mint _Alignment);
+			void *f_AllocAlignedWithSizeDebug(mint &_Size, mint _Alignment, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
 			void f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
 			void f_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
 			
-			void *f_Realloc(void * _pMemory, mint & _Size);
-			void *f_ReallocInline(void * _pMemory, mint & _Size);
-			void *f_ReallocDebug(void *_pMem, mint & _Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
-			void *f_Resize(void * _pMemory, mint & _Size);
-			void *f_ResizeInline(void * _pMemory, mint & _Size);
-			void *f_ResizeDebug(void *_pMem, mint & _Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
+			void *f_Realloc(void * _pMemory, mint &_Size, mint _OldSize);
+			void *f_ReallocInline(void * _pMemory, mint &_Size, mint _OldSize);
+			void *f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
+			void *f_Resize(void * _pMemory, mint &_Size, mint _OldSize);
+			void *f_ResizeInline(void * _pMemory, mint &_Size, mint _OldSize);
+			void *f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
 			mint f_Size(void const * _pMemory) const;
 			mint f_TrySize(void const * _pMemory) const;
 			mint f_SizeInline(void const * _pMemory) const;
@@ -156,7 +158,9 @@ namespace NMib
 			
 			bool f_CheckAll(bool _bBreak);
 			
-			void f_Free(void * _pMemory);
+			void f_Free(void * _pMemory, mint _Size);
+			void f_FreeNoSize(void * _pMemory);
+
 			void f_FreeInline(void * _pMemory);
 			mint f_SizePadded(mint _Size);
 			
@@ -181,6 +185,7 @@ namespace NMib
 				mint m_PreCheck;
 				mint m_PostCheck;
 				mint m_Size;
+				mint m_RequestedSize;
 				ch8 const * m_pFile;
 				mint m_ThreadID;
 				uint32 m_Line;

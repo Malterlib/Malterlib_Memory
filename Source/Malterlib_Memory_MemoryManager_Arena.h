@@ -51,7 +51,7 @@ namespace NMib
 			mint f_Size(void const *_pMemory, TCMemoryManagerSlabShared<t_CParams> const *_pSlab);
 			fp32 f_Overhead(void const *_pMemory, TCMemoryManagerSlabShared<t_CParams> const *_pSlab);
 			
-			void *f_Alloc(mint &_Size);
+			void *f_AllocWithSize(mint &_Size);
 			void f_AllocBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
 			
 			bool f_CheckFree(bool _bBreak);

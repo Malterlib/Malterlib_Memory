@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
@@ -25,6 +25,7 @@ namespace NMib
 				uint8 *m_pStart;
 				mint m_RealSize;
 				mint m_AllocSize;
+				mint m_OriginalSize;
 
 				uint8 *f_GetUserAddress() const
 				{
@@ -118,7 +119,7 @@ namespace NMib
 				if (!m_bProtectOnDemand || m_bProtectionDemanded)
 					NSys::fg_Mem_VirtualProtect(pBlockStart, GranularityProtect*2 + UserNeededSize, EProtect_ReadWrite);
 
-				m_Heap.f_Free(pBlock);
+				m_Heap.f_Free(pBlock, pMemBlock->m_RealSize);
 
 				m_FreeBlocks.f_Remove(pMemBlock);
 			}
@@ -140,7 +141,7 @@ namespace NMib
 				return m_Lock;
 			}
 			
-			void *f_Alloc(mint &_Size, mint _Alignment)
+			void *f_AllocWithSize(mint &_Size, mint _Alignment)
 			{
 				DMibLock(m_Lock);	
 				_Alignment = fg_Max(mint(1 << EMemoryManagerAlignment), _Alignment);
@@ -149,11 +150,12 @@ namespace NMib
 					_Size = 1;
 
 				_Size = fg_AlignUp(_Size, _Alignment);
+				mint OriginalSize = _Size;
 
 				mint UserNeededSize = fg_AlignUp(_Size, GranularityProtect);
 				mint NeededSize = UserNeededSize + GranularityProtect*3;
 
-				uint8 *pBlock = (uint8 *)m_Heap.f_AllocAligned(NeededSize, _Alignment);
+				uint8 *pBlock = (uint8 *)m_Heap.f_AllocAlignedWithSize(NeededSize, _Alignment);
 				uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
 				uint8 *pRetBlock = pBlockStart + GranularityProtect;
 
@@ -171,11 +173,24 @@ namespace NMib
 				NewBlock.m_pStart = pBlock;
 				NewBlock.m_RealSize = NeededSize;
 				NewBlock.m_AllocSize = _Size;
+				NewBlock.m_OriginalSize = OriginalSize;
 
 				return pRetBlock;
 			}
 
-			void f_Free(void *_pBlock)
+			void f_Free(void *_pBlock, mint _Size)
+			{
+				if (!_Size)
+					DMibPDebugBreak;
+				_Size = fg_AlignUp(_Size, mint(1 << EMemoryManagerAlignment));
+				return fp_Free(_pBlock, _Size);
+			}
+			void f_FreeNoSize(void *_pBlock)
+			{
+				fp_Free(_pBlock, 0);
+			}
+
+			void fp_Free(void *_pBlock, mint _Size)
 			{
 				if (!_pBlock)
 					return;
@@ -185,6 +200,9 @@ namespace NMib
 				CMemoryBlock *pMemBlock = m_Blocks.f_FindEqual(pUserBlock);
 				if (!pMemBlock)
 					DMibPDebugBreak;
+
+				if (_Size && _Size != pMemBlock->m_OriginalSize && _Size != pMemBlock->m_RealSize)
+					DMibPDebugBreak; // Misreported size
 
 				mint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
 

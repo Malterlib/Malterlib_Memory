@@ -43,13 +43,13 @@ namespace NMib
 			if (_OldSize == 0)
 				_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			void* pNewMem = CBaseAllocator::f_Alloc(_Size, _AllocFlags, _NumaNode);
+			void* pNewMem = CBaseAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
 
 			fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
 			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-			CBaseAllocator::f_Free(_pMem);
+			CBaseAllocator::f_Free(_pMem, _OldSize);
 
 			return pNewMem;
 		}
@@ -60,13 +60,13 @@ namespace NMib
 			if (_OldSize == 0)
 				_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			void* pNewMem = CBaseAllocator::f_AllocDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+			void* pNewMem = CBaseAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 
 			fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
 			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-			CBaseAllocator::f_Free(_pMem);
+			CBaseAllocator::f_Free(_pMem, _OldSize);
 
 			return pNewMem;
 		}
@@ -74,12 +74,17 @@ namespace NMib
 		template <typename t_CBaseAllocator, bool t_bStatic>
 		inline_small void TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_Free(void *_pBlock, mint _Size)
 		{
-			if (_Size == 0)
-				_Size = CBaseAllocator::f_Size(_pBlock);
-
+			DMibFastCheck(_Size != 0);
 			NMem::fg_ObjectSet((uint8*)_pBlock, 0, _Size);
-
 			return CBaseAllocator::f_Free(_pBlock, _Size);
+		}
+
+		template <typename t_CBaseAllocator, bool t_bStatic>
+		inline_small void TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_FreeNoSize(void *_pBlock)
+		{
+			mint Size = CBaseAllocator::f_Size(_pBlock);
+			NMem::fg_ObjectSet((uint8*)_pBlock, 0, Size);
+			return CBaseAllocator::f_Free(_pBlock, Size);
 		}
 
 
@@ -111,13 +116,13 @@ namespace NMib
 			if (_OldSize == 0)
 				_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			void* pNewMem = CBaseAllocator::f_Alloc(_Size, _AllocFlags, _NumaNode);
+			void* pNewMem = CBaseAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
 
 			fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
 			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-			CBaseAllocator::f_Free(_pMem);
+			CBaseAllocator::f_Free(_pMem, _OldSize);
 
 			return pNewMem;
 		}
@@ -128,13 +133,13 @@ namespace NMib
 			if (_OldSize == 0)
 				_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			void* pNewMem = CBaseAllocator::f_AllocDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+			void* pNewMem = CBaseAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 
 			fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
 			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-			CBaseAllocator::f_Free(_pMem);
+			CBaseAllocator::f_Free(_pMem, _OldSize);
 
 			return pNewMem;
 		}
@@ -142,12 +147,21 @@ namespace NMib
 		template<typename t_CBaseAllocator>
 		inline_small void TCAllocator_Secure<t_CBaseAllocator, true>::f_Free(void *_pBlock, mint _Size)
 		{
-			if (_Size == 0)
-				_Size = CBaseAllocator::f_Size(_pBlock);
+			DMibFastCheck(_Size != 0);
 
 			NMem::fg_ObjectSet((uint8*)_pBlock, 0, _Size);
 
 			return CBaseAllocator::f_Free(_pBlock, _Size);
+		}
+
+		template<typename t_CBaseAllocator>
+		inline_small void TCAllocator_Secure<t_CBaseAllocator, true>::f_FreeNoSize(void *_pBlock)
+		{
+			mint Size = CBaseAllocator::f_Size(_pBlock);
+
+			NMem::fg_ObjectSet((uint8*)_pBlock, 0, Size);
+
+			return CBaseAllocator::f_Free(_pBlock, Size);
 		}
 
 	} // Namespace NMem

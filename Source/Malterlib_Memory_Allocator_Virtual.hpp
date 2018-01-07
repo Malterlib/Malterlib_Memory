@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
@@ -57,7 +57,7 @@ namespace NMib
 			DMibMemoryReportProtect(ms_HeapName, ms_HeapName, _pMem, _Size, _Protect);
 		}
 
-		inline_small void *CAllocator_Virtual::f_Alloc(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		inline_small void *CAllocator_Virtual::f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibMemoryGoingToReportScope(ms_HeapName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -66,7 +66,7 @@ namespace NMib
 			return pRet;
 		}
 
-		inline_small void *CAllocator_Virtual::f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		inline_small void *CAllocator_Virtual::f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibMemoryGoingToReportScope(ms_HeapName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -74,13 +74,23 @@ namespace NMib
 			DMibMemoryReportAlloc(ms_HeapName, ms_HeapName, pRet, 0, RequestedSize, _Size, f_Overhead(pRet), nullptr);
 			return pRet;
 		}
-		
+
+		inline_small void *CAllocator_Virtual::f_Alloc(mint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
+		}
+
+		inline_small void *CAllocator_Virtual::f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return f_AllocAlignedWithSize(_Size, _Alignment, _AllocFlags, _NumaNode);
+		}
+
 		inline_small void CAllocator_Virtual::f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			while (true)
 			{
 				mint Size = _Size;
-				void * pMem = f_AllocAligned(Size, _Alignment);
+				void * pMem = f_AllocAlignedWithSize(Size, _Alignment);
 				if (!_Functor(pMem, Size))
 					break;
 			}
@@ -91,13 +101,32 @@ namespace NMib
 			return f_AllocBatch(_Size, _Alignment, _Functor, _AllocFlags, _NumaNode);
 		}			
 		
-		inline_small void *CAllocator_Virtual::f_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		inline_small void *CAllocator_Virtual::f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibMemoryGoingToReportScope(ms_HeapName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
 			void *pRet = NSys::fg_Mem_VirtualAlloc(_Size, _AllocFlags, _NumaNode);
 			DMibMemoryReportAlloc(ms_HeapName, ms_HeapName, pRet, 0, RequestedSize, _Size, f_Overhead(pRet), nullptr);
 			return pRet;
+		}
+
+		inline_small void *CAllocator_Virtual::f_AllocAlignedWithSizeDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			DMibMemoryGoingToReportScope(ms_HeapName, true);
+			DMibMemoryReportSaveVar(RequestedSize, _Size);
+			void *pRet = NSys::fg_Mem_VirtualAlloc(_Size, _AllocFlags, _NumaNode, _Alignment);
+			DMibMemoryReportAlloc(ms_HeapName, ms_HeapName, pRet, 0, RequestedSize, _Size, f_Overhead(pRet), nullptr);
+			return pRet;
+		}
+
+		inline_small void *CAllocator_Virtual::f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+		}
+
+		inline_small void *CAllocator_Virtual::f_AllocAlignedDebug(mint _Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return f_AllocAlignedWithSizeDebug(_Size, _Alignment, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 		}
 
 		inline_small void *CAllocator_Virtual::f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
@@ -152,9 +181,18 @@ namespace NMib
 
 		inline_small void CAllocator_Virtual::f_Free(void *_pBlock, mint _Size)
 		{
+			DMibFastCheck(_Size != 0);
 			DMibMemoryGoingToReportScope(ms_HeapName, true);
 			NSys::fg_Mem_VirtualFree(_pBlock, _Size);
 			DMibMemoryReportFree(ms_HeapName, ms_HeapName, _pBlock, _Size, nullptr);
+		}
+
+		inline_small void CAllocator_Virtual::f_FreeNoSize(void *_pBlock)
+		{
+			DMibMemoryGoingToReportScope(ms_HeapName, true);
+			DMibMemoryReportSaveVar(Size, f_Size(_pBlock));
+			NSys::fg_Mem_VirtualFree(_pBlock, 0);
+			DMibMemoryReportFree(ms_HeapName, ms_HeapName, _pBlock, Size, nullptr);
 		}
 
 		inline_small mint CAllocator_Virtual::f_Size(const void *_pBlock)
@@ -182,7 +220,25 @@ namespace NMib
 		{
 			return NSys::fg_Mem_VirtualOverhead(_pBlock);
 		}				
-		
+
+		inline_small only_parameters_aliased auto CAllocator_Virtual::f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
+		{
+			CAutoDestroy AutoDestroy;
+			AutoDestroy.m_pMemory = f_AllocAlignedWithSize(_Size, _Alignment, _AllocFlags, _NumaNode);
+			AutoDestroy.m_Size = _Size;
+
+			return fg_Move(AutoDestroy);
+		}
+
+		inline_small only_parameters_aliased auto CAllocator_Virtual::f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
+		{
+			CAutoDestroy AutoDestroy;
+			AutoDestroy.m_pMemory = f_AllocAligned(_Size, _Alignment, _AllocFlags, _NumaNode);
+			AutoDestroy.m_Size = _Size;
+
+			return fg_Move(AutoDestroy);
+		}
+
 		///
 		/// CAllocator_VirtualNoCommit
 		/// 
@@ -252,22 +308,32 @@ namespace NMib
 			return NSys::fg_Mem_VirtualProtect(_pMem, _Size, _Protect);
 		}
 
-		inline_small void *CAllocator_VirtualNoTracking::f_Alloc(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		inline_small void *CAllocator_VirtualNoTracking::f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return NSys::fg_Mem_VirtualAlloc(_Size, _AllocFlags, _NumaNode);
 		}
 
-		inline_small void *CAllocator_VirtualNoTracking::f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		inline_small void *CAllocator_VirtualNoTracking::f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return NSys::fg_Mem_VirtualAlloc(_Size, _AllocFlags, _NumaNode, _Alignment);
 		}
-		
+
+		inline_small void *CAllocator_VirtualNoTracking::f_Alloc(mint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return NSys::fg_Mem_VirtualAlloc(_Size, _AllocFlags, _NumaNode);
+		}
+
+		inline_small void *CAllocator_VirtualNoTracking::f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return NSys::fg_Mem_VirtualAlloc(_Size, _AllocFlags, _NumaNode, _Alignment);
+		}
+
 		inline_small void CAllocator_VirtualNoTracking::f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			while (true)
 			{
 				mint Size = _Size;
-				void * pMem = f_AllocAligned(Size, _Alignment);
+				void * pMem = f_AllocAlignedWithSize(Size, _Alignment);
 				if (!_Functor(pMem, Size))
 					break;
 			}
@@ -278,9 +344,25 @@ namespace NMib
 			return f_AllocBatch(_Size, _Alignment, _Functor, _AllocFlags, _NumaNode);
 		}
 
-		inline_small void *CAllocator_VirtualNoTracking::f_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		inline_small void *CAllocator_VirtualNoTracking::f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return NSys::fg_Mem_VirtualAlloc(_Size, _AllocFlags, _NumaNode);
+		}
+
+
+		inline_small void *CAllocator_VirtualNoTracking::f_AllocAlignedWithSizeDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return NSys::fg_Mem_VirtualAlloc(_Size, _AllocFlags, _NumaNode, _Alignment);
+		}
+
+		inline_small void *CAllocator_VirtualNoTracking::f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return NSys::fg_Mem_VirtualAlloc(_Size, _AllocFlags, _NumaNode);
+		}
+
+		inline_small void *CAllocator_VirtualNoTracking::f_AllocAlignedDebug(mint _Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return NSys::fg_Mem_VirtualAlloc(_Size, _AllocFlags, _NumaNode, _Alignment);
 		}
 
 		inline_small void *CAllocator_VirtualNoTracking::f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
@@ -315,7 +397,13 @@ namespace NMib
 
 		inline_small void CAllocator_VirtualNoTracking::f_Free(void *_pBlock, mint _Size)
 		{
+			DMibFastCheck(_Size != 0);
 			NSys::fg_Mem_VirtualFree(_pBlock, _Size);
+		}
+
+		inline_small void CAllocator_VirtualNoTracking::f_FreeNoSize(void *_pBlock)
+		{
+			NSys::fg_Mem_VirtualFree(_pBlock, 0);
 		}
 
 		inline_small mint CAllocator_VirtualNoTracking::f_Size(const void *_pBlock)
@@ -337,7 +425,25 @@ namespace NMib
 		{
 			return NSys::fg_Mem_VirtualOverhead(_pBlock);
 		}					
-		
+
+		inline_small only_parameters_aliased auto CAllocator_VirtualNoTracking::f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
+		{
+			CAutoDestroy AutoDestroy;
+			AutoDestroy.m_pMemory = f_AllocAlignedWithSize(_Size, _Alignment, _AllocFlags, _NumaNode);
+			AutoDestroy.m_Size = _Size;
+
+			return fg_Move(AutoDestroy);
+		}
+
+		inline_small only_parameters_aliased auto CAllocator_VirtualNoTracking::f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
+		{
+			CAutoDestroy AutoDestroy;
+			AutoDestroy.m_pMemory = f_AllocAligned(_Size, _Alignment, _AllocFlags, _NumaNode);
+			AutoDestroy.m_Size = _Size;
+
+			return fg_Move(AutoDestroy);
+		}
+
 		///
 		/// CAllocator_VirtualNoTrackingNoCommit
 		///

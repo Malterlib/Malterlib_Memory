@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -102,15 +102,19 @@ namespace NMib
 			void f_CanDoLazyCheckout();
 
 			void f_SetNumaNode(ENumaNode _NumaNode);
-			void *f_Alloc(mint & _Size);
-			void *f_AllocInline(mint & _Size);
-			void *f_AllocAligned(mint & _Size, mint _Alignment);
-			void *f_AllocAlignedInline(mint & _Size, mint _Alignment);
+			void *f_AllocWithSize(mint &_Size);
+			void *f_AllocWithSizeInline(mint &_Size);
+			void *f_Alloc(mint _Size);
+			void *f_AllocInline(mint _Size);
+			void *f_AllocAlignedWithSize(mint &_Size, mint _Alignment);
+			void *f_AllocAlignedWithSizeInline(mint &_Size, mint _Alignment);
+			void *f_AllocAligned(mint _Size, mint _Alignment);
+			void *f_AllocAlignedInline(mint _Size, mint _Alignment);
 			void f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
-			void *f_Realloc(void * _pMemory, mint &_Size);
-			void *f_ReallocInline(void * _pMemory, mint &_Size);
-			void *f_Resize(void * _pMemory, mint &_Size);
-			void *f_ResizeInline(void * _pMemory, mint &_Size);
+			void *f_Realloc(void * _pMemory, mint &_Size, mint _OldSize);
+			void *f_ReallocInline(void * _pMemory, mint &_Size, mint _OldSize);
+			void *f_Resize(void * _pMemory, mint &_Size, mint _OldSize);
+			void *f_ResizeInline(void * _pMemory, mint &_Size, mint _OldSize);
 			mint f_Size(void const * _pMemory) const;
 			mint f_TrySize(void const * _pMemory) const; // Warning, this function will cause can cause an access violatino if _pMemory is not part of this heap, it's up to the caller to handle this exception
 			mint f_SizeInline(void const * _pMemory) const;
@@ -120,8 +124,10 @@ namespace NMib
 			uint64 f_GetMagic() const;
 			TCMemoryManager *f_GetMemoryManager(void const *_pMemory); // Will only work between managers that share the same magic
 			
-			void f_Free(void * _pMemory);
-			void f_FreeInline(void * _pMemory);
+			void f_Free(void * _pMemory, mint _Size);
+			void f_FreeNoSize(void * _pMemory);
+			void f_FreeInline(void * _pMemory, mint _Size);
+			void f_FreeNoSizeInline(void * _pMemory);
 			mint f_SizePadded(mint _Size);
 			
 			void f_PrepareFork();
@@ -150,10 +156,10 @@ namespace NMib
 			void f_SetMaxArenas(mint _nArenas);
 			
 		private:
-			void *fp_AllocAlignedSlowPath(mint & _Size, mint _Alignment);
+			void *fp_AllocAlignedSlowPath(mint &_Size, mint _Alignment);
 			void fp_AllocBatchSlowPath(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
 
-			void fp_FreeSlowPath(void * _pMemory);
+			void fp_FreeSlowPath(void * _pMemory, mint _Size);
 			
 			TCMemoryManagerNumaArena<t_CParams> *fp_GetAnyNumaArena();
 		

@@ -12,6 +12,12 @@
 #ifndef DMibMemoryInterposeCpp1
 #	define DMibMemoryInterposeCpp1 DMibMemoryInterpose1
 #endif
+#ifndef DMibMemoryInterposeCpp2
+#	define DMibMemoryInterposeCpp2 DMibMemoryInterpose2
+#endif
+#ifndef DMibMemoryInterposeCpp3
+#	define DMibMemoryInterposeCpp3 DMibMemoryInterpose3
+#endif
 #ifndef DMibMemoryInterpose2
 #	define DMibMemoryInterpose2(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1), __VA_ARGS__)
 #endif
@@ -40,6 +46,12 @@
 #endif
 #ifndef DMibMemoryInterposeCpp1
 #define DMibMemoryInterposeCpp1 DMibMemoryInterpose0
+#endif
+#ifndef DMibMemoryInterposeCpp2
+#define DMibMemoryInterposeCpp2 DMibMemoryInterpose0
+#endif
+#ifndef DMibMemoryInterposeCpp3
+#define DMibMemoryInterposeCpp3 DMibMemoryInterpose0
 #endif
 #ifndef DMibMemoryInterpose2
 #define DMibMemoryInterpose2 DMibMemoryInterpose0
@@ -124,14 +136,27 @@ DMibMemoryInterpose3(int, posix_memalign, void **_0, size_t _1, size_t _2)
 DMibMemoryInterpose1(int, malloc_jumpstart, int _0)
 
 #ifndef DMibMemoryInterpose_Hooks
-DMibMemoryInterposeCpp1(void *, _Znwm, size_t _0)
 DMibMemoryInterposeCpp1(void *, _Znam, size_t _0)
-DMibMemoryInterposeCpp1(void , _ZdlPv, void * _0)
-DMibMemoryInterposeCpp1(void , _ZdaPv, void * _0)
-DMibMemoryInterposeCpp1(void *, _ZnwmRKSt9nothrow_t, size_t _0)
 DMibMemoryInterposeCpp1(void *, _ZnamRKSt9nothrow_t, size_t _0)
+DMibMemoryInterposeCpp2(void *, _ZnamSt11align_val_t, size_t _0, size_t _1)
+DMibMemoryInterposeCpp2(void *, _ZnamSt11align_val_tRKSt9nothrow_t, size_t _0, size_t _1)
+DMibMemoryInterposeCpp1(void *, _Znwm, size_t _0)
+DMibMemoryInterposeCpp1(void *, _ZnwmRKSt9nothrow_t, size_t _0)
+DMibMemoryInterposeCpp2(void *, _ZnwmSt11align_val_t, size_t _0, size_t _1)
+DMibMemoryInterposeCpp2(void *, _ZnwmSt11align_val_tRKSt9nothrow_t, size_t _0, size_t _1)
+DMibMemoryInterposeCpp1(void , _ZdaPv, void *_0)
 DMibMemoryInterposeCpp1(void , _ZdaPvRKSt9nothrow_t, void *_0)
+DMibMemoryInterposeCpp2(void , _ZdaPvSt11align_val_t, void *_0, size_t _1)
+DMibMemoryInterposeCpp2(void , _ZdaPvSt11align_val_tRKSt9nothrow_t, void *_0, size_t _1)
+DMibMemoryInterposeCpp2(void , _ZdaPvm, void *_0, size_t _1)
+DMibMemoryInterposeCpp3(void , _ZdaPvmSt11align_val_t, void *_0, size_t _1, size_t _2)
+DMibMemoryInterposeCpp1(void , _ZdlPv, void *_0)
 DMibMemoryInterposeCpp1(void , _ZdlPvRKSt9nothrow_t, void *_0)
+DMibMemoryInterposeCpp2(void , _ZdlPvSt11align_val_t, void *_0, size_t _1)
+DMibMemoryInterposeCpp2(void , _ZdlPvSt11align_val_tRKSt9nothrow_t, void *_0, size_t _1)
+DMibMemoryInterposeCpp2(void , _ZdlPvm, void *_0, size_t _1)
+DMibMemoryInterposeCpp3(void , _ZdlPvmSt11align_val_t, void *_0, size_t _1, size_t _2)
+
 #endif
 
 #endif
@@ -153,6 +178,8 @@ DMibMemoryInterpose7(mach_msg_return_t ,mach_msg_trap, mach_msg_header_t *_0, ma
 #undef DMibMemoryInterpose0
 #undef DMibMemoryInterpose1
 #undef DMibMemoryInterposeCpp1
+#undef DMibMemoryInterposeCpp2
+#undef DMibMemoryInterposeCpp3
 #undef DMibMemoryInterpose2
 #undef DMibMemoryInterpose3
 #undef DMibMemoryInterpose4

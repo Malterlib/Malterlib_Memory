@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Test/Memory>
@@ -32,6 +32,12 @@ namespace
 		{
 		}
 
+		struct CAlloc
+		{
+			void *m_pAlloc;
+			mint m_Size;
+		};
+
 		void f_Dummy()
 		{
 		}
@@ -43,7 +49,7 @@ namespace
 			{
 				CTestMemoryMeasure MeasureMemory("Alloc");
 				
-				NMib::NContainer::TCVector<void *> Allocs;
+				NMib::NContainer::TCVector<CAlloc> Allocs;
 				
 				MeasureMemory.f_Start();
 				
@@ -72,7 +78,7 @@ namespace
 											NMib::NMem::CDisableMemoryReporterScope DisableReport;
 #endif
 											DMibTest(DMibExpr(_Size) >= DMibExpr(MemorySize))(ETestFlag_Aggregated);
-											Allocs.f_Insert(_pAlloc);
+											Allocs.f_Insert({_pAlloc, _Size});
 										}
 										
 										if ((nAllocs--) == 0) 
@@ -88,8 +94,8 @@ namespace
 							}
 						}
 					}
-					for (void *pAlloc : Allocs)
-						MemoryManager.f_Free(pAlloc);
+					for (auto &Alloc : Allocs)
+						MemoryManager.f_Free(Alloc.m_pAlloc, Alloc.m_Size);
 					
 					MemoryManager.f_GarbageCollect(true);
 				}
@@ -121,28 +127,28 @@ namespace
 				{
 					DMibTestPath("Small");
 					mint Size = 16;
-					pAlloc = (uint8 *)MemoryManager.f_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
+					pAlloc = (uint8 *)MemoryManager.f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
 					MemoryManager.f_EnumAllocations(fl_AllocFunctor);
 					DMibTest(DMibExpr(bFoundAlloc));
-					MemoryManager.f_Free(pAlloc);
+					MemoryManager.f_Free(pAlloc, Size);
 					bFoundAlloc = false;
 				}
 				{
 					DMibTestPath("Big");
 					mint Size = 512*1024;
-					pAlloc = (uint8 *)MemoryManager.f_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
+					pAlloc = (uint8 *)MemoryManager.f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
 					MemoryManager.f_EnumAllocations(fl_AllocFunctor);
 					DMibTest(DMibExpr(bFoundAlloc));
-					MemoryManager.f_Free(pAlloc);
+					MemoryManager.f_Free(pAlloc, Size);
 					bFoundAlloc = false;
 				}
 				{
 					DMibTestPath("Huge");
 					mint Size = 32*1024*1024;
-					pAlloc = (uint8 *)MemoryManager.f_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
+					pAlloc = (uint8 *)MemoryManager.f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
 					MemoryManager.f_EnumAllocations(fl_AllocFunctor);
 					DMibTest(DMibExpr(bFoundAlloc));
-					MemoryManager.f_Free(pAlloc);
+					MemoryManager.f_Free(pAlloc, Size);
 					bFoundAlloc = false;
 				}
 			};
@@ -157,37 +163,37 @@ namespace
 					
 					DMibTestPath("Small");
 					mint Size = 1;
-					void *pMemory = MemoryManager.f_Alloc(Size);
-					MemoryManager.f_Free(pMemory);
+					void *pMemory = MemoryManager.f_AllocWithSize(Size);
+					MemoryManager.f_Free(pMemory, Size);
 					
 					DMibTest
 						(
 							DMibExpr(fg_ThrowsException(DoubleFreeException))
-							== DMibLExpr(MemoryManager.f_Free(pMemory))
+							== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 						)
 					;
 				}
 				{
 					DMibTestPath("Normal");
 					mint Size = 64;
-					void *pMemory = MemoryManager.f_Alloc(Size);
-					MemoryManager.f_Free(pMemory);
+					void *pMemory = MemoryManager.f_AllocWithSize(Size);
+					MemoryManager.f_Free(pMemory, Size);
 					DMibTest
 						(
 							DMibExpr(fg_ThrowsException(DoubleFreeException))
-							== DMibLExpr(MemoryManager.f_Free(pMemory))
+							== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 						)
 					;
 				}
 				{
 					DMibTestPath("Big");
 					mint Size = 512*1024;
-					void *pMemory = MemoryManager.f_Alloc(Size);
-					MemoryManager.f_Free(pMemory);
+					void *pMemory = MemoryManager.f_AllocWithSize(Size);
+					MemoryManager.f_Free(pMemory, Size);
 					DMibTest
 						(
 							DMibExpr(fg_ThrowsException(DoubleFreeException))
-							== DMibLExpr(MemoryManager.f_Free(pMemory))
+							== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 						)
 					;
 				}
@@ -197,7 +203,7 @@ namespace
 				{
 					DMibTestPath("Huge");
 					mint Size = 32*1024*1024;
-					void *pMemory = MemoryManager.f_Alloc(Size);
+					void *pMemory = MemoryManager.f_AllocWithSize(Size);
 					MemoryManager.f_Free(pMemory);
 					DMibTest
 						(
@@ -218,9 +224,9 @@ namespace
 					
 					auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after being freed");
 					mint Size = 4;
-					uint8 *pMemory0 = (uint8 *)MemoryManager.f_Alloc(Size);
-					uint8 *pMemory = (uint8 *)MemoryManager.f_Alloc(Size);
-					MemoryManager.f_Free(pMemory);
+					uint8 *pMemory0 = (uint8 *)MemoryManager.f_AllocWithSize(Size);
+					uint8 *pMemory = (uint8 *)MemoryManager.f_AllocWithSize(Size);
+					MemoryManager.f_Free(pMemory, Size);
 					
 					uint8 OldValue = pMemory[3];
 					pMemory[3] = 0;
@@ -239,13 +245,13 @@ namespace
 					DMibTest
 						(
 							DMibExpr(fg_ThrowsException(OverwriteException))
-							== DMibLExpr(MemoryManager.f_Alloc(Size))
+							== DMibLExpr(MemoryManager.f_AllocWithSize(Size))
 						)
 					;
 					
 					pMemory[3] = OldValue;
 					
-					MemoryManager.f_Free(pMemory0);
+					MemoryManager.f_Free(pMemory0, Size);
 				};
 			};
 			DMibTestCategory("Memory overwrite")
@@ -265,8 +271,8 @@ namespace
 								
 								auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after being freed");
 								mint Size = _Size;
-								uint8 *pMemory = (uint8 *)MemoryManager.f_Alloc(Size);
-								MemoryManager.f_Free(pMemory);
+								uint8 *pMemory = (uint8 *)MemoryManager.f_AllocWithSize(Size);
+								MemoryManager.f_Free(pMemory, Size);
 								
 								uint8 OldValue = pMemory[0];
 								pMemory[0] = 0;
@@ -285,7 +291,7 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Alloc(Size))
+										== DMibLExpr(MemoryManager.f_AllocWithSize(Size))
 									)
 								;
 								
@@ -300,7 +306,7 @@ namespace
 							
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
-							uint8 *pMemory = (uint8 *)MemoryManager.f_Alloc(Size);
+							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocWithSize(Size);
 							
 							uint8 OldValue = pMemory[-1];
 							pMemory[-1] = 0;
@@ -318,12 +324,12 @@ namespace
 							DMibTest
 								(
 									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_Free(pMemory))
+									== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 								)(ETest_FailAndStop)
 							;
 							
 							pMemory[-1] = OldValue;
-							MemoryManager.f_Free(pMemory);
+							MemoryManager.f_Free(pMemory, Size);
 						};
 						
 						DMibTestSuite("Post block")
@@ -332,7 +338,7 @@ namespace
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
-							uint8 *pMemory = (uint8 *)MemoryManager.f_Alloc(Size);
+							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocWithSize(Size);
 							
 							uint8 OldValue = pMemory[Size];
 							pMemory[Size] = 0;
@@ -349,12 +355,12 @@ namespace
 							DMibTest
 								(
 									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_Free(pMemory))
+									== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 								)
 							;
 
 							pMemory[Size] = OldValue;
-							MemoryManager.f_Free(pMemory);
+							MemoryManager.f_Free(pMemory, Size);
 						};
 
 						DMibTestSuite("Pre block aligned")
@@ -363,7 +369,7 @@ namespace
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
-							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAligned(Size, _Size * 4);
+							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
 							
 						
 							DMibTest(DMibExpr(NMib::fg_AlignUp(pMemory, _Size * 4)) == DMibExpr(pMemory));
@@ -383,12 +389,12 @@ namespace
 							DMibTest
 								(
 									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_Free(pMemory))
+									== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 								)(ETest_FailAndStop)
 							;
 							
 							pMemory[-1] = OldValue;
-							MemoryManager.f_Free(pMemory);
+							MemoryManager.f_Free(pMemory, Size);
 						};
 						
 						DMibTestSuite("Post block alligned")
@@ -397,7 +403,7 @@ namespace
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
-							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAligned(Size, _Size * 4);
+							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
 
 							DMibTest(DMibExpr(NMib::fg_AlignUp(pMemory, _Size * 4)) == DMibExpr(pMemory));
 							
@@ -417,12 +423,12 @@ namespace
 							DMibTest
 								(
 									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_Free(pMemory))
+									== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 								)
 							;
 
 							pMemory[Size] = OldValue;
-							MemoryManager.f_Free(pMemory);
+							MemoryManager.f_Free(pMemory, Size);
 						};
 
 						DMibTestSuite("Pre block realloc")
@@ -431,7 +437,7 @@ namespace
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
-							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAligned(Size, _Size * 4);
+							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
 
 							{
 								DMibTestPath("Bigger");
@@ -452,13 +458,13 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeBigger))
+										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeBigger, Size))
 									)(ETest_FailAndStop)
 								;
 								
 								pMemory[-1] = OldValue;
 								
-								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeBigger);
+								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeBigger, Size);
 								Size = NewSizeBigger;
 							}
 
@@ -481,13 +487,13 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeSmaller))
+										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeSmaller, Size))
 									)
 								;
 								
 								pMemory[-1] = OldValue;
 								
-								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeSmaller);
+								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeSmaller, Size);
 								Size = NewSizeSmaller ;
 							}
 
@@ -507,12 +513,12 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Free(pMemory))
+										== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 									)
 								;
 								
 								pMemory[-1] = OldValue;
-								MemoryManager.f_Free(pMemory);
+								MemoryManager.f_Free(pMemory, Size);
 							}
 						};
 						
@@ -522,7 +528,7 @@ namespace
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
-							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAligned(Size, _Size * 4);
+							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
 
 							{
 								DMibTestPath("Bigger");
@@ -543,13 +549,13 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeBigger))
+										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeBigger, Size))
 									)
 								;
 
 								pMemory[Size] = OldValue;
 
-								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeBigger);
+								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeBigger, Size);
 								
 								Size = NewSizeBigger;
 							}
@@ -573,13 +579,13 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeSmaller))
+										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeSmaller, Size))
 									)
 								;
 
 								pMemory[Size] = OldValue;
 
-								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeSmaller);
+								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeSmaller, Size);
 								
 								Size = NewSizeSmaller;
 							}
@@ -600,12 +606,12 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Free(pMemory))
+										== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 									)
 								;
 
 								pMemory[Size] = OldValue;
-								MemoryManager.f_Free(pMemory);
+								MemoryManager.f_Free(pMemory, Size);
 							}
 						};
 						
@@ -615,7 +621,7 @@ namespace
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
-							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAligned(Size, _Size * 4);
+							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
 
 							{
 								DMibTestPath("Bigger");
@@ -636,13 +642,13 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeBigger))
+										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeBigger, Size))
 									)(ETest_FailAndStop)
 								;
 								
 								pMemory[-1] = OldValue;
 								
-								pMemory = (uint8 *)MemoryManager.f_Resize(pMemory, NewSizeBigger);
+								pMemory = (uint8 *)MemoryManager.f_Resize(pMemory, NewSizeBigger, Size);
 								Size = NewSizeBigger;
 							}
 
@@ -664,14 +670,14 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeSmaller))
+										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeSmaller, Size))
 									)
 								;
 								
 								pMemory[-1] = OldValue;
 								
-								pMemory = (uint8 *)MemoryManager.f_Resize(pMemory, NewSizeSmaller);
-								Size = NewSizeSmaller ;
+								pMemory = (uint8 *)MemoryManager.f_Resize(pMemory, NewSizeSmaller, Size);
+								Size = NewSizeSmaller;
 							}
 
 							{
@@ -690,12 +696,12 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Free(pMemory))
+										== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 									)
 								;
 								
 								pMemory[-1] = OldValue;
-								MemoryManager.f_Free(pMemory);
+								MemoryManager.f_Free(pMemory, Size);
 							}
 						};
 						
@@ -705,7 +711,7 @@ namespace
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
-							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAligned(Size, _Size * 4);
+							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
 
 							{
 								DMibTestPath("Bigger");
@@ -725,13 +731,13 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeBigger))
+										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeBigger, Size))
 									)
 								;
 
 								pMemory[Size] = OldValue;
 
-								pMemory = (uint8 *)MemoryManager.f_Resize(pMemory, NewSizeBigger);
+								pMemory = (uint8 *)MemoryManager.f_Resize(pMemory, NewSizeBigger, Size);
 								
 								Size = NewSizeBigger;
 							}
@@ -754,13 +760,13 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeSmaller))
+										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeSmaller, Size))
 									)
 								;
 
 								pMemory[Size] = OldValue;
 
-								pMemory = (uint8 *)MemoryManager.f_Resize(pMemory, NewSizeSmaller);
+								pMemory = (uint8 *)MemoryManager.f_Resize(pMemory, NewSizeSmaller, Size);
 								
 								Size = NewSizeSmaller;
 							}
@@ -781,12 +787,12 @@ namespace
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Free(pMemory))
+										== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
 									)
 								;
 
 								pMemory[Size] = OldValue;
-								MemoryManager.f_Free(pMemory);
+								MemoryManager.f_Free(pMemory, Size);
 							}
 						};
 					}

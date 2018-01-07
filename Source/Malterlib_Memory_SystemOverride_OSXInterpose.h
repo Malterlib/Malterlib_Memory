@@ -4,15 +4,26 @@
 #include <mach/message.h>
 #include <sys/event.h>
 
-extern "C" void * _Znam (size_t) __attribute__((weak_import));  // operator new
-extern "C" void * _Znwm (size_t)__attribute__((weak_import));  // operator new
-extern "C" void * _ZnwmRKSt9nothrow_t (size_t) __attribute__((weak_import)); // nothrow variants
-extern "C" void * _ZnamRKSt9nothrow_t (size_t) __attribute__((weak_import)); // operator new nothrow
-	
-extern "C" void _ZdaPv (void *) __attribute__((weak_import)); // operator delete
-extern "C" void _ZdlPv (void *) __attribute__((weak_import)); // operator delete 
-extern "C" void _ZdaPvRKSt9nothrow_t (void *) __attribute__((weak_import)); // operator delete nothrow
-extern "C" void _ZdlPvRKSt9nothrow_t (void *) __attribute__((weak_import)); // operator delete nothrow
+extern "C" void *_Znam(size_t) __attribute__((weak_import));
+extern "C" void *_ZnamRKSt9nothrow_t(size_t) __attribute__((weak_import));
+extern "C" void *_ZnamSt11align_val_t(size_t, size_t) __attribute__((weak_import));
+extern "C" void *_ZnamSt11align_val_tRKSt9nothrow_t(size_t, size_t) __attribute__((weak_import));
+extern "C" void *_Znwm(size_t) __attribute__((weak_import));
+extern "C" void *_ZnwmRKSt9nothrow_t(size_t) __attribute__((weak_import));
+extern "C" void *_ZnwmSt11align_val_t(size_t, size_t) __attribute__((weak_import));
+extern "C" void *_ZnwmSt11align_val_tRKSt9nothrow_t(size_t, size_t) __attribute__((weak_import));
+extern "C" void _ZdaPv(void *) __attribute__((weak_import));
+extern "C" void _ZdaPvRKSt9nothrow_t(void *) __attribute__((weak_import));
+extern "C" void _ZdaPvSt11align_val_t(void *, size_t) __attribute__((weak_import));
+extern "C" void _ZdaPvSt11align_val_tRKSt9nothrow_t(void *, size_t) __attribute__((weak_import));
+extern "C" void _ZdaPvm(void *, size_t) __attribute__((weak_import));
+extern "C" void _ZdaPvmSt11align_val_t(void *, size_t, size_t) __attribute__((weak_import));
+extern "C" void _ZdlPv(void *) __attribute__((weak_import));
+extern "C" void _ZdlPvRKSt9nothrow_t(void *) __attribute__((weak_import));
+extern "C" void _ZdlPvSt11align_val_t(void *, size_t) __attribute__((weak_import));
+extern "C" void _ZdlPvSt11align_val_tRKSt9nothrow_t(void *, size_t) __attribute__((weak_import));
+extern "C" void _ZdlPvm(void *, size_t) __attribute__((weak_import));
+extern "C" void _ZdlPvmSt11align_val_t(void *, size_t, size_t) __attribute__((weak_import));
 
 extern "C" void vfree(void *) __attribute__((weak_import));
 

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
@@ -143,7 +143,7 @@ namespace
 					CAllocationInfo &Info = m_pAllocations[iStart];
 					if (Info.m_pAddress)
 					{
-						_Heap.f_Free(Info.m_pAddress);
+						_Heap.f_FreeNoSize(Info.m_pAddress);
 						++m_nIterations;
 					}
 
@@ -167,7 +167,7 @@ namespace
 					auto &Info = *Iter;
 					if (Info.m_pAddress)
 					{
-						_Heap.f_Free(Info.m_pAddress);
+						_Heap.f_FreeNoSize(Info.m_pAddress);
 						Info.m_pAddress = nullptr;
 						++m_nIterations;
 					}
@@ -252,7 +252,7 @@ namespace
 					CAllocationInfo &Info = m_pAllocations[iStart];
 					if (Info.m_pAddress)
 					{
-						_Heap.f_Free(Info.m_pAddress);
+						_Heap.f_FreeNoSize(Info.m_pAddress);
 						++m_nIterations;
 					}
 
@@ -282,7 +282,7 @@ namespace
 					auto &Info = *Iter;
 					if (Info.m_pAddress)
 					{
-						_Heap.f_Free(Info.m_pAddress);
+						_Heap.f_FreeNoSize(Info.m_pAddress);
 						Info.m_pAddress = nullptr;
 						++m_nIterations;
 					}
@@ -357,7 +357,7 @@ namespace
 					CAllocationInfo &Info = m_pAllocations[iStart];
 					if (Info.m_pAddress)
 					{
-						_Heap.f_Free(Info.m_pAddress);
+						_Heap.f_FreeNoSize(Info.m_pAddress);
 						++m_nIterations;
 					}
 
@@ -379,7 +379,7 @@ namespace
 					auto &Info = *Iter;
 					if (Info.m_pAddress)
 					{
-						_Heap.f_Free(Info.m_pAddress);
+						_Heap.f_FreeNoSize(Info.m_pAddress);
 						Info.m_pAddress = nullptr;
 						++m_nIterations;
 					}
@@ -409,7 +409,7 @@ namespace
 					CAllocationInfo &Info = m_pAllocations[iStart];
 					if (Info.m_pAddress)
 					{
-						_Heap.f_Free(Info.m_pAddress);
+						_Heap.f_FreeNoSize(Info.m_pAddress);
 						++m_nIterations;
 					}
 
@@ -453,7 +453,7 @@ namespace
 				}
 				// Init heap
 				m_pHeap->f_InitThread();
-				m_pHeap->f_Free(m_pHeap->f_Alloc(1));
+				m_pHeap->f_FreeNoSize(m_pHeap->f_Alloc(1));
 
 				m_StartedEvent.f_SetSignaled();
 				m_pWakeEvent->f_Wait();

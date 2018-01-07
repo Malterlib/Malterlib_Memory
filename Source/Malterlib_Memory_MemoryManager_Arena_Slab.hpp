@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -137,7 +137,6 @@ namespace NMib
 			else
 				pFreeSlab->m_Link2.f_Unlink();
 
-			mint Size = t_CParams::mc_SlabSize;
 			void *pMemory;
 			if (pFreeSlab)
 			{
@@ -147,7 +146,7 @@ namespace NMib
 			{
 				pMemory = m_pMemoryManager->m_Allocator.f_AllocAligned
 					(
-						Size
+						t_CParams::mc_SlabSize
 						, t_CParams::mc_SlabSize
 						, (m_pMemoryManager->m_Allocator.f_CanCommit() ? EAllocationFlag_NoCommit : EAllocationFlag_None) | EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags
 						, m_NumaNode

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #define USE_DL_PREFIX 1
@@ -54,34 +54,52 @@ namespace NMib
 				DMibMemoryReportAllocatorDelete(g_pMemoryManagerName, g_pMemoryManagerName);
 			}
 
-			inline_always static void *fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, mint &_Size)
+			inline_always static void *fs_NonTracked_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 			{
 				void *pRet = mspace_malloc(g_MainHeap, _Size);
 				_Size = fs_NonTracked_Size(_pModule, pRet);
 				return pRet;
 			}
-			inline_always static void *fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
+			inline_always static void *fs_NonTracked_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
 			{
 				void *pRet = mspace_memalign(g_MainHeap, _Alignment, _Size);
 				DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
 				_Size = fs_NonTracked_Size(_pModule, pRet);
 				return pRet;
 			}
-			inline_always static void *fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+			inline_always static void *fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
+			{
+				void *pRet = mspace_malloc(g_MainHeap, _Size);
+				return pRet;
+			}
+			inline_always static void *fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment)
+			{
+				void *pRet = mspace_memalign(g_MainHeap, _Alignment, _Size);
+				DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
+				return pRet;
+			}
+			inline_always static void *fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 			{
 				void *pRet = mspace_realloc(g_MainHeap, _pMemory, _Size);
-				_Size = fs_NonTracked_Size(_pModule, pRet);
+				if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+					_Size = fs_NonTracked_Size(_pModule, pRet);
 				return pRet;
 			}
 
-			inline_always static void *fs_NonTracked_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+			inline_always static void *fs_NonTracked_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 			{
 				void *pRet = mspace_realloc(g_MainHeap, _pMemory, _Size);
-				_Size = fs_NonTracked_Size(_pModule, pRet);
+				if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+					_Size = fs_NonTracked_Size(_pModule, pRet);
 				return pRet;
 			}			
 
-			inline_always static void fs_NonTracked_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+			inline_always static void fs_NonTracked_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
+			{
+				mspace_free(g_MainHeap, _pMemory);
+			}
+
+			inline_always static void fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 			{
 				mspace_free(g_MainHeap, _pMemory);
 			}
@@ -96,9 +114,33 @@ namespace NMib
 				DMibPDebugBreak; // Not supported
 				return 0;
 			}
+
+			inline_always static void *fs_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
+			{
+				DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
+				DMibMemoryReportSaveVar(RequestedSize, _Size);
+				void *pRet = mspace_malloc(g_MainHeap, _Size);
+				DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
+				return pRet;
+			}
+
+			inline_always static void *fs_AllocInitZero(CMemoryManagerCrossModule *_pModule, mint _Size)
+			{
+				return fg_MemClear(fs_Alloc(_pModule, _Size), _Size);
+			}
+
+			inline_always static void *fs_AllocAligned(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment)
+			{
+				DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
+				DMibMemoryReportSaveVar(RequestedSize, _Size);
+				void *pRet = mspace_memalign(g_MainHeap, _Alignment, _Size);
+				DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
+				DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, _Alignment, RequestedSize, _Size, 0.0, nullptr);
+				return pRet;
+			}
 		};
 
-		inline_always void *CCrossModuleImplementation::fs_Alloc(CMemoryManagerCrossModule *_pModule, mint &_Size)
+		inline_always void *CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -108,12 +150,12 @@ namespace NMib
 			return pRet;
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_AllocInitZero(CMemoryManagerCrossModule *_pModule, mint &_Size)
+		inline_always void *CCrossModuleImplementation::fs_AllocInitZeroWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
-			return fg_MemClear(fs_Alloc(_pModule, _Size), _Size);
+			return fg_MemClear(fs_AllocWithSize(_pModule, _Size), _Size);
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_AllocAligned(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
+		inline_always void *CCrossModuleImplementation::fs_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
 		{
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -124,29 +166,41 @@ namespace NMib
 			return pRet;
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		inline_always void *CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
-			DMibMemoryReportExpression(mint Size = fs_Size(_pModule, _pMemory));
+			DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
 			void *pRet = mspace_realloc(g_MainHeap, _pMemory, _Size);
-			_Size = fs_Size(_pModule, pRet);
+			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+				_Size = fs_Size(_pModule, pRet);
 			DMibMemoryReportRealloc(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		inline_always void *CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
-			DMibMemoryReportExpression(mint Size = fs_Size(_pModule, _pMemory));
+			DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
 			void *pRet = mspace_realloc(g_MainHeap, _pMemory, _Size);
-			_Size = fs_Size(_pModule, pRet);
+			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+				_Size = fs_Size(_pModule, pRet);
 			DMibMemoryReportResize(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
 
-		inline_always void CCrossModuleImplementation::fs_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+		inline_always void CCrossModuleImplementation::fs_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
+		{
+			if (!_pMemory)
+				return;
+			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
+			DMibMemoryReportSaveVar(Size, fs_SizePadded(_pModule, _Size);
+			mspace_free(g_MainHeap, _pMemory);
+			DMibMemoryReportFree(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr);
+		}
+
+		inline_always void CCrossModuleImplementation::fs_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
 			if (!_pMemory)
 				return;

@@ -19,10 +19,13 @@ namespace
 				for (mint i = 0; i < 10000; ++i)
 				{
 					mint Size = i;
-					pMem[i] = TestManager.f_Alloc(Size, 1);
+					pMem[i] = TestManager.f_AllocWithSize(Size, 1);
 				}
 				for (mint i = 0; i < 10000; ++i)
-					TestManager.f_Free(pMem[i]);
+				{
+					mint Size = NMib::fg_Max(i, 1);
+					TestManager.f_Free(pMem[i], Size);
+				}
 				return "";		
 			};
 		}

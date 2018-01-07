@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -93,42 +93,39 @@ namespace NMib
 		}
 
 		template <typename t_CParams>
-		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return m_pMemoryManager->f_AllocWithSize(_Size);
+		}
+
+		template <typename t_CParams>
+		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return m_pMemoryManager->f_Alloc(_Size);
 		}
 
 		template <typename t_CParams>
-		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocDebug(const mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			mint Size = _Size;
-			return m_pMemoryManager->f_Alloc(Size);
+			return m_pMemoryManager->f_AllocWithSize(_Size);
 		}
 
 		template <typename t_CParams>
-		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Alloc(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Alloc(mint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return m_pMemoryManager->f_Alloc(_Size);
 		}
 
 		template <typename t_CParams>
-		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Alloc(const mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			mint Size = _Size;
-			return f_Alloc(Size, _AllocFlags);
+			return m_pMemoryManager->f_AllocAlignedWithSize(_Size, _Alignment);
 		}
 
 		template <typename t_CParams>
-		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return m_pMemoryManager->f_AllocAligned(_Size, _Alignment);
-		}
-
-		template <typename t_CParams>
-		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocAligned(const mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			mint Size = _Size;
-			return m_pMemoryManager->f_AllocAligned(Size, _Alignment);
 		}
 
 		template <typename t_CParams>
@@ -146,25 +143,25 @@ namespace NMib
 		template <typename t_CParams>
 		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			return m_pMemoryManager->f_Realloc(_pMem, _Size);
+			return m_pMemoryManager->f_Realloc(_pMem, _Size, _OldSize);
 		}
 
 		template <typename t_CParams>
 		only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			return m_pMemoryManager->f_Realloc(_pMem, _Size);
+			return m_pMemoryManager->f_Realloc(_pMem, _Size, _OldSize);
 		}
 
 		template <typename t_CParams>
 		only_parameters_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			return m_pMemoryManager->f_Resize(_pMem, _Size);
+			return m_pMemoryManager->f_Resize(_pMem, _Size, _OldSize);
 		}
 
 		template <typename t_CParams>
 		only_parameters_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			return m_pMemoryManager->f_Resize(_Size);
+			return m_pMemoryManager->f_Resize(_pMem, _Size, _OldSize);
 		}
 		
 		template <typename t_CParams>
@@ -180,7 +177,33 @@ namespace NMib
 		template <typename t_CParams>
 		only_parameters_aliased inline_small void TCAllocator_MemoryManager<t_CParams>::f_Free(void *_pBlock, mint _Size)
 		{
-			m_pMemoryManager->f_Free(_pBlock);
+			m_pMemoryManager->f_Free(_pBlock, _Size);
+		}
+
+		template <typename t_CParams>
+		only_parameters_aliased inline_small void TCAllocator_MemoryManager<t_CParams>::f_FreeNoSize(void *_pBlock)
+		{
+			m_pMemoryManager->f_FreeNoSize(_pBlock);
+		}
+
+		template <typename t_CParams>
+		only_parameters_aliased auto TCAllocator_MemoryManager<t_CParams>::f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
+		{
+			CAutoDestroy AutoDestroy{*this};
+			AutoDestroy.m_pMemory = f_AllocAlignedWithSize(_Size, _Alignment, _AllocFlags, _NumaNode);
+			AutoDestroy.m_Size = _Size;
+
+			return fg_Move(AutoDestroy);
+		}
+
+		template <typename t_CParams>
+		only_parameters_aliased auto TCAllocator_MemoryManager<t_CParams>::f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
+		{
+			CAutoDestroy AutoDestroy{*this};
+			AutoDestroy.m_pMemory = f_AllocAligned(_Size, _Alignment, _AllocFlags, _NumaNode);
+			AutoDestroy.m_Size = _Size;
+
+			return fg_Move(AutoDestroy);
 		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -366,7 +366,7 @@ namespace NMib
 			if (m_pMemoryManager->m_Allocator.f_CanCommit())
 				Flags |= EAllocationFlag_NoCommit;
 			
-			uint8 *pMemory = (uint8 *)m_pMemoryManager->m_Allocator.f_AllocAligned(Size, t_CParams::mc_SlabSize, Flags, m_pNumaArena->m_NumaNode);
+			uint8 *pMemory = (uint8 *)m_pMemoryManager->m_Allocator.f_AllocAlignedWithSize(Size, t_CParams::mc_SlabSize, Flags, m_pNumaArena->m_NumaNode);
 
 			TCMemoryManagerArenaHeapChunk<t_CParams> *pChunk;
 			{
@@ -396,7 +396,7 @@ namespace NMib
 		}	
 		
 		template <typename t_CParams>
-		inline_never void *TCMemoryManagerArenaHeap<t_CParams>::f_Alloc(mint &_Size)
+		inline_never void *TCMemoryManagerArenaHeap<t_CParams>::f_AllocWithSize(mint &_Size)
 		{
 			DMibLock(m_Lock);
 			mint Size = (_Size + t_CParams::mc_HeapBlockSize - 1) & ~mint(t_CParams::mc_HeapBlockSize - 1);
@@ -446,7 +446,7 @@ namespace NMib
 		}
 		
 		template <typename t_CParams>
-		inline_never void *TCMemoryManagerArenaHeap<t_CParams>::f_AllocAligned(mint &_Size, mint _Alignment)
+		inline_never void *TCMemoryManagerArenaHeap<t_CParams>::f_AllocAlignedWithSize(mint &_Size, mint _Alignment)
 		{
 			DMibLock(m_Lock);
 			mint Size = fg_AlignUp(_Size, _Alignment);

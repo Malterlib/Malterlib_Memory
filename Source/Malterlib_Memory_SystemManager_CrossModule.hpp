@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -53,21 +53,21 @@ namespace NMib
 		{
 		}
 		
-		inline_always void * CCrossModuleImplementationDefaults::fs_AllocDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		inline_always void * CCrossModuleImplementationDefaults::fs_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
-			return CCrossModuleImplementationExtra::fs_Alloc(_pModule, _Size);
+			return CCrossModuleImplementationExtra::fs_AllocWithSize(_pModule, _Size);
 		}
-		inline_always void * CCrossModuleImplementationDefaults::fs_AllocAlignedDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		inline_always void * CCrossModuleImplementationDefaults::fs_AllocAlignedWithSizeDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
-			return CCrossModuleImplementationExtra::fs_AllocAligned(_pModule, _Size, _Alignment);
+			return CCrossModuleImplementationExtra::fs_AllocAlignedWithSize(_pModule, _Size, _Alignment);
 		}
-		inline_always void * CCrossModuleImplementationDefaults::fs_ReallocDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		inline_always void * CCrossModuleImplementationDefaults::fs_ReallocDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
 		{
-			return CCrossModuleImplementationExtra::fs_Realloc(_pModule, _pMemory, _Size);
+			return CCrossModuleImplementationExtra::fs_Realloc(_pModule, _pMemory, _Size, _OldSize, _AllocFlags);
 		}
-		inline_always void * CCrossModuleImplementationDefaults::fs_ResizeDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		inline_always void * CCrossModuleImplementationDefaults::fs_ResizeDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
 		{
-			return CCrossModuleImplementationExtra::fs_Resize(_pModule, _pMemory, _Size);
+			return CCrossModuleImplementationExtra::fs_Resize(_pModule, _pMemory, _Size, _OldSize, _AllocFlags);
 		}
 		
 		inline_always mint CCrossModuleImplementationDefaults::fs_NonTracked_Granularity(CMemoryManagerCrossModule *_pModule)
@@ -91,53 +91,57 @@ namespace NMib
 			return CCrossModuleImplementationExtra::fs_Overhead(_pModule, _pMemory);
 		}
 		
-		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, mint &_Size)
+		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
-			return CCrossModuleImplementationExtra::fs_Alloc(_pModule, _Size);
+			return CCrossModuleImplementationExtra::fs_AllocWithSize(_pModule, _Size);
 		}
-		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
+		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
 		{
-			return CCrossModuleImplementationExtra::fs_AllocAligned(_pModule, _Size, _Alignment);
+			return CCrossModuleImplementationExtra::fs_AllocAlignedWithSize(_pModule, _Size, _Alignment);
 		}
-		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
-			return CCrossModuleImplementationExtra::fs_Realloc(_pModule, _pMemory, _Size);
+			return CCrossModuleImplementationExtra::fs_Realloc(_pModule, _pMemory, _Size, _OldSize, _AllocFlags);
 		}
-		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
-			return CCrossModuleImplementationExtra::fs_Resize(_pModule, _pMemory, _Size);
+			return CCrossModuleImplementationExtra::fs_Resize(_pModule, _pMemory, _Size, _OldSize, _AllocFlags);
 		}
-		inline_always void CCrossModuleImplementationDefaults::fs_NonTracked_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+		inline_always void CCrossModuleImplementationDefaults::fs_NonTracked_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
 		{
-			return CCrossModuleImplementationExtra::fs_Free(_pModule, _pMemory);
+			return CCrossModuleImplementationExtra::fs_Free(_pModule, _pMemory, _Size);
 		}
-		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_AllocDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		inline_always void CCrossModuleImplementationDefaults::fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+		{
+			return CCrossModuleImplementationExtra::fs_FreeNoSize(_pModule, _pMemory);
+		}
+		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
 			if (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
-				return CCrossModuleImplementationExtra::fs_NonTracked_Alloc(_pModule, _Size);
+				return CCrossModuleImplementationExtra::fs_NonTracked_AllocWithSize(_pModule, _Size);
 			else
-				return CCrossModuleImplementationExtra::fs_AllocDebug(_pModule, _Size, _pFile, _Line, _Flags);
+				return CCrossModuleImplementationExtra::fs_AllocWithSizeDebug(_pModule, _Size, _pFile, _Line, _Flags);
 		}
-		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_ReallocDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_ReallocDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
 		{
 			if (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
-				return CCrossModuleImplementationExtra::fs_NonTracked_Realloc(_pModule, _pMemory, _Size);
+				return CCrossModuleImplementationExtra::fs_NonTracked_Realloc(_pModule, _pMemory, _Size, _OldSize, _AllocFlags);
 			else
-				return CCrossModuleImplementationExtra::fs_ReallocDebug(_pModule, _pMemory, _Size, _pFile, _Line, _Flags);
+				return CCrossModuleImplementationExtra::fs_ReallocDebug(_pModule, _pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 		}
-		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_ResizeDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_ResizeDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
 		{
 			if (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
-				return CCrossModuleImplementationExtra::fs_NonTracked_Resize(_pModule, _pMemory, _Size);
+				return CCrossModuleImplementationExtra::fs_NonTracked_Resize(_pModule, _pMemory, _Size, _OldSize, _AllocFlags);
 			else
-				return CCrossModuleImplementationExtra::fs_ResizeDebug(_pModule, _pMemory, _Size, _pFile, _Line, _Flags);
+				return CCrossModuleImplementationExtra::fs_ResizeDebug(_pModule, _pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 		}
-		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_AllocAlignedDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		inline_always void * CCrossModuleImplementationDefaults::fs_NonTracked_AllocAlignedWithSizeDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
 			if (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
-				return CCrossModuleImplementationExtra::fs_NonTracked_AllocAligned(_pModule, _Size, _Alignment);
+				return CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSize(_pModule, _Size, _Alignment);
 			else
-				return CCrossModuleImplementationExtra::fs_AllocAlignedDebug(_pModule, _Size, _Alignment, _pFile, _Line, _Flags);
+				return CCrossModuleImplementationExtra::fs_AllocAlignedWithSizeDebug(_pModule, _Size, _Alignment, _pFile, _Line, _Flags);
 		}
 		
 		inline_always void CCrossModuleImplementationDefaults::fs_AllocBatchInternal(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
@@ -145,7 +149,11 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
-				void * pMem = CCrossModuleImplementationExtra::fs_AllocAligned(_pModule, Size, _Alignment);
+				void * pMem;
+				if constexpr (CCrossModuleImplementationExtra::mc_bSizePenalty)
+					pMem = CCrossModuleImplementationExtra::fs_AllocAligned(_pModule, Size, _Alignment);
+				else
+					pMem = CCrossModuleImplementationExtra::fs_AllocAlignedWithSize(_pModule, Size, _Alignment);
 				if (!_Functor(pMem, Size))
 					break;
 			}
@@ -155,7 +163,11 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
-				void * pMem = CCrossModuleImplementationExtra::fs_AllocAligned(_pModule, Size, _Alignment);
+				void *pMem;
+				if constexpr (CCrossModuleImplementationExtra::mc_bSizePenalty)
+					pMem = CCrossModuleImplementationExtra::fs_AllocAligned(_pModule, Size, _Alignment);
+				else
+					pMem = CCrossModuleImplementationExtra::fs_AllocAlignedWithSize(_pModule, Size, _Alignment);
 				if (!_fCallBatchFunctor(_pContext, pMem, Size))
 					break;
 			}
@@ -165,7 +177,8 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
-				void * pMem = CCrossModuleImplementationExtra::fs_AllocAlignedDebug(_pModule, Size, _Alignment, _pFile, _Line, _Flags);
+				void *pMem;
+				pMem = CCrossModuleImplementationExtra::fs_AllocAlignedWithSizeDebug(_pModule, Size, _Alignment, _pFile, _Line, _Flags);
 				if (!_Functor(pMem, Size))
 					break;
 			}
@@ -175,7 +188,7 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
-				void * pMem = CCrossModuleImplementationExtra::fs_AllocAlignedDebug(_pModule, Size, _Alignment, _pFile, _Line, _Flags);
+				void *pMem = CCrossModuleImplementationExtra::fs_AllocAlignedWithSizeDebug(_pModule, Size, _Alignment, _pFile, _Line, _Flags);
 				if (!_fCallBatchFunctor(_pContext, pMem, Size))
 					break;
 			}
@@ -186,7 +199,11 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
-				void * pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAligned(_pModule, Size, _Alignment);
+				void *pMem;
+				if constexpr (CCrossModuleImplementationExtra::mc_bSizePenalty)
+					pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAligned(_pModule, Size, _Alignment);
+				else
+					pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSize(_pModule, Size, _Alignment);
 				if (!_Functor(pMem, Size))
 					break;
 			}
@@ -196,7 +213,11 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
-				void * pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAligned(_pModule, Size, _Alignment);
+				void *pMem;
+				if constexpr (CCrossModuleImplementationExtra::mc_bSizePenalty)
+					pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAligned(_pModule, Size, _Alignment);
+				else
+					pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSize(_pModule, Size, _Alignment);
 				if (!_fCallBatchFunctor(_pContext, pMem, Size))
 					break;
 			}
@@ -207,7 +228,7 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
-				void * pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedDebug(_pModule, Size, _Alignment, _pFile, _Line, _Flags);
+				void *pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSizeDebug(_pModule, Size, _Alignment, _pFile, _Line, _Flags);
 				if (!_Functor(pMem, Size))
 					break;
 			}
@@ -217,7 +238,7 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
-				void * pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedDebug(_pModule, Size, _Alignment, _pFile, _Line, _Flags);
+				void *pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSizeDebug(_pModule, Size, _Alignment, _pFile, _Line, _Flags);
 				if (!_fCallBatchFunctor(_pContext, pMem, Size))
 					break;
 			}
@@ -227,7 +248,32 @@ namespace NMib
 		{
 			return false;
 		}
-		
+
+		void *CCrossModuleImplementationDefaults::fs_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
+		{
+			return CCrossModuleImplementation::fs_AllocWithSize(_pModule, _Size);
+		}
+
+		void *CCrossModuleImplementationDefaults::fs_AllocInitZero(CMemoryManagerCrossModule *_pModule, mint _Size)
+		{
+			return CCrossModuleImplementation::fs_AllocInitZeroWithSize(_pModule, _Size);
+		}
+
+		void *CCrossModuleImplementationDefaults::fs_AllocAligned(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Align)
+		{
+			return CCrossModuleImplementation::fs_AllocAlignedWithSize(_pModule, _Size, _Align);
+		}
+
+		void *CCrossModuleImplementationDefaults::fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
+		{
+			return CCrossModuleImplementation::fs_NonTracked_AllocWithSize(_pModule, _Size);
+		}
+
+		void *CCrossModuleImplementationDefaults::fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment)
+		{
+			return CCrossModuleImplementation::fs_NonTracked_AllocAlignedWithSize(_pModule, _Size, _Alignment);
+		}
+
 		CMemoryManagerCrossModule g_CrossModule
 			=
 			{
@@ -264,18 +310,26 @@ namespace NMib
 				, &CCrossModuleImplementationExtra::fs_MemoryManager_OnThreadCreated
 				, &CCrossModuleImplementationExtra::fs_DemandProtection
 				
-				, &CCrossModuleImplementationExtra::fs_Alloc
-				, &CCrossModuleImplementationExtra::fs_AllocInitZero
-				, &CCrossModuleImplementationExtra::fs_AllocAligned
+				, &CCrossModuleImplementationExtra::fs_AllocWithSize
+				, &CCrossModuleImplementationExtra::fs_AllocInitZeroWithSize
+				, &CCrossModuleImplementationExtra::fs_AllocAlignedWithSize
 				, &CCrossModuleImplementationExtra::fs_AllocBatch
 				, &CCrossModuleImplementationExtra::fs_AllocBatchDebug
-				, &CCrossModuleImplementationExtra::fs_AllocDebug
-				, &CCrossModuleImplementationExtra::fs_AllocAlignedDebug
-				, &CCrossModuleImplementationExtra::fs_ReallocDebug
-				, &CCrossModuleImplementationExtra::fs_ResizeDebug
-				, &CCrossModuleImplementationExtra::fs_Realloc
-				, &CCrossModuleImplementationExtra::fs_Resize
-				, &CCrossModuleImplementationExtra::fs_Free
+				, &CCrossModuleImplementationExtra::fs_AllocWithSizeDebug
+				, &CCrossModuleImplementationExtra::fs_AllocAlignedWithSizeDebug
+				, nullptr // &CCrossModuleImplementationExtra::fs_ReallocNoOldDebug
+				, nullptr // &CCrossModuleImplementationExtra::fs_ResizeNoOldDebug
+				, // &CCrossModuleImplementationExtra::fs_Realloc
+				[](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size) -> void *
+				{
+					return CCrossModuleImplementationExtra::fs_Realloc(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
+				}
+				, // &CCrossModuleImplementationExtra::fs_Resize
+				[](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size) -> void *
+				{
+					return CCrossModuleImplementationExtra::fs_Resize(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
+				}
+				, &CCrossModuleImplementationExtra::fs_FreeNoSize
 				, &CCrossModuleImplementationExtra::fs_Size
 				, &CCrossModuleImplementationExtra::fs_TrySize
 				, &CCrossModuleImplementationExtra::fs_SizePadded
@@ -287,19 +341,47 @@ namespace NMib
 				, &CCrossModuleImplementationExtra::fs_NonTracked_TrySize
 				, &CCrossModuleImplementationExtra::fs_NonTracked_SizePadded
 				, &CCrossModuleImplementationExtra::fs_NonTracked_Overhead
-				, &CCrossModuleImplementationExtra::fs_NonTracked_Alloc
-				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocAligned
+				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocWithSize
+				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSize
 				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocBatch
 				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocBatchDebug
-				, &CCrossModuleImplementationExtra::fs_NonTracked_Realloc
-				, &CCrossModuleImplementationExtra::fs_NonTracked_Resize
-				, &CCrossModuleImplementationExtra::fs_NonTracked_Free
-				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocDebug
-				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedDebug
-				, &CCrossModuleImplementationExtra::fs_NonTracked_ReallocDebug
-				, &CCrossModuleImplementationExtra::fs_NonTracked_ResizeDebug
+				, // &CCrossModuleImplementationExtra::fs_NonTracked_Realloc
+				[](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size) -> void *
+				{
+					return CCrossModuleImplementationExtra::fs_NonTracked_Realloc(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
+				}
+				, // &CCrossModuleImplementationExtra::fs_NonTracked_Resize
+				[](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size) -> void *
+				{
+					return CCrossModuleImplementationExtra::fs_NonTracked_Resize(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
+				}
+				, &CCrossModuleImplementationExtra::fs_NonTracked_FreeNoSize
+				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocWithSizeDebug
+				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSizeDebug
+				, nullptr // &CCrossModuleImplementationExtra::fs_NonTracked_ReallocDebug
+				, nullptr // &CCrossModuleImplementationExtra::fs_NonTracked_ResizeDebug
 				
 				, &CCrossModuleImplementationExtra::fs_ReportingLeaks
+
+				, &CCrossModuleImplementationExtra::fs_Alloc
+				, &CCrossModuleImplementationExtra::fs_AllocInitZero
+				, &CCrossModuleImplementationExtra::fs_AllocAligned
+
+				, &CCrossModuleImplementationExtra::fs_NonTracked_Alloc
+				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocAligned
+
+				, &CCrossModuleImplementationExtra::fs_ReallocDebug
+				, &CCrossModuleImplementationExtra::fs_ResizeDebug
+				, &CCrossModuleImplementationExtra::fs_Realloc
+				, &CCrossModuleImplementationExtra::fs_Resize
+
+				, &CCrossModuleImplementationExtra::fs_NonTracked_Realloc
+				, &CCrossModuleImplementationExtra::fs_NonTracked_Resize
+				, &CCrossModuleImplementationExtra::fs_NonTracked_ReallocDebug
+				, &CCrossModuleImplementationExtra::fs_NonTracked_ResizeDebug
+
+				, &CCrossModuleImplementationExtra::fs_Free
+				, &CCrossModuleImplementationExtra::fs_NonTracked_Free
 			}
 		;
 	}

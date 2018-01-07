@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -75,7 +75,16 @@ namespace NMib
 
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+#if DMibConfig_MalterlibMemoryManager_Debug
+			return NMib::NMem::fg_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags);
+#else
+			return NMib::NMem::fg_AllocWithSize(_Size);
+#endif
+		}
+
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 #if DMibConfig_MalterlibMemoryManager_Debug
 			return NMib::NMem::fg_AllocDebug(_Size, _pFile, _Line, _Flags);
@@ -84,13 +93,16 @@ namespace NMib
 #endif
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocDebug(const mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocAlignedWithSizeDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			mint Size = _Size;
-			return f_AllocDebug(Size, _pFile, _Line, _Flags, _AllocFlags);
+#if DMibConfig_MalterlibMemoryManager_Debug
+			return NMib::NMem::fg_AllocAlignedWithSizeDebug(_Size, _Alignment, _pFile, _Line, _Flags);
+#else
+			return NMib::NMem::fg_AllocAlignedWithSize(_Size, _Alignment);
+#endif
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocAlignedDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocAlignedDebug(mint _Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 #if DMibConfig_MalterlibMemoryManager_Debug
 			return NMib::NMem::fg_AllocAlignedDebug(_Size, _Alignment, _pFile, _Line, _Flags);
@@ -99,41 +111,42 @@ namespace NMib
 #endif
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocAlignedDebug(const mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			mint Size = _Size;
-			return f_AllocAlignedDebug(Size, _Alignment, _pFile, _Line, _Flags, _AllocFlags);
+			return NMib::NMem::fg_AllocWithSize(_Size);
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_Alloc(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_Alloc(mint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return NMib::NMem::fg_Alloc(_Size);
 		}
-
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_Alloc(const mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			mint Size = _Size;
-			return f_Alloc(Size, _AllocFlags);
-		}
 		
-		only_parameters_aliased inline_small CAllocator_Heap::CAutoDestroy CAllocator_Heap::f_AllocSafe(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased inline_small CAllocator_Heap::CAutoDestroy CAllocator_Heap::f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			CAllocator_Heap::CAutoDestroy AutoDestroy;
-			AutoDestroy.m_pMemory = NMib::NMem::fg_AllocAligned(_Size, _Alignment);
+			CAutoDestroy AutoDestroy;
+			AutoDestroy.m_pMemory = NMib::NMem::fg_AllocAlignedWithSize(_Size, _Alignment);
 			AutoDestroy.m_Size = _Size;
-			
+
 			return fg_Move(AutoDestroy);
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased inline_small CAllocator_Heap::CAutoDestroy CAllocator_Heap::f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			return NMib::NMem::fg_AllocAligned(_Size, _Alignment);
+			CAutoDestroy AutoDestroy;
+			AutoDestroy.m_pMemory = NMib::NMem::fg_AllocAligned(_Size, _Alignment);
+			AutoDestroy.m_Size = _Size;
+
+			return fg_Move(AutoDestroy);
 		}
 
-		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocAligned(const mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			mint Size = _Size;
-			return f_AllocAligned(Size, _Alignment, _AllocFlags);
+			return NMib::NMem::fg_AllocAlignedWithSize(_Size, _Alignment);
+		}
+
+		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			return NMib::NMem::fg_AllocAligned(_Size, _Alignment);
 		}
 		
 		only_parameters_aliased inline_small void CAllocator_Heap::f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
@@ -152,22 +165,22 @@ namespace NMib
 
 		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			return NMib::NMem::fg_Realloc(_pMem, _Size);
+			return NMib::NMem::fg_Realloc(_pMem, _Size, _OldSize, _AllocFlags);
 		}
 
 		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			return NMib::NMem::fg_ReallocDebug(_pMem, _Size, _pFile, _Line, _Flags);
+			return NMib::NMem::fg_ReallocDebug(_pMem, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 		}
 
 		only_parameters_aliased inline_small void *CAllocator_Heap::f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			return NMib::NMem::fg_Resize(_pMem, _Size);
+			return NMib::NMem::fg_Resize(_pMem, _Size, _OldSize, _AllocFlags);
 		}
 
 		only_parameters_aliased inline_small void *CAllocator_Heap::f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			return NMib::NMem::fg_ResizeDebug(_pMem, _Size, _pFile, _Line, _Flags);
+			return NMib::NMem::fg_ResizeDebug(_pMem, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 		}
 
 
@@ -181,7 +194,12 @@ namespace NMib
 
 		only_parameters_aliased inline_small void CAllocator_Heap::f_Free(void *_pBlock, mint _Size)
 		{
-			NMib::NMem::fg_Free(_pBlock);
+			NMib::NMem::fg_Free(_pBlock, _Size);
+		}
+
+		only_parameters_aliased inline_small void CAllocator_Heap::f_FreeNoSize(void *_pBlock)
+		{
+			NMib::NMem::fg_FreeNoSize(_pBlock);
 		}
 
 		///
@@ -227,36 +245,33 @@ namespace NMib
 
 		}
 
-		inline_small only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocDebug(const mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		inline_small only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			mint Size = _Size;
-			return f_AllocDebug(Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+			return f_AllocWithSizeDebug(Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 		}
 
-		inline_small only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocAligendDebug(const mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		inline_small only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocAlignedDebug(mint _Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			mint Size = _Size;
-			return f_AllocAlignedDebug(Size, _Alignment, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
-		}
-
-		only_parameters_aliased malloc_like inline_small void *CAllocator_NonTrackedHeap::f_Alloc(const mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			mint Size = _Size;
-			return f_Alloc(Size, _AllocFlags);
-		}
-
-		only_parameters_aliased malloc_like inline_small void *CAllocator_NonTrackedHeap::f_AllocAligned(const mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			mint Size = _Size;
-			return f_AllocAligned(Size, _Alignment, _AllocFlags, _NumaNode);
+			return f_AllocAlignedWithSizeDebug(Size, _Alignment, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 		}
 		
-		only_parameters_aliased inline_small CAllocator_NonTrackedHeap::CAutoDestroy CAllocator_NonTrackedHeap::f_AllocSafe(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased inline_small CAllocator_NonTrackedHeap::CAutoDestroy CAllocator_NonTrackedHeap::f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			CAllocator_NonTrackedHeap::CAutoDestroy AutoDestroy;
+			AutoDestroy.m_pMemory = f_AllocAlignedWithSize(_Size, _Alignment);
+			AutoDestroy.m_Size = _Size;
+
+			return fg_Move(AutoDestroy);
+		}
+
+		only_parameters_aliased inline_small CAllocator_NonTrackedHeap::CAutoDestroy CAllocator_NonTrackedHeap::f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			CAllocator_NonTrackedHeap::CAutoDestroy AutoDestroy;
 			AutoDestroy.m_pMemory = f_AllocAligned(_Size, _Alignment);
 			AutoDestroy.m_Size = _Size;
-			
+
 			return fg_Move(AutoDestroy);
 		}
 
@@ -366,35 +381,35 @@ namespace NMib
 		}
 
 		template <mint t_AllocSize>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			f_DoCheck(_Size);
 			return m_pPointer;
 		}
 
 		template <mint t_AllocSize>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocDebug(const mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			f_DoCheck(_Size);
 			return m_pPointer;
 		}
 
 		template <mint t_AllocSize>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_Alloc(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			f_DoCheck(_Size);
 			return m_pPointer;
 		}
 
 		template <mint t_AllocSize>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_Alloc(const mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_Alloc(mint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			f_DoCheck(_Size);
 			return m_pPointer;
 		}
 
 		template <mint t_AllocSize>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			f_DoCheck(_Size);
 			DMibFastCheck(((mint)m_pPointer & (_Alignment - 1)) == 0);
@@ -402,7 +417,7 @@ namespace NMib
 		}
 
 		template <mint t_AllocSize>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocAligned(const mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			f_DoCheck(_Size);
 			DMibFastCheck(((mint)m_pPointer & (_Alignment - 1)) == 0);
@@ -410,18 +425,31 @@ namespace NMib
 		}
 		
 		template <mint t_AllocSize>
-		only_parameters_aliased inline_small auto TCAllocator_Placement<t_AllocSize>::f_AllocSafe(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
+		only_parameters_aliased inline_small auto TCAllocator_Placement<t_AllocSize>::f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
 		{
 			f_DoCheck(_Size);
 			DMibFastCheck(((mint)m_pPointer & (_Alignment - 1)) == 0);
-			
+
 			CAutoDestroy AutoDestroy;
 			AutoDestroy.m_pMemory = m_pPointer;
 			AutoDestroy.m_Size = t_AllocSize;
-			
+
 			return fg_Move(AutoDestroy);
 		}
-		
+
+		template <mint t_AllocSize>
+		only_parameters_aliased inline_small auto TCAllocator_Placement<t_AllocSize>::f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
+		{
+			f_DoCheck(_Size);
+			DMibFastCheck(((mint)m_pPointer & (_Alignment - 1)) == 0);
+
+			CAutoDestroy AutoDestroy;
+			AutoDestroy.m_pMemory = m_pPointer;
+			AutoDestroy.m_Size = t_AllocSize;
+
+			return fg_Move(AutoDestroy);
+		}
+
 		template <mint t_AllocSize>
 		only_parameters_aliased inline_small void TCAllocator_Placement<t_AllocSize>::f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
@@ -472,6 +500,11 @@ namespace NMib
 
 		template <mint t_AllocSize>
 		only_parameters_aliased inline_small void TCAllocator_Placement<t_AllocSize>::f_Free(void *_pBlock, mint _Size)
+		{
+		}
+
+		template <mint t_AllocSize>
+		only_parameters_aliased inline_small void TCAllocator_Placement<t_AllocSize>::f_FreeNoSize(void *_pBlock)
 		{
 		}
 
@@ -623,7 +656,7 @@ namespace NMib
 		}
 
 		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			
 			if (_Size <= mcp_StorageSize)
@@ -635,18 +668,33 @@ namespace NMib
 				_Size = mcp_StorageSize;
 				return fp_GetStatic();
 			}
-			return t_CFallbackAllocator::f_AllocDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+			return t_CFallbackAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 		}
 
 		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocDebug(const mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			mint Size = _Size;
-			return f_AllocDebug(Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+			return f_AllocWithSizeDebug(Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 		}
 
 		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_Alloc(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		{
+			if (_Size <= mcp_StorageSize)
+			{
+#if DMibEnableSafeCheck > 0
+				DMibFastCheck(!m_bAllocated);
+				m_bAllocated = true;
+#endif
+				_Size = mcp_StorageSize;
+				return fp_GetStatic();
+			}
+			return t_CFallbackAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
+		}
+
+		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_Alloc(mint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			if (_Size <= mcp_StorageSize)
 			{
@@ -661,14 +709,23 @@ namespace NMib
 		}
 
 		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_Alloc(const mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
-			mint Size = _Size;
-			return f_Alloc(Size, _AllocFlags, _NumaNode);
+			DMibFastCheck(_Alignment <= t_Alignment);
+			if (_Size <= mcp_StorageSize)
+			{
+#if DMibEnableSafeCheck > 0
+				DMibFastCheck(!m_bAllocated);
+				m_bAllocated = true;
+#endif
+				_Size = mcp_StorageSize;
+				return fp_GetStatic();
+			}
+			return t_CFallbackAllocator::f_AllocAlignedWithSize(_Size, _Alignment, _AllocFlags, _NumaNode);
 		}
 
 		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocAligned(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibFastCheck(_Alignment <= t_Alignment);
 			if (_Size <= mcp_StorageSize)
@@ -681,14 +738,6 @@ namespace NMib
 				return fp_GetStatic();
 			}
 			return t_CFallbackAllocator::f_AllocAligned(_Size, _Alignment, _AllocFlags, _NumaNode);
-		}
-
-		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-		only_parameters_aliased malloc_like inline_small void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocAligned(const mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			DMibFastCheck(_Alignment <= t_Alignment);
-			mint Size = _Size;
-			return f_AllocAligned(Size, _Alignment, _AllocFlags, _NumaNode);
 		}
 		
 		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
@@ -731,13 +780,16 @@ namespace NMib
 #if DMibEnableSafeCheck > 0
 				m_bAllocated = false;
 #endif
-				return t_CFallbackAllocator::f_Alloc(_Size, _AllocFlags, _NumaNode);
+				return t_CFallbackAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
 			}
 			else
 			{
 				if (_Size <= mcp_StorageSize)
 				{
-					t_CFallbackAllocator::f_Free(_pMem);
+					if (_OldSize)
+						t_CFallbackAllocator::f_Free(_pMem, _OldSize);
+					else
+						t_CFallbackAllocator::f_FreeNoSize(_pMem);
 					_Size = mcp_StorageSize;
 					return fp_GetStatic();
 				}
@@ -761,13 +813,16 @@ namespace NMib
 #if DMibEnableSafeCheck > 0
 				m_bAllocated = false;
 #endif
-				return t_CFallbackAllocator::f_AllocDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+				return t_CFallbackAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 			}
 			else
 			{
 				if (_Size <= mcp_StorageSize)
 				{
-					t_CFallbackAllocator::f_Free(_pMem);
+					if (_OldSize)
+						t_CFallbackAllocator::f_Free(_pMem, _OldSize);
+					else
+						t_CFallbackAllocator::f_FreeNoSize(_pMem);
 					_Size = mcp_StorageSize;
 					return fp_GetStatic();
 				}
@@ -791,19 +846,18 @@ namespace NMib
 #if DMibEnableSafeCheck > 0
 				m_bAllocated = false;
 #endif
-				mint OldSize = _Size;
-				void *pMem = t_CFallbackAllocator::f_Alloc(_Size, _AllocFlags, _NumaNode);
-				fg_MemCopy(pMem, fp_GetStatic(), fg_Min(_Size, OldSize));
+				void *pMem = t_CFallbackAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
+				fg_MemCopy(pMem, fp_GetStatic(), fg_Min(_Size, mcp_StorageSize));
 			}
 			else
 			{
 				if (_Size <= mcp_StorageSize)
 				{
 					_Size = mcp_StorageSize;
-					mint OldSize = t_CFallbackAllocator::f_Size(_pMem);
+					mint OldSize = _OldSize ? _OldSize : t_CFallbackAllocator::f_Size(_pMem);
 					void *pMem = fp_GetStatic();
 					fg_MemCopy(pMem, _pMem, fg_Min(_Size, OldSize));
-					t_CFallbackAllocator::f_Free(_pMem);
+					t_CFallbackAllocator::f_Free(_pMem, OldSize);
 					return pMem;
 				}
 				return t_CFallbackAllocator::f_Resize(_pMem, _Size, _OldSize, _AllocFlags, _NumaNode);
@@ -826,19 +880,18 @@ namespace NMib
 #if DMibEnableSafeCheck > 0
 				m_bAllocated = false;
 #endif
-				mint OldSize = _Size;
-				void *pMem = t_CFallbackAllocator::f_AllocDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
-				fg_MemCopy(pMem, fp_GetStatic(), fg_Min(_Size, OldSize));
+				void *pMem = t_CFallbackAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+				fg_MemCopy(pMem, fp_GetStatic(), fg_Min(_Size, mcp_StorageSize));
 			}
 			else
 			{
 				if (_Size <= mcp_StorageSize)
 				{
 					_Size = mcp_StorageSize;
-					mint OldSize = t_CFallbackAllocator::f_Size(_pMem);
+					mint OldSize = _OldSize ? _OldSize : t_CFallbackAllocator::f_Size(_pMem);
 					void *pMem = fp_GetStatic();
 					fg_MemCopy(pMem, _pMem, fg_Min(_Size, OldSize));
-					t_CFallbackAllocator::f_Free(_pMem);
+					t_CFallbackAllocator::f_Free(_pMem, OldSize);
 					return pMem;
 				}
 				return t_CFallbackAllocator::f_ResizeDebug(_pMem, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
@@ -870,7 +923,54 @@ namespace NMib
 
 				return;
 			}
-			NMib::NMem::fg_Free(_pBlock);
+			NMib::NMem::fg_Free(_pBlock, _Size);
+		}
+
+		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
+		only_parameters_aliased inline_small void TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_FreeNoSize(void *_pBlock)
+		{
+			if (fp_IsStatic(_pBlock))
+			{
+#if DMibEnableSafeCheck > 0
+				DMibFastCheck(m_bAllocated);
+				m_bAllocated = false;
+#endif
+
+				return;
+			}
+			NMib::NMem::fg_FreeNoSize(_pBlock);
+		}
+
+		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
+		only_parameters_aliased auto TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocSafeWithSize
+			(
+			 	mint &_Size
+			 	, mint _Alignment
+			 	, EAllocationFlag _AllocFlags
+			 	, ENumaNode _NumaNode
+			) -> CAutoDestroy
+		{
+			CAutoDestroy AutoDestroy{*this};
+			AutoDestroy.m_pMemory = f_AllocAlignedWithSize(_Size, _Alignment, _AllocFlags, _NumaNode);
+			AutoDestroy.m_Size = _Size;
+
+			return fg_Move(AutoDestroy);
+		}
+
+		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
+		only_parameters_aliased auto TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_AllocSafe
+			(
+			 	mint _Size
+			 	, mint _Alignment
+			 	, EAllocationFlag _AllocFlags
+			 	, ENumaNode _NumaNode
+			) -> CAutoDestroy
+		{
+			CAutoDestroy AutoDestroy{*this};
+			AutoDestroy.m_pMemory = f_AllocAligned(_Size, _Alignment, _AllocFlags, _NumaNode);
+			AutoDestroy.m_Size = _Size;
+
+			return fg_Move(AutoDestroy);
 		}
 
 		///
