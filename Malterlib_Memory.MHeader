@@ -167,12 +167,12 @@ Property
 	{
 		!!CompileDialect C
 
-		SearchPath "@(Builtin.BasePath)/@(Builtin.Function->RelativeBase('..'));@(Compile.SearchPath)"
-		SearchPath "@(Builtin.BasePath)/SDK/TCMalloc/windows;@(Compile.SearchPath)"
+		SearchPath "@('..'->MakeAbsolute());@(Compile.SearchPath)"
+		SearchPath "@(Builtin.BasePathAbsolute)/SDK/TCMalloc/windows;@(Compile.SearchPath)"
 		{
 			!!PlatformFamily "Windows"
 		}
-		SearchPath "@(Builtin.BasePath)/SDK/TCMalloc;@(Compile.SearchPath)"
+		SearchPath "@(Builtin.BasePathAbsolute)/SDK/TCMalloc;@(Compile.SearchPath)"
 		PreprocessorDefines "PERFTOOLS_DLL_DECL=;@(Compile.PreprocessorDefines)"
 		PreprocessorDefines "DMemoryManagerTestEnable_OSX;@(Compile.PreprocessorDefines)"
 		{
