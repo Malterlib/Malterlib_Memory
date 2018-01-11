@@ -23,7 +23,7 @@ namespace
 				}
 				for (mint i = 0; i < 10000; ++i)
 				{
-					mint Size = NMib::fg_Max(i, 1);
+					mint Size = NMib::fg_Max(i, 1u);
 					TestManager.f_Free(pMem[i], Size);
 				}
 				return "";		

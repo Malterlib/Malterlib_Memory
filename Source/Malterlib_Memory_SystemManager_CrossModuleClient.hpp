@@ -221,7 +221,7 @@ namespace NMib
 			return g_CrossModule.m_fAllocAligned(&g_CrossModule, _Size, _Alignment);
 		}
 
-		bool fg_CallBatchFunctor(void *_pContext, void * _pAlloc, mint _Size)
+		bool DMibCrossmoduleAPI fg_CallBatchFunctor(void *_pContext, void * _pAlloc, mint _Size)
 		{
 			NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const *pFunctor = fg_AutoStaticCast(_pContext);
 			return (*pFunctor)(_pAlloc, _Size);

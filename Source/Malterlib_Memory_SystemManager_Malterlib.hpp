@@ -17,7 +17,7 @@ namespace NMib
 	
 	namespace NMem
 	{
-		inline_always void CCrossModuleImplementation::fs_CreateNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
+		inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_CreateNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
 			g_MainHeap.f_Construct(CMemoryManagerConfig());
 			{
@@ -27,7 +27,7 @@ namespace NMib
 			}
 		}
 		
-		inline_always void CCrossModuleImplementation::fs_DestroyNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
+		inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_DestroyNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
 #			if DEnableDebugMemoryManager
 				if (!CSystem::ms_bDisableMemoryManagerLeakReport)
@@ -59,21 +59,21 @@ namespace NMib
 		{
 			static constexpr bool mc_bSizePenalty = false;
 
-			inline_always static void fs_MemoryManager_GarbageCollect(CMemoryManagerCrossModule *_pModule)
+			inline_always static void DMibCrossmoduleAPI fs_MemoryManager_GarbageCollect(CMemoryManagerCrossModule *_pModule)
 			{
 				g_MainHeap->f_GarbageCollect(true);
 			}
 
-			inline_always static NMem::CMemoryManagerCheckout fs_MemoryManager_Checkout(CMemoryManagerCrossModule *_pModule)
+			inline_always static NMem::CMemoryManagerCheckout DMibCrossmoduleAPI fs_MemoryManager_Checkout(CMemoryManagerCrossModule *_pModule)
 			{
 				return g_MainHeap->f_CheckoutVirtual();
 			}	
 			
-			inline_always static void fs_DestroyMemoryManager(CMemoryManagerCrossModule *_pModule)
+			inline_always static void DMibCrossmoduleAPI fs_DestroyMemoryManager(CMemoryManagerCrossModule *_pModule)
 			{
 			}
 			
-			inline_always static bool fs_MemoryManager_Check(CMemoryManagerCrossModule *_pModule, bool _bBreak)
+			inline_always static bool DMibCrossmoduleAPI fs_MemoryManager_Check(CMemoryManagerCrossModule *_pModule, bool _bBreak)
 			{
 	#			if DEnableDebugMemoryManager
 					return g_MainHeap->f_CheckAll(_bBreak);
@@ -82,7 +82,7 @@ namespace NMib
 	#			endif
 			}
 			
-			inline_always static bool fs_ReportingLeaks(CMemoryManagerCrossModule *_pModule)
+			inline_always static bool DMibCrossmoduleAPI fs_ReportingLeaks(CMemoryManagerCrossModule *_pModule)
 			{
 	#			if DEnableDebugMemoryManager
 					return g_MainHeap->f_ReportingLeaks();
@@ -94,7 +94,7 @@ namespace NMib
 
 			static constexpr bool mc_SupportsNonTracked = true;
 
-			inline_always static void fs_MemoryManager_PrepareFork(CMemoryManagerCrossModule *_pModule)
+			inline_always static void DMibCrossmoduleAPI fs_MemoryManager_PrepareFork(CMemoryManagerCrossModule *_pModule)
 			{
 				g_MemoryManagerForkLock.f_Lock();
 				if (++g_MemoryManagerForkedCount > 1)
@@ -108,7 +108,7 @@ namespace NMib
 				g_MainHeap->f_PrepareFork();
 			}
 			
-			inline_always static void fs_MemoryManager_ForkedParent(CMemoryManagerCrossModule *_pModule)
+			inline_always static void DMibCrossmoduleAPI fs_MemoryManager_ForkedParent(CMemoryManagerCrossModule *_pModule)
 			{
 				--g_MemoryManagerForkedCount;
 				if (g_MemoryManagerUnforked)
@@ -126,7 +126,7 @@ namespace NMib
 				g_MemoryManagerForkLock.f_Unlock();
 			}
 			
-			inline_always static void fs_MemoryManager_ForkedChild(CMemoryManagerCrossModule *_pModule)
+			inline_always static void DMibCrossmoduleAPI fs_MemoryManager_ForkedChild(CMemoryManagerCrossModule *_pModule)
 			{
 				--g_MemoryManagerForkedCount;
 				if (g_MemoryManagerUnforked)
@@ -144,26 +144,26 @@ namespace NMib
 				g_MemoryManagerForkLock.f_Unlock();
 			}
 
-			inline_always static void fs_MemoryManager_DestroyThreads(CMemoryManagerCrossModule *_pModule)
+			inline_always static void DMibCrossmoduleAPI fs_MemoryManager_DestroyThreads(CMemoryManagerCrossModule *_pModule)
 			{
 				g_MainHeap->f_DestroyCleanupThreads();
 			}
 
-			inline_always static void fs_MemoryManager_CanStrartThreads(CMemoryManagerCrossModule *_pModule)
+			inline_always static void DMibCrossmoduleAPI fs_MemoryManager_CanStrartThreads(CMemoryManagerCrossModule *_pModule)
 			{
 				g_MainHeap->f_CanStartThreads();
 			}
 			
-			inline_always static void fs_MemoryManager_SetNumaNode(CMemoryManagerCrossModule *_pModule, ENumaNode _NumaNode)
+			inline_always static void DMibCrossmoduleAPI fs_MemoryManager_SetNumaNode(CMemoryManagerCrossModule *_pModule, ENumaNode _NumaNode)
 			{
 				g_MainHeap->f_SetNumaNode(_NumaNode);
 			}
 		
-			inline_always static void fs_AllocBatchInternal(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
+			inline_always static void DMibCrossmoduleAPI fs_AllocBatchInternal(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 			{
 				g_MainHeap->f_AllocBatch(_Size, _Alignment, _Functor);
 			}
-			inline_always static void fs_AllocBatch(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, bool (* _fCallBatchFunctor)(void *_pContext, void * _pAlloc, mint _Size), void * _pContext)
+			inline_always static void DMibCrossmoduleAPI fs_AllocBatch(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, bool (DMibCrossmoduleAPI * _fCallBatchFunctor)(void *_pContext, void * _pAlloc, mint _Size), void * _pContext)
 			{
 				g_MainHeap->f_AllocBatch
 					(
@@ -176,11 +176,11 @@ namespace NMib
 					)
 				;
 			}
-			inline_always static void fs_NonTracked_AllocBatchInternal(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
+			inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatchInternal(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 			{
 				g_MainHeap->f_AllocBatch(_Size, _Alignment, _Functor);
 			}
-			inline_always static void fs_NonTracked_AllocBatch(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, bool (* _fCallBatchFunctor)(void *_pContext, void * _pAlloc, mint _Size), void * _pContext)
+			inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatch(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, bool (DMibCrossmoduleAPI * _fCallBatchFunctor)(void *_pContext, void * _pAlloc, mint _Size), void * _pContext)
 			{
 				g_MainHeap->f_AllocBatch
 					(
@@ -194,19 +194,19 @@ namespace NMib
 				;
 			}
 
-			inline_always static void *fs_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
+			inline_always static void * DMibCrossmoduleAPI fs_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
 			{
 				return g_MainHeap->f_AllocAligned(_Size, 1);
 			}
 
 
-			inline_always static void *fs_AllocInitZero(CMemoryManagerCrossModule *_pModule, mint _Size)
+			inline_always static void * DMibCrossmoduleAPI fs_AllocInitZero(CMemoryManagerCrossModule *_pModule, mint _Size)
 			{
 				auto pMem = g_MainHeap->f_AllocAligned(_Size, 1);
 				return fg_MemClear(pMem, _Size);
 			}
 
-			inline_always static void *fs_AllocAligned(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Align)
+			inline_always static void * DMibCrossmoduleAPI fs_AllocAligned(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Align)
 			{
 				return g_MainHeap->f_AllocAligned(_Size, _Align);
 			}
@@ -215,27 +215,27 @@ namespace NMib
 			
 #		if DEnableDebugMemoryManager
 			static constexpr bool mc_SupportsDebug = true;
-			inline_always static void *fs_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+			inline_always static void * DMibCrossmoduleAPI fs_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 			{
 				return g_MainHeap->f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags);
 			}
-			inline_always static void *fs_AllocAlignedWithSizeDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Align, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+			inline_always static void * DMibCrossmoduleAPI fs_AllocAlignedWithSizeDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Align, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 			{
 				return g_MainHeap->f_AllocAlignedWithSizeDebug(_Size, _Align, _pFile, _Line, _Flags);
 			}
-			inline_always static void *fs_ReallocDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
+			inline_always static void * DMibCrossmoduleAPI fs_ReallocDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
 			{
 				return g_MainHeap->f_ReallocDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 			}
-			inline_always static void *fs_ResizeDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
+			inline_always static void * DMibCrossmoduleAPI fs_ResizeDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
 			{
 				return g_MainHeap->f_ResizeDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 			}
-			inline_always static void fs_AllocBatchDebugInternal(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+			inline_always static void DMibCrossmoduleAPI fs_AllocBatchDebugInternal(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 			{
 				g_MainHeap->f_AllocBatchDebug(_Size, _Alignment, _Functor, _pFile, _Line, _Flags);
 			}
-			inline_always static void fs_AllocBatchDebug(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, bool (* _fCallBatchFunctor)(void *_pContext, void * _pAlloc, mint _Size), void * _pContext, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+			inline_always static void DMibCrossmoduleAPI fs_AllocBatchDebug(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, bool (DMibCrossmoduleAPI * _fCallBatchFunctor)(void *_pContext, void * _pAlloc, mint _Size), void * _pContext, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 			{
 				g_MainHeap->f_AllocBatchDebug
 					(
@@ -257,63 +257,63 @@ namespace NMib
 		};
 		
 
-		inline_always void *CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
+		inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
 			return g_MainHeap->f_AllocAlignedWithSize(_Size, 1);
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Align)
+		inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Align)
 		{
 			return g_MainHeap->f_AllocAlignedWithSize(_Size, _Align);
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_AllocInitZeroWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
+		inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocInitZeroWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
 			auto pMem = g_MainHeap->f_AllocAlignedWithSize(_Size, 1);
 			return fg_MemClear(pMem, _Size);
 		}
 
-		inline_always void *CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
+		inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
 			return g_MainHeap->f_Realloc(_pMemory, _Size, _OldSize);
 		}
 		
-		inline_always void *CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
+		inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
 			return g_MainHeap->f_Resize(_pMemory, _Size, _OldSize);
 		}
 
-		inline_always void CCrossModuleImplementation::fs_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
+		inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
 		{
 			g_MainHeap->f_Free(_pMemory, _Size);
 		}
 
-		inline_always void CCrossModuleImplementation::fs_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+		inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
 			g_MainHeap->f_FreeNoSize(_pMemory);
 		}
 
-		inline_always mint CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+		inline_always mint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
 		{
 			return g_MainHeap->f_Size(_pMemory);
 		}
 		
-		inline_always mint CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+		inline_always mint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
 		{
 			return g_MainHeap->f_TrySize(_pMemory);
 		}
 		
-		inline_always mint CCrossModuleImplementation::fs_SizePadded(CMemoryManagerCrossModule *_pModule, mint _Size)
+		inline_always mint DMibCrossmoduleAPI CCrossModuleImplementation::fs_SizePadded(CMemoryManagerCrossModule *_pModule, mint _Size)
 		{
 			return g_MainHeap->f_SizePadded(_Size);
 		}
 		
-		inline_always fp32 CCrossModuleImplementation::fs_Overhead(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
+		inline_always fp32 DMibCrossmoduleAPI CCrossModuleImplementation::fs_Overhead(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 		{
 			return g_MainHeap->f_Overhead(_pMemory);
 		}
 		
-		inline_always mint CCrossModuleImplementation::fs_Granularity(CMemoryManagerCrossModule *_pModule)
+		inline_always mint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Granularity(CMemoryManagerCrossModule *_pModule)
 		{
 			return 1;
 		}
