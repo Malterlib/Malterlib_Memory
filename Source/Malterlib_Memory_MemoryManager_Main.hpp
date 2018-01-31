@@ -951,7 +951,10 @@ namespace NMib
 			
 			if (this->mc_EnableCallbacks)
 				this->f_OnFree((uint8 *)_pMemory);
-			m_Allocator.f_Free(_pMemory, _Size);
+			if (_Size)
+				m_Allocator.f_Free(_pMemory, _Size);
+			else
+				m_Allocator.f_FreeNoSize(_pMemory);
 		}
 
 		template <typename t_CParams>
