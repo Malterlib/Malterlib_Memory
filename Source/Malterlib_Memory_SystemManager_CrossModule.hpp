@@ -274,6 +274,23 @@ namespace NMib
 			return CCrossModuleImplementation::fs_NonTracked_AllocAlignedWithSize(_pModule, _Size, _Alignment);
 		}
 
+		static void * DMibCrossmoduleAPI fg_OldRealloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		{
+			return CCrossModuleImplementationExtra::fs_Realloc(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
+		}
+		static void * DMibCrossmoduleAPI fg_OldResize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		{
+			return CCrossModuleImplementationExtra::fs_Resize(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
+		}
+		static void * DMibCrossmoduleAPI fg_OldNonTrackedRealloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size) 
+		{
+			return CCrossModuleImplementationExtra::fs_NonTracked_Realloc(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
+		}
+		static void * DMibCrossmoduleAPI fg_OldNonTrackedResize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size)
+		{
+			return CCrossModuleImplementationExtra::fs_NonTracked_Resize(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
+		}
+
 		CMemoryManagerCrossModule g_CrossModule
 			=
 			{
@@ -319,16 +336,8 @@ namespace NMib
 				, &CCrossModuleImplementationExtra::fs_AllocAlignedWithSizeDebug
 				, nullptr // &CCrossModuleImplementationExtra::fs_ReallocNoOldDebug
 				, nullptr // &CCrossModuleImplementationExtra::fs_ResizeNoOldDebug
-				, // &CCrossModuleImplementationExtra::fs_Realloc
-				[](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size) -> void *
-				{
-					return CCrossModuleImplementationExtra::fs_Realloc(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
-				}
-				, // &CCrossModuleImplementationExtra::fs_Resize
-				[](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size) -> void *
-				{
-					return CCrossModuleImplementationExtra::fs_Resize(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
-				}
+				, &fg_OldRealloc
+				, &fg_OldResize
 				, &CCrossModuleImplementationExtra::fs_FreeNoSize
 				, &CCrossModuleImplementationExtra::fs_Size
 				, &CCrossModuleImplementationExtra::fs_TrySize
@@ -345,16 +354,8 @@ namespace NMib
 				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSize
 				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocBatch
 				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocBatchDebug
-				, // &CCrossModuleImplementationExtra::fs_NonTracked_Realloc
-				[](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size) -> void *
-				{
-					return CCrossModuleImplementationExtra::fs_NonTracked_Realloc(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
-				}
-				, // &CCrossModuleImplementationExtra::fs_NonTracked_Resize
-				[](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size) -> void *
-				{
-					return CCrossModuleImplementationExtra::fs_NonTracked_Resize(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
-				}
+				, &fg_OldNonTrackedRealloc
+				, &fg_OldNonTrackedResize
 				, &CCrossModuleImplementationExtra::fs_NonTracked_FreeNoSize
 				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocWithSizeDebug
 				, &CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSizeDebug
