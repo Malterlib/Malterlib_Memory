@@ -582,6 +582,8 @@ namespace NMib
 		template <typename t_CParams>
 		mint TCMemoryManagerArenaHeap<t_CParams>::f_Size(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
 		{
+			DMibLock(m_Lock);
+
 			uint8 *pMem = (uint8 *)_pMemory;
 			auto *pBlock = _pChunk->m_Blocks.f_FindEqual(pMem);
 			
@@ -605,6 +607,7 @@ namespace NMib
 		template <typename t_CParams>
 		fp32 TCMemoryManagerArenaHeap<t_CParams>::f_Overhead(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
 		{
+			DMibLock(m_Lock);
 			uint8 *pMem = (uint8 *)_pMemory;
 			auto *pBlock = _pChunk->m_Blocks.f_FindEqual(pMem);
 			
