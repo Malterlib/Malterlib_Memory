@@ -57,7 +57,8 @@ namespace NMib
 
 		bool CCaptureDefaultDelete::fs_ReportDelete(void *_pMemory, mint _Size)
 		{
-			DMibFastCheck(!fg_GetSys()->f_ThreadDestroyed());
+			if (fg_GetSys()->f_ThreadDestroyed())
+				return false;
 
 			if (!NPrivate::g_SubSystem_Memory.f_WasCreated() || !_pMemory)
 				return false;
