@@ -30,6 +30,7 @@ namespace NMib
 					}
 				;
 			}
+
 			if (NMem::g_CrossModule.m_Version < 0x103)
 			{
 				NMem::g_CrossModule.m_fAlloc = [](CMemoryManagerCrossModule *_pModule, mint _Size) -> void *
@@ -107,6 +108,12 @@ namespace NMib
 				NMem::g_CrossModule.m_fFree = [](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
 					{
 						return NMem::g_CrossModule.m_fFreeNoSize(&g_CrossModule, _pMemory);
+					}
+				;
+
+				NMem::g_CrossModule.m_fNonTracked_Free = [](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
+					{
+						return NMem::g_CrossModule.m_fNonTracked_FreeNoSize(&g_CrossModule, _pMemory);
 					}
 				;
 			}
