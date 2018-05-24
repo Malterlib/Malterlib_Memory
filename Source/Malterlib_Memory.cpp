@@ -117,6 +117,10 @@ namespace NMib
 				"__NSFontInstanceInfoInitializeMetricsInfo",
 				"_NSXPCConnectionClassCache",
 				"CGPathMoveToPoint",
+				"XTCopyPropertiesForFont",
+				"_NSSLMPopUpCarbonMenu3",
+				"_dispatch_unote_register_muxed",
+				"_dispatch_timer_heap_grow",
 	#elif defined(DPlatformFamily_Linux)
 				"qt_load_library_runtime",
 				"qt_set_x11_resources",
