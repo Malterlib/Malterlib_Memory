@@ -464,8 +464,8 @@ namespace NMib
 		_pModule->m_fNonTracked_AllocAlignedWithSize = NMem::g_CrossModule.m_fNonTracked_AllocAlignedWithSize;
 		_pModule->m_fNonTracked_AllocBatch = NMem::g_CrossModule.m_fNonTracked_AllocBatch;
 		_pModule->m_fNonTracked_AllocBatchDebug = &NCrossModuleServer::fg_NonTracked_AllocBatchDebug;
-		_pModule->m_fNonTracked_Realloc = NMem::g_CrossModule.m_fNonTracked_Realloc;
-		_pModule->m_fNonTracked_Resize = NMem::g_CrossModule.m_fNonTracked_Resize;
+		_pModule->m_fNonTracked_ReallocNoOld = NMem::g_CrossModule.m_fNonTracked_ReallocNoOld;
+		_pModule->m_fNonTracked_ResizeNoOld = NMem::g_CrossModule.m_fNonTracked_ResizeNoOld;
 		_pModule->m_fNonTracked_FreeNoSize = NMem::g_CrossModule.m_fNonTracked_FreeNoSize;
 		_pModule->m_fNonTracked_AllocWithSizeDebug = &NCrossModuleServer::fg_NonTracked_AllocDebug;
 		_pModule->m_fNonTracked_AllocAlignedWithSizeDebug = &NCrossModuleServer::fg_NonTracked_AllocAlignedDebug;
