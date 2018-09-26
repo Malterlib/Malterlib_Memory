@@ -343,6 +343,7 @@ namespace
 				
 				{
 					TCMemoryManagerTracked<TCMemoryManager<CDefaultMemoryManagerParams_Tests>> MemoryManager("Test", CMemoryManagerConfig());
+					MemoryManager.f_ForceStartCleanupThreads();
 					mint LastAlloc = 0;
 					auto Checkout = MemoryManager.f_Checkout();
 					for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize; ++MemorySize)
@@ -394,6 +395,7 @@ namespace
 				
 				{
 					TCMemoryManagerTracked<TCMemoryManager<CDefaultMemoryManagerParams_Tests>> MemoryManager("Test", CMemoryManagerConfig());
+					MemoryManager.f_ForceStartCleanupThreads();
 					mint LastAlloc = 0;
 					auto Checkout = MemoryManager.f_Checkout();
 					for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize; ++MemorySize)
@@ -644,7 +646,8 @@ namespace
 					
 					mint LastAlloc = 0;
 					TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
-			
+					MemoryManager.f_ForceStartCleanupThreads();
+
 					for (mint i = 0; i < 2; ++i)
 					{
 						ch8 const *pPath = "First Pass";
@@ -709,7 +712,8 @@ namespace
 					
 					mint LastAlloc = 0;
 					TCMemoryManager<CDefaultMemoryManagerParams_Tests> MemoryManager{CMemoryManagerConfig()};
-					
+					MemoryManager.f_ForceStartCleanupThreads();
+
 					for (mint i = 0; i < 2; ++i)
 					{
 						ch8 const *pPath = "First Pass";
@@ -801,8 +805,9 @@ namespace
 			{
 				TCMemoryManager<CDefaultMemoryManagerParams_BackgroundTest> MemoryManager{CMemoryManagerConfig()};
 				
+				MemoryManager.f_ForceStartCleanupThreads();
 				MemoryManager.f_GarbageCollect(true); // Make sure that the thread local is created for this thread
-				
+
 				NMib::NContainer::TCVector<NMib::NPtr::TCUniquePointer<NMib::NThread::CThreadObject>> StartedThreads;
 				{
 					CTestMemoryMeasure MeasureMemory("Alloc");

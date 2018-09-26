@@ -1093,8 +1093,8 @@ void fg_MalterlibMallocOverrideEnable()
 	if (!g_bRegisteredAtFork)
 	{
 		g_bRegisteredAtFork = true;
-		if (g_OriginalFunctions._malloc_fork_prepare)
-			pthread_atfork(&fg_Override_PrepareForkDummy, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
+		if (g_OriginalFunctions._malloc_fork_prepare && g_OriginalFunctions._malloc_fork_parent && g_OriginalFunctions._malloc_fork_child)
+			;//pthread_atfork(&fg_Override_PrepareForkDummy, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
 		else
 			pthread_atfork(&fg_Override_PrepareFork, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
 	}
@@ -1166,15 +1166,31 @@ void fg_Override_PrepareForkDummy()
 
 assure_used extern "C" DMibMalterlibOverrideMallocExport void fg_Malterlib__malloc_fork_prepare()
 {
+	fg_Override_PrepareFork();
+
 	if (g_OriginalFunctions._malloc_fork_prepare)
 		g_OriginalFunctions._malloc_fork_prepare();
+}
 
-	fg_Override_PrepareFork();
+assure_used extern "C" DMibMalterlibOverrideMallocExport void fg_Malterlib__malloc_fork_child()
+{
+	fg_Override_ForkedChild();
+
+	if (g_OriginalFunctions._malloc_fork_child)
+		g_OriginalFunctions._malloc_fork_child();
 }
 
 void fg_Override_ForkedChild()
 {
 	NSys::fg_MalterlibSystem_ForkChild();
+}
+
+assure_used extern "C" DMibMalterlibOverrideMallocExport void fg_Malterlib__malloc_fork_parent()
+{
+	fg_Override_ForkedParent();
+
+	if (g_OriginalFunctions._malloc_fork_parent)
+		g_OriginalFunctions._malloc_fork_parent();
 }
 
 void NMib::NSys::fg_Mem_PrepareFork()
@@ -1818,7 +1834,7 @@ extern "C"
 	#endif
 		return pMalterlibAlloc;
 #else
-		return g_OriginalFunctions._ZnamSt11align_val_t(_Size);
+		return g_OriginalFunctions._ZnamSt11align_val_t(_Size, _Alignment);
 #endif
 	}
 
@@ -1834,7 +1850,7 @@ extern "C"
 	#endif
 		return pMalterlibAlloc;
 #else
-		return g_OriginalFunctions._ZnamSt11align_val_tRKSt9nothrow_t(_Size);
+		return g_OriginalFunctions._ZnamSt11align_val_tRKSt9nothrow_t(_Size, _Alignment);
 #endif
 	}
 

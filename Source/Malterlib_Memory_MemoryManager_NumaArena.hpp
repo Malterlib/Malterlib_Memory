@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -48,6 +48,12 @@ namespace NMib
 		void TCMemoryManagerNumaArena<t_CParams>::f_CanStartThreads()
 		{
 			m_BackgroundCleanup.f_CanStartThreads();
+		}
+
+		template <typename t_CParams>
+		void TCMemoryManagerNumaArena<t_CParams>::f_ForceStartCleanupThread()
+		{
+			m_BackgroundCleanup.f_ForceStartThread();
 		}
 
 		template <typename t_CParams>

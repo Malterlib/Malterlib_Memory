@@ -1,7 +1,14 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
+#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_OSX)
+namespace NMib::NPlatform
+{
+	NThread::CMutual &fg_ForkLock();
+}
+#endif
+
 namespace NMib
 {
 	namespace NMem
@@ -51,12 +58,28 @@ namespace NMib
 			}
 		}
 		
-//#define DMibMemory_CleanupOnUSR1Signal
+		template <typename t_CParams>
+		void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_ForceStartThread()
+		{
+#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_OSX)
+			auto &ForkLock = NMib::NPlatform::fg_ForkLock();
+			DMibLock(ForkLock);
+#endif
+			f_OnNeedCleanup();
+		}
+
 		template <typename t_CParams>
 		void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::fp_StartupThread()
 		{
-			// Force initialization of time context on main thread as it uses environment which is not thread safe. In future try to remove dependency on time context here
-			NTime::CSystem_Time::fs_CyclesFrequency();
+#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_OSX)
+			auto &ForkLock = NMib::NPlatform::fg_ForkLock();
+			if (!ForkLock.f_TryLock())
+				return;
+			DMibLock(ForkLock);
+			ForkLock.f_Unlock();
+			if (mp_pThread)
+				return;
+#endif
 			mp_pThread = NThread::CThreadObjectNonTracked::fs_StartThread
 				(
 					[this](NThread::CThreadObjectNonTracked *_pThread) -> aint
@@ -125,6 +148,9 @@ namespace NMib
 		template <typename t_CParams>
 		void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_CanStartThreads()
 		{
+			// Force initialization of time context on main thread as it uses environment which is not thread safe. In future try to remove dependency on time context here
+			NTime::CSystem_Time::fs_CyclesFrequency();
+
 			if (mp_bStarted.f_FetchAnd(~2) & 2)
 			{
 				// Start was scheduled
@@ -163,8 +189,8 @@ namespace NMib
 			{
 				mp_pThread->f_ForkedChild();
 				mp_pThread.f_Clear();
-				mp_bStarted = false;
 			}
+			mp_bStarted = false;
 		}
 		
 		template <typename t_CParams>
@@ -172,7 +198,11 @@ namespace NMib
 		{
 			if (mp_pThread)
 				mp_pThread->f_ForkedParent();
-		}
 
+#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_OSX)
+			if (mp_bStarted && !mp_pThread)
+				fp_StartupThread();
+#endif
+		}
 	}
 }

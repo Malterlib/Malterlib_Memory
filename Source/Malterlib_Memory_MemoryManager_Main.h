@@ -145,7 +145,8 @@ namespace NMib
 
 			void f_CanStartThreads();
 			void f_DestroyCleanupThreads();
-			
+			void f_ForceStartCleanupThreads();
+
 			mint f_GetNumUsedSlabs();
 			mint f_GetNumFreeSlabs();
 			

@@ -8,107 +8,98 @@
 #	error "You must define this when compling this file"
 #endif
 
-namespace NMib
+namespace NMib::NMem
 {
-	namespace NMem
+#ifdef DMibPOverrideOperatorNew
+	namespace NPrivate
+	{
+		struct CThreadLocal
+		{
+			CCaptureDefaultDelete *m_pCapture = nullptr;
+		};
+
+		struct CSubSystem_Memory : public CSubSystem
+		{
+			~CSubSystem_Memory()
+			{
+				m_bDestroyed = true;
+			}
+
+			void f_DestroyThreadLocal() override
+			{
+				m_bThreadLocalsDestroyed = true;
+				m_ThreadLocal.f_Destroy();
+			}
+
+			bool m_bThreadLocalsDestroyed = false;
+			bool m_bDestroyed = false;
+
+			NThread::TCThreadLocal<CThreadLocal, NMem::CAllocator_NonTrackedHeap, NThread::EThreadLocalFlag_AlwaysCreated> m_ThreadLocal;
+		};
+
+		TCSubSystem<CSubSystem_Memory, ESubSystemDestruction_BeforeThreadLocals> g_SubSystem_Memory = {DAggregateInit};
+	}
+
+	CCaptureDefaultDelete::CCaptureDefaultDelete()
+	{
+		auto &ThreadLocal = *NPrivate::g_SubSystem_Memory->m_ThreadLocal;
+		m_pPrevious = ThreadLocal.m_pCapture;
+		ThreadLocal.m_pCapture = this;
+	}
+
+	CCaptureDefaultDelete::~CCaptureDefaultDelete()
+	{
+		auto &ThreadLocal = *NPrivate::g_SubSystem_Memory->m_ThreadLocal;
+		ThreadLocal.m_pCapture = m_pPrevious;
+	}
+
+	bool CCaptureDefaultDelete::fs_ReportDelete(void *_pMemory, mint _Size)
+	{
+		if (fg_GetSys()->f_ThreadDestroyed())
+			return false;
+
+		if (!NPrivate::g_SubSystem_Memory.f_WasCreated() || !_pMemory)
+			return false;
+
+		auto &SubSystem = *NPrivate::g_SubSystem_Memory;
+
+		DMibFastCheck(!SubSystem.m_bDestroyed);
+		DMibFastCheck(!SubSystem.m_bThreadLocalsDestroyed);
+
+		auto *pThreadLocal = SubSystem.m_ThreadLocal.f_TryGet();
+		if (!pThreadLocal)
+			return false;
+		if (!pThreadLocal->m_pCapture)
+			return false;
+		auto &Capture = *pThreadLocal->m_pCapture;
+		if (Capture.m_pMemory) // Recursive delete
+		{
+			if (Capture.m_Size)
+				fg_Free(Capture.m_pMemory, Capture.m_Size);
+			else
+				fg_FreeNoSize(Capture.m_pMemory);
+		}
+		Capture.m_pMemory = _pMemory;
+		Capture.m_Size = _Size;
+		return true;
+	}
+#endif
+
+	void fg_Mem_InitSubsystem()
 	{
 #ifdef DMibPOverrideOperatorNew
-		namespace NPrivate
-		{
-			struct CThreadLocal
-			{
-				CCaptureDefaultDelete *m_pCapture = nullptr;
-			};
-
-			struct CSubSystem_Memory : public CSubSystem
-			{
-				~CSubSystem_Memory()
-				{
-					m_bDestroyed = true;
-				}
-
-				void f_DestroyThreadLocal() override
-				{
-					m_bThreadLocalsDestroyed = true;
-					m_ThreadLocal.f_Destroy();
-				}
-
-				bool m_bThreadLocalsDestroyed = false;
-				bool m_bDestroyed = false;
-
-				NThread::TCThreadLocal<CThreadLocal, NMem::CAllocator_NonTrackedHeap, NThread::EThreadLocalFlag_AlwaysCreated> m_ThreadLocal;
-			};
-
-			TCSubSystem<CSubSystem_Memory, ESubSystemDestruction_BeforeThreadLocals> g_SubSystem_Memory = {DAggregateInit};
-		}
-
-		CCaptureDefaultDelete::CCaptureDefaultDelete()
-		{
-			auto &ThreadLocal = *NPrivate::g_SubSystem_Memory->m_ThreadLocal;
-			m_pPrevious = ThreadLocal.m_pCapture;
-			ThreadLocal.m_pCapture = this;
-		}
-
-		CCaptureDefaultDelete::~CCaptureDefaultDelete()
-		{
-			auto &ThreadLocal = *NPrivate::g_SubSystem_Memory->m_ThreadLocal;
-			ThreadLocal.m_pCapture = m_pPrevious;
-		}
-
-		bool CCaptureDefaultDelete::fs_ReportDelete(void *_pMemory, mint _Size)
-		{
-			if (fg_GetSys()->f_ThreadDestroyed())
-				return false;
-
-			if (!NPrivate::g_SubSystem_Memory.f_WasCreated() || !_pMemory)
-				return false;
-
-			auto &SubSystem = *NPrivate::g_SubSystem_Memory;
-
-			DMibFastCheck(!SubSystem.m_bDestroyed);
-			DMibFastCheck(!SubSystem.m_bThreadLocalsDestroyed);
-
-			auto *pThreadLocal = SubSystem.m_ThreadLocal.f_TryGet();
-			if (!pThreadLocal)
-				return false;
-			if (!pThreadLocal->m_pCapture)
-				return false;
-			auto &Capture = *pThreadLocal->m_pCapture;
-			if (Capture.m_pMemory) // Recursive delete
-			{
-				if (Capture.m_Size)
-					fg_Free(Capture.m_pMemory, Capture.m_Size);
-				else
-					fg_FreeNoSize(Capture.m_pMemory);
-			}
-			Capture.m_pMemory = _pMemory;
-			Capture.m_Size = _Size;
-			return true;
-		}
-#endif
-
-		/************************************************************************************************\
-		||ﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯ||
-		|| Heap alloc functions
-		||______________________________________________________________________________________________||
-		\************************************************************************************************/
-		
-		bint g_MalterlibMemoryManager_Debug_EnableStackTrace = DMibConfig_MalterlibMemoryManager_Debug_EnableStackTrace;
-		
-		ch8 CAllocator_Virtual::ms_HeapName[] = "Virtual";
-
-#if DMibConfig_Memory_Shims_Enable
-		CAllocator_Virtual::CHeapInit CAllocator_Virtual::ms_HeapInit;
+		*NPrivate::g_SubSystem_Memory;
 #endif
 	}
+
+	bint g_MalterlibMemoryManager_Debug_EnableStackTrace = DMibConfig_MalterlibMemoryManager_Debug_EnableStackTrace;
+
+	ch8 CAllocator_Virtual::ms_HeapName[] = "Virtual";
+
+#if DMibConfig_Memory_Shims_Enable
+	CAllocator_Virtual::CHeapInit CAllocator_Virtual::ms_HeapInit;
+#endif
 }
-
-
-/************************************************************************************************\
-||ﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯ||
-|| new operators
-||______________________________________________________________________________________________||
-\************************************************************************************************/
 
 
 #if defined(DMibPOverrideOperatorNew)

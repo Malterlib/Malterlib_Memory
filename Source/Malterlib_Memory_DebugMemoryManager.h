@@ -63,7 +63,7 @@ namespace NMib
 			struct CMemoryManagerParams : public NMem::CDefaultMemoryManagerParams
 			{
 				static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
-				typedef CMainHeapVirtualAllocator CAllocator;
+				typedef NMem::CAllocator_VirtualNoTracking CAllocator;
 			};
 			
 			typedef NMem::TCMemoryManager<CMemoryManagerParams> CMemoryManager;

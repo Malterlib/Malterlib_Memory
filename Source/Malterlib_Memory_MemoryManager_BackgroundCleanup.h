@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -26,6 +26,7 @@ namespace NMib
 			void f_PrepareFork();
 			void f_ForkedChild();
 			void f_ForkedParent();
+			void f_ForceStartThread();
 
 		private:
 
@@ -37,7 +38,7 @@ namespace NMib
 			NTime::CCyclesClock mp_Clock;
 			align_cacheline NAtomic::TCAtomic<uint32> mp_bStarted;
 			align_cacheline NAtomic::TCAtomic<uint32> mp_bWaiting;
-			
+
 			NPtr::TCUniquePointer<NThread::CThreadObjectNonTracked, NMem::CAllocator_NonTrackedHeap> mp_pThread;
 		};
 	}

@@ -292,7 +292,17 @@ namespace NMib
 					iNumaArena->f_CanStartThreads();
 			}
 		}
-		
+
+		template <typename t_CParams>
+		void TCMemoryManager<t_CParams>::f_ForceStartCleanupThreads()
+		{
+			{
+				DMibLock(m_NumaArenasLock);
+				for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+					iNumaArena->f_ForceStartCleanupThread();
+			}
+		}
+
 		template <typename t_CParams>
 		void TCMemoryManager<t_CParams>::fp_EnumHeaps(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArenaHeap<t_CParams> *)> const &_Functor)
 		{
