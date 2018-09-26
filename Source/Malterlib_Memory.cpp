@@ -121,6 +121,10 @@ namespace NMib
 				"_NSSLMPopUpCarbonMenu3",
 				"_dispatch_unote_register_muxed",
 				"_dispatch_timer_heap_grow",
+				// macOS 10.14
+				"fosl_filter_getStringForGraphWithOptions",
+				"_CFRunLoopGet0",
+				"_dispatch_timer_unote_arm",
 	#elif defined(DPlatformFamily_Linux)
 				"qt_load_library_runtime",
 				"qt_set_x11_resources",
