@@ -11,8 +11,10 @@ using namespace NMib::NMem;
 
 namespace NMib
 {
+	extern mint g_bCreatedSystem;
 	namespace NSys
 	{
+		void fg_CreateSystem();
 		namespace NPrivate
 		{
 			extern mint g_PageSize;
@@ -25,6 +27,10 @@ extern "C"
 	/* Allocate SIZE bytes of memory.  */
 	module_export void *malloc(size_t __size) __THROW __wur
 	{
+#ifndef DMibInitInPreInitArray
+		if (!NMib::g_bCreatedSystem)
+			NMib::NSys::fg_CreateSystem();
+#endif
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		__size = NMib::fg_AlignUp(__size, 16);
 #		if DMibConfig_MalterlibMemoryManager_Debug
@@ -36,6 +42,10 @@ extern "C"
 
 	module_export void *calloc (size_t __nmemb, size_t __size) __THROW __wur
 	{
+#ifndef DMibInitInPreInitArray
+		if (!NMib::g_bCreatedSystem)
+			NMib::NSys::fg_CreateSystem();
+#endif
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		mint Size = __nmemb * __size;
 		Size = NMib::fg_AlignUp(Size, 16);
@@ -50,6 +60,10 @@ extern "C"
 	
 	module_export void *realloc (void *__ptr, size_t __size) __THROW
 	{
+#ifndef DMibInitInPreInitArray
+		if (!NMib::g_bCreatedSystem)
+			NMib::NSys::fg_CreateSystem();
+#endif
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		__size = NMib::fg_AlignUp(__size, 16);
 #		if DMibConfig_MalterlibMemoryManager_Debug
@@ -72,6 +86,10 @@ extern "C"
 	}
 	module_export void *memalign (size_t __alignment, size_t __size) __THROW __wur
 	{
+#ifndef DMibInitInPreInitArray
+		if (!NMib::g_bCreatedSystem)
+			NMib::NSys::fg_CreateSystem();
+#endif
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		__size = NMib::fg_AlignUp(__size, __alignment);
 #		if DMibConfig_MalterlibMemoryManager_Debug
@@ -82,6 +100,10 @@ extern "C"
 	}
 	module_export void *valloc (size_t __size) __THROW __wur
 	{
+#ifndef DMibInitInPreInitArray
+		if (!NMib::g_bCreatedSystem)
+			NMib::NSys::fg_CreateSystem();
+#endif
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		__size = NMib::fg_AlignUp(__size, NMib::NSys::NPrivate::g_PageSize);
 #		if DMibConfig_MalterlibMemoryManager_Debug
@@ -92,6 +114,10 @@ extern "C"
 	}
 	module_export void * pvalloc (size_t __size) __THROW __wur
 	{
+#ifndef DMibInitInPreInitArray
+		if (!NMib::g_bCreatedSystem)
+			NMib::NSys::fg_CreateSystem();
+#endif
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		__size = NMib::fg_AlignUp(__size, NMib::NSys::NPrivate::g_PageSize);
 #		if DMibConfig_MalterlibMemoryManager_Debug
@@ -102,6 +128,10 @@ extern "C"
 	}
 	module_export size_t malloc_usable_size (void *__ptr) __THROW
 	{
+#ifndef DMibInitInPreInitArray
+		if (!NMib::g_bCreatedSystem)
+			NMib::NSys::fg_CreateSystem();
+#endif
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		return NMib::NMem::CAllocator_NonTrackedHeap::f_Size(__ptr);
 	}
