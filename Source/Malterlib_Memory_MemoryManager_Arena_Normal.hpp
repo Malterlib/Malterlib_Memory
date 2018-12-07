@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -109,7 +109,9 @@ namespace NMib
 		{
 			CNormalFreeList *pList;
 			mint Size = fg_AlignUp(_Size, mc_MinNormalSizeAlignment);
-			
+
+			DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(Size));
+
 			DMibFastCheck(Size >= 20);
 
 			mint AlignedSize;
@@ -268,8 +270,23 @@ namespace NMib
 				
 				auto &List = *pList;
 
+				DMibMemLightweightTrack
+					(
+					 	auto *pLocalArena = m_pMemoryManager->m_LocalArena.f_TryGet();
+					)
+				;
+
 				while (1)
 				{
+					DMibMemLightweightTrack
+						(
+							{
+								if (TCMemoryManager<t_CParams>::fsp_ShouldTrackAlloc(pLocalArena))
+									pLocalArena->f_TrackAlloc(AlignedSize);
+							}
+						)
+					;
+
 					auto pAlloc = List.f_GetFirst();
 					
 					if (likely(pAlloc))

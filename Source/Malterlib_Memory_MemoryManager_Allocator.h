@@ -57,6 +57,7 @@ namespace NMib
 			only_parameters_aliased inline_small void f_FreeNoSize(void *_pBlock);
 			only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 			only_parameters_aliased CAutoDestroy f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+			CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size);
 		};
 	}
 }

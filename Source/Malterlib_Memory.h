@@ -128,6 +128,69 @@ namespace NMib
 			virtual void f_AllocatorDelete(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth) = 0;
 		};
 
+		class CReportMemoryLightweight
+		{
+		public:
+			virtual void f_Alloc(mint _ReturnedSize) = 0;
+			virtual void f_Free(mint _Size) = 0;
+		};
+
+#if DMibConfig_Memory_Shims_Lightweight
+		#define DMibMemLightweightTrack(d_Expression) d_Expression
+
+		CReportMemoryLightweight *fg_ReportMemoryLightweightTo(CReportMemoryLightweight *_pMemoryReporter);
+
+		class CMemoryReportLightweightScope
+		{
+			CReportMemoryLightweight *m_pOldReporter;
+		public:
+			CMemoryReportLightweightScope(CReportMemoryLightweight *_pReporter)
+			{
+				m_pOldReporter = fg_ReportMemoryLightweightTo(_pReporter);
+			}
+			CMemoryReportLightweightScope(CReportMemoryLightweight &_Reporter)
+			{
+				m_pOldReporter = fg_ReportMemoryLightweightTo(&_Reporter);
+			}
+			~CMemoryReportLightweightScope()
+			{
+				fg_ReportMemoryLightweightTo(m_pOldReporter);
+			}
+		};
+
+		enum EMemoryReportLightweightScopeFlag
+		{
+			EMemoryReportLightweightScopeFlag_None = 0
+			, EMemoryReportLightweightScopeFlag_InCScope = DMibBit(0) // We are inside a C allocation scope, for example malloc, or free
+			, EMemoryReportLightweightScopeFlag_User0 = DMibBit(1)
+		};
+
+		EMemoryReportLightweightScopeFlag fg_MemoryLightweightScopeGetFlags();
+		EMemoryReportLightweightScopeFlag fg_MemoryLightweightScopeSetFlags(EMemoryReportLightweightScopeFlag _Flags);
+		EMemoryReportLightweightScopeFlag fg_MemoryLightweightScopeAddFlags(EMemoryReportLightweightScopeFlag _Flags);
+
+		class CMemoryReportLightweightScopeFlagScope
+		{
+			EMemoryReportLightweightScopeFlag m_OldFlags;
+		public:
+			CMemoryReportLightweightScopeFlagScope(EMemoryReportLightweightScopeFlag _AddFlags)
+			{
+				m_OldFlags = fg_MemoryLightweightScopeAddFlags(_AddFlags);
+			}
+			~CMemoryReportLightweightScopeFlagScope()
+			{
+				fg_MemoryLightweightScopeSetFlags(m_OldFlags);
+			}
+		};
+
+		#define DMibMemLightweightTrackDisableScope NMib::NMem::CMemoryReportLightweightScope DisableLightweightTrack(nullptr)
+		#define DMibMemLightweightTrackAddFlagsScope(d_Flags) NMib::NMem::CMemoryReportLightweightScopeFlagScope AddLightweightTrackScopFlags(d_Flags)
+#else
+		#define DMibMemLightweightTrack(d_Expression)
+		#define DMibMemLightweightTrackDisableScope
+		#define DMibMemLightweightTrackAddFlagsScope(d_Flags)
+#endif
+
 #	if DMibConfig_Memory_Shims_Enable
 
 		void fg_ReportMemoryAlloc
@@ -289,6 +352,12 @@ namespace NMib
 			void *m_pMemory;
 			mint m_Size;
 
+			CAllocator_AutoDestroy(void *_pMemory, mint _Size)
+				: m_pMemory(_pMemory)
+				, m_Size(_Size)
+			{
+			}
+
 			CAllocator_AutoDestroy(CAllocator_AutoDestroy &&_Other)
 				: m_pMemory(_Other.m_pMemory)
 				, m_Size(_Other.m_Size)
@@ -323,6 +392,10 @@ namespace NMib
 		template <typename t_CAllocator>
 		struct TCAllocator_AutoDestroyStatic : public CAllocator_AutoDestroy
 		{
+			TCAllocator_AutoDestroyStatic(void *_pMemory, mint _Size)
+				: CAllocator_AutoDestroy(_pMemory, _Size)
+			{
+			}
 			TCAllocator_AutoDestroyStatic(TCAllocator_AutoDestroyStatic &&) = default;
 			TCAllocator_AutoDestroyStatic &operator = (TCAllocator_AutoDestroyStatic &&) = default;
 			TCAllocator_AutoDestroyStatic() = default;
@@ -336,6 +409,11 @@ namespace NMib
 		template <typename t_CAllocator>
 		struct TCAllocator_AutoDestroy : public CAllocator_AutoDestroy
 		{
+			TCAllocator_AutoDestroy(void *_pMemory, mint _Size, t_CAllocator &_Allocator)
+				: CAllocator_AutoDestroy(_pMemory, _Size)
+				, m_Allocator(_Allocator)
+			{
+			}
 			TCAllocator_AutoDestroy(TCAllocator_AutoDestroy &&) = default;
 			TCAllocator_AutoDestroy &operator = (TCAllocator_AutoDestroy &&) = default;
 			TCAllocator_AutoDestroy(t_CAllocator &_Allocator)
@@ -498,6 +576,11 @@ namespace NMib
 			only_parameters_aliased static CAutoDestroy f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 			{
 				return {};
+			}
+
+			static CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size)
+			{
+				return CAutoDestroy{};
 			}
 		};
 

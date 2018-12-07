@@ -155,7 +155,19 @@ namespace NMib
 			void f_DestroyThreadLocals();
 
 			void f_SetMaxArenas(mint _nArenas);
-			
+
+#if DMibConfig_Memory_CustomThreadLocal
+			void *f_GetCustomThreadLocal(mint _Index);
+			void *f_SetCustomThreadLocal(mint _Index, void *_pCustom);
+#endif
+
+#if DMibConfig_Memory_Shims_Lightweight
+			CReportMemoryLightweight *f_ReportMemoryTo(CReportMemoryLightweight *_pMemoryReporter);
+			EMemoryReportLightweightScopeFlag f_GetLightweightScopeFlags();
+			EMemoryReportLightweightScopeFlag f_SetLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags);
+			EMemoryReportLightweightScopeFlag f_AddLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags);
+#endif
+
 		private:
 			void *fp_AllocAlignedSlowPath(mint &_Size, mint _Alignment);
 			void fp_AllocBatchSlowPath(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
@@ -181,6 +193,11 @@ namespace NMib
 			
 			void fp_EnumArenas(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArena<t_CParams> *)> const &_Functor, bool _bCleanup);
 			void fp_EnumHeaps(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArenaHeap<t_CParams> *)> const &_Functor);
+
+#if DMibConfig_Memory_Shims_Lightweight
+			inline_always void fp_TrackAlloc(mint _Size);
+			inline_always static bool fsp_ShouldTrackAlloc(TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
+#endif
 
 			void f_ReturnCheckoutVirtual() override;
 			void f_TemporaryReturn() override;
@@ -247,6 +264,7 @@ namespace NMib
 			NContainer::TCMap<uint8 *, TCMemoryManagerArenaHeapChunk<t_CParams>, NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_HeapChunks;
 			
 			bool m_bCanDoLazyCheckout = false;
+			bool m_bThreadLocalsDestroyed = false;
 		};
 	}
 }

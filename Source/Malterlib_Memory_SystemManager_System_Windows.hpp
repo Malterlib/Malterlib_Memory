@@ -17,6 +17,27 @@ namespace NMib
 
 	namespace NMem
 	{
+#if DMibConfig_Memory_Shims_Lightweight
+		CReportMemoryLightweight *fg_ReportMemoryLightweightTo(CReportMemoryLightweight *_pMemoryReporter)
+		{
+			return nullptr;
+		}
+
+		EMemoryReportLightweightScopeFlag fg_MemoryLightweightScopeGetFlags()
+		{
+			return EMemoryReportLightweightScopeFlag_None;
+		}
+
+		EMemoryReportLightweightScopeFlag fg_MemoryLightweightScopeSetFlags(EMemoryReportLightweightScopeFlag _Flags)
+		{
+			return EMemoryReportLightweightScopeFlag_None;
+		}
+
+		EMemoryReportLightweightScopeFlag fg_MemoryLightweightScopeAddFlags(EMemoryReportLightweightScopeFlag _Flags)
+		{
+			return EMemoryReportLightweightScopeFlag_None;
+		}
+#endif
 		inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_CreateNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
 			//g_pMainHeap = HeapCreate(0, 0);

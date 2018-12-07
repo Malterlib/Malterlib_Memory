@@ -234,6 +234,8 @@ namespace NMib
 						}
 					}
 					
+					DMibMemLightweightTrackDisableScope;
+
 					FreeLinkType = EMessageType_FreeSmallBlock;
 					CMessage_FreeSmallBlock *pFreeLinkSmallBlock = (CMessage_FreeSmallBlock *)m_pMemoryManager->f_AllocAligned(sizeof(CMessage_FreeSmallBlock), 1);
 					pFreeLinkSmallBlock->m_pBlock = _pMemory;

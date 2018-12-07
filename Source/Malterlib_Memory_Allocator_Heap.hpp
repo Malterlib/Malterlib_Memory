@@ -139,6 +139,11 @@ namespace NMib
 			return fg_Move(AutoDestroy);
 		}
 
+		inline_small CAllocator_Heap::CAutoDestroy CAllocator_Heap::f_MakeSafe(void *_pMemory, mint _Size)
+		{
+			return CAutoDestroy{_pMemory, _Size};
+		}
+
 		only_parameters_aliased malloc_like inline_small void *CAllocator_Heap::f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			return NMib::NMem::fg_AllocAlignedWithSize(_Size, _Alignment);
@@ -273,6 +278,11 @@ namespace NMib
 			AutoDestroy.m_Size = _Size;
 
 			return fg_Move(AutoDestroy);
+		}
+
+		inline_small CAllocator_NonTrackedHeap::CAutoDestroy CAllocator_NonTrackedHeap::f_MakeSafe(void *_pMemory, mint _Size)
+		{
+			return CAutoDestroy{_pMemory, _Size};
 		}
 
 		only_parameters_aliased inline_small void CAllocator_NonTrackedHeap::f_Commit(void *_pMem, mint _Size)
@@ -448,6 +458,12 @@ namespace NMib
 			AutoDestroy.m_Size = t_AllocSize;
 
 			return fg_Move(AutoDestroy);
+		}
+
+		template <mint t_AllocSize>
+		inline_small auto TCAllocator_Placement<t_AllocSize>::f_MakeSafe(void *_pMemory, mint _Size) -> CAutoDestroy
+		{
+			return CAutoDestroy{_pMemory, _Size};
 		}
 
 		template <mint t_AllocSize>
@@ -971,6 +987,12 @@ namespace NMib
 			AutoDestroy.m_Size = _Size;
 
 			return fg_Move(AutoDestroy);
+		}
+
+		template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
+		inline_small auto TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_MakeSafe(void *_pMemory, mint _Size) -> CAutoDestroy
+		{
+			return CAutoDestroy{_pMemory, _Size, *this};
 		}
 
 		///

@@ -1091,6 +1091,11 @@ namespace NMib
 
 				return fg_Move(AutoDestroy);
 			}
+
+			static CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size)
+			{
+				return CAutoDestroy{_pMemory, _Size};
+			}
 		};
 
 		template <typename t_CType, mint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
@@ -1308,6 +1313,11 @@ namespace NMib
 
 				return fg_Move(AutoDestroy);
 			}
+
+			CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size)
+			{
+				return CAutoDestroy{_pMemory, _Size, *this};
+			}
 		};
 
 		template <typename t_CPoolType>
@@ -1504,6 +1514,11 @@ namespace NMib
 				AutoDestroy.m_Size = _Size;
 
 				return fg_Move(AutoDestroy);
+			}
+
+			CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size)
+			{
+				return CAutoDestroy{_pMemory, _Size, *this};
 			}
 		};
 		

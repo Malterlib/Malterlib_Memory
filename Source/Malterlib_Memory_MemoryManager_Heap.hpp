@@ -61,6 +61,8 @@ namespace NMib
 		template <typename t_CParams>
 		TCMemoryManagerArenaHeapChunk<t_CParams>::~TCMemoryManagerArenaHeapChunk()
 		{
+			DMibMemLightweightTrackDisableScope;
+
 			for (auto iBlock = m_Blocks.f_GetIterator(); iBlock; ++iBlock)
 			{
 				auto * pBlock = &*iBlock;
@@ -129,6 +131,7 @@ namespace NMib
 		template <typename t_CParams>
 		TCMemoryManagerArenaHeap<t_CParams>::~TCMemoryManagerArenaHeap()
 		{
+			DMibMemLightweightTrackDisableScope;
 			for (auto iChunk = m_Chunks.f_GetIterator(); iChunk; )
 			{
 				auto pChunk = &*iChunk;
@@ -153,6 +156,8 @@ namespace NMib
 		template <typename t_CParams>
 		void TCMemoryManagerArenaHeap<t_CParams>::f_Destroy()
 		{
+			DMibMemLightweightTrackDisableScope;
+
 			m_FreeBuckets.f_Clear();
 		}
 		
@@ -290,7 +295,8 @@ namespace NMib
 		{
 			int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 			DMibFastCheck(m_Lock.f_OwnsLock());
-			
+			DMibMemLightweightTrackDisableScope;
+
 			for (auto iChunk = m_ChunksNeedingCleanup.f_GetIterator(); iChunk; )
 			{
 				auto pChunk = &*iChunk;
@@ -361,6 +367,8 @@ namespace NMib
 		template <typename t_CParams>
 		void TCMemoryManagerArenaHeap<t_CParams>::fp_AddNewChunk()
 		{
+			DMibMemLightweightTrackDisableScope;
+
 			mint Size = t_CParams::mc_HeapChunkSize;
 			EAllocationFlag Flags = t_CParams::mc_AllocationFlags;
 			if (m_pMemoryManager->m_Allocator.f_CanCommit())
@@ -384,7 +392,7 @@ namespace NMib
 			auto &Block = pChunk->m_Blocks[pMemory];
 			
 			Block.m_pChunk = pChunk;
-			
+
 			m_FreeBuckets[Size].f_Insert(Block);
 			
 		}
@@ -401,6 +409,9 @@ namespace NMib
 			DMibLock(m_Lock);
 			mint Size = (_Size + t_CParams::mc_HeapBlockSize - 1) & ~mint(t_CParams::mc_HeapBlockSize - 1);
 
+			DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(Size));
+			DMibMemLightweightTrackDisableScope;
+
 			auto pBucket = m_FreeBuckets.f_FindSmallestGreaterThanEqual(Size);
 			if (!pBucket)
 			{
@@ -412,7 +423,7 @@ namespace NMib
 			mint FoundSize = m_FreeBuckets.fs_GetKey(pBucket);
 
 			auto pBlock = pBucket->f_Pop();
-			
+
 			if (pBucket->f_IsEmpty())
 				m_FreeBuckets.f_Remove(pBucket);
 			
@@ -451,6 +462,9 @@ namespace NMib
 			DMibLock(m_Lock);
 			mint Size = fg_AlignUp(_Size, _Alignment);
 			Size = (Size + t_CParams::mc_HeapBlockSize - 1) & ~mint(t_CParams::mc_HeapBlockSize - 1);
+
+			DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(Size));
+			DMibMemLightweightTrackDisableScope;
 
 			auto pBucket = m_FreeBuckets.f_FindEqual(Size);
 			
@@ -524,11 +538,10 @@ namespace NMib
 					
 					pBlock = &NewBlock;
 				}
-				
+
 				mint LeftOverSize = FoundSize - Size;
 				
 				pBlock->m_Flags |= EMemoryManagerArenaHeapBlockFlag_Allocated;
-				
 				
 				if (LeftOverSize > 0)
 				{
@@ -627,6 +640,7 @@ namespace NMib
 		inline_never void TCMemoryManagerArenaHeap<t_CParams>::f_Free(void *_pMem, TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk)
 		{
 			DMibLock(m_Lock);
+			DMibMemLightweightTrackDisableScope;
 
 			uint8 *pMem = (uint8 *)_pMem;
 

@@ -205,6 +205,12 @@ namespace NMib
 
 			return fg_Move(AutoDestroy);
 		}
+
+		template <typename t_CParams>
+		auto TCAllocator_MemoryManager<t_CParams>::f_MakeSafe(void *_pMemory, mint _Size) -> CAutoDestroy
+		{
+			return CAutoDestroy{_pMemory, _Size, *this};
+		}
 	}
 }
 

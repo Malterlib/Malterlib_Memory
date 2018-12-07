@@ -2,6 +2,7 @@
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
+#define DMibConfig_Memory_CustomThreadLocal 2
 #include "Malterlib_Memory_MemoryManager.hpp"
 
 namespace NMib
@@ -136,6 +137,26 @@ namespace NMib
 				m_FreeBlocks.f_Clear();
 			}
 
+			CReportMemoryLightweight *f_ReportMemoryLightweightTo(CReportMemoryLightweight *_pMemoryReporter)
+			{
+				return (CReportMemoryLightweight *)m_Heap.f_SetCustomThreadLocal(0, _pMemoryReporter);
+			}
+
+			EMemoryReportLightweightScopeFlag f_GetLightweightScopeFlags()
+			{
+				return (EMemoryReportLightweightScopeFlag)(mint)m_Heap.f_GetCustomThreadLocal(1);
+			}
+
+			EMemoryReportLightweightScopeFlag f_SetLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags)
+			{
+				return (EMemoryReportLightweightScopeFlag)(mint)m_Heap.f_SetCustomThreadLocal(1, (void *)(mint)_Flags);
+			}
+
+			EMemoryReportLightweightScopeFlag f_AddLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags)
+			{
+				return (EMemoryReportLightweightScopeFlag)(mint)m_Heap.f_SetCustomThreadLocal(1, (void *)(mint)(f_GetLightweightScopeFlags() | _Flags));
+			}
+
 			NThread::CMutual &f_GetLock()
 			{
 				return m_Lock;
@@ -150,6 +171,11 @@ namespace NMib
 					_Size = 1;
 
 				_Size = fg_AlignUp(_Size, _Alignment);
+
+				CReportMemoryLightweight *pReporter = (CReportMemoryLightweight *)m_Heap.f_GetCustomThreadLocal(0);
+				if (pReporter)
+					pReporter->f_Alloc(_Size);
+
 				mint OriginalSize = _Size;
 
 				mint UserNeededSize = fg_AlignUp(_Size, GranularityProtect);
@@ -203,6 +229,10 @@ namespace NMib
 
 				if (_Size && _Size != pMemBlock->m_OriginalSize && _Size != pMemBlock->m_RealSize)
 					DMibPDebugBreak; // Misreported size
+
+				CReportMemoryLightweight *pReporter = (CReportMemoryLightweight *)m_Heap.f_GetCustomThreadLocal(0);
+				if (pReporter)
+					pReporter->f_Free(_Size);
 
 				mint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
 

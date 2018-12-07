@@ -32,7 +32,14 @@ namespace NMib
 			TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
 			bool m_bLazyCheckout = false;
 			bool m_bOwnArena = false;
-			
+#if DMibConfig_Memory_Shims_Lightweight
+			CReportMemoryLightweight *m_pLightweightReporter = nullptr;
+			EMemoryReportLightweightScopeFlag m_LightweightScopeFlags = EMemoryReportLightweightScopeFlag_None;
+#endif
+#if DMibConfig_Memory_CustomThreadLocal
+			TCAutoClear<void *> m_pCustom[DMibConfig_Memory_CustomThreadLocal];
+#endif
+
 			TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal const& _Other);
 			
 			struct CRentrantScope
@@ -47,6 +54,7 @@ namespace NMib
 				
 				TCMemoryManagerThreadLocal *m_pThreadLocal;
 			};
+
 		public:
 			TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal && _Other, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
 			TCMemoryManagerThreadLocal(TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
@@ -61,6 +69,11 @@ namespace NMib
 			void f_TakeOwnership();
 			void f_RelinquishOwnership();
 			void f_GarbageCollectLocalArena(bool _bDecommit);
+
+#if DMibConfig_Memory_Shims_Lightweight
+			inline_never void f_TrackAlloc(mint _Size);
+			inline_never void f_TrackFree(mint _Size);
+#endif
 		};
 		
 		template <typename t_CParams>

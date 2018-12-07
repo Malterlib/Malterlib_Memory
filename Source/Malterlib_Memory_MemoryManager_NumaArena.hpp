@@ -555,5 +555,21 @@ namespace NMib
 					m_pNumaArena->f_RequestCleanup(RequestedCleanup);
 			}
 		}
+
+#if DMibConfig_Memory_Shims_Lightweight
+		template <typename t_CParams>
+		inline_never void TCMemoryManagerThreadLocal<t_CParams>::f_TrackAlloc(mint _Size)
+		{
+			DMibFastCheck(m_pLightweightReporter);
+			m_pLightweightReporter->f_Alloc(_Size);
+		}
+		
+		template <typename t_CParams>
+		inline_never void TCMemoryManagerThreadLocal<t_CParams>::f_TrackFree(mint _Size)
+		{
+			DMibFastCheck(m_pLightweightReporter);
+			m_pLightweightReporter->f_Free(_Size);
+		}
+#endif
 	}
 }

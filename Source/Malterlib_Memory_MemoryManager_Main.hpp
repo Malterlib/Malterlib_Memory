@@ -81,17 +81,106 @@ namespace NMib
 			m_nMaxArenas = _nArenas;
 		}
 
+#if DMibConfig_Memory_Shims_Lightweight
+		template <typename t_CParams>
+		CReportMemoryLightweight *TCMemoryManager<t_CParams>::f_ReportMemoryTo(CReportMemoryLightweight *_pMemoryReporter)
+		{
+			if (m_bThreadLocalsDestroyed)
+				return nullptr;
+			auto &ThreadLocal = *m_LocalArena;
+			auto pOld = ThreadLocal.m_pLightweightReporter;
+			ThreadLocal.m_pLightweightReporter = _pMemoryReporter;
+			return pOld;
+		}
+
+		template <typename t_CParams>
+		EMemoryReportLightweightScopeFlag TCMemoryManager<t_CParams>::f_GetLightweightScopeFlags()
+		{
+			if (m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
+				return EMemoryReportLightweightScopeFlag_None;
+			auto &ThreadLocal = *m_LocalArena;
+			return ThreadLocal.m_LightweightScopeFlags;
+		}
+
+		template <typename t_CParams>
+		EMemoryReportLightweightScopeFlag TCMemoryManager<t_CParams>::f_SetLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags)
+		{
+			if (m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
+				return EMemoryReportLightweightScopeFlag_None;
+			auto &ThreadLocal = *m_LocalArena;
+			auto Old = ThreadLocal.m_LightweightScopeFlags;
+			ThreadLocal.m_LightweightScopeFlags = _Flags;
+			return Old;
+		}
+
+		template <typename t_CParams>
+		EMemoryReportLightweightScopeFlag TCMemoryManager<t_CParams>::f_AddLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags)
+		{
+			if (m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
+				return EMemoryReportLightweightScopeFlag_None;
+			auto &ThreadLocal = *m_LocalArena;
+			auto Old = ThreadLocal.m_LightweightScopeFlags;
+			ThreadLocal.m_LightweightScopeFlags |= _Flags;
+			return Old;
+		}
+
+		template <typename t_CParams>
+		inline_always void TCMemoryManager<t_CParams>::fp_TrackAlloc(mint _Size)
+		{
+			auto *pLocalArena = m_LocalArena.f_TryGet();
+			if (fsp_ShouldTrackAlloc(pLocalArena))
+				pLocalArena->f_TrackAlloc(_Size);
+		}
+
+		template <typename t_CParams>
+		inline_always bool TCMemoryManager<t_CParams>::fsp_ShouldTrackAlloc(TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
+		{
+			if (_pLocalArena && _pLocalArena->m_pLightweightReporter)
+				return true;
+			return false;
+		}
+#endif
+
+#if DMibConfig_Memory_CustomThreadLocal
+		template <typename t_CParams>
+		void *TCMemoryManager<t_CParams>::f_GetCustomThreadLocal(mint _Index)
+		{
+			auto *pLocalArena = m_LocalArena.f_TryGet();
+			if (pLocalArena)
+				return pLocalArena->m_pCustom[_Index];
+			return nullptr;
+		}
+
+		template <typename t_CParams>
+		void *TCMemoryManager<t_CParams>::f_SetCustomThreadLocal(mint _Index, void *_pCustom)
+		{
+			auto *pLocalArena = m_LocalArena.f_TryGet();
+			if (pLocalArena)
+			{
+				void *pOld = pLocalArena->m_pCustom[_Index];
+				pLocalArena->m_pCustom[_Index] = _pCustom;
+				return pOld;
+			}
+			else
+				return nullptr;
+		}
+#endif
+
 		template <typename t_CParams>
 		TCMemoryManager<t_CParams>::~TCMemoryManager()
 		{
 			// Remove all big blocks
-			m_HeapChunks.f_Clear();
-			
-			for (auto &Arena : m_NumaArenas)
 			{
-				Arena.m_Heap.f_Destroy();
+				DMibMemLightweightTrackDisableScope;
+
+				m_HeapChunks.f_Clear();
+				
+				for (auto &Arena : m_NumaArenas)
+				{
+					Arena.m_Heap.f_Destroy();
+				}
 			}
-			
+
 			bool bDoneSomething = true;
 			while (bDoneSomething)
 			{
@@ -107,6 +196,7 @@ namespace NMib
 				}
 			}
 			
+			m_bThreadLocalsDestroyed = true;
 			m_LocalArena.f_Destroy();
 			m_LocalNumaNode.f_Destroy();
 			
@@ -121,6 +211,7 @@ namespace NMib
 		template <typename t_CParams>
 		void TCMemoryManager<t_CParams>::f_DestroyThreadLocals()
 		{
+			m_bThreadLocalsDestroyed = true;
 			m_LocalArena.f_Destroy();
 			m_LocalNumaNode.f_Destroy();
 		}
@@ -776,6 +867,14 @@ namespace NMib
 			while (true)
 			{
 				mint Size = _Size;
+				DMibMemLightweightTrack
+					(
+						{
+							if (fsp_ShouldTrackAlloc(pLocalArena))
+								pLocalArena->f_TrackAlloc(m_Allocator.f_SizePadded(_Size));
+						}
+					)
+				;
 				auto pRet = m_Allocator.f_AllocAlignedWithSize(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
 				if (this->mc_EnableCallbacks)
 					this->f_OnAlloc((uint8 *)pRet, _Size);
@@ -816,6 +915,15 @@ namespace NMib
 			
 			if (_Size <= t_CParams::mc_MaxHeapAllocSize)
 				return pNumaArena->m_Heap.f_AllocAlignedWithSize(_Size, _Alignment);
+
+			DMibMemLightweightTrack
+				(
+					{
+						if (fsp_ShouldTrackAlloc(pLocalArena))
+							pLocalArena->f_TrackAlloc(m_Allocator.f_SizePadded(_Size));
+					}
+				)
+			;
 			auto pRet = m_Allocator.f_AllocAlignedWithSize(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
 			if (this->mc_EnableCallbacks)
 				this->f_OnAlloc((uint8 *)pRet, _Size);
@@ -919,7 +1027,7 @@ namespace NMib
 				DMibFastCheck(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
 
 				TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
-				
+
 				auto *pLocalArena = m_LocalArena.f_TryGet();
 				if (unlikely(!pLocalArena))
 				{
@@ -930,8 +1038,18 @@ namespace NMib
 					}
 					pLocalArena = &(*m_LocalArena);
 				}
-					
+
 				auto &LocalArena = *pLocalArena;
+
+				DMibMemLightweightTrack
+					(
+						{
+							if (fsp_ShouldTrackAlloc(&LocalArena))
+								LocalArena.f_TrackFree(pSlab->m_pArena->f_Size(_pMemory, pSlab));
+						}
+					)
+				;
+
 				auto ReentrantScope = LocalArena.f_Reentrant();
 				if (pSlab->m_pArena == LocalArena.m_pArena)
 					pSlab->m_pArena->f_FreeThisThread(_pMemory, pSlab);
@@ -950,6 +1068,15 @@ namespace NMib
 
 				if (pChunk && (uint8 *)_pMemory < pChunk->f_GetEndAddress())
 				{
+					DMibMemLightweightTrack
+						(
+							{
+								auto *pLocalArena = m_LocalArena.f_TryGet();
+								if (fsp_ShouldTrackAlloc(pLocalArena))
+									pLocalArena->f_TrackFree(pChunk->f_GetHeap()->f_Size(_pMemory, pChunk));
+							}
+						)
+					;
 					pChunk->f_GetHeap()->f_Free(_pMemory, pChunk);
 					return;
 				}
@@ -961,6 +1088,17 @@ namespace NMib
 			
 			if (this->mc_EnableCallbacks)
 				this->f_OnFree((uint8 *)_pMemory);
+
+			DMibMemLightweightTrack
+				(
+					{
+						auto *pLocalArena = m_LocalArena.f_TryGet();
+						if (fsp_ShouldTrackAlloc(pLocalArena))
+							pLocalArena->f_TrackFree(m_Allocator.f_Size(_pMemory));
+					}
+				)
+			;
+
 			if (_Size)
 				m_Allocator.f_Free(_pMemory, _Size);
 			else
@@ -988,6 +1126,16 @@ namespace NMib
 				if (unlikely(!pLocalArena))
 					goto l_SlowPath;
 				auto &LocalArena = *pLocalArena;
+
+				DMibMemLightweightTrack
+					(
+						{
+							if (fsp_ShouldTrackAlloc(&LocalArena))
+								LocalArena.f_TrackFree(pSlab->m_pArena->f_Size(_pMemory, pSlab));
+						}
+					)
+				;
+
 				auto ReentrantScope = LocalArena.f_Reentrant();
 				if (pSlab->m_pArena == LocalArena.m_pArena)
 					pSlab->m_pArena->f_FreeThisThread(_pMemory, pSlab);
@@ -1017,6 +1165,16 @@ namespace NMib
 				if (unlikely(!pLocalArena))
 					goto l_SlowPath;
 				auto &LocalArena = *pLocalArena;
+
+				DMibMemLightweightTrack
+					(
+						{
+							if (fsp_ShouldTrackAlloc(&LocalArena))
+								LocalArena.f_TrackFree(pSlab->m_pArena->f_Size(_pMemory, pSlab));
+						}
+					)
+				;
+
 				auto ReentrantScope = LocalArena.f_Reentrant();
 				if (pSlab->m_pArena == LocalArena.m_pArena)
 					pSlab->m_pArena->f_FreeThisThread(_pMemory, pSlab);

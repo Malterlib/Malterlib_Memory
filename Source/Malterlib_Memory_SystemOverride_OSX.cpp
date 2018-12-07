@@ -26,6 +26,18 @@
 namespace NMib
 {
 	extern NMib::NAggregate::TCAggregateSimple<CMemoryManager> g_MainHeap;
+	extern bool g_bMainHeapConstructed;
+#if DMibEnableSafeCheck > 0
+	auto &fg_MainHeap()
+	{
+		DMibFastCheck(g_bMainHeapConstructed);
+		return g_MainHeap;
+	}
+	#define DMainHeap fg_MainHeap()
+#else
+	#define DMainHeap g_MainHeap
+#endif
+
 }
 #endif
 
@@ -362,7 +374,7 @@ extern "C"
 		g_MalterlibMallocOveriddenInterposersInstalled = true;
 
 #ifdef DMemoryManagerIsSame
-		g_MainHeap->f_CanDoLazyCheckout();
+		DMainHeap->f_CanDoLazyCheckout();
 #endif
 	}
 
@@ -667,7 +679,7 @@ size_t fg_Malterlib_zone_size(struct _malloc_zone_t *_pZone, const void *ptr) /*
 	}
 	
 #ifdef DMemoryManagerIsSame
-	return g_MainHeap->f_TrySize(pMalterlibAlloc);
+	return DMainHeap->f_TrySize(pMalterlibAlloc);
 #else
 	return fg_TrySize(pMalterlibAlloc);
 #endif
@@ -677,10 +689,11 @@ void fg_Malterlib_zone_free(struct _malloc_zone_t *_pZone, void *ptr)
 {
 	if (!ptr)
 		return;
+	DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibOSXOverrideZoneCheck(_pZone);
 	uint8 *pMalterlibAlloc = (uint8 *)ptr;
 #ifdef DMemoryManagerIsSame
-	return g_MainHeap->f_FreeNoSize(pMalterlibAlloc);
+	return DMainHeap->f_FreeNoSize(pMalterlibAlloc);
 #else
 	return fg_FreeNoSize(pMalterlibAlloc);
 #endif
@@ -690,10 +703,11 @@ void fg_Malterlib_zone_free_definite_size(struct _malloc_zone_t *_pZone, void *p
 {
 	if (!ptr)
 		return;
+	DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibOSXOverrideZoneCheck(_pZone);
 	uint8 *pMalterlibAlloc = (uint8 *)ptr;
 #ifdef DMemoryManagerIsSame
-	return g_MainHeap->f_Free(pMalterlibAlloc, size);
+	return DMainHeap->f_Free(pMalterlibAlloc, size);
 #else
 	return fg_Free(pMalterlibAlloc, size);
 #endif
@@ -710,15 +724,16 @@ size_t fg_Malterlib_zone_pressure_relief(struct _malloc_zone_t *_pZone, size_t g
 
 void *fg_Malterlib_zone_malloc(struct _malloc_zone_t *_pZone, size_t size)
 {
+	DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibOSXOverrideZoneCheck(_pZone);
 
 	mint Size = DAlignSizeOSX(size);
 	
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
-	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+	uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+	uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_Alloc(Size);
 #endif
 #else
 #if DEnableDebugMemoryManager
@@ -736,12 +751,13 @@ unsigned fg_Malterlib_zone_batch_malloc(struct _malloc_zone_t *_pZone, size_t si
 	DMibOSXOverrideZoneCheck(_pZone);
 	if (num_requested)
 		return 0;
+	DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	mint Size = DAlignSizeOSX(size);
 	
 	mint nAllocated = 0;
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
-	g_MainHeap->f_AllocBatchDebug
+	DMainHeap->f_AllocBatchDebug
 		(
 			Size
 			, 1
@@ -757,7 +773,7 @@ unsigned fg_Malterlib_zone_batch_malloc(struct _malloc_zone_t *_pZone, size_t si
 		)
 	;
 #else
-	g_MainHeap->f_AllocBatch
+	DMainHeap->f_AllocBatch
 		(
 			Size
 			, 1
@@ -810,9 +826,10 @@ void fg_Malterlib_zone_batch_free(struct _malloc_zone_t *_pZone, void **to_be_fr
 {
 	if (num_to_be_freed == 0)
 		return;
-	
+	DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+
 #ifdef DMemoryManagerIsSame
-	auto &MainHeap = *g_MainHeap;
+	auto &MainHeap = *DMainHeap;
 #endif
 	auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
 	for (mint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
@@ -827,13 +844,14 @@ void fg_Malterlib_zone_batch_free(struct _malloc_zone_t *_pZone, void **to_be_fr
 
 void *fg_Malterlib_zone_calloc(struct _malloc_zone_t *_pZone, size_t num_items, size_t size) /* same as malloc, but block returned is set to zero */
 {
+	DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibOSXOverrideZoneCheck(_pZone);
 	mint Size = DAlignSizeOSX(size * num_items);
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
-	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+	uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+	uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_Alloc(Size);
 #endif
 #else
 #if DEnableDebugMemoryManager
@@ -848,14 +866,15 @@ void *fg_Malterlib_zone_calloc(struct _malloc_zone_t *_pZone, size_t num_items, 
 /* aligned memory allocation. The callback may be NULL. Present in version >= 5. */
 void *fg_Malterlib_zone_memalign(struct _malloc_zone_t *_pZone, size_t alignment, size_t size)
 {
+	DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibOSXOverrideZoneCheck(_pZone);
 
 	mint Size = size;
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
-	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedWithSizeDebug(Size, alignment, DMibPFile, DMibPLine, g_DebugFlags);
+	uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAlignedWithSizeDebug(Size, alignment, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, alignment);
+	uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAligned(Size, alignment);
 #endif
 #else
 #if DEnableDebugMemoryManager
@@ -870,15 +889,16 @@ void *fg_Malterlib_zone_memalign(struct _malloc_zone_t *_pZone, size_t alignment
 
 void *fg_Malterlib_zone_valloc(struct _malloc_zone_t *_pZone, size_t size) /* same as malloc, but block returned is set to zero and is guaranteed to be page aligned */
 {
+	DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibOSXOverrideZoneCheck(_pZone);
 
 	mint Alignment = NSys::NPrivate::g_PageSize;
 	mint Size = fg_AlignUp(fg_Max(size, 1), Alignment);
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
-	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+	uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-	uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, Alignment);
+	uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAligned(Size, Alignment);
 #endif
 #else
 #if DEnableDebugMemoryManager
@@ -894,6 +914,7 @@ void *fg_Malterlib_zone_valloc(struct _malloc_zone_t *_pZone, size_t size) /* sa
 
 void *fg_Malterlib_zone_realloc(struct _malloc_zone_t *_pZone, void *ptr, size_t size)
 {
+	DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibOSXOverrideZoneCheck(_pZone);
 
 	uint8 *pMalterlibAlloc = (uint8 *)ptr;
@@ -902,9 +923,9 @@ void *fg_Malterlib_zone_realloc(struct _malloc_zone_t *_pZone, void *ptr, size_t
 	
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
-	pMalterlibAlloc = (uint8 *)g_MainHeap->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+	pMalterlibAlloc = (uint8 *)DMainHeap->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-	pMalterlibAlloc = (uint8 *)g_MainHeap->f_Resize(pMalterlibAlloc, Size, 0);
+	pMalterlibAlloc = (uint8 *)DMainHeap->f_Resize(pMalterlibAlloc, Size, 0);
 #endif
 #else	
 #if DEnableDebugMemoryManager
@@ -924,7 +945,7 @@ void fg_Malterlib_zone_destroy(struct _malloc_zone_t *_pZone) /* zone is destroy
 size_t fg_Malterlib_zone_good_size(malloc_zone_t *zone, size_t size) /* zone is destroyed and all memory reclaimed */
 {
 #ifdef DMemoryManagerIsSame
-	return g_MainHeap->f_SizePadded(size);
+	return DMainHeap->f_SizePadded(size);
 #else
 	return fg_SizePadded(size);
 #endif
@@ -1356,7 +1377,7 @@ extern "C"
 		}
 #endif
 #endif
-		g_MainHeap->f_LazyReturnCheckout();
+		DMainHeap->f_LazyReturnCheckout();
 	}
 	
 	mint fg_Malterlib_Safe_GetSize(CMemoryManagerZone *_pZone, const void *_pMemory)
@@ -1406,7 +1427,7 @@ extern "C"
 	#endif
 			return nullptr;
 		
-		return g_MainHeap->f_GetMemoryManager(_pMemory);
+		return DMainHeap->f_GetMemoryManager(_pMemory);
 	}
 	CMemoryManager *fg_Malterlib_Safe_GetOtherMemoryManager(void const *_pMemory)
 	{
@@ -1451,14 +1472,14 @@ extern "C"
 
 	inline_always malloc_zone_t *fg_Malterlib_ZoneFromMemoryManager(CMemoryManager *_pMemoryManager)
 	{
-		if (_pMemoryManager == &(*g_MainHeap))
+		if (_pMemoryManager == &(*DMainHeap))
 			return (malloc_zone_t *)&g_MalterlibMallocZone;
 		return (malloc_zone_t *)&(((CMemoryManagerZone *)((uint8 *)_pMemoryManager - DMibPOffsetOf(CMemoryManagerZone, m_MemoryManager)))->m_MallocZone);
 	}
 	
 	CMemoryManager *fg_Malterlib_GetMemoryManager(void const *_pMemory)
 	{
-		CMemoryManager *pMemoryManager = g_MainHeap->f_GetMemoryManager(_pMemory);
+		CMemoryManager *pMemoryManager = DMainHeap->f_GetMemoryManager(_pMemory);
 		if (likely(pMemoryManager))
 			return pMemoryManager;
 		auto &State = *g_GlobalState;
@@ -1496,10 +1517,11 @@ extern "C"
 	{
 #ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeOSX(_Size);
+		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 #if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_Alloc(Size);
 #endif
 		return pMalterlibAlloc;
 #else
@@ -1512,10 +1534,11 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		mint Alignment = NSys::NPrivate::g_PageSize;
 		mint Size = DAlignSizeOSX(_Size);
+		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, Alignment);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAligned(Size, Alignment);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1527,10 +1550,11 @@ extern "C"
 	{
 #ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeOSX(_Size * _NumItems);
+		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_Alloc(Size);
 	#endif
 		fg_MemClear(pMalterlibAlloc, Size);
 		return pMalterlibAlloc;
@@ -1548,10 +1572,11 @@ extern "C"
 		mint Size = DAlignSizeOSX(_Size);
 		if (g_bOnlyDefaultZone || !_pMemory)
 		{
+			DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 #			if DEnableDebugMemoryManager
-				return (uint8 *)g_MainHeap->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+				return (uint8 *)DMainHeap->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
 #			else
-				return (uint8 *)g_MainHeap->f_Resize(pMalterlibAlloc, Size, 0);
+				return (uint8 *)DMainHeap->f_Resize(pMalterlibAlloc, Size, 0);
 #			endif
 		}
  		CMemoryManager *pMemoryManager;
@@ -1572,6 +1597,7 @@ extern "C"
 		else
 			pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
 		DMibFastCheck(pMemoryManager);
+		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 #		if DEnableDebugMemoryManager
 			return pMemoryManager->f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
 #		else
@@ -1591,10 +1617,11 @@ extern "C"
 		mint Size = DAlignSizeOSX(_Size);
 		if (g_bOnlyDefaultZone || !_pMemory)
 		{
+			DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 #			if DEnableDebugMemoryManager
-				return (uint8 *)g_MainHeap->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+				return (uint8 *)DMainHeap->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
 #			else
-				return (uint8 *)g_MainHeap->f_Resize(pMalterlibAlloc, Size, 0);
+				return (uint8 *)DMainHeap->f_Resize(pMalterlibAlloc, Size, 0);
 #			endif
 		}
  		CMemoryManager *pMemoryManager;
@@ -1615,6 +1642,7 @@ extern "C"
 		else
 			pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
 		DMibFastCheck(pMemoryManager);
+		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 #		if DEnableDebugMemoryManager
 			return pMemoryManager->f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
 #		else
@@ -1635,8 +1663,9 @@ extern "C"
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 		if (g_bOnlyDefaultZone)
 		{
+			DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 #ifdef DMemoryManagerIsSame
-			return g_MainHeap->f_FreeNoSize(pMalterlibAlloc);
+			return DMainHeap->f_FreeNoSize(pMalterlibAlloc);
 #else
 			return fg_FreeNoSize(pMalterlibAlloc);
 #endif
@@ -1659,6 +1688,7 @@ extern "C"
 		else
 			pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
 		DMibFastCheck(pMemoryManager);
+		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 		return pMemoryManager->f_FreeNoSize(_pMemory);
 #else
 		return g_OriginalFunctions.free(_pMemory);
@@ -1674,8 +1704,9 @@ extern "C"
 			return g_OriginalFunctions.vfree(_pMemory);
 		if (g_bOnlyDefaultZone)
 		{
+			DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 #ifdef DMemoryManagerIsSame
-			return g_MainHeap->f_FreeNoSize(_pMemory);
+			return DMainHeap->f_FreeNoSize(_pMemory);
 #else
 			return fg_FreeNoSize((uint8 *)_pMemory);
 #endif
@@ -1698,6 +1729,7 @@ extern "C"
 		else
 			pMemoryManager = fg_Malterlib_GetMemoryManager(_pMemory);
 		DMibFastCheck(pMemoryManager);
+		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 		return pMemoryManager->f_FreeNoSize(_pMemory);
 #else
 		return g_OriginalFunctions.vfree(_pMemory);
@@ -1708,10 +1740,11 @@ extern "C"
 	{
 #ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeOSX(_Size);
+		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedWithSizeDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAlignedWithSizeDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, _Alignment);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAligned(Size, _Alignment);
 	#endif
 		*_pOutput = pMalterlibAlloc;
 		return 0;
@@ -1735,9 +1768,9 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeOSX(_Size);
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_Alloc(Size);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1751,9 +1784,9 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeOSX(_Size);
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_Alloc(Size);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1767,9 +1800,9 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeOSX(_Size);
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_Alloc(Size);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1782,9 +1815,9 @@ extern "C"
 	{
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(_Size, (mint)_Alignment);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAligned(_Size, (mint)_Alignment);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1797,9 +1830,9 @@ extern "C"
 	{
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(_Size, (mint)_Alignment);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAligned(_Size, (mint)_Alignment);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1813,9 +1846,9 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeOSX(_Size);
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_Alloc(Size);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_Alloc(Size);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1828,9 +1861,9 @@ extern "C"
 	{
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(_Size, (mint)_Alignment);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAligned(_Size, (mint)_Alignment);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1844,9 +1877,9 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeOSX(_Size);
 	#if DEnableDebugMemoryManager
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAlignedWithSizeDebug(Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAlignedWithSizeDebug(Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
-		uint8 *pMalterlibAlloc = (uint8 *)g_MainHeap->f_AllocAligned(Size, (mint)_Alignment);
+		uint8 *pMalterlibAlloc = (uint8 *)DMainHeap->f_AllocAligned(Size, (mint)_Alignment);
 	#endif
 		return pMalterlibAlloc;
 #else
@@ -1861,7 +1894,7 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_FreeNoSize(pMalterlibAlloc);
+		return DMainHeap->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdaPv(_pMemory);
 #endif
@@ -1874,7 +1907,7 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_FreeNoSize(pMalterlibAlloc);
+		return DMainHeap->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdlPv(_pMemory);
 #endif
@@ -1887,7 +1920,7 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_FreeNoSize(pMalterlibAlloc);
+		return DMainHeap->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdaPvRKSt9nothrow_t(_pMemory);
 #endif
@@ -1900,7 +1933,7 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_FreeNoSize(pMalterlibAlloc);
+		return DMainHeap->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdaPvSt11align_val_t(_pMemory, _Alignment);
 #endif
@@ -1913,7 +1946,7 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_FreeNoSize(pMalterlibAlloc);
+		return DMainHeap->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdaPvSt11align_val_tRKSt9nothrow_t(_pMemory, _Alignment);
 #endif
@@ -1926,7 +1959,7 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_Free(pMalterlibAlloc, _Size);
+		return DMainHeap->f_Free(pMalterlibAlloc, _Size);
 #else
 		return g_OriginalFunctions._ZdaPvm(_pMemory, _Size);
 #endif
@@ -1940,7 +1973,7 @@ extern "C"
 			return;
 		mint Size = fg_AlignUp(DAlignSizeOSX(_Size), (mint)_Alignment);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_Free(pMalterlibAlloc, Size);
+		return DMainHeap->f_Free(pMalterlibAlloc, Size);
 #else
 		return g_OriginalFunctions._ZdaPvmSt11align_val_t(_pMemory, _Size, _Alignment);
 #endif
@@ -1953,7 +1986,7 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_FreeNoSize(pMalterlibAlloc);
+		return DMainHeap->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdlPvRKSt9nothrow_t(_pMemory);
 #endif
@@ -1966,7 +1999,7 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_FreeNoSize(pMalterlibAlloc);
+		return DMainHeap->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdlPvSt11align_val_t(_pMemory, _Alignment);
 #endif
@@ -1979,7 +2012,7 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_FreeNoSize(pMalterlibAlloc);
+		return DMainHeap->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return g_OriginalFunctions._ZdlPvSt11align_val_tRKSt9nothrow_t(_pMemory, _Alignment);
 #endif
@@ -1992,7 +2025,7 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_Free(pMalterlibAlloc, _Size);
+		return DMainHeap->f_Free(pMalterlibAlloc, _Size);
 #else
 		return g_OriginalFunctions._ZdlPvm(_pMemory, _Size);
 #endif
@@ -2006,7 +2039,7 @@ extern "C"
 			return;
 		mint Size = fg_AlignUp(DAlignSizeOSX(_Size), (mint)_Alignment);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		return g_MainHeap->f_Free(pMalterlibAlloc, Size);
+		return DMainHeap->f_Free(pMalterlibAlloc, Size);
 #else
 		return g_OriginalFunctions._ZdlPvmSt11align_val_t(_pMemory, _Size, _Alignment);
 #endif
@@ -2022,7 +2055,7 @@ extern "C"
 		if (g_bOnlyDefaultZone)
 		{
 #ifdef DMemoryManagerIsSame
-			return g_MainHeap->f_Size(_pMemory);
+			return DMainHeap->f_Size(_pMemory);
 #else
 			return fg_Size(_pMemory);
 #endif
@@ -2060,7 +2093,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport size_t fg_Malterlib_malloc_good_size(size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		return g_MainHeap->f_SizePadded(_Size);
+		return DMainHeap->f_SizePadded(_Size);
 #else
 		return g_OriginalFunctions.malloc_good_size(_Size);
 #endif
@@ -2133,7 +2166,7 @@ extern "C"
 #ifndef DFullArenasForSecondary
 		Config.m_nMaxArenas = 1; // For these zones don't waste address space, chances are they will be single thread use anyways
 #endif
-		Config.m_Magic = g_MainHeap->f_GetMagic();
+		Config.m_Magic = DMainHeap->f_GetMagic();
 		NPtr::TCUniquePointer<CMemoryManagerZone> pMemoryManager = fg_Construct(Config);
 		
 #ifdef DFullArenasForSecondary
@@ -2158,6 +2191,7 @@ extern "C"
 				{
 					auto *pZone = (CMemoryManagerZone *)_pZone;
 					mint Size = DAlignSizeOSX(_Size);
+					DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 					uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 					return pMalterlibAlloc;
 				}
@@ -2165,6 +2199,7 @@ extern "C"
 				{
 					auto *pZone = (CMemoryManagerZone *)_pZone;
 					mint Size = DAlignSizeOSX(_Size * _nItems);
+					DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 					uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 					fg_MemClear(pMalterlibAlloc, Size);
 					return pMalterlibAlloc;
@@ -2173,6 +2208,7 @@ extern "C"
 				{
 					auto *pZone = (CMemoryManagerZone *)_pZone;
 					mint Size = fg_AlignUp(fg_Max(_Size, 1), NSys::NPrivate::g_PageSize);
+					DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 					uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, NSys::NPrivate::g_PageSize);
 					fg_MemClear(pMalterlibAlloc, Size);
 					return pMalterlibAlloc;
@@ -2190,6 +2226,7 @@ extern "C"
 					uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 					mint Size = DAlignSizeOSX(_Size);
 					auto *pZone = (CMemoryManagerZone *)_pZone;
+					DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 					pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_Resize(pMalterlibAlloc, Size, 0);
 					return pMalterlibAlloc;
 				}
@@ -2214,7 +2251,8 @@ extern "C"
 						return 0;
 					mint Size = DAlignSizeOSX(size);
 					auto *pZone = (CMemoryManagerZone *)_pZone;
-					
+					DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+
 					mint nAllocated = 0;
 				#if DEnableDebugMemoryManager
 					pZone->m_MemoryManager.f_AllocBatchDebug
@@ -2253,6 +2291,7 @@ extern "C"
 				{
 					if (num_to_be_freed == 0)
 						return;
+					DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 					auto *pZone = (CMemoryManagerZone *)_pZone;
 					auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
 					for (mint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
@@ -2264,6 +2303,7 @@ extern "C"
 				{
 					auto *pZone = (CMemoryManagerZone *)_pZone;
 					mint Size = size;
+					DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 				#if DEnableDebugMemoryManager
 					uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, alignment, DMibPFile, DMibPLine, g_DebugFlags);
 				#else
@@ -2276,6 +2316,7 @@ extern "C"
 				{
 					if (!ptr)
 						return;
+					DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
 					auto *pZone = (CMemoryManagerZone *)_pZone;
 					uint8 *pMalterlibAlloc = (uint8 *)ptr;
 					pZone->m_MemoryManager.f_Free(pMalterlibAlloc, size);

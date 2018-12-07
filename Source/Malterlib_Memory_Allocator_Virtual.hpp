@@ -239,6 +239,11 @@ namespace NMib
 			return fg_Move(AutoDestroy);
 		}
 
+		inline_small auto CAllocator_Virtual::f_MakeSafe(void *_pMemory, mint _Size) -> CAutoDestroy
+		{
+			return CAutoDestroy{_pMemory, _Size};
+		}
+
 		///
 		/// CAllocator_VirtualNoCommit
 		/// 
@@ -442,6 +447,11 @@ namespace NMib
 			AutoDestroy.m_Size = _Size;
 
 			return fg_Move(AutoDestroy);
+		}
+
+		inline_small auto CAllocator_VirtualNoTracking::f_MakeSafe(void *_pMemory, mint _Size) -> CAutoDestroy
+		{
+			return CAutoDestroy{_pMemory, _Size};
 		}
 
 		///

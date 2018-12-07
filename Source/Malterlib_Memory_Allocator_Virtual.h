@@ -76,6 +76,7 @@ namespace NMib
 			static fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
 			only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 			only_parameters_aliased static CAutoDestroy f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+			static CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size);
 		};
 
 		class CAllocator_VirtualNoCommit : public CAllocator_Virtual
@@ -132,6 +133,7 @@ namespace NMib
 			static fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
 			only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 			only_parameters_aliased static CAutoDestroy f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+			static CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size);
 		};
 
 		class CAllocator_VirtualNoTrackingNoCommit : public CAllocator_VirtualNoTracking

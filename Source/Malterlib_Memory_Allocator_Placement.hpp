@@ -128,6 +128,11 @@ namespace NMib
 			return fg_Move(AutoDestroy);
 		}
 
+		inline_small auto CAllocator_Placement::f_MakeSafe(void *_pMemory, mint _Size) -> CAutoDestroy
+		{
+			return CAutoDestroy{_pMemory, _Size};
+		}
+
 		only_parameters_aliased inline_small void CAllocator_Placement::f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		{
 			DMibPDebugBreak; // Not supported

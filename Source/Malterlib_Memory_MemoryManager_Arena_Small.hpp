@@ -25,6 +25,7 @@ namespace NMib
 		inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocSmallSize(mint &_Size)
 		{
 			mint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
+			DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(_Size));
 			if (unlikely(iSlab == 0))
 				return fsp_AllocSmall<1>(this);
 			return fsp_AllocSmallShared(this, iSlab);					
@@ -33,11 +34,26 @@ namespace NMib
 		template <typename t_CParams>
 		inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocSmallSizeBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 		{
+			DMibMemLightweightTrack
+				(
+					auto *pLocalArena = m_pMemoryManager->m_LocalArena.f_TryGet();
+				)
+			;
+
 			mint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
 			if (unlikely(iSlab == 0))
 			{
 				while (true)
 				{
+					DMibMemLightweightTrack
+						(
+							{
+								if (TCMemoryManager<t_CParams>::fsp_ShouldTrackAlloc(pLocalArena))
+									pLocalArena->f_TrackAlloc(1);
+							}
+						)
+					;
+
 					auto *pAlloc = fsp_AllocSmall<1>(this);
 					if (!_Functor(pAlloc, 1))
 						break;
@@ -46,6 +62,15 @@ namespace NMib
 			}
 			while (true)
 			{
+				DMibMemLightweightTrack
+					(
+						{
+							if (TCMemoryManager<t_CParams>::fsp_ShouldTrackAlloc(pLocalArena))
+								pLocalArena->f_TrackAlloc(_Size);
+						}
+					)
+				;
+
 				auto *pAlloc = fsp_AllocSmallShared(this, iSlab);
 				if (!_Functor(pAlloc, _Size))
 					break;
