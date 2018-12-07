@@ -131,7 +131,9 @@ namespace NMib
 				"currentThread",
 				"createDefaultEngines",
 	#endif
-	#ifndef DPlatformFamily_Windows
+	#ifdef DPlatformFamily_Windows
+				"QWindowsIntegration::createPlatformTheme",
+	#else
 				"qt_init",
 	#endif
 				"QMutex::QMutex",
@@ -153,6 +155,33 @@ namespace NMib
 				"QLibraryPrivate::findOrCreate",
 				"QFactoryLoader::instance",
 				"QProcessPrivate::initializeProcessManager",
+				// Qml stuffs
+				"QQmlTypePrivate::initEnums",
+				"QQmlPrivate::qmlregister",
+				"QQmlObjectCreator::createInstance",
+				"QQmlPropertyCache::update",
+				"QQuickTransitionManager::transition",
+				"QQmlContextData::propertyNames",
+				"QQmlMetaObject::methodParameterTypes",
+				"QQuickTransitionManager::QQuickTransitionManager",
+				"QQuickListViewPrivate::newViewItem",
+				"QQuickItemViewTransitionableItem::startTransition",
+				"QQmlMetaTypeData::propertyCache",
+				"QQmlType::SingletonInstanceInfo::init",
+				"QQuickItemView::setModel",
+				"QQmlTypeLoader::doLoad<PlainLoader>",
+				"FxViewItem::transitionNextReposition",
+				"QQmlImportsPrivate::importExtension",
+				"QQmlImportInstance::resolveType",
+				"QQmlMetaType::registerCompositeSingletonType",
+				"QQuickWidgetPrivate::createContext",
+				"QQmlThreadPrivate::QQmlThreadPrivate",
+				"QQmlThreadPrivate::run",
+				"QQmlData::createQQmlData",
+				"QSGAdaptationBackendData::QSGAdaptationBackendData",
+				"QQuickEventPoint::estimatedVelocity",
+				"QV4::QQmlQPointer<QObject>::init",
+				"QPointer<QQmlEngine>::operator=",
 				nullptr
 			}
 		;
