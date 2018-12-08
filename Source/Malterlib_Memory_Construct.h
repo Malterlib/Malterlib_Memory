@@ -79,7 +79,7 @@ namespace NMib
 #endif
 #if defined(DMibPOverrideOperatorNew)
 
-				NMem::CCaptureDefaultDelete Captured;
+				NMemory::CCaptureDefaultDelete Captured;
 				delete _pObject;
 
 				DMibFastCheck(Captured.m_pMemory);
@@ -141,7 +141,7 @@ namespace NMib
 			return fg_ConstructObject<typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType>
 				(
 					fg_Forward<tf_CAllocator>(_Allocator)
-					, fg_Forward<tp_CParams>(NContainer::fg_Get<tp_Indices>(m_Params))...
+					, fg_Forward<tp_CParams>(fg_Get<tp_Indices>(m_Params))...
 				);
 		}
 		
@@ -151,7 +151,7 @@ namespace NMib
 			mc_nParams = sizeof...(tp_CParams)
 		};
 		
-		NContainer::TCTuple<typename NMib::NTraits::TCAddLValueReference<tp_CParams>::CType...> m_Params;
+		NStorage::TCTuple<typename NMib::NTraits::TCAddLValueReference<tp_CParams>::CType...> m_Params;
 		
 		TCConstruct(typename NMib::NTraits::TCAddLValueReference<tp_CParams>::CType... p_Params)
 			: m_Params(p_Params...)

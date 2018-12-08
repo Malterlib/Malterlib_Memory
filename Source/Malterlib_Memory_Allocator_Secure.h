@@ -5,52 +5,46 @@
 
 #include <Mib/Core/Core>
 
-namespace NMib
+namespace NMib::NMemory
 {
-	namespace NMem
+	/************************************************************************************************\
+	||¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯||
+	|| Secure Allocator
+	||______________________________________________________________________________________________||
+	\************************************************************************************************/
+
+	template
+	<
+		typename t_CBaseAllocator
+		, bool t_bStatic = t_CBaseAllocator::mc_bMethodsStatic
+	>
+	class TCAllocator_Secure : public t_CBaseAllocator
 	{
+	public:
+		typedef t_CBaseAllocator CBaseAllocator;
 
-		/************************************************************************************************\
-		||¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯||
-		|| Secure Allocator
-		||______________________________________________________________________________________________||
-		\************************************************************************************************/
-				
-		template
-		<
-			typename t_CBaseAllocator
-			, bool t_bStatic = t_CBaseAllocator::mc_bMethodsStatic
-		>
-		class TCAllocator_Secure : public t_CBaseAllocator
-		{
-		public:
-			typedef t_CBaseAllocator CBaseAllocator;
-
-			void *f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-			void *f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-			void *f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-			void *f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-			void f_Free(void *_pBlock, mint _Size);
-			void f_FreeNoSize(void *_pBlock);
-		};
+		void *f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		void *f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		void *f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		void *f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		void f_Free(void *_pBlock, mint _Size);
+		void f_FreeNoSize(void *_pBlock);
+	};
 
 
-		template<typename t_CBaseAllocator>
-		class TCAllocator_Secure<t_CBaseAllocator, true> : public t_CBaseAllocator
-		{
-		public:
-			typedef t_CBaseAllocator CBaseAllocator;
+	template<typename t_CBaseAllocator>
+	class TCAllocator_Secure<t_CBaseAllocator, true> : public t_CBaseAllocator
+	{
+	public:
+		typedef t_CBaseAllocator CBaseAllocator;
 
-			static void *f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-			static void *f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-			static void *f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-			static void *f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-			static void f_Free(void *_pBlock, mint _Size);
-			static void f_FreeNoSize(void *_pBlock);
-		};
-		
-		using CAllocator_HeapSecure = TCAllocator_Secure<CAllocator_Heap>;
+		static void *f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		static void *f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		static void *f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		static void *f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		static void f_Free(void *_pBlock, mint _Size);
+		static void f_FreeNoSize(void *_pBlock);
+	};
 
-	} // Namespace NMem
-
-} // Namespace NMib
+	using CAllocator_HeapSecure = TCAllocator_Secure<CAllocator_Heap>;
+}

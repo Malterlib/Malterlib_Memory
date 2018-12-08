@@ -1,53 +1,50 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
 
-namespace NMib
+namespace NMib::NMemory
 {
-	namespace NMem
+	/// Keep in mind that these two classes are used in the cross module interface and has to be versioned properly if changed
+
+	enum
 	{
-		/// Keep in mind that these two classes are used in the cross module interface and has to be versioned properly if changed
-		
-		enum 
-		{
-			ECMemoryManagerReturnCheckoutVersion = 0x102
-		};
-		struct ICMemoryManagerReturnCheckout
-		{
-			uint32 m_Version;
+		ECMemoryManagerReturnCheckoutVersion = 0x102
+	};
+	struct ICMemoryManagerReturnCheckout
+	{
+		uint32 m_Version;
 
-			// Available in version 0x101
-			virtual void f_ReturnCheckoutVirtual() = 0;
-			virtual void f_TemporaryReturn() = 0;
-			virtual void f_TemporaryGetBack() = 0;
-			virtual void f_TakeOwnership() = 0;
-			virtual void f_RelinquishOwnership() = 0;
-			virtual void f_GarbageCollectLocalArena(bool _bDecommit) = 0;
-		};
-		
-		class CMemoryManagerCheckout
-		{
-			ICMemoryManagerReturnCheckout *m_pThreadLocal;
+		// Available in version 0x101
+		virtual void f_ReturnCheckoutVirtual() = 0;
+		virtual void f_TemporaryReturn() = 0;
+		virtual void f_TemporaryGetBack() = 0;
+		virtual void f_TakeOwnership() = 0;
+		virtual void f_RelinquishOwnership() = 0;
+		virtual void f_GarbageCollectLocalArena(bool _bDecommit) = 0;
+	};
 
-			CMemoryManagerCheckout(CMemoryManagerCheckout const &_Other);
-			CMemoryManagerCheckout &operator = (CMemoryManagerCheckout const &_Other);
-		public:
-			CMemoryManagerCheckout(CMemoryManagerCheckout &&_Other);
-			CMemoryManagerCheckout(ICMemoryManagerReturnCheckout *_pThreadLocal);
-			CMemoryManagerCheckout &operator = (CMemoryManagerCheckout &&_Other);
-			~CMemoryManagerCheckout();
-			
-			bool f_IsCheckedOut() const;
+	class CMemoryManagerCheckout
+	{
+		ICMemoryManagerReturnCheckout *m_pThreadLocal;
 
-			void f_TemporaryReturn();
-			void f_TemporaryGetBack();
-			void f_TakeOwnership();
-			void f_RelinquishOwnership();
-			void f_CheckMessages();
-			void f_GarbageCollectLocalArena(bool _bDecommit);
-		};
-	}
+		CMemoryManagerCheckout(CMemoryManagerCheckout const &_Other);
+		CMemoryManagerCheckout &operator = (CMemoryManagerCheckout const &_Other);
+	public:
+		CMemoryManagerCheckout(CMemoryManagerCheckout &&_Other);
+		CMemoryManagerCheckout(ICMemoryManagerReturnCheckout *_pThreadLocal);
+		CMemoryManagerCheckout &operator = (CMemoryManagerCheckout &&_Other);
+		~CMemoryManagerCheckout();
+
+		bool f_IsCheckedOut() const;
+
+		void f_TemporaryReturn();
+		void f_TemporaryGetBack();
+		void f_TakeOwnership();
+		void f_RelinquishOwnership();
+		void f_CheckMessages();
+		void f_GarbageCollectLocalArena(bool _bDecommit);
+	};
 }
 
 #include "Malterlib_Memory_MemoryManager_Checkout.hpp"

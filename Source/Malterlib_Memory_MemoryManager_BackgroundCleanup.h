@@ -3,43 +3,39 @@
 
 #pragma once
 
-namespace NMib
+namespace NMib::NMemory
 {
-	namespace NMem
+	template <typename t_CParams>
+	struct TCMemoryManagerNumaArenaBackgroundCleanup
 	{
+		TCMemoryManagerNumaArenaBackgroundCleanup(TCMemoryManagerNumaArena<t_CParams> * _pNumaArena);
+		~TCMemoryManagerNumaArenaBackgroundCleanup();
 
-		template <typename t_CParams>
-		struct TCMemoryManagerNumaArenaBackgroundCleanup
-		{
-			TCMemoryManagerNumaArenaBackgroundCleanup(TCMemoryManagerNumaArena<t_CParams> * _pNumaArena);
-			~TCMemoryManagerNumaArenaBackgroundCleanup();
-			
-			void f_OnNeedCleanup();
+		void f_OnNeedCleanup();
 
-			int64 f_GetTimestamp() const;
-			
-			bool f_IsWaiting();
+		int64 f_GetTimestamp() const;
 
-			void f_StopThread();
-			void f_CanStartThreads();
-			
-			void f_PrepareFork();
-			void f_ForkedChild();
-			void f_ForkedParent();
-			void f_ForceStartThread();
+		bool f_IsWaiting();
 
-		private:
+		void f_StopThread();
+		void f_CanStartThreads();
 
-			void fp_StartupThread();
-			
-		private:
-			TCMemoryManager<t_CParams> * mp_pMemoryManager;
-			TCMemoryManagerNumaArena<t_CParams> * mp_pNumaArena;
-			NTime::CCyclesClock mp_Clock;
-			align_cacheline NAtomic::TCAtomic<uint32> mp_bStarted;
-			align_cacheline NAtomic::TCAtomic<uint32> mp_bWaiting;
+		void f_PrepareFork();
+		void f_ForkedChild();
+		void f_ForkedParent();
+		void f_ForceStartThread();
 
-			NPtr::TCUniquePointer<NThread::CThreadObjectNonTracked, NMem::CAllocator_NonTrackedHeap> mp_pThread;
-		};
-	}
+	private:
+
+		void fp_StartupThread();
+
+	private:
+		TCMemoryManager<t_CParams> * mp_pMemoryManager;
+		TCMemoryManagerNumaArena<t_CParams> * mp_pNumaArena;
+		NTime::CCyclesClock mp_Clock;
+		align_cacheline NAtomic::TCAtomic<uint32> mp_bStarted;
+		align_cacheline NAtomic::TCAtomic<uint32> mp_bWaiting;
+
+		NStorage::TCUniquePointer<NThread::CThreadObjectNonTracked, NMemory::CAllocator_NonTrackedHeap> mp_pThread;
+	};
 }

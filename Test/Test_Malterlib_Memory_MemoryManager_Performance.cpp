@@ -10,7 +10,7 @@
 namespace
 {
 	using namespace NMib::NTest;
-	using namespace NMib::NMem;
+	using namespace NMib::NMemory;
 	
 	constexpr mint gc_TestSize = 512;
 	
@@ -96,7 +96,7 @@ namespace
 			zbint m_bFailed;
 
 //			typedef DMibListLinkD_List(CAllocationInfo, m_Link) CAllocInfoList;
-	//		NMib::NMem::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMem::CPoolType_Growing> m_AllocationInfoPool;
+	//		NMib::NMemory::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing> m_AllocationInfoPool;
 
 
 			CAllocPattern_Random()
@@ -152,7 +152,7 @@ namespace
 						//mint Size = m_MaxAllocSize + 1;
 						Info.m_pAddress = _Heap.f_Alloc(Size);
 						*((uint8 *)Info.m_pAddress) = iStart;
-						//NMib::NMem::fg_MemClear((uint8 *)Info.m_pAddress, Size);
+						//NMib::NMemory::fg_MemClear((uint8 *)Info.m_pAddress, Size);
 						++m_nIterations;
 					}
 				}
@@ -200,7 +200,7 @@ namespace
 			zbint m_bFailed;
 
 //			typedef DMibListLinkD_List(CAllocationInfo, m_Link) CAllocInfoList;
-	//		NMib::NMem::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMem::CPoolType_Growing> m_AllocationInfoPool;
+	//		NMib::NMemory::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing> m_AllocationInfoPool;
 
 
 			CAllocPattern_RandomAlignment()
@@ -614,16 +614,16 @@ namespace
 						, m_bValidResult(false)
 					{
 					}
-					virtual void f_HandleHeader(NMib::NRegistry::CRegistry_CStr const &_Reg) override
+					virtual void f_HandleHeader(NMib::NContainer::CRegistry_CStr const &_Reg) override
 					{
 					}
-					virtual void f_HandleFooter(NMib::NRegistry::CRegistry_CStr const &_Reg) override
+					virtual void f_HandleFooter(NMib::NContainer::CRegistry_CStr const &_Reg) override
 					{
 					}
-					virtual void f_HandleCategory(NMib::NRegistry::CRegistry_CStr const &_Reg) override
+					virtual void f_HandleCategory(NMib::NContainer::CRegistry_CStr const &_Reg) override
 					{
 					}
-					virtual void f_HandleResult(NMib::NRegistry::CRegistry_CStr const &_Reg) override
+					virtual void f_HandleResult(NMib::NContainer::CRegistry_CStr const &_Reg) override
 					{
 						CTestResult Result;
 						CTestResultParser::fs_DecodeResult(_Reg, Result);
@@ -634,7 +634,7 @@ namespace
 						}
 
 					}
-					virtual void f_HandlePerformanceResult(NMib::NRegistry::CRegistry_CStr const &_Reg) override
+					virtual void f_HandlePerformanceResult(NMib::NContainer::CRegistry_CStr const &_Reg) override
 					{
 						CTestPerformanceResults Results;
 						CTestResultParser::fs_DecodePerformanceResults(_Reg, Results);
@@ -646,7 +646,7 @@ namespace
 							m_bValidResult = true;
 						}
 					}
-					virtual void f_HandleMemoryResult(NMib::NRegistry::CRegistry_CStr const &_Reg) override
+					virtual void f_HandleMemoryResult(NMib::NContainer::CRegistry_CStr const &_Reg) override
 					{
 					}
 				}
@@ -658,7 +658,7 @@ namespace
 				DMibTrace("{}\r\n", Params.m_Parameters);
 				void *pProcess = nullptr;
 				
-				NMib::NPtr::TCUniquePointer<NMib::NProcess::CProcessLaunch> pProcessLaunch;
+				NMib::NStorage::TCUniquePointer<NMib::NProcess::CProcessLaunch> pProcessLaunch;
 				
 				NMib::NThread::CEvent Exited;
 				Exited.f_ResetSignaled();

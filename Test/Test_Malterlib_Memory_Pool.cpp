@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #if 0
@@ -36,7 +36,7 @@ public:
 
 //		DMibTrace("\n\nPool\n\n", 0);
 
-		NMib::NMem::TCPool<CTestClass, 128, NMib::NThread::CNoLock, NMib::NMem::CPoolType_Freeable, NMib::NMem::CAllocator_Virtual> TestPool;
+		NMib::NMemory::TCPool<CTestClass, 128, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Freeable, NMib::NMemory::CAllocator_Virtual> TestPool;
 
 //		TCPoolAggregate<CTestClass> TestPool = {0};
 
@@ -75,7 +75,7 @@ public:
 
 		Timer.f_Reset();
 		TimerDelete.f_Reset();
-		NMib::NMem::TCPool<CTestClass, 128, NMib::NThread::CNoLock, NMib::NMem::CPoolType_Growing, NMib::NMem::CAllocator_Virtual> TestPoolGrowing;
+		NMib::NMemory::TCPool<CTestClass, 128, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing, NMib::NMemory::CAllocator_Virtual> TestPoolGrowing;
 		for (aint i = 0; i < NumIter; ++i)
 		{
 			{

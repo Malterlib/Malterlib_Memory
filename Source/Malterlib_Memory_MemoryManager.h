@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -7,20 +7,16 @@
 
 //#	define DMibPNoUnalignedAccess
 
-namespace NMib
+namespace NMib::NMemory
 {
-	namespace NMem
-	{
-		template <typename t_CParams>
-		struct TCMemoryManager;
+	template <typename t_CParams>
+	struct TCMemoryManager;
 
-		template <typename t_CParams>
-		struct TCMemoryManagerArena;
+	template <typename t_CParams>
+	struct TCMemoryManagerArena;
 
-		template <typename t_CParams>
-		struct TCMemoryManagerNumaArena;
-
-	}
+	template <typename t_CParams>
+	struct TCMemoryManagerNumaArena;
 }
 
 #include "Malterlib_Memory_MemoryManager_Config.h"

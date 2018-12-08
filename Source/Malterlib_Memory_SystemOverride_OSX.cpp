@@ -25,10 +25,10 @@
 #	define DMemoryManagerIsSame
 namespace NMib
 {
-	extern NMib::NAggregate::TCAggregateSimple<CMemoryManager> g_MainHeap;
+	extern NMib::NStorage::TCAggregateSimple<CMemoryManager> g_MainHeap;
 	extern bool g_bMainHeapConstructed;
 #if DMibEnableSafeCheck > 0
-	auto &fg_MainHeap()
+	static auto &fg_MainHeap()
 	{
 		DMibFastCheck(g_bMainHeapConstructed);
 		return g_MainHeap;
@@ -63,7 +63,7 @@ namespace NMib
 
 
 using namespace NMib;
-using namespace NMib::NMem;
+using namespace NMib::NMemory;
 
 //#define DEmulateCrash
 #define DOptimizeSetJmp
@@ -123,7 +123,7 @@ namespace NMib
 		void fg_MalterlibSystem_ForkParent();
 		void fg_MalterlibSystem_ForkChild();
 		
-		NAggregate::TCAggregateSimple<NInstrumentation::CMHook> g_FunctionHooks = {DAggregateInit};
+		NStorage::TCAggregateSimple<NInstrumentation::CMHook> g_FunctionHooks = {DAggregateInit};
 
 		bool g_bAtExitCalled = false;
 	}
@@ -210,7 +210,7 @@ namespace
 		mint m_iThreadLocalReentrant;
 	};
 	
-	NAggregate::TCAggregateSimple<CLowLevelGlobalState> g_LowLevelGlobalState = {DAggregateInit};
+	NStorage::TCAggregateSimple<CLowLevelGlobalState> g_LowLevelGlobalState = {DAggregateInit};
 	
 	struct CGlobalState
 	{
@@ -227,7 +227,7 @@ namespace
 #endif
 	};
 	
-	NAggregate::TCAggregateSimple<CGlobalState> g_GlobalState = {DAggregateInit};
+	NStorage::TCAggregateSimple<CGlobalState> g_GlobalState = {DAggregateInit};
 }
 
 extern "C"
@@ -2167,7 +2167,7 @@ extern "C"
 		Config.m_nMaxArenas = 1; // For these zones don't waste address space, chances are they will be single thread use anyways
 #endif
 		Config.m_Magic = DMainHeap->f_GetMagic();
-		NPtr::TCUniquePointer<CMemoryManagerZone> pMemoryManager = fg_Construct(Config);
+		NStorage::TCUniquePointer<CMemoryManagerZone> pMemoryManager = fg_Construct(Config);
 		
 #ifdef DFullArenasForSecondary
 		pMemoryManager->m_MemoryManager.f_CanDoLazyCheckout();
@@ -2232,7 +2232,7 @@ extern "C"
 				}
 				, [](malloc_zone_t *_pZone)
 				{
-					NPtr::TCUniquePointer<CMemoryManagerZone> pMemoryManager = fg_Explicit((CMemoryManagerZone *)_pZone);
+					NStorage::TCUniquePointer<CMemoryManagerZone> pMemoryManager = fg_Explicit((CMemoryManagerZone *)_pZone);
 					if (unlikely(g_bForeignZone))
 						g_OriginalFunctions.malloc_zone_unregister(pMemoryManager->f_GetMallocZone());
 					else

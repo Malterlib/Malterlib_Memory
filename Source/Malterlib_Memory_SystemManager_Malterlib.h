@@ -19,14 +19,14 @@
 
 namespace NMib
 {
-	struct CMemoryManagerParams : public NMem::CDefaultMemoryManagerParams
+	struct CMemoryManagerParams : public NMemory::CDefaultMemoryManagerParams
 	{
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 		typedef CMainHeapVirtualAllocator CAllocator;
 	};
 
 #if DEnableDebugMemoryManager
-		struct CMemoryManagerDebugOptions : public NMem::CMemoryManagerDebugOptionsDefault
+		struct CMemoryManagerDebugOptions : public NMemory::CMemoryManagerDebugOptionsDefault
 		{
 			enum
 			{
@@ -56,11 +56,11 @@ namespace NMib
 	#endif
 			};
 		};
-		using CMemoryManager = NMem::TCMemoryManagerDebug<CMemoryManagerParams, false, CMemoryManagerDebugOptions>;
+		using CMemoryManager = NMemory::TCMemoryManagerDebug<CMemoryManagerParams, false, CMemoryManagerDebugOptions>;
 #	else
-		using CMemoryManager = NMem::TCMemoryManager<CMemoryManagerParams>;
+		using CMemoryManager = NMemory::TCMemoryManager<CMemoryManagerParams>;
 #	endif
-	extern NMib::NAggregate::TCAggregateSimple<CMemoryManager> g_MainHeap;
+	extern NMib::NStorage::TCAggregateSimple<CMemoryManager> g_MainHeap;
 }
 
 #endif

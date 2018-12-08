@@ -5,7 +5,7 @@
 
 #include <Mib/Core/Core>
 
-namespace NMib::NMem
+namespace NMib::NMemory
 {
 #ifdef DMibPOverrideOperatorNew
 	struct CCaptureDefaultDelete

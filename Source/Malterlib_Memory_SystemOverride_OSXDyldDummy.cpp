@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #define module_export __attribute__ ((__visibility__("default")))
@@ -10,4 +10,3 @@ extern "C"
 		
 	}
 }
-

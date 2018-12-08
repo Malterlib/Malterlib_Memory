@@ -73,11 +73,11 @@ namespace
 
 	class CMalterlibMemoryDummy
 	{
-		NMib::NThread::TCThreadLocal<NMib::NContainer::TCVector<uint8>> m_Memory;
+		NMib::NThread::TCThreadLocal<NMib::NContainer::CByteVector> m_Memory;
 		NMib::NThread::TCThreadLocal
 			<
 				uint8 *
-				, NMib::NMem::CAllocator_Heap
+				, NMib::NMemory::CAllocator_Heap
 				, (NMib::NThread::EThreadLocalFlag)(NMib::NThread::EThreadLocalFlag_AlwaysCreated | NMib::NThread::EThreadLocalFlag_FastThreadLocal)
 			>
 			m_pMemory
@@ -137,10 +137,10 @@ namespace
 #ifdef DMemoryManagerTestEnable_MalterlibNew
 	class CMalterlibMemoryMalterlibNew
 	{
-		NMib::NMem::TCMemoryManager<NMib::NMem::CDefaultMemoryManagerParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<NMib::NMemory::CDefaultMemoryManagerParams> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew()
-			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
+			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -190,10 +190,10 @@ namespace
 	
 	class CMalterlibMemoryMalterlibNew_Debug
 	{
-		NMib::NMem::TCMemoryManagerDebug<NMib::NMem::CDefaultMemoryManagerParams, false> m_MemoryManager;
+		NMib::NMemory::TCMemoryManagerDebug<NMib::NMemory::CDefaultMemoryManagerParams, false> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_Debug()
-			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
+			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -245,10 +245,10 @@ namespace
 	
 	class CMalterlibMemoryMalterlibNew_Tracked
 	{
-		NMib::NMem::TCMemoryManagerTracked<NMib::NMem::TCMemoryManager<NMib::NMem::CDefaultMemoryManagerParams>> m_MemoryManager;
+		NMib::NMemory::TCMemoryManagerTracked<NMib::NMemory::TCMemoryManager<NMib::NMemory::CDefaultMemoryManagerParams>> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_Tracked()
-			: m_MemoryManager("Test tracked manager", NMib::NMem::CMemoryManagerConfig())
+			: m_MemoryManager("Test tracked manager", NMib::NMemory::CMemoryManagerConfig())
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -299,23 +299,23 @@ namespace
 
 	class CMalterlibMemoryMalterlibNew_NoCleanup
 	{
-		struct CParams : public NMib::NMem::CDefaultMemoryManagerParams
+		struct CParams : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
-			static constexpr NMib::NMem::EDeferCleanup mc_DeferCleanup
-				= NMib::NMem::EDeferCleanup
+			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup
+				= NMib::NMemory::EDeferCleanup
 				(
-					NMib::NMem::EDeferCleanup_NoCleanup
-					| NMib::NMem::EDeferCleanup_OneSizeBlocks
-					| NMib::NMem::EDeferCleanup_Commit
-					| NMib::NMem::EDeferCleanup_Allocs
+					NMib::NMemory::EDeferCleanup_NoCleanup
+					| NMib::NMemory::EDeferCleanup_OneSizeBlocks
+					| NMib::NMemory::EDeferCleanup_Commit
+					| NMib::NMemory::EDeferCleanup_Allocs
 				)
 			;
 		};
 		
-		NMib::NMem::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_NoCleanup()
-			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
+			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -365,16 +365,16 @@ namespace
 	};
 	class CMalterlibMemoryMalterlibNew_NoDeferCleanup
 	{
-		struct CParams : public NMib::NMem::CDefaultMemoryManagerParams
+		struct CParams : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
-			static constexpr NMib::NMem::EDeferCleanup mc_DeferCleanup = NMib::NMem::EDeferCleanup_None;
+			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup = NMib::NMemory::EDeferCleanup_None;
 		};
 		
-		NMib::NMem::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
 		
 		CMalterlibMemoryMalterlibNew_NoDeferCleanup()
-			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
+			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -424,10 +424,10 @@ namespace
 	};
 	class CMalterlibMemoryMalterlibNew_NoCheckout
 	{
-		NMib::NMem::TCMemoryManager<NMib::NMem::CDefaultMemoryManagerParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<NMib::NMemory::CDefaultMemoryManagerParams> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_NoCheckout()
-			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
+			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -478,10 +478,10 @@ namespace
 	};
 	class CMalterlibMemoryMalterlibNew_NoCommit
 	{
-		NMib::NMem::TCMemoryManager<NMib::NMem::CDefaultMemoryManagerParams_NoCommit> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<NMib::NMemory::CDefaultMemoryManagerParams_NoCommit> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_NoCommit()
-			: m_MemoryManager{NMib::NMem::CMemoryManagerConfig()}
+			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
@@ -1171,17 +1171,17 @@ namespace
 
 		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
 		{
-			return NMib::NMem::fg_AllocAligned(_Size, _Alignment);
+			return NMib::NMemory::fg_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(mint _Size)
 		{
-			return NMib::NMem::fg_Alloc(_Size);
+			return NMib::NMemory::fg_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			return NMib::NMem::fg_FreeNoSize(_pMem);
+			return NMib::NMemory::fg_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -1381,12 +1381,12 @@ namespace
 
 		inline_small void *f_Alloc(mint _Size)
 		{
-			return NMib::NMem::CAllocator_Virtual::f_Alloc(_Size);
+			return NMib::NMemory::CAllocator_Virtual::f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			NMib::NMem::CAllocator_Virtual::f_FreeNoSize(_pMem);
+			NMib::NMemory::CAllocator_Virtual::f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()

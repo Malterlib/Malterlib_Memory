@@ -15,7 +15,7 @@
 namespace
 {
 	using namespace NMib::NTest;
-	using namespace NMib::NMem;
+	using namespace NMib::NMemory;
 	class CDebug_Tests : public CTest
 	{
 	public:
@@ -75,7 +75,7 @@ namespace
 										{
 #if DMibConfig_Memory_Shims_Enable
 
-											NMib::NMem::CDisableMemoryReporterScope DisableReport;
+											NMib::NMemory::CDisableMemoryReporterScope DisableReport;
 #endif
 											DMibTest(DMibExpr(_Size) >= DMibExpr(MemorySize))(ETestFlag_Aggregated);
 											Allocs.f_Insert({_pAlloc, _Size});

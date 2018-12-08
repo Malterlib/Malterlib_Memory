@@ -1,4 +1,4 @@
-﻿// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include "Malterlib_Memory_MemoryManager.hpp"
@@ -19,14 +19,14 @@
 namespace NMib
 {
 
-	struct CMemoryManagerParams : public NMem::CDefaultMemoryManagerParams
+	struct CMemoryManagerParams : public NMemory::CDefaultMemoryManagerParams
 	{
 		typedef CMainHeapVirtualAllocator CAllocator;
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 	};
 
 #	if DEnableDebugMemoryManager
-		struct CMemoryManagerDebugOptions : public NMem::CMemoryManagerDebugOptionsDefault
+		struct CMemoryManagerDebugOptions : public NMemory::CMemoryManagerDebugOptionsDefault
 		{
 			enum
 			{
@@ -55,26 +55,26 @@ namespace NMib
 	#endif
 			};
 		};
-		typedef NMem::TCMemoryManagerDebug<CMemoryManagerParams, false, CMemoryManagerDebugOptions> CMemoryManagerWithDebug;
+		typedef NMemory::TCMemoryManagerDebug<CMemoryManagerParams, false, CMemoryManagerDebugOptions> CMemoryManagerWithDebug;
 #	else
-		typedef NMem::TCMemoryManager<CMemoryManagerParams> CMemoryManagerWithDebug;
+		typedef NMemory::TCMemoryManager<CMemoryManagerParams> CMemoryManagerWithDebug;
 #	endif
 
 #if !DMibConfig_MemoryManager_Stats_EnableCategories
-	namespace NMem
+	namespace NMemory
 	{
 		typedef void CTrackedAllocationInfo;
 	}
 #endif
 	
-	typedef NMem::TCMemoryManagerTracked<CMemoryManagerWithDebug, NMem::CTrackedAllocationInfo> CMemoryManager;
+	typedef NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebug, NMemory::CTrackedAllocationInfo> CMemoryManager;
 	
-	extern NMib::NAggregate::TCAggregateSimple<CMemoryManager> g_MainHeap;
+	extern NMib::NStorage::TCAggregateSimple<CMemoryManager> g_MainHeap;
 	
 	struct CMemoryManagerNonTrackedParams : public CMemoryManagerParams
 	{
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_NonTrackedMainHeap;
-		typedef NMem::CAllocator_VirtualNoTracking CAllocator;
+		typedef NMemory::CAllocator_VirtualNoTracking CAllocator;
 		static constexpr bool mc_bBackgroundCleanup = false; // Threading potentially recursive allocations
 	};
 
@@ -86,10 +86,10 @@ namespace NMib
 			mc_bCanAllocateNonTracked = false // Threading potentially recursive allocations
 		};
 	};
-	typedef NMem::TCMemoryManagerDebug<CMemoryManagerNonTrackedParams, false, CMemoryManagerNonTrackedDebugOptions> CMemoryManagerNonTracked;
+	typedef NMemory::TCMemoryManagerDebug<CMemoryManagerNonTrackedParams, false, CMemoryManagerNonTrackedDebugOptions> CMemoryManagerNonTracked;
 #else
-	typedef NMem::TCMemoryManager<CMemoryManagerNonTrackedParams> CMemoryManagerNonTracked;
+	typedef NMemory::TCMemoryManager<CMemoryManagerNonTrackedParams> CMemoryManagerNonTracked;
 #endif
 	
-	extern NMib::NAggregate::TCAggregateSimple<CMemoryManagerNonTracked> g_NonTrackedHeap;
+	extern NMib::NStorage::TCAggregateSimple<CMemoryManagerNonTracked> g_NonTrackedHeap;
 }

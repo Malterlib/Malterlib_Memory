@@ -3,167 +3,161 @@
 
 #pragma once
 
-namespace NMib
+namespace NMib::NMemory
 {
-	namespace NMem
+	/************************************************************************************************\
+	||¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯||
+	|| Secure Allocator
+	||______________________________________________________________________________________________||
+	\************************************************************************************************/
+
+
+	template <typename t_CBaseAllocator, bool t_bStatic>
+	inline_small void *TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
+		if (_OldSize == 0)
+			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-		/************************************************************************************************\
-		||¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯||
-		|| Secure Allocator
-		||______________________________________________________________________________________________||
-		\************************************************************************************************/
+		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-		
-		template <typename t_CBaseAllocator, bool t_bStatic>
-		inline_small void *TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			if (_OldSize == 0)
-				_OldSize = CBaseAllocator::f_Size(_pMem);
+		return CBaseAllocator::f_Realloc(_pMem, _Size, _OldSize, _AllocFlags, _NumaNode);
+	}
 
-			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+	template <typename t_CBaseAllocator, bool t_bStatic>
+	inline_small void *TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	{
+		if (_OldSize == 0)
+			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			return CBaseAllocator::f_Realloc(_pMem, _Size, _OldSize, _AllocFlags, _NumaNode);
-		}
+		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-		template <typename t_CBaseAllocator, bool t_bStatic>
-		inline_small void *TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			if (_OldSize == 0)
-				_OldSize = CBaseAllocator::f_Size(_pMem);
+		return CBaseAllocator::f_ReallocDebug(_pMem, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+	}
 
-			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+	template <typename t_CBaseAllocator, bool t_bStatic>
+	inline_small void *TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	{
+		if (_OldSize == 0)
+			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			return CBaseAllocator::f_ReallocDebug(_pMem, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
-		}
+		void* pNewMem = CBaseAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
 
-		template <typename t_CBaseAllocator, bool t_bStatic>
-		inline_small void *TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			if (_OldSize == 0)
-				_OldSize = CBaseAllocator::f_Size(_pMem);
+		fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
-			void* pNewMem = CBaseAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
+		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-			fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
+		CBaseAllocator::f_Free(_pMem, _OldSize);
 
-			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		return pNewMem;
+	}
 
-			CBaseAllocator::f_Free(_pMem, _OldSize);
+	template <typename t_CBaseAllocator, bool t_bStatic>
+	inline_small void *TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	{
+		if (_OldSize == 0)
+			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			return pNewMem;
-		}
+		void* pNewMem = CBaseAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 
-		template <typename t_CBaseAllocator, bool t_bStatic>
-		inline_small void *TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			if (_OldSize == 0)
-				_OldSize = CBaseAllocator::f_Size(_pMem);
+		fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
-			void* pNewMem = CBaseAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-			fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
+		CBaseAllocator::f_Free(_pMem, _OldSize);
 
-			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		return pNewMem;
+	}
 
-			CBaseAllocator::f_Free(_pMem, _OldSize);
+	template <typename t_CBaseAllocator, bool t_bStatic>
+	inline_small void TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_Free(void *_pBlock, mint _Size)
+	{
+		DMibFastCheck(_Size != 0);
+		NMemory::fg_ObjectSet((uint8*)_pBlock, 0, _Size);
+		return CBaseAllocator::f_Free(_pBlock, _Size);
+	}
 
-			return pNewMem;
-		}
-
-		template <typename t_CBaseAllocator, bool t_bStatic>
-		inline_small void TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_Free(void *_pBlock, mint _Size)
-		{
-			DMibFastCheck(_Size != 0);
-			NMem::fg_ObjectSet((uint8*)_pBlock, 0, _Size);
-			return CBaseAllocator::f_Free(_pBlock, _Size);
-		}
-
-		template <typename t_CBaseAllocator, bool t_bStatic>
-		inline_small void TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_FreeNoSize(void *_pBlock)
-		{
-			mint Size = CBaseAllocator::f_Size(_pBlock);
-			NMem::fg_ObjectSet((uint8*)_pBlock, 0, Size);
-			return CBaseAllocator::f_Free(_pBlock, Size);
-		}
+	template <typename t_CBaseAllocator, bool t_bStatic>
+	inline_small void TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_FreeNoSize(void *_pBlock)
+	{
+		mint Size = CBaseAllocator::f_Size(_pBlock);
+		NMemory::fg_ObjectSet((uint8*)_pBlock, 0, Size);
+		return CBaseAllocator::f_Free(_pBlock, Size);
+	}
 
 
-		template<typename t_CBaseAllocator>
-		inline_small void *TCAllocator_Secure<t_CBaseAllocator, true>::f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			if (_OldSize == 0)
-				_OldSize = CBaseAllocator::f_Size(_pMem);
+	template<typename t_CBaseAllocator>
+	inline_small void *TCAllocator_Secure<t_CBaseAllocator, true>::f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	{
+		if (_OldSize == 0)
+			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-			return CBaseAllocator::f_Realloc(_pMem, _Size, _OldSize, _AllocFlags, _NumaNode);
-		}
+		return CBaseAllocator::f_Realloc(_pMem, _Size, _OldSize, _AllocFlags, _NumaNode);
+	}
 
-		template<typename t_CBaseAllocator>
-		inline_small void *TCAllocator_Secure<t_CBaseAllocator, true>::f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			if (_OldSize == 0)
-				_OldSize = CBaseAllocator::f_Size(_pMem);
+	template<typename t_CBaseAllocator>
+	inline_small void *TCAllocator_Secure<t_CBaseAllocator, true>::f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	{
+		if (_OldSize == 0)
+			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-			return CBaseAllocator::f_ReallocDebug(_pMem, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
-		}
+		return CBaseAllocator::f_ReallocDebug(_pMem, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+	}
 
-		template<typename t_CBaseAllocator>
-		inline_small void *TCAllocator_Secure<t_CBaseAllocator, true>::f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			if (_OldSize == 0)
-				_OldSize = CBaseAllocator::f_Size(_pMem);
+	template<typename t_CBaseAllocator>
+	inline_small void *TCAllocator_Secure<t_CBaseAllocator, true>::f_Resize(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	{
+		if (_OldSize == 0)
+			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			void* pNewMem = CBaseAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
+		void* pNewMem = CBaseAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
 
-			fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
+		fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
-			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-			CBaseAllocator::f_Free(_pMem, _OldSize);
+		CBaseAllocator::f_Free(_pMem, _OldSize);
 
-			return pNewMem;
-		}
+		return pNewMem;
+	}
 
-		template<typename t_CBaseAllocator>
-		inline_small void *TCAllocator_Secure<t_CBaseAllocator, true>::f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
-		{
-			if (_OldSize == 0)
-				_OldSize = CBaseAllocator::f_Size(_pMem);
+	template<typename t_CBaseAllocator>
+	inline_small void *TCAllocator_Secure<t_CBaseAllocator, true>::f_ResizeDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	{
+		if (_OldSize == 0)
+			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-			void* pNewMem = CBaseAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
+		void* pNewMem = CBaseAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 
-			fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
+		fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
-			NMem::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
 
-			CBaseAllocator::f_Free(_pMem, _OldSize);
+		CBaseAllocator::f_Free(_pMem, _OldSize);
 
-			return pNewMem;
-		}
+		return pNewMem;
+	}
 
-		template<typename t_CBaseAllocator>
-		inline_small void TCAllocator_Secure<t_CBaseAllocator, true>::f_Free(void *_pBlock, mint _Size)
-		{
-			DMibFastCheck(_Size != 0);
+	template<typename t_CBaseAllocator>
+	inline_small void TCAllocator_Secure<t_CBaseAllocator, true>::f_Free(void *_pBlock, mint _Size)
+	{
+		DMibFastCheck(_Size != 0);
 
-			NMem::fg_ObjectSet((uint8*)_pBlock, 0, _Size);
+		NMemory::fg_ObjectSet((uint8*)_pBlock, 0, _Size);
 
-			return CBaseAllocator::f_Free(_pBlock, _Size);
-		}
+		return CBaseAllocator::f_Free(_pBlock, _Size);
+	}
 
-		template<typename t_CBaseAllocator>
-		inline_small void TCAllocator_Secure<t_CBaseAllocator, true>::f_FreeNoSize(void *_pBlock)
-		{
-			mint Size = CBaseAllocator::f_Size(_pBlock);
+	template<typename t_CBaseAllocator>
+	inline_small void TCAllocator_Secure<t_CBaseAllocator, true>::f_FreeNoSize(void *_pBlock)
+	{
+		mint Size = CBaseAllocator::f_Size(_pBlock);
 
-			NMem::fg_ObjectSet((uint8*)_pBlock, 0, Size);
+		NMemory::fg_ObjectSet((uint8*)_pBlock, 0, Size);
 
-			return CBaseAllocator::f_Free(_pBlock, Size);
-		}
-
-	} // Namespace NMem
-
-} // Namespace NMib
+		return CBaseAllocator::f_Free(_pBlock, Size);
+	}
+}

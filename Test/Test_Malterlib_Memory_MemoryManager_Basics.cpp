@@ -10,7 +10,7 @@
 namespace
 {
 	using namespace NMib::NTest;
-	using namespace NMib::NMem;
+	using namespace NMib::NMemory;
 	class CBasics_Tests : public CTest
 	{
 	public:
@@ -80,7 +80,7 @@ namespace
 					}
 				;
 
-				NMib::NPtr::TCUniquePointer<NMib::NThread::CThreadObject> pThread
+				NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread
 					= NMib::NThread::CThreadObject::fs_StartThread
 					(
 						[&](NMib::NThread::CThreadObject *_pThread) -> aint
@@ -100,7 +100,7 @@ namespace
 
 				for (int i = 0; i < 1024; ++i)
 				{
-					NMib::NPtr::TCUniquePointer<NMib::NThread::CThreadObject> pThread
+					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread
 						= NMib::NThread::CThreadObject::fs_StartThread
 						(
 							fl_ThreadTest
@@ -360,7 +360,7 @@ namespace
 							{
 #if DMibConfig_Memory_Shims_Enable
 
-								NMib::NMem::CDisableMemoryReporterScope DisableReport;
+								NMib::NMemory::CDisableMemoryReporterScope DisableReport;
 #endif
 								Allocs.f_Insert({pMemory, Size});
 								DMibTest(DMibExpr(AllocSize) == DMibExpr(Size))(ETestFlag_Aggregated);
@@ -416,7 +416,7 @@ namespace
 										{
 #if DMibConfig_Memory_Shims_Enable
 
-											NMib::NMem::CDisableMemoryReporterScope DisableReport;
+											NMib::NMemory::CDisableMemoryReporterScope DisableReport;
 #endif
 											DMibTest(DMibExpr(_Size) >= DMibExpr(MemorySize))(ETestFlag_Aggregated);
 											Allocs.f_Insert({_pAlloc, _Size});
@@ -808,7 +808,7 @@ namespace
 				MemoryManager.f_ForceStartCleanupThreads();
 				MemoryManager.f_GarbageCollect(true); // Make sure that the thread local is created for this thread
 
-				NMib::NContainer::TCVector<NMib::NPtr::TCUniquePointer<NMib::NThread::CThreadObject>> StartedThreads;
+				NMib::NContainer::TCVector<NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject>> StartedThreads;
 				{
 					CTestMemoryMeasure MeasureMemory("Alloc");
 					MeasureMemory.f_Start();

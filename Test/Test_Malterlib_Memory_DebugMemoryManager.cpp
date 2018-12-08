@@ -13,7 +13,7 @@ namespace
 		{
 			DMibTestSuite("TestAlloc")
 			{
-				NMib::NMem::TCDebugMemoryManager<NMib::NMem::EDebugMemoryManager_None> TestManager;
+				NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_None> TestManager;
 
 				void *pMem[10000];
 				for (mint i = 0; i < 10000; ++i)
