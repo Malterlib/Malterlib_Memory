@@ -185,7 +185,6 @@ namespace NMib::NMemory
 		class TCBlock
 		{
 		public:
-			DMibListLinkS_Trans(TCBlock, m_FreeLink);
 			union
 			{
 				void *m_pChunk;
@@ -193,6 +192,7 @@ namespace NMib::NMemory
 				DMibListLinkAllocatorSA_Member(m_FreeLink, t_CAllocator);
 #endif
 			};
+			DMibListLinkS_Trans(TCBlock, m_FreeLink);
 		};
 
 		template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
@@ -416,8 +416,8 @@ namespace NMib::NMemory
 		class TCBlock
 		{
 		public:
-			DMibListLinkS_Trans(TCBlock, m_FreeLink);
 			DMibListLinkAllocatorSA_Member(m_FreeLink, t_CAllocator);
+			DMibListLinkS_Trans(TCBlock, m_FreeLink);
 		};
 
 		template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
