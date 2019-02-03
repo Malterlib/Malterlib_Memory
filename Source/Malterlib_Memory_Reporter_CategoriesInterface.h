@@ -48,17 +48,27 @@ namespace NMib::NMemory
 
 	CMemoryCategory *fg_Mem_DefineDynamicCategory(ch8 const *_pName);
 
-	struct CMemoryCategoryScope
+	struct CMemoryCategoryScope final : public CCoroutineThreadLocalHandler
 	{
 		CMemoryCategoryScope(CMemoryCategory *_pScope)
 			: mp_pOldCategory(fg_Mem_SetCategory(_pScope))
+			, mp_pNewCategory(_pScope)
 		{
 		}
 		~CMemoryCategoryScope()
 		{
 			fg_Mem_SetCategory(mp_pOldCategory);
 		}
+		void f_Suspend() override
+		{
+			fg_Mem_SetCategory(mp_pOldCategory);
+		}
+		void f_Resume() override
+		{
+			mp_pOldCategory = fg_Mem_SetCategory(mp_pNewCategory);
+		}
 	private:
+		CMemoryCategory *mp_pNewCategory;
 		CMemoryCategory *mp_pOldCategory;
 	};
 
