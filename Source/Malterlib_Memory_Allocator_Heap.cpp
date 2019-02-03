@@ -97,6 +97,12 @@ namespace NMib::NMemory
 	ch8 CAllocator_Virtual::ms_HeapName[] = "Virtual";
 
 #if DMibConfig_Memory_Shims_Enable
+	CAllocator_Virtual::CHeapInit::CHeapInit()
+	{
+		DMibMemoryGoingToReportScope(this, true);
+		DMibMemoryReportAllocatorName(ms_HeapName, ms_HeapName);
+	}
+
 	CAllocator_Virtual::CHeapInit CAllocator_Virtual::ms_HeapInit;
 #endif
 }

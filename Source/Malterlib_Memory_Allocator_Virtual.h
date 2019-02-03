@@ -36,11 +36,7 @@ namespace NMib::NMemory
 #if DMibConfig_Memory_Shims_Enable
 		struct CHeapInit
 		{
-			CHeapInit()
-			{
-				DMibMemoryGoingToReportScope(this, true);
-				DMibMemoryReportAllocatorName(ms_HeapName, ms_HeapName);
-			}
+			CHeapInit();
 		};
 
 		static CHeapInit ms_HeapInit;
