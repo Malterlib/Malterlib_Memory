@@ -122,6 +122,7 @@ namespace NMib::NMemory
 			"fosl_filter_getStringForGraphWithOptions",
 			"_CFRunLoopGet0",
 			"_dispatch_timer_unote_arm",
+			"localtime",
 #elif defined(DPlatformFamily_Linux)
 			"qt_load_library_runtime",
 			"qt_set_x11_resources",
