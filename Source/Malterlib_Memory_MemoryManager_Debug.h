@@ -3,15 +3,10 @@
 
 #pragma once
 
+#include "Malterlib_Memory_MemoryManager_DebugException.h"
+
 namespace NMib::NMemory
 {
-	DMibImpErrorClass(CExceptionMemoryManagerDebug, NException::CDebugException);
-#		define DMibErrorMemoryManagerDebug(_Description) DMibImpError(NMib::NMemory::CExceptionMemoryManagerDebug, _Description)
-
-#		ifndef DMibPNoShortCuts
-#			define DErrorMemoryManagerDebug(_Description) DMibErrorMemoryManagerDebug(_Description)
-#		endif
-
 	struct CMemoryManagerDebugOptionsDefault
 	{
 		enum

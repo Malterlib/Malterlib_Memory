@@ -2,9 +2,12 @@
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
+#include "Malterlib_Memory_MemoryManager_DebugException.h"
 
 namespace NMib::NMemory
 {
+	DMibImpErrorClassImplement(CExceptionMemoryManagerDebug);
+	
 	extern char const* gc_IgnoreFunctions[];
 }
 
