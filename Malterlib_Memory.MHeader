@@ -222,6 +222,10 @@ Property
 		{
 			!!MemoryManagerTestEnable_TcMalloc "true"
 		}
+		PreprocessorDefines "DMibConfig_OverrideSystemMalloc;@(Compile.PreprocessorDefines)"
+		{
+			!!MalterlibMemoryManager_EnableOverrideSystemMalloc true
+		}
 	}
 	%Group Documentation
 	{

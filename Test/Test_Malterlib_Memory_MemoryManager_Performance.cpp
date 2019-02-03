@@ -890,11 +890,18 @@ namespace
 			f_DoTest<CMalterlibMemoryMalterlibNew_NoCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_NoCleanup", _MaxAllocSize, _nThreads);
 			 */
 #endif
+
+#ifdef DMibConfig_OverrideSystemMalloc
+			NMib::NStr::CStr SystemMallocOverrideSuffix = " (Overridden)";
+#else
+			NMib::NStr::CStr SystemMallocOverrideSuffix;
+#endif
+
 #ifdef DMemoryManagerTestEnable_OSX
-			f_DoTest<CMalterlibMemoryOSX, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "OSX", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryOSX, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "OSX" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
 #endif
 #ifdef DMemoryManagerTestEnable_StdLib
-			f_DoTest<CMalterlibMemoryStdLib, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "StdLib", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryStdLib, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "StdLib" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
 #endif
 #ifdef DMemoryManagerTestEnable_Application
 			f_DoTest<CMalterlibMemoryApplication, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "Application", _MaxAllocSize, _nThreads);
