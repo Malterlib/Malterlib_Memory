@@ -112,14 +112,14 @@ namespace NMib::NMemory
 
 	only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size)
 	{
-		return NMib::NMemory::fg_Alloc(_Size);
+		return NMib::NMemory::fg_AllocAligned(_Size, 1 << NMib::fg_GetLowestBitSetNoZero(_Size));
 	}
 
 	only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size, std::nothrow_t const &) noexcept
 	{
 		try
 		{
-			return NMib::NMemory::fg_Alloc(_Size);
+			return NMib::NMemory::fg_AllocAligned(_Size, 1 << NMib::fg_GetLowestBitSetNoZero(_Size));
 		}
 		catch (NMib::NException::CException const &)
 		{
@@ -154,14 +154,14 @@ namespace NMib::NMemory
 
 	only_parameters_aliased malloc_like void * calling_convention_c operator new[](std::size_t _Size)
 	{
-		return NMib::NMemory::fg_Alloc(_Size);
+		return NMib::NMemory::fg_AllocAligned(_Size, 1 << NMib::fg_GetLowestBitSetNoZero(_Size));;
 	}
 
 	only_parameters_aliased malloc_like void * calling_convention_c operator new[](std::size_t _Size, std::nothrow_t const &) noexcept
 	{
 		try
 		{
-			return NMib::NMemory::fg_Alloc(_Size);
+			return NMib::NMemory::fg_AllocAligned(_Size, 1 << NMib::fg_GetLowestBitSetNoZero(_Size));
 		}
 		catch (NMib::NException::CException const &)
 		{
