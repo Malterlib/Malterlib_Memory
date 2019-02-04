@@ -73,6 +73,12 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
+	void *TCMemoryManagerTracked<t_CSuper, void>::f_Alloc(mint _Size)
+	{
+		return f_AllocAligned(_Size, 1);
+	}
+
+	template <typename t_CSuper>
 	void TCMemoryManagerTracked<t_CSuper, void>::f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 	{
 		struct CFunctorOptions
@@ -300,6 +306,11 @@ namespace NMib::NMemory
 		return f_AllocWithSize(_Size);
 	}
 
+	template <typename t_CSuper, typename t_CAllocationInfo>
+	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_Alloc(mint _Size)
+	{
+		return f_AllocAligned(_Size, 1);
+	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
 	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocWithSize(mint &_Size)

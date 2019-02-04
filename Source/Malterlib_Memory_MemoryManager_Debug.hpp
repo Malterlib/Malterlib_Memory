@@ -760,9 +760,9 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
-	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_FreeInline(void * _pMemory)
+	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_FreeInline(void * _pMemory, mint _Size)
 	{
-		return f_Free(_pMemory);
+		return f_Free(_pMemory, _Size);
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -803,6 +803,12 @@ namespace NMib::NMemory
 
 		uint8 * pOldMemory = fsp_GetRealMemory((uint8 *)_pMemory);
 		return CSuper::f_FreeNoSize(pOldMemory);
+	}
+
+	template <typename t_CParams, bool t_bException, typename t_COptions>
+	inline_never void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_FreeNoSizeInline(void * _pMemory)
+	{
+		return f_FreeNoSize(_pMemory);
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>

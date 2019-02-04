@@ -419,7 +419,7 @@ namespace NMib::NMemory
 			return DNonTrackedHeap->f_FreeNoSize(_pBlock);
 		}
 
-		inline_always static void * DMibCrossmoduleAPI fs_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
+		inline_never static void * DMibCrossmoduleAPI fs_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
 		{
 			return DMainHeap->f_Alloc(_Size);
 		}
