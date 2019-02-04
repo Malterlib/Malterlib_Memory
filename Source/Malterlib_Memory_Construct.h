@@ -82,12 +82,12 @@ namespace NMib
 				NMemory::CCaptureDefaultDelete Captured;
 				delete _pObject;
 
-				DMibFastCheck(Captured.m_pMemory);
+				DMibFastCheck(Captured.m_Captured.m_pMemory);
 
-				if (Captured.m_Size)
-					fg_Forward<tf_CAllocator>(_Allocator).f_Free(Captured.m_pMemory, fg_AlignUp(Captured.m_Size, _Alignment));
+				if (Captured.m_Captured.m_Size)
+					fg_Forward<tf_CAllocator>(_Allocator).f_Free(Captured.m_Captured.m_pMemory, fg_AlignUp(Captured.m_Captured.m_Size, _Alignment));
 				else
-					fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(Captured.m_pMemory);
+					fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(Captured.m_Captured.m_pMemory);
 #else
 				_pObject->~tf_CObjectType();
 				fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(_pObject);

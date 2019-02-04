@@ -72,15 +72,15 @@ namespace NMib::NMemory
 		if (!pThreadLocal->m_pCapture)
 			return false;
 		auto &Capture = *pThreadLocal->m_pCapture;
-		if (Capture.m_pMemory) // Recursive delete
+		if (Capture.m_Captured.m_pMemory) // Recursive delete
 		{
-			if (Capture.m_Size)
-				fg_Free(Capture.m_pMemory, Capture.m_Size);
+			if (Capture.m_Captured.m_Size)
+				fg_Free(Capture.m_Captured.m_pMemory, Capture.m_Captured.m_Size);
 			else
-				fg_FreeNoSize(Capture.m_pMemory);
+				fg_FreeNoSize(Capture.m_Captured.m_pMemory);
 		}
-		Capture.m_pMemory = _pMemory;
-		Capture.m_Size = _Size;
+		Capture.m_Captured.m_pMemory = _pMemory;
+		Capture.m_Captured.m_Size = _Size;
 		return true;
 	}
 #endif

@@ -8,6 +8,12 @@
 namespace NMib::NMemory
 {
 #ifdef DMibPOverrideOperatorNew
+	struct CCapturedDelete
+	{
+		void *m_pMemory = nullptr;
+		mint m_Size = 0;
+	};
+
 	struct CCaptureDefaultDelete
 	{
 		CCaptureDefaultDelete();
@@ -16,8 +22,7 @@ namespace NMib::NMemory
 		static bool fs_ReportDelete(void *_pMemory, mint _Size);
 
 		CCaptureDefaultDelete *m_pPrevious;
-		void *m_pMemory = nullptr;
-		mint m_Size = 0;
+		CCapturedDelete m_Captured;
 	};
 #endif
 }
