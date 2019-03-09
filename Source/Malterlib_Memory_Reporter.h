@@ -51,18 +51,19 @@ namespace NMib::NMemory
 
 	class CMemoryReportLightweightScopeFlagScope
 	{
-		EMemoryReportLightweightScopeFlag m_OldFlags;
 	public:
 		CMemoryReportLightweightScopeFlagScope(EMemoryReportLightweightScopeFlag _AddFlags)
 		{
-			DMibThreadLocalScopeEnter;
 			m_OldFlags = fg_MemoryLightweightScopeAddFlags(_AddFlags);
 		}
 		~CMemoryReportLightweightScopeFlagScope()
 		{
 			fg_MemoryLightweightScopeSetFlags(m_OldFlags);
-			DMibThreadLocalScopeExit;
 		}
+
+	private:
+		DMibThreadLocalScopeDebugMember;
+		EMemoryReportLightweightScopeFlag m_OldFlags;
 	};
 
 	#define DMibMemLightweightTrackDisableScope NMib::NMemory::CMemoryReportLightweightScope DisableLightweightTrack(nullptr)
