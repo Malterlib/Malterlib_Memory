@@ -109,8 +109,11 @@ namespace NMib::NMemory
 					m_bCheckUpper = false;
 			}
 
-			if (t_Options & EDebugMemoryManager_ProtectOnDemand)
-				m_bProtectOnDemand = true;
+			auto CheckUpperStr = NSys::fg_Process_GetEnvironmentVariable_NonProtected(NStr::CFStr256("MalterlibMemoryOverwriteCheckUpper"));
+			if (CheckUpperStr == "true")
+				m_bCheckUpper = true;
+			else if (CheckUpperStr == "false")
+				m_bCheckUpper = false;
 
 			// Use max 20 % of physical memory
 			//m_nMaxFreeMemory = NMib::NSys::fg_Process_GetPhysicalMemory() / 5;
@@ -224,8 +227,12 @@ namespace NMib::NMemory
 
 		void f_Free(void *_pBlock, mint _Size)
 		{
+			if (!_pBlock)
+				return;
+
 			if (!_Size)
 				DMibPDebugBreak;
+
 			_Size = fg_AlignUp(_Size, mint(1 << EMemoryManagerAlignment));
 			return fp_Free(_pBlock, _Size);
 		}
