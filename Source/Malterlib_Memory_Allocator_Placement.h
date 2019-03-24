@@ -17,8 +17,6 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
-		typedef CDefaultPointerHolder CPtrHolder;
-
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Placement>;
 
 		inline_always CAllocator_Placement();

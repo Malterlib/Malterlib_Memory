@@ -20,7 +20,6 @@ namespace NMib::NMemory
 			, mc_CanBeStatic = false
 			, mc_bMethodsStatic = true
 		};
-		typedef CDefaultPointerHolder CPtrHolder;
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Virtual>;
 
 		static bint f_OnlyOneAlloc();
@@ -88,7 +87,6 @@ namespace NMib::NMemory
 			, mc_CanBeStatic = false
 			, mc_bMethodsStatic = true
 		};
-		typedef CDefaultPointerHolder CPtrHolder;
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_VirtualNoTracking>;
 
 		static bint f_OnlyOneAlloc();

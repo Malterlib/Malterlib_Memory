@@ -46,5 +46,7 @@ namespace NMib::NMemory
 		static void f_FreeNoSize(void *_pBlock);
 	};
 
-	using CAllocator_HeapSecure = TCAllocator_Secure<CAllocator_Heap>;
+	struct CAllocator_HeapSecure : public TCAllocator_Secure<CAllocator_Heap, true>
+	{
+	};
 }

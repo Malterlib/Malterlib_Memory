@@ -25,7 +25,6 @@ namespace NMib::NMemory
 		{
 		public:
 			typedef TCChunk CChunk;
-			typedef typename t_CAllocator::CPtrHolder CPtrHolder;
 			DMibListLinkAllocatorS_Link(CChunk, m_Link, t_CAllocator);
 			mint m_Size;
 
@@ -80,7 +79,6 @@ namespace NMib::NMemory
 			}
 #endif
 			typedef TCChunk<t_CAllocator, t_DataSize, t_Alignment> CChunk;
-			typedef typename t_CAllocator::CPtrHolder CPtrHolder;
 
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
@@ -200,7 +198,6 @@ namespace NMib::NMemory
 		{
 		public:
 			typedef TCChunk CChunk;
-			typedef typename t_CAllocator::CPtrHolder CPtrHolder;
 			DMibListLinkAllocatorD_Link(CChunk, m_Link, t_CAllocator);
 			DMibListLinkAllocatorS_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
 			aint m_NumUsed;
@@ -259,7 +256,6 @@ namespace NMib::NMemory
 			}
 #endif
 			typedef TCChunk<t_CAllocator, t_DataSize, t_Alignment> CChunk;
-			typedef typename t_CAllocator::CPtrHolder CPtrHolder;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
@@ -425,7 +421,6 @@ namespace NMib::NMemory
 		{
 		public:
 			typedef TCChunk CChunk;
-			typedef typename t_CAllocator::CPtrHolder CPtrHolder;
 
 			class CCompare
 			{
@@ -495,7 +490,6 @@ namespace NMib::NMemory
 			}
 #endif
 			typedef TCChunk<t_CAllocator, t_DataSize, t_Alignment> CChunk;
-			typedef typename t_CAllocator::CPtrHolder CPtrHolder;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
@@ -931,7 +925,6 @@ namespace NMib::NMemory
 		{
 			return 0;
 		}
-		typedef CDefaultPointerHolder CPtrHolder;
 
 		static inline_small mint f_GranularityAlloc(bint _bLargePages = false)
 		{
@@ -1161,7 +1154,6 @@ namespace NMib::NMemory
 		{
 			return 0;
 		}
-		typedef CDefaultPointerHolder CPtrHolder;
 
 		static inline_small mint f_GranularityAlloc(bint _bLargePages = false)
 		{
@@ -1363,7 +1355,6 @@ namespace NMib::NMemory
 		{
 			return 0;
 		}
-		typedef CDefaultPointerHolder CPtrHolder;
 
 		static inline_small mint f_GranularityAlloc(bint _bLargePages = false)
 		{

@@ -11,7 +11,6 @@ namespace NMib::NMemory
 		TCMemoryManager<t_CParams> *m_pMemoryManager;
 	public:
 
-		typedef CDefaultPointerHolder CPtrHolder;
 		using CAutoDestroy = TCAllocator_AutoDestroy<TCAllocator_MemoryManager>;
 
 		enum

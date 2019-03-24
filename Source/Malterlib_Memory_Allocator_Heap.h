@@ -84,7 +84,6 @@ namespace NMib::NMemory
 			, mc_CanBeStatic = false
 			, mc_bMethodsStatic = true
 		};
-		typedef CDefaultPointerHolder CPtrHolder;
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Heap>;
 
@@ -134,7 +133,6 @@ namespace NMib::NMemory
 			, mc_CanBeStatic = false
 			, mc_bMethodsStatic = true
 		};
-		typedef CDefaultPointerHolder CPtrHolder;
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_NonTrackedHeap>;
 
@@ -199,8 +197,6 @@ namespace NMib::NMemory
 			, mc_CanBeStatic = false
 			, mc_bMethodsStatic = false
 		};
-
-		typedef CDefaultPointerHolder CPtrHolder;
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<TCAllocator_Placement>;
 
@@ -278,8 +274,6 @@ namespace NMib::NMemory
 			mc_CanBeStatic = true
 			, mc_bMethodsStatic = false
 		};
-		typedef CDefaultPointerHolder CPtrHolder;
-
 		using CAutoDestroy = TCAllocator_AutoDestroy<TCAllocator_Static>;
 
 		TCAllocator_Static();

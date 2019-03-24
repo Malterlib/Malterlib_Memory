@@ -227,8 +227,6 @@ namespace NMib::NMemory
 	{
 	public:
 
-		typedef CDefaultPointerHolder CPtrHolder;
-
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Empty>;
 
 		static inline_small mint f_GranularityAlloc(bint _bLargePages = false)
@@ -382,10 +380,7 @@ namespace NMib::NMemory
 	class CAllocator_Disable : public CAllocator_Base
 	{
 	public:
-
-		typedef CDefaultPointerHolder CPtrHolder;
 	};
-
 
 	class CAllocator_Heap;
 
