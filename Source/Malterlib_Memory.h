@@ -526,25 +526,35 @@ namespace NMib::NMemory
 		return _Data;
 	}
 
-#ifdef	DMibPIntrinsicMemSet
-	template <typename t_CData1>
-	inline_always t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, mint _Size)
-	{
-		DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
-		NAtomic::fg_CompilerFence();
-		return _pFirst;
-	}
-#else
-	template <typename t_CData1>
-	inline_large t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, mint _Size)
-	{
-		mint DoSize = _Size / sizeof(mint);
-		fg_ObjectSet((mint *)_pFirst, 0, DoSize);
-		fg_ObjectSet((uint8 *)_pFirst + (DoSize * sizeof(mint)), 0, _Size - (DoSize * sizeof(mint)));
-		NAtomic::fg_CompilerFence();
-		return _pFirst;
-	}
-#endif
+#	ifdef	DMibPIntrinsicMemSet
+#		ifdef DCompiler_MSVC
+			template <typename t_CData1>
+			inline_always t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, mint _Size)
+			{
+				DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
+				NAtomic::fg_CompilerFence();
+				return _pFirst;
+			}
+#		else
+			template <typename t_CData1>
+			inline_always t_CData1 *fg_SecureMemClear(t_CData1 *_pFirst, mint _Size)
+			{
+				DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
+				__asm__ __volatile__("" ::"r"(_pFirst): "memory");
+				return _pFirst;
+			}
+#		endif
+#	else
+		template <typename t_CData1>
+		inline_large t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, mint _Size)
+		{
+			mint DoSize = _Size / sizeof(mint);
+			fg_ObjectSet((mint *)_pFirst, 0, DoSize);
+			fg_ObjectSet((uint8 *)_pFirst + (DoSize * sizeof(mint)), 0, _Size - (DoSize * sizeof(mint)));
+			NAtomic::fg_CompilerFence();
+			return _pFirst;
+		}
+#	endif
 
 	template <typename t_CData1>
 	inline_always t_CData1 &fg_SecureMemClear(t_CData1 &_First)
