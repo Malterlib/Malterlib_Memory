@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Mib/Core/Core>
+#include <Mib/Atomic/Atomic>
 
 namespace NMib::NMemory
 {
@@ -526,6 +527,36 @@ namespace NMib::NMemory
 		fg_MemClear(&_Data, sizeof(t_CData1) * _nElem);
 		return _Data;
 	}
+
+	template <typename t_CData1>
+	inline_large t_CData1 *fg_SecureMemClear(t_CData1 *_pFirst, mint _Size)
+	{
+#ifdef	DMibPIntrinsicMemSet
+		DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
+		NAtomic::fg_CompilerFence();
+		return _pFirst;
+#else
+		mint DoSize = _Size / sizeof(mint);
+		fg_ObjectSet((mint *)_pFirst, 0, DoSize);
+		fg_ObjectSet((uint8 *)_pFirst + (DoSize * sizeof(mint)), 0, _Size - (DoSize * sizeof(mint)));
+		NAtomic::fg_CompilerFence();
+		return _pFirst;
+#endif
+	}
+	template <typename t_CData1>
+	inline_small t_CData1 &fg_SecureMemClear(t_CData1 &_First)
+	{
+		fg_SecureMemClear(&_First, sizeof(t_CData1));
+		return _First;
+	}
+
+	template <typename t_CData1, mint _nElem>
+	inline_small t_CData1 *fg_SecureMemClear(t_CData1 _Data[_nElem])
+	{
+		fg_SecureMemClear(&_Data, sizeof(t_CData1) * _nElem);
+		return _Data;
+	}
+
 
 #ifdef DMibPIntrinsicMemCmp
 	static inline_always aint fg_MemCmp(uint8 const *_pFirst, uint8 const *_pSecond, mint _Size)
