@@ -123,6 +123,7 @@ namespace NMib::NMemory
 			"_CFRunLoopGet0",
 			"_dispatch_timer_unote_arm",
 			"localtime",
+			"realizeClassWithoutSwift",
 #elif defined(DPlatformFamily_Linux)
 			"qt_load_library_runtime",
 			"qt_set_x11_resources",
