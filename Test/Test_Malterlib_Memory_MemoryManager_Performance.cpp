@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
@@ -11,9 +11,9 @@ namespace
 {
 	using namespace NMib::NTest;
 	using namespace NMib::NMemory;
-	
+
 	constexpr mint gc_TestSize = 512;
-	
+
 #if 0
 	struct CDisplayStats
 	{
@@ -22,7 +22,7 @@ namespace
 			// Stats
 			mint SlabSize = CDefaultMemoryManagerParams::mc_SlabSize;
 			DMibConOut("CDefaultMemoryManagerParams::mc_SlabSize = {}\r\n", SlabSize);
-			
+
 			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 0>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 0>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 0>), 4096));
 			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 1>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 1>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 1>), 4096));
 			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 2>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 2>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 2>), 4096));
@@ -39,7 +39,7 @@ namespace
 			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 5>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 5>::mc_SubSlabs));
 			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 6>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 6>::mc_SubSlabs));
 			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 7>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 7>::mc_SubSlabs));
-			DMibConOut("sizeof(CMemoryManagerSubSlabData) = {}\r\n", sizeof(CMemoryManagerSubSlabData));			
+			DMibConOut("sizeof(CMemoryManagerSubSlabData) = {}\r\n", sizeof(CMemoryManagerSubSlabData));
 			DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,1>) = {}\r\n", sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,1>));
 			DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,2>) = {}\r\n", sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,2>));
 			DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,4>) = {}\r\n", sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,4>));
@@ -55,14 +55,14 @@ namespace
 			DMibConOut("sizeof(TCMemoryManager<CDefaultMemoryManagerParams>) = {}\r\n", sizeof(TCMemoryManager<CDefaultMemoryManagerParams>));
 			DMibConOut("sizeof(TCMemoryManagerArenaHeap<CDefaultMemoryManagerParams>) = {}\r\n", sizeof(TCMemoryManagerArenaHeap<CDefaultMemoryManagerParams>));
 			DMibConOut("sizeof(TCMemoryManagerArenaHeapChunk<CDefaultMemoryManagerParams>) = {}\r\n", sizeof(TCMemoryManagerArenaHeapChunk<CDefaultMemoryManagerParams>));
-			
+
 		}
 	};
-	
+
 	CDisplayStats g_DisplayStats;
 
 #endif
-	
+
 	class CPerformance_Tests : public CTest
 	{
 	public:
@@ -71,8 +71,8 @@ namespace
 		CPerformance_Tests()
 		{
 			m_nCores = NMib::NSys::fg_Thread_GetVirtualCores();
-			
-			
+
+
 		}
 
 		struct CAllocPattern_Random
@@ -86,7 +86,7 @@ namespace
 				}
 				void *m_pAddress;
 			};
-			
+
 			NMib::NMisc::CRandomShiftRNG m_Random;
 			uint64 m_nIterations;
 			CAllocationInfo *m_pAllocations;
@@ -123,7 +123,7 @@ namespace
 			{
 				return false;
 			}
-			
+
 			mint f_GetIdealAllocations()
 			{
 				return m_ArraySize * 256;
@@ -231,8 +231,8 @@ namespace
 			static bool fs_Alignment()
 			{
 				return true;
-			}			
-			
+			}
+
 			mint f_GetIdealAllocations()
 			{
 				return m_ArraySize * 256;
@@ -291,7 +291,7 @@ namespace
 				m_nIterations = 0;
 				return Ret;
 			}
-			
+
 		};
 
 		struct CAllocPattern_OneSize
@@ -304,7 +304,7 @@ namespace
 				}
 				void *m_pAddress;
 			};
-			
+
 			NMib::NMisc::CRandomShiftRNG m_Random;
 			uint64 m_nIterations;
 			CAllocationInfo *m_pAllocations;
@@ -342,7 +342,7 @@ namespace
 			{
 				return m_ArraySize * 256;
 			}
-			
+
 			~CAllocPattern_OneSize()
 			{
 				if (m_pAllocations)
@@ -460,10 +460,10 @@ namespace
 
 				auto Checkout = m_pHeap->f_Checkout();
 				(void)Checkout;
-				
-				auto fInnerLoop = [pHeapPointer = m_pHeap, this]() inline_never 
+
+				auto fInnerLoop = [pHeapPointer = m_pHeap, this]() inline_never
 					{
-						auto pHeap = pHeapPointer; 
+						auto pHeap = pHeapPointer;
 						t_CAllocPattern Pattern(m_MaxAllocSize, m_iThread, m_iRepetition, m_iNumaNode);
 						int nPattern = Pattern.f_GetIdealAllocations() / 32;
 						uint64 nIterations = 0;
@@ -486,7 +486,7 @@ namespace
 							DMibTest(!DMibExpr(Pattern.m_bFailed))(ETestFlag_Aggregated);
 					}
 				;
-				
+
 				fInnerLoop();
 
 				return 0;
@@ -497,7 +497,7 @@ namespace
 				return NMib::NStr::CStr::CFormat("Memory manager test {}") << m_iThread;
 			}
 		};
-		
+
 		template <typename tf_CHeap, typename tf_CAllocPattern>
 		void f_DoTestPerform(CTestPerformance &_PerfTest, ETestMeasureType _MeasureType, ch8 const *_pName, mint _MaxAllocSize, mint _nThreads)
 		{
@@ -579,7 +579,7 @@ namespace
 			if (_MeasureType == ETestMeasureType_Reference)
 				_PerfTest.f_AddReference(Measure);
 			else if (_MeasureType == ETestMeasureType_Baseline)
-				_PerfTest.f_AddBaseline(Measure); 
+				_PerfTest.f_AddBaseline(Measure);
 			else if (_MeasureType == ETestMeasureType_Debug)
 				_PerfTest.f_AddDebug(Measure);
 			else
@@ -614,16 +614,16 @@ namespace
 						, m_bValidResult(false)
 					{
 					}
-					virtual void f_HandleHeader(NMib::NContainer::CRegistry_CStr const &_Reg) override
+					virtual void f_HandleHeader(NMib::NContainer::CRegistry const &_Reg) override
 					{
 					}
-					virtual void f_HandleFooter(NMib::NContainer::CRegistry_CStr const &_Reg) override
+					virtual void f_HandleFooter(NMib::NContainer::CRegistry const &_Reg) override
 					{
 					}
-					virtual void f_HandleCategory(NMib::NContainer::CRegistry_CStr const &_Reg) override
+					virtual void f_HandleCategory(NMib::NContainer::CRegistry const &_Reg) override
 					{
 					}
-					virtual void f_HandleResult(NMib::NContainer::CRegistry_CStr const &_Reg) override
+					virtual void f_HandleResult(NMib::NContainer::CRegistry const &_Reg) override
 					{
 						CTestResult Result;
 						CTestResultParser::fs_DecodeResult(_Reg, Result);
@@ -634,7 +634,7 @@ namespace
 						}
 
 					}
-					virtual void f_HandlePerformanceResult(NMib::NContainer::CRegistry_CStr const &_Reg) override
+					virtual void f_HandlePerformanceResult(NMib::NContainer::CRegistry const &_Reg) override
 					{
 						CTestPerformanceResults Results;
 						CTestResultParser::fs_DecodePerformanceResults(_Reg, Results);
@@ -646,7 +646,7 @@ namespace
 							m_bValidResult = true;
 						}
 					}
-					virtual void f_HandleMemoryResult(NMib::NContainer::CRegistry_CStr const &_Reg) override
+					virtual void f_HandleMemoryResult(NMib::NContainer::CRegistry const &_Reg) override
 					{
 					}
 				}
@@ -657,9 +657,9 @@ namespace
 				Params.m_Parameters = NMib::NStr::CStr::CFormat("--Tests \"{}/{}\" --TestLogger Registry --TestResults (All ProcessRecursive) --TestGroups Performance") << fg_TestGetCurrentPath() << _pName;
 				DMibTrace("{}\r\n", Params.m_Parameters);
 				void *pProcess = nullptr;
-				
+
 				NMib::NStorage::TCUniquePointer<NMib::NProcess::CProcessLaunch> pProcessLaunch;
-				
+
 				NMib::NThread::CEvent Exited;
 				Exited.f_ResetSignaled();
 
@@ -739,8 +739,8 @@ namespace
 						}
 					}
 				;
-				
-				Params.m_fOnStateChange = 
+
+				Params.m_fOnStateChange =
 					[&](NMib::NProcess::CProcessLaunchStateChangeVariant const &_State, fp64 _TimeSinceStart)
 					{
 						switch (_State.f_GetTypeID())
@@ -765,7 +765,7 @@ namespace
 										MemoryResult.m_PerAllocationType[Iter.f_GetKey()].m_BytesMaxAlloc = CTestStats(fp64(*Iter));
 									}*/
 
-							
+
 								}
 								Exited.f_SetSignaled();
 							}
@@ -784,7 +784,7 @@ namespace
 						}
 					}
 				;
-				Params.m_fOnOutput = 
+				Params.m_fOnOutput =
 					[&](NMib::NProcess::EProcessLaunchOutputType _OutputType, NMib::NStr::CStr const &_Output)
 					{
 						if (_OutputType == NMib::NProcess::EProcessLaunchOutputType_StdOut)
@@ -793,11 +793,11 @@ namespace
 				;
 				{
 					pProcessLaunch = NMib::fg_Construct(Params, NMib::NProcess::EProcessLaunchCloseFlag_BlockOnExit);
-					
+
 				}
-				
+
 				NMib::NProcess::CProcessStatistics SampledMemoryStats;
-				
+
 				while (true)
 				{
 					try
@@ -811,19 +811,19 @@ namespace
 								if (iStat->m_Value > (*Mapped).m_Value)
 									(*Mapped).m_Value = iStat->m_Value;
 							}
-								
+
 						}
 					}
 					catch (NMib::NException::CException const &)
 					{
 					}
-					
+
 					if (!Exited.f_WaitTimeout(0.01))
 						break; // Exited
 				}
 
 				pProcessLaunch.f_Clear();
-				
+
 				fl_AddStats(SampledMemoryStats);
 
 				if (ResultParser.m_bFailedTest)
@@ -906,7 +906,7 @@ namespace
 #ifdef DMemoryManagerTestEnable_Application
 			f_DoTest<CMalterlibMemoryApplication, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "Application", _MaxAllocSize, _nThreads);
 #endif
-			
+
 #ifdef DMemoryManagerTestEnable_LLAlloc
 			f_DoTest<CMalterlibMemoryLLAlloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "LLAlloc", _MaxAllocSize, _nThreads);
 #endif
@@ -919,7 +919,7 @@ namespace
 #ifdef DMemoryManagerTestEnable_TcMalloc
 			f_DoTest<CMalterlibMemoryTcMalloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "TcMalloc", _MaxAllocSize, _nThreads);
 #endif
-      
+
 #ifdef DMemoryManagerTestEnable_PtMalloc
 			f_DoTest<CMalterlibMemoryPtMalloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "PtMalloc", _MaxAllocSize, _nThreads);
 #endif
@@ -946,7 +946,7 @@ namespace
 		{
 			mint nPhysicalCores = NMib::NSys::fg_Thread_GetPhysicalCores();
 			mint nVirtualCores = NMib::NSys::fg_Thread_GetVirtualCores();
-			for 
+			for
 #if 1
 				(
 					mint i = 1
@@ -974,7 +974,7 @@ namespace
 						{
 							f_DoTests(i, _Pattern, _nThreads);
 						};
-						
+
 					}
 					else
 					{
@@ -1030,7 +1030,7 @@ namespace
 					if (NMib::NSys::fg_System_BeingDebugged() && !(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
 						nEndCores = NMib::fg_Min(nEndCores, 128u); // Running in debugger the debugger makes creating threads really slow
 	#endif
-					
+
 					for (; i <= nEndCores; i = i << 1)
 					{
 						DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << i)
@@ -1078,7 +1078,7 @@ namespace
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(1)/Max Alloc(131072)/MalterlibNewNoCommit" --TestLogger Registry --TestResults (All ProcessRecursive) --TestGroups Performance
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(32)/Max Alloc(512)" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(4)/Max Alloc(512)" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-			
+
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(1)/*" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/OneSize/Threads(1)/*" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
 
@@ -1086,7 +1086,7 @@ namespace
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/RandomAligned/Threads(1)/Max Alloc(32768)" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
 
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(4)/*" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-			
+
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(4)/Max Alloc(1)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/OneSize/Threads(1)/Max Alloc(8)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/OneSize/Threads(1)/Max Alloc(1)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
@@ -1094,11 +1094,11 @@ namespace
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/OneSize/Threads(1)/Max Alloc(16)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
 
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(4)/Max Alloc(16)/MalterlibNewNoCommit" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-			
+
 			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(1)/Max Alloc(262144)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive) --TestGroups Performance
 #endif
 
-			
+
 			DMibTestCategory(CTestCategory("Synthetic") << CTestGroup("Performance"))
 			{
 				f_DoPatterns();
