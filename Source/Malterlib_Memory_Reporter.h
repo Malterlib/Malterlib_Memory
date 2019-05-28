@@ -3,6 +3,10 @@
 
 #pragma once
 
+#if DMibConfig_Memory_Shims_Lightweight
+#	include <Mib/Core/CoroutineHandler>
+#endif
+
 namespace NMib::NMemory
 {
 #if DMibConfig_Memory_Shims_Lightweight
