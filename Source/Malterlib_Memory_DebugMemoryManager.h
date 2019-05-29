@@ -59,10 +59,10 @@ namespace NMib::NMemory
 		mint m_nFreeMemBytes;
 		mint m_nMaxFreeMemory;
 
-		bint m_bCheckUpper;
+		bool m_bCheckUpper;
 
-		bint m_bProtectOnDemand;
-		bint m_bProtectionDemanded;
+		bool m_bProtectOnDemand;
+		bool m_bProtectionDemanded;
 
 		mutable NThread::CMutual m_Lock;
 

@@ -186,9 +186,9 @@ namespace NMib::NMemory
 	class CMemoryReportGoingToReportScope
 	{
 		mint m_Allocator;
-		bint m_bReport;
+		bool m_bReport;
 	public:
-		CMemoryReportGoingToReportScope(mint _Allocator, bint _bReport)
+		CMemoryReportGoingToReportScope(mint _Allocator, bool _bReport)
 			: m_Allocator(_Allocator)
 			, m_bReport(_bReport)
 		{

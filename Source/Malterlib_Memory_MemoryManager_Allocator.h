@@ -22,18 +22,18 @@ namespace NMib::NMemory
 
 		TCAllocator_MemoryManager(TCMemoryManager<t_CParams> *_pMemoryManager);
 
-		static bint f_IsStatic(void const *_pBlock);
-		static bint f_OnlyOneAlloc();
+		static bool f_IsStatic(void const *_pBlock);
+		static bool f_OnlyOneAlloc();
 		static inline_small mint f_StaticAddresses();
-		static inline_small mint f_GranularityAlloc(bint _bLargePages = false);
-		static inline_small mint f_GranularityCommit(bint _bLargePages = false);
-		static inline_small mint f_GranularityProtect(bint _bLargePages = false);
+		static inline_small mint f_GranularityAlloc(bool _bLargePages = false);
+		static inline_small mint f_GranularityCommit(bool _bLargePages = false);
+		static inline_small mint f_GranularityProtect(bool _bLargePages = false);
 		only_parameters_aliased inline_small mint f_Size(void *_pBlock);
 		only_parameters_aliased inline_small mint f_TrySize(void *_pBlock);
 		mint f_SizePadded(mint _Size);
 		static inline_small fp32 f_Overhead(void const *_pBlock);
-		static inline_small bint f_CanCommit();
-		static inline_small bint f_CanProtect();
+		static inline_small bool f_CanCommit();
+		static inline_small bool f_CanProtect();
 		only_parameters_aliased static inline_small void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		only_parameters_aliased return_not_aliased inline_small void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		only_parameters_aliased return_not_aliased inline_small void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);

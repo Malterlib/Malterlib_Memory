@@ -22,14 +22,14 @@ namespace NMib::NMemory
 		};
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Virtual>;
 
-		static bint f_OnlyOneAlloc();
-		static bint f_IsStatic(void const *_pBlock);
+		static bool f_OnlyOneAlloc();
+		static bool f_IsStatic(void const *_pBlock);
 		static mint f_StaticAddresses();
-		static mint f_GranularityAlloc(bint _bLargePages = false);
-		static mint f_GranularityCommit(bint _bLargePages = false);
-		static mint f_GranularityProtect(bint _bLargePages = false);
-		static bint f_CanCommit();
-		static bint f_CanProtect();
+		static mint f_GranularityAlloc(bool _bLargePages = false);
+		static mint f_GranularityCommit(bool _bLargePages = false);
+		static mint f_GranularityProtect(bool _bLargePages = false);
+		static bool f_CanCommit();
+		static bool f_CanProtect();
 		static ch8 ms_HeapName[];
 
 #if DMibConfig_Memory_Shims_Enable
@@ -72,8 +72,8 @@ namespace NMib::NMemory
 	class CAllocator_VirtualNoCommit : public CAllocator_Virtual
 	{
 	public:
-		static bint f_CanCommit();
-		static bint f_CanProtect();
+		static bool f_CanCommit();
+		static bool f_CanProtect();
 		static void f_Commit(void *_pMem, mint _Size);
 		static void f_Decommit(void *_pMem, mint _Size);
 	};
@@ -89,14 +89,14 @@ namespace NMib::NMemory
 		};
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_VirtualNoTracking>;
 
-		static bint f_OnlyOneAlloc();
-		static bint f_IsStatic(void const *_pBlock);
+		static bool f_OnlyOneAlloc();
+		static bool f_IsStatic(void const *_pBlock);
 		static mint f_StaticAddresses();
-		static mint f_GranularityAlloc(bint _bLargePages = false);
-		static mint f_GranularityCommit(bint _bLargePages = false);
-		static mint f_GranularityProtect(bint _bLargePages = false);
-		static bint f_CanCommit();
-		static bint f_CanProtect();
+		static mint f_GranularityAlloc(bool _bLargePages = false);
+		static mint f_GranularityCommit(bool _bLargePages = false);
+		static mint f_GranularityProtect(bool _bLargePages = false);
+		static bool f_CanCommit();
+		static bool f_CanProtect();
 		static void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		static void *f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static void *f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -128,8 +128,8 @@ namespace NMib::NMemory
 	class CAllocator_VirtualNoTrackingNoCommit : public CAllocator_VirtualNoTracking
 	{
 	public:
-		static bint f_CanCommit();
-		static bint f_CanProtect();
+		static bool f_CanCommit();
+		static bool f_CanProtect();
 		static void f_Commit(void *_pMem, mint _Size);
 		static void f_Decommit(void *_pMem, mint _Size);
 	};

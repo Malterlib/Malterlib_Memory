@@ -1030,7 +1030,7 @@ extern "C" bool g_bForeignZone = false;
 extern "C" bool g_bHasForeignZones = false;
 extern "C" bool g_bOnlyDefaultZone = true;
 
-extern bint g_bRegisteredAtFork;
+extern bool g_bRegisteredAtFork;
 
 void fg_Override_PrepareFork();
 void fg_Override_PrepareForkDummy();

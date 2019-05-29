@@ -372,7 +372,7 @@ namespace NMib::NMemory
 
 namespace NMib::NMemory
 {
-	mint CAllocator_NonTrackedHeap::f_GranularityAlloc(bint _bLargePages)
+	mint CAllocator_NonTrackedHeap::f_GranularityAlloc(bool _bLargePages)
 	{
 		return g_CrossModule.m_fNonTracked_Granularity(&g_CrossModule);
 	}

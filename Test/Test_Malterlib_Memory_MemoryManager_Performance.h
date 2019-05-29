@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #if defined(DPlatformFamily_Windows)
@@ -13,7 +13,7 @@
 #	undef DMemoryManagerTestEnable_TcMalloc
 #endif
 
-#if DMibPPtrBits != 64 
+#if DMibPPtrBits != 64
 #	undef DMemoryManagerTestEnable_TcMalloc
 #endif
 
@@ -66,7 +66,7 @@
 namespace
 {
 
-	enum 
+	enum
 	{
 		EUseFast = true
 	};
@@ -84,7 +84,7 @@ namespace
 		;
 		mint m_MaxSize;
 	public:
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
@@ -93,7 +93,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			m_MaxSize = _MaxSize;
 			return true;
@@ -112,7 +112,7 @@ namespace
 
 		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
 		{
-			
+
 			return NMib::fg_AlignUp((*m_pMemory), _Alignment);
 		}
 
@@ -143,7 +143,7 @@ namespace
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
@@ -152,14 +152,14 @@ namespace
 			m_MemoryManager.f_SetNumaNode(_Node);
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			return true;
 		}
 		void f_InitThread()
 		{
 		}
-		
+
 		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
 		{
 			return m_MemoryManager.f_Checkout();
@@ -187,7 +187,7 @@ namespace
 		{
 		}
 	};
-	
+
 	class CMalterlibMemoryMalterlibNew_Debug
 	{
 		NMib::NMemory::TCMemoryManagerDebug<NMib::NMemory::CDefaultMemoryManagerParams, false> m_MemoryManager;
@@ -196,7 +196,7 @@ namespace
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
@@ -205,14 +205,14 @@ namespace
 			m_MemoryManager.f_SetNumaNode(_Node);
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			return true;
 		}
 		void f_InitThread()
 		{
 		}
-		
+
 		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
 		{
 			return m_MemoryManager.f_Checkout();
@@ -242,7 +242,7 @@ namespace
 		}
 	};
 
-	
+
 	class CMalterlibMemoryMalterlibNew_Tracked
 	{
 		NMib::NMemory::TCMemoryManagerTracked<NMib::NMemory::TCMemoryManager<NMib::NMemory::CDefaultMemoryManagerParams>> m_MemoryManager;
@@ -251,7 +251,7 @@ namespace
 			: m_MemoryManager("Test tracked manager", NMib::NMemory::CMemoryManagerConfig())
 		{
 		}
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
@@ -260,14 +260,14 @@ namespace
 			m_MemoryManager.f_SetNumaNode(_Node);
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			return true;
 		}
 		void f_InitThread()
 		{
 		}
-		
+
 		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
 		{
 			return m_MemoryManager.f_Checkout();
@@ -311,14 +311,14 @@ namespace
 				)
 			;
 		};
-		
+
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlibNew_NoCleanup()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
@@ -327,14 +327,14 @@ namespace
 			m_MemoryManager.f_SetNumaNode(_Node);
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			return true;
 		}
 		void f_InitThread()
 		{
 		}
-		
+
 		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
 		{
 			return m_MemoryManager.f_Checkout();
@@ -369,15 +369,15 @@ namespace
 		{
 			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup = NMib::NMemory::EDeferCleanup_None;
 		};
-		
+
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
-		
+
 		CMalterlibMemoryMalterlibNew_NoDeferCleanup()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
@@ -386,14 +386,14 @@ namespace
 			m_MemoryManager.f_SetNumaNode(_Node);
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			return true;
 		}
 		void f_InitThread()
 		{
 		}
-		
+
 		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
 		{
 			return m_MemoryManager.f_Checkout();
@@ -430,7 +430,7 @@ namespace
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
@@ -439,7 +439,7 @@ namespace
 			m_MemoryManager.f_SetNumaNode(_Node);
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			return true;
 		}
@@ -447,7 +447,7 @@ namespace
 		void f_InitThread()
 		{
 		}
-		
+
 		int f_Checkout()
 		{
 			return 0;
@@ -471,7 +471,7 @@ namespace
 		void f_Clear()
 		{
 		}
-		
+
 		void f_CheckHeap()
 		{
 		}
@@ -484,7 +484,7 @@ namespace
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
@@ -493,14 +493,14 @@ namespace
 			m_MemoryManager.f_SetNumaNode(_Node);
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			return true;
 		}
 		void f_InitThread()
 		{
 		}
-		
+
 		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
 		{
 			return m_MemoryManager.f_Checkout();
@@ -545,7 +545,7 @@ namespace
 		{
 		}
 
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			if (_bAlignment)
 				return false;
@@ -556,7 +556,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			NAllocator_PtMalloc::mallopt(M_TRIM_THRESHOLD, -1);
 
@@ -617,14 +617,14 @@ namespace
 		{
 		}
 
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			if (_bAlignment)
 				return false;
 			return _nThreads <= 4;
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			tc_free(tc_malloc(1));
 			return true;
@@ -675,7 +675,7 @@ namespace
 		{
 		}
 
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			if (_bAlignment)
 				return false; // Seems to be a bug in llalloc for aligned blocks
@@ -686,7 +686,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			llalloc_free(llalloc_malloc(1));
 			return true;
@@ -741,7 +741,7 @@ namespace
 				NAllocator_DlMalloc::destroy_mspace(m_Heap);
 		}
 
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return _nThreads == 1;
 		}
@@ -750,7 +750,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			if (_nThreads > 1)
 				return false;
@@ -810,7 +810,7 @@ namespace
 				NAllocator_DlMalloc::destroy_mspace(m_Heap);
 		}
 
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return _nThreads == 1;
 		}
@@ -819,7 +819,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			if (_nThreads > 1)
 				return false;
@@ -882,7 +882,7 @@ namespace
 				NAllocator_DlMallocMultiThreaded::destroy_mspace(m_Heap);
 		}
 
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return _nThreads <= 3;
 		}
@@ -891,7 +891,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			m_Heap = NAllocator_DlMallocMultiThreaded::create_mspace(0, true);
 			NAllocator_DlMallocMultiThreaded::mspace_mallopt(M_TRIM_THRESHOLD, -1);
@@ -947,7 +947,7 @@ namespace
 				NAllocator_DlMallocMultiThreaded::destroy_mspace(m_Heap);
 		}
 
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return _nThreads <= 3;
 		}
@@ -956,7 +956,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			m_Heap = NAllocator_DlMallocMultiThreaded::create_mspace(0, true);
 			NAllocator_DlMallocMultiThreaded::mspace_mallopt(M_TRIM_THRESHOLD, 4096*1024*2);
@@ -1010,7 +1010,7 @@ namespace
 			: m_pMallocZone(nullptr)
 		{
 		}
-		
+
 		~CMalterlibMemoryOSX()
 		{
 			if (m_pMallocZone)
@@ -1019,8 +1019,8 @@ namespace
 				m_pMallocZone = nullptr;
 			}
 		}
-		
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 #ifdef DPlatform_OSX10_5
 			if (_bAlignment)
@@ -1028,12 +1028,12 @@ namespace
 #endif
 			return true;
 		}
-		
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 		}
-		
-		bint f_Init(mint _nThreads, mint _MaxSize)
+
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			m_pMallocZone = malloc_create_zone(1024*1024, 0);
 			return true;
@@ -1045,7 +1045,7 @@ namespace
 		{
 			return 0;
 		}
-		
+
 		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
 		{
 #ifndef DPlatform_OSX10_5
@@ -1060,12 +1060,12 @@ namespace
 		{
 			return m_pMallocZone->malloc(m_pMallocZone, _Size);
 		}
-		
+
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
 			m_pMallocZone->free(m_pMallocZone, _pMem);
 		}
-		
+
 		void f_Clear()
 		{
 		}
@@ -1079,12 +1079,12 @@ namespace
 		}
 	};
 #endif
-	
+
 #ifdef DMemoryManagerTestEnable_StdLib
 	class CMalterlibMemoryStdLib
 	{
 	public:
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 #ifdef DPlatformFamily_Windows
 			if (_bAlignment)
@@ -1097,7 +1097,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			return true;
 		}
@@ -1148,7 +1148,7 @@ namespace
 	class CMalterlibMemoryApplication
 	{
 	public:
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
@@ -1157,7 +1157,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			return true;
 		}
@@ -1197,9 +1197,9 @@ namespace
 		}
 	};
 #endif
-	
+
 #ifdef DMemoryManagerTestEnable_WindowsDefault
-	template <bint t_bClear, bint t_bMultiThreaded>
+	template <bool t_bClear, bool t_bMultiThreaded>
 	class TCMalterlibMemoryWindows
 	{
 	public:
@@ -1212,7 +1212,7 @@ namespace
 			if (m_Heap)
 				HeapDestroy(m_Heap);
 		}
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			if (_bAlignment)
 				return false;
@@ -1224,7 +1224,7 @@ namespace
 		}
 
 		HANDLE m_Heap;
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			if (_nThreads > 1 && !t_bMultiThreaded)
 				return false;
@@ -1270,7 +1270,7 @@ namespace
 #endif
 
 #ifdef DMemoryManagerTestEnable_WindowsLF
-	template <bint t_bClear>
+	template <bool t_bClear>
 	class TCMalterlibMemoryWindowsLF
 	{
 	public:
@@ -1285,7 +1285,7 @@ namespace
 		}
 		HANDLE m_Heap;
 
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			if (_bAlignment)
 				return false;
@@ -1296,7 +1296,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			f_Create();
 			return true;
@@ -1351,7 +1351,7 @@ namespace
 	{
 	public:
 
-		static bint fs_ShouldRun(mint _nThreads, bint _bAlignment)
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			if (_bAlignment)
 				return false;
@@ -1362,7 +1362,7 @@ namespace
 		{
 		}
 
-		bint f_Init(mint _nThreads, mint _MaxSize)
+		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
 			return _nThreads <= 2;
 		}

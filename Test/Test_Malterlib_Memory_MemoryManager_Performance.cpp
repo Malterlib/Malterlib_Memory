@@ -93,7 +93,7 @@ namespace
 			mint m_ArraySize;
 			mint m_MaxAllocatedMemory;
 			mint m_MaxAllocSize;
-			zbint m_bFailed;
+			bool m_bFailed = false;
 
 //			typedef DMibListLinkD_List(CAllocationInfo, m_Link) CAllocInfoList;
 	//		NMib::NMemory::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing> m_AllocationInfoPool;
@@ -197,7 +197,7 @@ namespace
 			mint m_MaxAllocatedMemory;
 			mint m_MaxAllocSize;
 			mint m_AlignBits;
-			zbint m_bFailed;
+			bool m_bFailed = false;
 
 //			typedef DMibListLinkD_List(CAllocationInfo, m_Link) CAllocInfoList;
 	//		NMib::NMemory::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing> m_AllocationInfoPool;
@@ -311,7 +311,7 @@ namespace
 			mint m_ArraySize;
 			mint m_MaxAllocatedMemory;
 			mint m_MaxAllocSize;
-			zbint m_bFailed;
+			bool m_bFailed = false;
 
 			CAllocPattern_OneSize()
 				: m_pAllocations(nullptr)
@@ -605,8 +605,8 @@ namespace
 					CTestPerformanceResult &m_Result;
 					ETestMeasureType m_MeasureType;
 					ch8 const *m_pName;
-					bint m_bValidResult;
-					zbint m_bFailedTest;
+					bool m_bValidResult;
+					bool m_bFailedTest = false;
 					CLocalParser(CTestPerformanceResult &_Result, ETestMeasureType _MeasureType, ch8 const *_pName)
 						: m_Result(_Result)
 						, m_MeasureType(_MeasureType)

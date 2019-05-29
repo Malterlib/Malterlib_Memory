@@ -9,12 +9,12 @@ namespace NMib::NMemory
 	{
 	}
 
-	bint CAllocator_Placement::f_IsStatic(void const *_pBlock)
+	bool CAllocator_Placement::f_IsStatic(void const *_pBlock)
 	{
 		return false;
 	}
 
-	bint CAllocator_Placement::f_OnlyOneAlloc()
+	bool CAllocator_Placement::f_OnlyOneAlloc()
 	{
 		return false;
 	}
@@ -24,15 +24,15 @@ namespace NMib::NMemory
 		return 0;
 	}
 
-	mint CAllocator_Placement::f_GranularityAlloc(bint _bLargePages)
+	mint CAllocator_Placement::f_GranularityAlloc(bool _bLargePages)
 	{
 		return 1;
 	}
-	mint CAllocator_Placement::f_GranularityCommit(bint _bLargePages)
+	mint CAllocator_Placement::f_GranularityCommit(bool _bLargePages)
 	{
 		return 1;
 	}
-	mint CAllocator_Placement::f_GranularityProtect(bint _bLargePages)
+	mint CAllocator_Placement::f_GranularityProtect(bool _bLargePages)
 	{
 		return 1;
 	}
@@ -56,12 +56,12 @@ namespace NMib::NMemory
 		return 0.0;
 	}
 
-	inline_small bint CAllocator_Placement::f_CanCommit()
+	inline_small bool CAllocator_Placement::f_CanCommit()
 	{
 		return false;
 	}
 
-	inline_small bint CAllocator_Placement::f_CanProtect()
+	inline_small bool CAllocator_Placement::f_CanProtect()
 	{
 		return false;
 	}

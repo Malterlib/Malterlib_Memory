@@ -933,7 +933,7 @@ namespace NMib::NMemory
 				DMibErrorMemoryManagerDebug(_pMessage);
 			else
 			{
-				static bint bBreak = true;
+				static bool bBreak = true;
 				if (bBreak)
 				{
 					DMibPDebugBreak; // Memory damaged

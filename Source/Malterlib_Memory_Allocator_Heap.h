@@ -87,19 +87,19 @@ namespace NMib::NMemory
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Heap>;
 
-		static bint f_IsStatic(void const *_pBlock);
-		static bint f_OnlyOneAlloc();
+		static bool f_IsStatic(void const *_pBlock);
+		static bool f_OnlyOneAlloc();
 		static mint f_StaticAddresses();
 
-		static mint f_GranularityAlloc(bint _bLargePages = false);
-		static mint f_GranularityCommit(bint _bLargePages = false);
-		static mint f_GranularityProtect(bint _bLargePages = false);
+		static mint f_GranularityAlloc(bool _bLargePages = false);
+		static mint f_GranularityCommit(bool _bLargePages = false);
+		static mint f_GranularityProtect(bool _bLargePages = false);
 		only_parameters_aliased static mint f_Size(void *_pBlock);
 		only_parameters_aliased static mint f_TrySize(void *_pBlock);
 		static mint f_SizePadded(mint _Size);
 		static fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
-		static bint f_CanCommit();
-		static bint f_CanProtect();
+		static bool f_CanCommit();
+		static bool f_CanProtect();
 		only_parameters_aliased static void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		only_parameters_aliased malloc_like static void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		only_parameters_aliased malloc_like static void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -136,18 +136,18 @@ namespace NMib::NMemory
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_NonTrackedHeap>;
 
-		static bint f_IsStatic(void const *_pBlock);
-		static bint f_OnlyOneAlloc();
+		static bool f_IsStatic(void const *_pBlock);
+		static bool f_OnlyOneAlloc();
 		static mint f_StaticAddresses();
-		static mint f_GranularityAlloc(bint _bLargePages = false);
-		static mint f_GranularityCommit(bint _bLargePages = false);
-		static mint f_GranularityProtect(bint _bLargePages = false);
+		static mint f_GranularityAlloc(bool _bLargePages = false);
+		static mint f_GranularityCommit(bool _bLargePages = false);
+		static mint f_GranularityProtect(bool _bLargePages = false);
 		only_parameters_aliased static mint f_Size(void *_pBlock);
 		only_parameters_aliased static mint f_TrySize(void *_pBlock);
 		static mint f_SizePadded(mint _Size);
 		static fp32 f_Overhead(void const *_pBlock);
-		static bint f_CanCommit();
-		static bint f_CanProtect();
+		static bool f_CanCommit();
+		static bool f_CanProtect();
 		only_parameters_aliased static void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		only_parameters_aliased malloc_like static void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		only_parameters_aliased malloc_like static void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -201,18 +201,18 @@ namespace NMib::NMemory
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<TCAllocator_Placement>;
 
 		TCAllocator_Placement(void *_pPointer);
-		static bint f_IsStatic(void const *_pBlock);
-		static bint f_OnlyOneAlloc();
+		static bool f_IsStatic(void const *_pBlock);
+		static bool f_OnlyOneAlloc();
 		static mint f_StaticAddresses();
-		static mint f_GranularityAlloc(bint _bLargePages = false);
-		static mint f_GranularityCommit(bint _bLargePages = false);
-		static mint f_GranularityProtect(bint _bLargePages = false);
+		static mint f_GranularityAlloc(bool _bLargePages = false);
+		static mint f_GranularityCommit(bool _bLargePages = false);
+		static mint f_GranularityProtect(bool _bLargePages = false);
 		only_parameters_aliased static mint f_Size(void *_pBlock);
 		only_parameters_aliased static mint f_TrySize(void *_pBlock);
 		static mint f_SizePadded(mint _Size);
 		static fp32 f_Overhead(void const *_pBlock);
-		static bint f_CanCommit();
-		static bint f_CanProtect();
+		static bool f_CanCommit();
+		static bool f_CanProtect();
 		only_parameters_aliased static void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		only_parameters_aliased malloc_like void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		only_parameters_aliased malloc_like void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -263,10 +263,10 @@ namespace NMib::NMemory
 		typedef typename NTraits::TCAlign<CStorage, t_Alignment>::CType CAlignedStorage;
 		CAlignedStorage m_Storage;
 #if DMibEnableSafeCheck > 0
-		bint m_bAllocated;
+		bool m_bAllocated;
 #endif
 
-		bint fp_IsStatic(void const *_pBlock) const;
+		bool fp_IsStatic(void const *_pBlock) const;
 		malloc_like void *fp_GetStatic();
 	public:
 		enum
@@ -281,18 +281,18 @@ namespace NMib::NMemory
 		TCAllocator_Static(TCAllocator_Static const &_Other);
 		TCAllocator_Static & operator =(TCAllocator_Static &&_Other);
 		TCAllocator_Static & operator =(TCAllocator_Static const &_Other);
-		bint f_IsStatic(void const *_pBlock) const;
-		static bint f_OnlyOneAlloc();
+		bool f_IsStatic(void const *_pBlock) const;
+		static bool f_OnlyOneAlloc();
 		mint f_StaticAddresses();
-		mint f_GranularityAlloc(bint _bLargePages = false);
-		mint f_GranularityCommit(bint _bLargePages = false);
-		mint f_GranularityProtect(bint _bLargePages = false);
+		mint f_GranularityAlloc(bool _bLargePages = false);
+		mint f_GranularityCommit(bool _bLargePages = false);
+		mint f_GranularityProtect(bool _bLargePages = false);
 		only_parameters_aliased mint f_Size(void *_pBlock);
 		only_parameters_aliased mint f_TrySize(void *_pBlock);
 		mint f_SizePadded(mint _Size);
 		fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
-		bint f_CanCommit();
-		bint f_CanProtect();
+		bool f_CanCommit();
+		bool f_CanProtect();
 		only_parameters_aliased void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		only_parameters_aliased malloc_like void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		only_parameters_aliased malloc_like void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);

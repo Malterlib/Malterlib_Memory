@@ -92,7 +92,7 @@ namespace NMib::NMemory
 #endif
 	}
 
-	bint g_MalterlibMemoryManager_Debug_EnableStackTrace = DMibConfig_MalterlibMemoryManager_Debug_EnableStackTrace;
+	bool g_MalterlibMemoryManager_Debug_EnableStackTrace = DMibConfig_MalterlibMemoryManager_Debug_EnableStackTrace;
 
 	ch8 CAllocator_Virtual::ms_HeapName[] = "Virtual";
 

@@ -279,7 +279,7 @@ namespace NMib::NMemory
 
 			void f_Destruct(ch8 const *_pTypeName);
 
-			bint f_ContainsBlock(void *_pBlock)
+			bool f_ContainsBlock(void *_pBlock)
 			{
 				DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *lLists[] = {&m_Chunks, &m_FreeChunks, &m_EmptyChunks};
 
@@ -515,7 +515,7 @@ namespace NMib::NMemory
 
 			void f_Destruct(ch8 const *_pTypeName);
 
-			bint f_ContainsBlock(void *_pBlock)
+			bool f_ContainsBlock(void *_pBlock)
 			{
 				DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *lLists[] = {&m_Chunks, &m_FreeChunks, &m_EmptyChunks};
 
@@ -666,7 +666,7 @@ namespace NMib::NMemory
 			m_bDoneInit = true;
 		}
 
-		inline_small bint f_ShouldInit()
+		inline_small bool f_ShouldInit()
 		{
 			if (m_bDoneInit)
 				return false;
@@ -810,7 +810,7 @@ namespace NMib::NMemory
 		{
 		}
 
-		static inline_small bint f_ShouldInit()
+		static inline_small bool f_ShouldInit()
 		{
 			return false;
 		}
@@ -926,17 +926,17 @@ namespace NMib::NMemory
 			return 0;
 		}
 
-		static inline_small mint f_GranularityAlloc(bint _bLargePages = false)
+		static inline_small mint f_GranularityAlloc(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_GranularityCommit(bint _bLargePages = false)
+		static inline_small mint f_GranularityCommit(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_GranularityProtect(bint _bLargePages = false)
+		static inline_small mint f_GranularityProtect(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
@@ -957,12 +957,12 @@ namespace NMib::NMemory
 			return sizeof(t_CType);
 		}
 
-		static inline_small bint f_CanCommit()
+		static inline_small bool f_CanCommit()
 		{
 			return false;
 		}
 
-		static inline_small bint f_CanProtect()
+		static inline_small bool f_CanProtect()
 		{
 			return false;
 		}
@@ -1155,17 +1155,17 @@ namespace NMib::NMemory
 			return 0;
 		}
 
-		static inline_small mint f_GranularityAlloc(bint _bLargePages = false)
+		static inline_small mint f_GranularityAlloc(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_GranularityCommit(bint _bLargePages = false)
+		static inline_small mint f_GranularityCommit(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_GranularityProtect(bint _bLargePages = false)
+		static inline_small mint f_GranularityProtect(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
@@ -1186,12 +1186,12 @@ namespace NMib::NMemory
 			return sizeof(t_CType);
 		}
 
-		static inline_small bint f_CanCommit()
+		static inline_small bool f_CanCommit()
 		{
 			return false;
 		}
 
-		static inline_small bint f_CanProtect()
+		static inline_small bool f_CanProtect()
 		{
 			return false;
 		}
@@ -1356,17 +1356,17 @@ namespace NMib::NMemory
 			return 0;
 		}
 
-		static inline_small mint f_GranularityAlloc(bint _bLargePages = false)
+		static inline_small mint f_GranularityAlloc(bool _bLargePages = false)
 		{
 			return sizeof(CData);
 		}
 
-		static inline_small mint f_GranularityCommit(bint _bLargePages = false)
+		static inline_small mint f_GranularityCommit(bool _bLargePages = false)
 		{
 			return sizeof(CData);
 		}
 
-		static inline_small mint f_GranularityProtect(bint _bLargePages = false)
+		static inline_small mint f_GranularityProtect(bool _bLargePages = false)
 		{
 			return sizeof(CData);
 		}
@@ -1387,12 +1387,12 @@ namespace NMib::NMemory
 			return sizeof(CData);
 		}
 
-		static inline_small bint f_CanCommit()
+		static inline_small bool f_CanCommit()
 		{
 			return false;
 		}
 
-		static inline_small bint f_CanProtect()
+		static inline_small bool f_CanProtect()
 		{
 			return false;
 		}

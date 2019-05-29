@@ -237,7 +237,7 @@ namespace NMib::NMemory
 
 namespace NMib::NMemory
 {
-	mint CAllocator_NonTrackedHeap::f_GranularityAlloc(bint _bLargePages)
+	mint CAllocator_NonTrackedHeap::f_GranularityAlloc(bool _bLargePages)
 	{
 		return CCrossModuleImplementationExtra::fs_NonTracked_Granularity(&g_CrossModule);
 	}

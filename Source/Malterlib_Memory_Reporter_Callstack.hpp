@@ -454,7 +454,7 @@ namespace NMib::NMemory
 
 	CCallstackMemoryReporter::CCallstack& CCallstackMemoryReporter::fp_GetCallstack(mint _MemoryAllocator, mint _Hash, CMibCodeAddress *_pStack, mint _nStack)
 	{
-		bint bCreated = false;
+		bool bCreated = false;
 		auto & CallStack = m_Callstacks.f_Map(_Hash, bCreated, _Hash, _pStack, _nStack, _MemoryAllocator);
 		return CallStack;
 	}
@@ -470,7 +470,7 @@ namespace NMib::NMemory
 
 	bool CCallstackMemoryReporter::fp_RegisterAllocation(mint _MemoryAllocator, mint _Address, mint _Size, CCallstack* _pCallstack)
 	{
-		bint bCreated = false;
+		bool bCreated = false;
 		CAllocation &Allocation = m_Allocations.f_Map(CAllocationKey(_MemoryAllocator, _Address), bCreated, _Size, _pCallstack);
 
 		if (!bCreated)

@@ -9,12 +9,12 @@ namespace NMib::NMemory
 	/// CAllocator_Virtual
 	///
 
-	inline_small bint CAllocator_Virtual::f_OnlyOneAlloc()
+	inline_small bool CAllocator_Virtual::f_OnlyOneAlloc()
 	{
 		return false;
 	}
 
-	inline_small bint CAllocator_Virtual::f_IsStatic(void const *_pBlock)
+	inline_small bool CAllocator_Virtual::f_IsStatic(void const *_pBlock)
 	{
 		return false;
 	}
@@ -24,25 +24,25 @@ namespace NMib::NMemory
 		return 1;
 	}
 
-	inline_small mint CAllocator_Virtual::f_GranularityAlloc(bint _bLargePages)
+	inline_small mint CAllocator_Virtual::f_GranularityAlloc(bool _bLargePages)
 	{
 		return NSys::fg_Mem_VirtualGranularityAlloc(_bLargePages);
 	}
-	inline_small mint CAllocator_Virtual::f_GranularityCommit(bint _bLargePages)
+	inline_small mint CAllocator_Virtual::f_GranularityCommit(bool _bLargePages)
 	{
 		return NSys::fg_Mem_VirtualGranularityCommit(_bLargePages);
 	}
-	inline_small mint CAllocator_Virtual::f_GranularityProtect(bint _bLargePages)
+	inline_small mint CAllocator_Virtual::f_GranularityProtect(bool _bLargePages)
 	{
 		return NSys::fg_Mem_VirtualGranularityProtect(_bLargePages);
 	}
 
-	inline_small bint CAllocator_Virtual::f_CanCommit()
+	inline_small bool CAllocator_Virtual::f_CanCommit()
 	{
 		return NSys::fg_Mem_VirtualCanCommit();
 	}
 
-	inline_small bint CAllocator_Virtual::f_CanProtect()
+	inline_small bool CAllocator_Virtual::f_CanProtect()
 	{
 		return NSys::fg_Mem_VirtualCanProtect();
 	}
@@ -245,12 +245,12 @@ namespace NMib::NMemory
 	/// CAllocator_VirtualNoCommit
 	///
 
-	inline_small bint CAllocator_VirtualNoCommit::f_CanCommit()
+	inline_small bool CAllocator_VirtualNoCommit::f_CanCommit()
 	{
 		return 0;
 	}
 
-	inline_small bint CAllocator_VirtualNoCommit::f_CanProtect()
+	inline_small bool CAllocator_VirtualNoCommit::f_CanProtect()
 	{
 		return 0;
 	}
@@ -267,12 +267,12 @@ namespace NMib::NMemory
 	///
 	/// CAllocator_VirtualNoTracking
 	///
-	inline_small bint CAllocator_VirtualNoTracking::f_OnlyOneAlloc()
+	inline_small bool CAllocator_VirtualNoTracking::f_OnlyOneAlloc()
 	{
 		return false;
 	}
 
-	inline_small bint CAllocator_VirtualNoTracking::f_IsStatic(void const *_pBlock)
+	inline_small bool CAllocator_VirtualNoTracking::f_IsStatic(void const *_pBlock)
 	{
 		return false;
 	}
@@ -282,25 +282,25 @@ namespace NMib::NMemory
 		return 1;
 	}
 
-	inline_small mint CAllocator_VirtualNoTracking::f_GranularityAlloc(bint _bLargePages)
+	inline_small mint CAllocator_VirtualNoTracking::f_GranularityAlloc(bool _bLargePages)
 	{
 		return NSys::fg_Mem_VirtualGranularityAlloc(_bLargePages);
 	}
-	inline_small mint CAllocator_VirtualNoTracking::f_GranularityCommit(bint _bLargePages)
+	inline_small mint CAllocator_VirtualNoTracking::f_GranularityCommit(bool _bLargePages)
 	{
 		return NSys::fg_Mem_VirtualGranularityCommit(_bLargePages);
 	}
-	inline_small mint CAllocator_VirtualNoTracking::f_GranularityProtect(bint _bLargePages)
+	inline_small mint CAllocator_VirtualNoTracking::f_GranularityProtect(bool _bLargePages)
 	{
 		return NSys::fg_Mem_VirtualGranularityProtect(_bLargePages);
 	}
 
-	inline_small bint CAllocator_VirtualNoTracking::f_CanCommit()
+	inline_small bool CAllocator_VirtualNoTracking::f_CanCommit()
 	{
 		return NSys::fg_Mem_VirtualCanCommit();
 	}
 
-	inline_small bint CAllocator_VirtualNoTracking::f_CanProtect()
+	inline_small bool CAllocator_VirtualNoTracking::f_CanProtect()
 	{
 		return NSys::fg_Mem_VirtualCanProtect();
 	}
@@ -455,12 +455,12 @@ namespace NMib::NMemory
 	/// CAllocator_VirtualNoTrackingNoCommit
 	///
 
-	inline_small bint CAllocator_VirtualNoTrackingNoCommit::f_CanCommit()
+	inline_small bool CAllocator_VirtualNoTrackingNoCommit::f_CanCommit()
 	{
 		return 0;
 	}
 
-	inline_small bint CAllocator_VirtualNoTrackingNoCommit::f_CanProtect()
+	inline_small bool CAllocator_VirtualNoTrackingNoCommit::f_CanProtect()
 	{
 		return 0;
 	}

@@ -12,13 +12,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline bint TCAllocator_MemoryManager<t_CParams>::f_IsStatic(void const *_pBlock)
+	inline bool TCAllocator_MemoryManager<t_CParams>::f_IsStatic(void const *_pBlock)
 	{
 		return false;
 	}
 
 	template <typename t_CParams>
-	inline bint TCAllocator_MemoryManager<t_CParams>::f_OnlyOneAlloc()
+	inline bool TCAllocator_MemoryManager<t_CParams>::f_OnlyOneAlloc()
 	{
 		return false;
 	}
@@ -30,19 +30,19 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_small mint TCAllocator_MemoryManager<t_CParams>::f_GranularityAlloc(bint _bLargePages)
+	inline_small mint TCAllocator_MemoryManager<t_CParams>::f_GranularityAlloc(bool _bLargePages)
 	{
 		return NMib::NMemory::fg_Granularity();
 	}
 
 	template <typename t_CParams>
-	inline_small mint TCAllocator_MemoryManager<t_CParams>::f_GranularityCommit(bint _bLargePages)
+	inline_small mint TCAllocator_MemoryManager<t_CParams>::f_GranularityCommit(bool _bLargePages)
 	{
 		return NMib::NMemory::fg_Granularity();
 	}
 
 	template <typename t_CParams>
-	inline_small mint TCAllocator_MemoryManager<t_CParams>::f_GranularityProtect(bint _bLargePages)
+	inline_small mint TCAllocator_MemoryManager<t_CParams>::f_GranularityProtect(bool _bLargePages)
 	{
 		return NMib::NMemory::fg_Granularity();
 	}
@@ -72,13 +72,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_small bint TCAllocator_MemoryManager<t_CParams>::f_CanCommit()
+	inline_small bool TCAllocator_MemoryManager<t_CParams>::f_CanCommit()
 	{
 		return false;
 	}
 
 	template <typename t_CParams>
-	inline_small bint f_CanProtect()
+	inline_small bool f_CanProtect()
 	{
 		return false;
 	}

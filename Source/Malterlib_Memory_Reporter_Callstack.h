@@ -36,7 +36,7 @@ namespace NMib::NMemory
 				return *this;
 			}
 
-			bint operator< (CSize const& _Other) const
+			bool operator< (CSize const& _Other) const
 			{
 				return m_nBytes > _Other.m_nBytes;
 			}

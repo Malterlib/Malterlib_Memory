@@ -7,12 +7,12 @@
 
 namespace NMib::NMemory
 {
-	inline_small bint CAllocator_Heap::f_IsStatic(void const *_pBlock)
+	inline_small bool CAllocator_Heap::f_IsStatic(void const *_pBlock)
 	{
 		return false;
 	}
 
-	inline_small bint CAllocator_Heap::f_OnlyOneAlloc()
+	inline_small bool CAllocator_Heap::f_OnlyOneAlloc()
 	{
 		return false;
 	}
@@ -22,17 +22,17 @@ namespace NMib::NMemory
 		return 0;
 	}
 
-	inline_small mint CAllocator_Heap::f_GranularityAlloc(bint _bLargePages)
+	inline_small mint CAllocator_Heap::f_GranularityAlloc(bool _bLargePages)
 	{
 		return NMib::NMemory::fg_Granularity();
 	}
 
-	inline_small mint CAllocator_Heap::f_GranularityCommit(bint _bLargePages)
+	inline_small mint CAllocator_Heap::f_GranularityCommit(bool _bLargePages)
 	{
 		return NMib::NMemory::fg_Granularity();
 	}
 
-	inline_small mint CAllocator_Heap::f_GranularityProtect(bint _bLargePages)
+	inline_small mint CAllocator_Heap::f_GranularityProtect(bool _bLargePages)
 	{
 		return NMib::NMemory::fg_Granularity();
 	}
@@ -58,12 +58,12 @@ namespace NMib::NMemory
 	}
 
 
-	inline_small bint CAllocator_Heap::f_CanCommit()
+	inline_small bool CAllocator_Heap::f_CanCommit()
 	{
 		return false;
 	}
 
-	inline_small bint CAllocator_Heap::f_CanProtect()
+	inline_small bool CAllocator_Heap::f_CanProtect()
 	{
 		return false;
 	}
@@ -209,12 +209,12 @@ namespace NMib::NMemory
 	/// CAllocator_NonTrackedHeap
 	///
 
-	inline_small bint CAllocator_NonTrackedHeap::f_IsStatic(void const *_pBlock)
+	inline_small bool CAllocator_NonTrackedHeap::f_IsStatic(void const *_pBlock)
 	{
 		return false;
 	}
 
-	inline_small bint CAllocator_NonTrackedHeap::f_OnlyOneAlloc()
+	inline_small bool CAllocator_NonTrackedHeap::f_OnlyOneAlloc()
 	{
 		return false;
 	}
@@ -224,21 +224,21 @@ namespace NMib::NMemory
 		return 0;
 	}
 
-	inline_small mint CAllocator_NonTrackedHeap::f_GranularityCommit(bint _bLargePages)
+	inline_small mint CAllocator_NonTrackedHeap::f_GranularityCommit(bool _bLargePages)
 	{
 		return f_GranularityAlloc();
 	}
-	inline_small mint CAllocator_NonTrackedHeap::f_GranularityProtect(bint _bLargePages)
+	inline_small mint CAllocator_NonTrackedHeap::f_GranularityProtect(bool _bLargePages)
 	{
 		return f_GranularityAlloc();
 	}
 
-	inline_small bint CAllocator_NonTrackedHeap::f_CanCommit()
+	inline_small bool CAllocator_NonTrackedHeap::f_CanCommit()
 	{
 		return false;
 	}
 
-	inline_small bint CAllocator_NonTrackedHeap::f_CanProtect()
+	inline_small bool CAllocator_NonTrackedHeap::f_CanProtect()
 	{
 		return false;
 	}
@@ -316,13 +316,13 @@ namespace NMib::NMemory
 	}
 
 	template <mint t_AllocSize>
-	bint TCAllocator_Placement<t_AllocSize>::f_IsStatic(void const *_pBlock)
+	bool TCAllocator_Placement<t_AllocSize>::f_IsStatic(void const *_pBlock)
 	{
 		return false;
 	}
 
 	template <mint t_AllocSize>
-	bint TCAllocator_Placement<t_AllocSize>::f_OnlyOneAlloc()
+	bool TCAllocator_Placement<t_AllocSize>::f_OnlyOneAlloc()
 	{
 		return false;
 	}
@@ -334,17 +334,17 @@ namespace NMib::NMemory
 	}
 
 	template <mint t_AllocSize>
-	mint TCAllocator_Placement<t_AllocSize>::f_GranularityAlloc(bint _bLargePages)
+	mint TCAllocator_Placement<t_AllocSize>::f_GranularityAlloc(bool _bLargePages)
 	{
 		return 1;
 	}
 	template <mint t_AllocSize>
-	mint TCAllocator_Placement<t_AllocSize>::f_GranularityCommit(bint _bLargePages)
+	mint TCAllocator_Placement<t_AllocSize>::f_GranularityCommit(bool _bLargePages)
 	{
 		return 1;
 	}
 	template <mint t_AllocSize>
-	mint TCAllocator_Placement<t_AllocSize>::f_GranularityProtect(bint _bLargePages)
+	mint TCAllocator_Placement<t_AllocSize>::f_GranularityProtect(bool _bLargePages)
 	{
 		return 1;
 	}
@@ -371,13 +371,13 @@ namespace NMib::NMemory
 	}
 
 	template <mint t_AllocSize>
-	inline_small bint TCAllocator_Placement<t_AllocSize>::f_CanCommit()
+	inline_small bool TCAllocator_Placement<t_AllocSize>::f_CanCommit()
 	{
 		return false;
 	}
 
 	template <mint t_AllocSize>
-	inline_small bint TCAllocator_Placement<t_AllocSize>::f_CanProtect()
+	inline_small bool TCAllocator_Placement<t_AllocSize>::f_CanProtect()
 	{
 		return false;
 	}
@@ -527,7 +527,7 @@ namespace NMib::NMemory
 	///
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	bint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::fp_IsStatic(void const *_pBlock) const
+	bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::fp_IsStatic(void const *_pBlock) const
 	{
 		return &m_Storage == _pBlock;
 	}
@@ -579,12 +579,12 @@ namespace NMib::NMemory
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	bint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_IsStatic(void const *_pBlock) const
+	bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_IsStatic(void const *_pBlock) const
 	{
 		return fp_IsStatic(_pBlock);
 	}
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	bint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_OnlyOneAlloc()
+	bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_OnlyOneAlloc()
 	{
 		return true;
 	}
@@ -596,19 +596,19 @@ namespace NMib::NMemory
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	inline_small mint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_GranularityAlloc(bint _bLargePages)
+	inline_small mint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_GranularityAlloc(bool _bLargePages)
 	{
 		return NMib::NMemory::fg_Granularity();
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	inline_small mint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_GranularityCommit(bint _bLargePages)
+	inline_small mint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_GranularityCommit(bool _bLargePages)
 	{
 		return NMib::NMemory::fg_Granularity();
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	inline_small mint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_GranularityProtect(bint _bLargePages)
+	inline_small mint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_GranularityProtect(bool _bLargePages)
 	{
 		return NMib::NMemory::fg_Granularity();
 	}
@@ -652,13 +652,13 @@ namespace NMib::NMemory
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	inline_small bint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_CanCommit()
+	inline_small bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_CanCommit()
 	{
 		return false;
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	inline_small bint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_CanProtect()
+	inline_small bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_CanProtect()
 	{
 		return false;
 	}

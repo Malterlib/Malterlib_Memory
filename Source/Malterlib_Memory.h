@@ -230,17 +230,17 @@ namespace NMib::NMemory
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Empty>;
 
-		static inline_small mint f_GranularityAlloc(bint _bLargePages = false)
+		static inline_small mint f_GranularityAlloc(bool _bLargePages = false)
 		{
 			return 1;
 		}
 
-		static inline_small mint f_GranularityCommit(bint _bLargePages = false)
+		static inline_small mint f_GranularityCommit(bool _bLargePages = false)
 		{
 			return 1;
 		}
 
-		static inline_small mint f_GranularityProtect(bint _bLargePages = false)
+		static inline_small mint f_GranularityProtect(bool _bLargePages = false)
 		{
 			return 1;
 		}
@@ -265,12 +265,12 @@ namespace NMib::NMemory
 			return 0.0f;
 		}
 
-		static inline_small bint f_CanCommit()
+		static inline_small bool f_CanCommit()
 		{
 			return false;
 		}
 
-		static inline_small bint f_CanProtect()
+		static inline_small bool f_CanProtect()
 		{
 			return false;
 		}
