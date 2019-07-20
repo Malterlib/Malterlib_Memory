@@ -5,6 +5,7 @@
 {
 	Property
 	{
+		ProductName "Malterlib Malloc"
 		MalterlibPostCopyProject "MalterlibMalloc"
 		{
 			!!MalterlibPostCopyProject ""
