@@ -16,6 +16,11 @@ namespace NMib::NMemory
 		, ENumaArenaCleanup_FreeSlabs = DMibBit(3)
 	};
 
+	struct CMemoryManagerGarbageOptions
+	{
+		int64 m_Timestamp;
+		int64 m_TimestampDecommit;
+	};
 
 	template <typename t_CParams>
 	class TCMemoryManagerArenaHeap;

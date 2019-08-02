@@ -102,7 +102,7 @@ namespace NMib::NMemory
 		void f_RequestCleanup(ENumaArenaCleanup _Cleanup);
 		void f_RequestCleanupWeak(ENumaArenaCleanup _Cleanup);
 
-		int64 f_GarbageCollect(int64 _Timestamp, bool _bDecommit, bool _bHasNumaArenasLock, bool _bForceCleanup);
+		int64 f_GarbageCollect(CMemoryManagerGarbageOptions const &_GarbageOptions, bool _bDecommit, bool _bHasNumaArenasLock, bool _bForceCleanup);
 
 		bool f_ProcessArenaMessages(bool _bIncremental, bool & _oDeferred, bool _bHasNumaArenasLock);
 

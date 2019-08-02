@@ -91,11 +91,11 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	int64 TCMemoryManagerNumaArena<t_CParams>::f_GarbageCollect(int64 _Timestamp, bool _bDecommit, bool _bHasNumaArenasLock, bool _bForceCleanup)
+	int64 TCMemoryManagerNumaArena<t_CParams>::f_GarbageCollect(CMemoryManagerGarbageOptions const &_GarbageOptions, bool _bDecommit, bool _bHasNumaArenasLock, bool _bForceCleanup)
 	{
 		int64 EarliestTimestamp = TCLimitsInt<int64>::mc_Max;
 
-		bool bIncremental = _Timestamp != TCLimitsInt<int64>::mc_Max;
+		bool bIncremental = _GarbageOptions.m_Timestamp != TCLimitsInt<int64>::mc_Max;
 
 		auto &ThreadLocal = *m_pMemoryManager->m_LocalArena;
 		auto ReentrantScope = ThreadLocal.f_Reentrant();
@@ -110,7 +110,7 @@ namespace NMib::NMemory
 			DMibLock(m_Heap);
 			if (RequestedCleanup & ENumaArenaCleanup_HeapGarbage)
 			{
-				int64 NextCleanup = m_Heap.f_GarbageCollect(_Timestamp);
+				int64 NextCleanup = m_Heap.f_GarbageCollect(_GarbageOptions.m_Timestamp);
 				if (NextCleanup != TCLimitsInt<int64>::mc_Max)
 					NewCleanup |= ENumaArenaCleanup_HeapGarbage;
 				EarliestTimestamp = fg_Min(EarliestTimestamp, NextCleanup);
@@ -121,7 +121,7 @@ namespace NMib::NMemory
 					NewCleanup |= ENumaArenaCleanup_HeapCommit;
 				else
 				{
-					int64 NextCleanup = m_Heap.f_DecommitDeferred(_Timestamp);
+					int64 NextCleanup = m_Heap.f_DecommitDeferred(_GarbageOptions.m_TimestampDecommit);
 					if (NextCleanup != TCLimitsInt<int64>::mc_Max)
 						NewCleanup |= ENumaArenaCleanup_HeapCommit;
 					EarliestTimestamp = fg_Min(EarliestTimestamp, NextCleanup);
@@ -136,7 +136,7 @@ namespace NMib::NMemory
 			f_ProcessArenaMessages(bIncremental, bDeferred, _bHasNumaArenasLock);
 			if (bDeferred)
 			{
-				EarliestTimestamp = fg_Min(EarliestTimestamp, _Timestamp); // Directly request another go
+				EarliestTimestamp = fg_Min(EarliestTimestamp, _GarbageOptions.m_Timestamp); // Directly request another go
 				NewCleanup |= ENumaArenaCleanup_ProcessMessages;
 			}
 		}
@@ -154,7 +154,7 @@ namespace NMib::NMemory
 							auto Locked = pArena->m_Locked.f_FetchOr(EArenaLockFlag_Cleanup, NAtomic::EMemoryOrder_Acquire);
 							if (Locked != EArenaLockFlag_None)
 							{
-								EarliestTimestamp = fg_Min(EarliestTimestamp, _Timestamp); // Directly request another go
+								EarliestTimestamp = fg_Min(EarliestTimestamp, _GarbageOptions.m_Timestamp); // Directly request another go
 								return bRemove; // Already locked by some other thread, just leave it be
 							}
 						}
@@ -177,10 +177,10 @@ namespace NMib::NMemory
 
 					int64 ArenaEarliestTimestamp = TCLimitsInt<int64>::mc_Max;
 
-					ArenaEarliestTimestamp = fg_Min(EarliestTimestamp, pArena->f_GarbageCollect(RequestedCleanup, _Timestamp));
+					ArenaEarliestTimestamp = fg_Min(EarliestTimestamp, pArena->f_GarbageCollect(RequestedCleanup, _GarbageOptions.m_Timestamp));
 					if (_bDecommit)
 					{
-						ArenaEarliestTimestamp = fg_Min(EarliestTimestamp, pArena->f_DecommitDeferred(_Timestamp));
+						ArenaEarliestTimestamp = fg_Min(EarliestTimestamp, pArena->f_DecommitDeferred(_GarbageOptions.m_TimestampDecommit));
 
 						if (ArenaEarliestTimestamp == TCLimitsInt<int64>::mc_Max)
 						{
@@ -249,7 +249,7 @@ namespace NMib::NMemory
 				if (pFreeSlab->m_Link0.f_IsAloneInList())
 					break; // Always save one free slab
 
-				if (pFreeSlab->m_FreeTimestamp > _Timestamp)
+				if (pFreeSlab->m_FreeTimestamp > _GarbageOptions.m_TimestampDecommit)
 				{
 					EarliestTimestamp = fg_Min(EarliestTimestamp, pFreeSlab->m_FreeTimestamp);
 					bAnotherCleanup = true;
@@ -267,7 +267,7 @@ namespace NMib::NMemory
 					auto pSlab = &*iSlab;
 					++iSlab;
 
-					if (pSlab->m_NeedDecommitTimestamp > _Timestamp)
+					if (pSlab->m_NeedDecommitTimestamp > _GarbageOptions.m_TimestampDecommit)
 					{
 						EarliestTimestamp = fg_Min(EarliestTimestamp, pSlab->m_NeedDecommitTimestamp);
 						bAnotherCleanup = true;
@@ -284,7 +284,7 @@ namespace NMib::NMemory
 		}
 
 		if (m_RequestedCleanup.f_FetchOr(NewCleanup))
-			EarliestTimestamp = fg_Min(EarliestTimestamp, _Timestamp); // Directly request another go
+			EarliestTimestamp = fg_Min(EarliestTimestamp, _GarbageOptions.m_Timestamp); // Directly request another go
 
 		return EarliestTimestamp;
 	}

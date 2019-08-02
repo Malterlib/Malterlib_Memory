@@ -328,7 +328,7 @@ namespace NMib::NMemory
 		DMibLock(m_NumaArenasLock);
 		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 		{
-			while (iNumaArena->f_GarbageCollect(TCLimitsInt<int64>::mc_Max, _bDecommit, true, false) != TCLimitsInt<int64>::mc_Max)
+			while (iNumaArena->f_GarbageCollect({TCLimitsInt<int64>::mc_Max, TCLimitsInt<int64>::mc_Max}, _bDecommit, true, false) != TCLimitsInt<int64>::mc_Max)
 				;
 		}
 

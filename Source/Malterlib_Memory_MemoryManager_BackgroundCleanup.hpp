@@ -87,10 +87,23 @@ namespace NMib::NMemory
 						NSys::fg_Thread_SetNumaAffinity(NMib::NSys::fg_Thread_GetCurrent(), mp_pNumaArena->m_NumaNode);
 						mp_pMemoryManager->f_SetNumaNode(mp_pNumaArena->m_NumaNode);
 					}
+					
+					static_assert(t_CParams::mc_BackgroundCleanupLifetimeDecommit >= t_CParams::mc_BackgroundCleanupLifetime);
+
 					bool bForceFullGarbageCollection = false;
-					int64 MSLifetime = t_CParams::mc_BackgroundCleanupLifetime;
-					fp32 WaitTime = fp32(MSLifetime) / fp32(1000.0f);
-					int64 LifeTime = MSLifetime * NTime::CSystem_Time::fs_CyclesFrequency() / 1000;
+					int64 LifeTime;
+					fp32 WaitTime;
+					{
+						int64 MSLifetime = t_CParams::mc_BackgroundCleanupLifetime;
+						WaitTime = fp32(MSLifetime) / fp32(1000.0f);
+						LifeTime = MSLifetime * NTime::CSystem_Time::fs_CyclesFrequency() / 1000;
+					}
+					int64 LifeTimeDecommit;
+					{
+						int64 MSLifetime = t_CParams::mc_BackgroundCleanupLifetimeDecommit;
+						fp32 WaitTime = fp32(MSLifetime) / fp32(1000.0f);
+						LifeTimeDecommit = MSLifetime * NTime::CSystem_Time::fs_CyclesFrequency() / 1000;
+					}
 					int64 NextCleanup = mp_Clock.f_GetCycles() + LifeTime;
 
 #ifdef DMibMemory_CleanupOnUSR1Signal
@@ -115,8 +128,10 @@ namespace NMib::NMemory
 						{
 		//					DMibTraceSafe("{}\n", mp_Clock.f_GetTime());
 
-							int64 RemoveTime = mp_Clock.f_GetCycles() - LifeTime;
-							int64 NextUpdate = mp_pNumaArena->f_GarbageCollect(RemoveTime, true, false, bForceFullGarbageCollection);
+							int64 Now = mp_Clock.f_GetCycles();
+							int64 RemoveTime = Now - LifeTime;
+							int64 RemoveTimeDecommit = Now - LifeTimeDecommit;
+							int64 NextUpdate = mp_pNumaArena->f_GarbageCollect({RemoveTime, RemoveTimeDecommit}, true, false, bForceFullGarbageCollection);
 							bForceFullGarbageCollection = false;
 
 							bNeedUpdate = NextUpdate != TCLimitsInt<int64>::mc_Max;

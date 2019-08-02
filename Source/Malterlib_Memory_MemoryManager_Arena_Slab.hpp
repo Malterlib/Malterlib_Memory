@@ -100,17 +100,20 @@ namespace NMib::NMemory
 	{
 		TCMemoryManagerSlabShared<t_CParams> *pSlab;
 
-#if 1
-		// Do full garbage collection
-		fp_GarbageCollectFull();
-		aint iFree = m_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
-
-#else
-		// Only collect garbage that is relevant to this slab type
-		aint iFree = m_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
-		while (iFree < 0 && fp_GarbageCollect(_SlabType))
+		aint iFree;
+		if constexpr (t_CParams::mc_bFullGarbageCollect)
+		{
+			// Do full garbage collection
+			fp_GarbageCollectFull();
 			iFree = m_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
-#endif
+		}
+		else
+		{
+			// Only collect garbage that is relevant to this slab type
+			iFree = m_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
+			while (iFree < 0 && fp_GarbageCollect(_SlabType))
+				iFree = m_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
+		}
 
 		if (iFree >= 0)
 		{
