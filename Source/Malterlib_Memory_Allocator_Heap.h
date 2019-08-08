@@ -98,7 +98,7 @@ namespace NMib::NMemory
 		only_parameters_aliased static mint f_TrySize(void *_pBlock);
 		static mint f_SizePadded(mint _Size);
 		static fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
-		static bool f_CanCommit();
+		constexpr static bool f_CanCommit();
 		static bool f_CanProtect();
 		only_parameters_aliased static void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		only_parameters_aliased malloc_like static void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -146,7 +146,7 @@ namespace NMib::NMemory
 		only_parameters_aliased static mint f_TrySize(void *_pBlock);
 		static mint f_SizePadded(mint _Size);
 		static fp32 f_Overhead(void const *_pBlock);
-		static bool f_CanCommit();
+		constexpr static bool f_CanCommit();
 		static bool f_CanProtect();
 		only_parameters_aliased static void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		only_parameters_aliased malloc_like static void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -211,7 +211,7 @@ namespace NMib::NMemory
 		only_parameters_aliased static mint f_TrySize(void *_pBlock);
 		static mint f_SizePadded(mint _Size);
 		static fp32 f_Overhead(void const *_pBlock);
-		static bool f_CanCommit();
+		constexpr static bool f_CanCommit();
 		static bool f_CanProtect();
 		only_parameters_aliased static void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		only_parameters_aliased malloc_like void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -291,7 +291,7 @@ namespace NMib::NMemory
 		only_parameters_aliased mint f_TrySize(void *_pBlock);
 		mint f_SizePadded(mint _Size);
 		fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
-		bool f_CanCommit();
+		constexpr bool f_CanCommit();
 		bool f_CanProtect();
 		only_parameters_aliased void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		only_parameters_aliased malloc_like void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);

@@ -88,13 +88,13 @@ namespace NMib::NMemory
 		{
 			Index = 0;
 			TCMemoryManagerSubSlab_SmallSize<t_CParams, 1> *pSubSlab1 = (TCMemoryManagerSubSlab_SmallSize<t_CParams, 1> *)pSubSlab;
-			if (this->mc_EnableCallbacks)
+			if constexpr (mc_EnableCallbacks)
 				pSubSlab1->f_OnFree(*this, _pMemory);
 			SmallState = pSubSlab1->f_Free(_pMemory);
 		}
 		else
 		{
-			if (this->mc_EnableCallbacks)
+			if constexpr (mc_EnableCallbacks)
 				pSubSlab->f_OnFree(*this, _pMemory);
 
 			mint Offset = (uint8 *)_pMemory - pSubSlab->f_GetArray();
@@ -114,7 +114,7 @@ namespace NMib::NMemory
 				iAlloc = Offset / 8;
 				break;
 			case 4:
-				if (mc_MinAlignment == 4)
+				if constexpr (mc_MinAlignment == 4)
 				{
 					Index = 4;
 					iAlloc = Offset / 12;
@@ -147,12 +147,12 @@ namespace NMib::NMemory
 		case 3:
 			return 8;
 		case 4:
-			if (mc_MinAlignment == 4)
+			if constexpr (mc_MinAlignment == 4)
 				return 12;
 			else
 				return 16;
 		case 5:
-			if (mc_MinAlignment == 4)
+			if constexpr (mc_MinAlignment == 4)
 				return 16;
 		default:
 			DMibFastCheck(false);
@@ -175,12 +175,12 @@ namespace NMib::NMemory
 		case 3:
 			return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 8>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 8>::mc_NumAllocs);
 		case 4:
-			if (mc_MinAlignment == 4)
+			if constexpr (mc_MinAlignment == 4)
 				return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 12>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 12>::mc_NumAllocs);
 			else
 				return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 16>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 16>::mc_NumAllocs);
 		case 5:
-			if (mc_MinAlignment == 4)
+			if constexpr (mc_MinAlignment == 4)
 				return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 16>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 16>::mc_NumAllocs);
 		default:
 			DMibFastCheck(false);
@@ -216,7 +216,7 @@ namespace NMib::NMemory
 			Size = 8;
 			break;
 		case 4:
-			if (mc_MinAlignment == 4)
+			if constexpr (mc_MinAlignment == 4)
 			{
 				Size = 12;
 				break;
@@ -228,7 +228,7 @@ namespace NMib::NMemory
 				break;
 			}
 		case 5:
-			if (mc_MinAlignment == 4)
+			if constexpr (mc_MinAlignment == 4)
 			{
 				Size = 16;
 				break;
@@ -255,7 +255,7 @@ namespace NMib::NMemory
 
 		bool bFull;
 		void *pAlloc = pSlab->f_Alloc(bFull);
-		if (_pThis->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 		{
 			pSlab->f_OnCheckFree(*_pThis, pAlloc, true);
 			pSlab->f_OnAlloc(*_pThis, pAlloc);
@@ -283,7 +283,7 @@ namespace NMib::NMemory
 
 		bool bFull;
 		void *pAlloc = pSlab->f_Alloc(bFull);
-		if (_pThis->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 		{
 			pSlab->f_OnCheckFree(*_pThis, pAlloc, true);
 			pSlab->f_OnAlloc(*_pThis, pAlloc);
@@ -336,7 +336,7 @@ namespace NMib::NMemory
 
 		CSubSlab *pSlab = new(pSlabAddress) CSubSlab();
 
-		if (this->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 			pSlab->f_OnFillFree(*this);
 
 		DMibFastCheck(SlabIndex < mc_nSmallSizeSlabs);
@@ -362,7 +362,7 @@ namespace NMib::NMemory
 			CMemoryManagerSubSlab_Free *pFreeSubSlab = (CMemoryManagerSubSlab_Free *)_pSubSlab;
 			pFreeSubSlab = new(pFreeSubSlab) CMemoryManagerSubSlab_Free();
 			_pSlab->m_FreeSubSlabs.f_UnsafeInsert(pFreeSubSlab);
-			if (t_CParams::mc_DeferCleanup & EDeferCleanup_OneSizeBlocks)
+			if constexpr (t_CParams::mc_DeferCleanup & EDeferCleanup_OneSizeBlocks)
 				fp_SlabHasGarbageInline(_pSlab);
 			else
 				fp_FreeSmallSubSlabs(_pSlab);

@@ -46,7 +46,7 @@ namespace NMib::NMemory
 	{
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 
-		if (!(t_CParams::mc_DeferCleanup & EDeferCleanup_Commit))
+		if constexpr (!(t_CParams::mc_DeferCleanup & EDeferCleanup_Commit))
 			return NextTimestamp;
 
 		for (auto iSlab = m_SlabsNeedingDecommit.f_GetIterator(); iSlab; )
@@ -166,7 +166,7 @@ namespace NMib::NMemory
 	{
 		fp_CheckMessages();
 
-		if (t_CParams::mc_DeferCleanup & EDeferCleanup_NoCleanup)
+		if constexpr (t_CParams::mc_DeferCleanup & EDeferCleanup_NoCleanup)
 			return false;
 
 		return fp_GarbageCollectPerform(_SlabType);
@@ -178,7 +178,7 @@ namespace NMib::NMemory
 		if (_pSlab->m_nPendingSubSlabs + _pSlab->m_nFreeSubSlabs == 0)
 			m_SlabsToGarbageCollect[_pSlab->m_SlabType].f_Insert(_pSlab);
 
-		if (t_CParams::mc_bBackgroundCleanup)
+		if constexpr (t_CParams::mc_bBackgroundCleanup)
 			_pSlab->m_HasGarbageTimestamp = m_pNumaArena->f_GetTimestamp();
 		this->fp_RequestCleanup();
 	}

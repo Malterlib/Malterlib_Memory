@@ -34,7 +34,6 @@ namespace NMib::NMemory
 	struct align_cacheline TCMemoryManagerArena : public t_CParams::CNotifier::CArena
 	{
 	public:
-
 		TCMemoryManagerArena(TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic, ENumaNode _NumaNode, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
 		~TCMemoryManagerArena();
 
@@ -173,6 +172,7 @@ namespace NMib::NMemory
 		static constexpr mint mc_Level0SmallestSize = 32 - mc_MinNormalSizeAlignment;
 		static constexpr mint mc_SmallSizeSlabsLargestSize = 16;
 		static constexpr mint mc_NumSubSlabSizeLevels = t_CParams::mc_NumSizeLevels - TCHighestBitSetCorrect<mint, t_CParams::mc_SubSlabSize>::mc_Value;
+		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CArena::mc_EnableCallbacks;
 
 	private:
 

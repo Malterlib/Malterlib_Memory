@@ -185,7 +185,7 @@ namespace NMib::NMemory
 		mint StartBit = (_pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
 		mint nBits = _Size / t_CParams::mc_HeapBlockSize;
 
-		if (this->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 		{
 			_pChunk->m_Committed.f_EnumSetBitRanges
 				(
@@ -260,9 +260,9 @@ namespace NMib::NMemory
 		mint StartBit = (_pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
 		mint nBits = _Size / t_CParams::mc_HeapBlockSize;
 
-		if (t_CParams::mc_DeferCleanup & EDeferCleanup_Commit)
+		if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_Commit) != 0)
 		{
-			if (this->mc_EnableCallbacks)
+			if constexpr (mc_EnableCallbacks)
 			{
 				_pChunk->m_Committed.f_EnumSetBitRanges
 					(
@@ -322,7 +322,7 @@ namespace NMib::NMemory
 	{
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 
-		if (!m_pMemoryManager->m_Allocator.f_CanCommit())
+		if constexpr (!t_CParams::CAllocator::f_CanCommit())
 			return NextTimestamp;
 
 		DMibFastCheck(m_Lock.f_OwnsLock());
@@ -368,7 +368,7 @@ namespace NMib::NMemory
 
 		mint Size = t_CParams::mc_HeapChunkSize;
 		EAllocationFlag Flags = t_CParams::mc_AllocationFlags;
-		if (m_pMemoryManager->m_Allocator.f_CanCommit())
+		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			Flags |= EAllocationFlag_NoCommit;
 
 		uint8 *pMemory = (uint8 *)m_pMemoryManager->m_Allocator.f_AllocAlignedWithSize(Size, t_CParams::mc_SlabSize, Flags, m_pNumaArena->m_NumaNode);
@@ -381,9 +381,9 @@ namespace NMib::NMemory
 
 		m_Chunks.f_Insert(pChunk);
 
-		if (m_pMemoryManager->m_Allocator.f_CanCommit())
+		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			fp_InitBlockCommit(pChunk, pMemory, Size);
-		else if (this->mc_EnableCallbacks)
+		else if constexpr (mc_EnableCallbacks)
 			this->f_OnFillFree(pMemory, Size);
 
 		auto &Block = pChunk->m_Blocks[pMemory];
@@ -391,7 +391,6 @@ namespace NMib::NMemory
 		Block.m_pChunk = pChunk;
 
 		m_FreeBuckets[Size].f_Insert(Block);
-
 	}
 
 	template <typename t_CParams>
@@ -440,12 +439,12 @@ namespace NMib::NMemory
 			m_FreeBuckets[LeftOverSize].f_Insert(LeftOverBlock);
 		}
 
-		if (m_pMemoryManager->m_Allocator.f_CanCommit())
+		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			fp_CommitBlock(pChunk, pRetAddress, Size);
-		else if (this->mc_EnableCallbacks)
+		else if constexpr (mc_EnableCallbacks)
 			this->f_OnCheckFree(pRetAddress, Size, true);
 
-		if (this->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 			this->f_OnAlloc(pRetAddress, Size);
 
 		_Size = Size;
@@ -549,12 +548,12 @@ namespace NMib::NMemory
 			}
 		}
 
-		if (m_pMemoryManager->m_Allocator.f_CanCommit())
+		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			fp_CommitBlock(pChunk, pRetAddress, Size);
-		else if (this->mc_EnableCallbacks)
+		else if constexpr (mc_EnableCallbacks)
 			this->f_OnCheckFree(pRetAddress, Size, true);
 
-		if (this->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 			this->f_OnAlloc(pRetAddress, Size);
 
 		_Size = Size;
@@ -641,7 +640,7 @@ namespace NMib::NMemory
 
 		uint8 *pMem = (uint8 *)_pMem;
 
-		if (this->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 			this->f_OnFree(pMem);
 
 		auto *pBlock = _pChunk->m_Blocks.f_FindEqual(pMem);
@@ -650,9 +649,9 @@ namespace NMib::NMemory
 
 		mint BlockSize = _pChunk->f_GetBlockSize(pBlock);
 
-		if (m_pMemoryManager->m_Allocator.f_CanCommit())
+		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			fp_DecommitBlock(_pChunk, pMem, BlockSize);
-		else if (this->mc_EnableCallbacks)
+		else if constexpr (mc_EnableCallbacks)
 			this->f_OnFillFree(pMem, BlockSize);
 
 		pBlock->m_Flags &= ~EMemoryManagerArenaHeapBlockFlag_Allocated;
@@ -681,7 +680,7 @@ namespace NMib::NMemory
 		if (NewSize == t_CParams::mc_HeapChunkSize)
 		{
 			// Totally free chunk, add for cleanup
-			if (t_CParams::mc_bBackgroundCleanup)
+			if constexpr (t_CParams::mc_bBackgroundCleanup)
 				_pChunk->m_FreeTimestamp = m_pNumaArena->f_GetTimestamp();
 			fp_RequestCleanup(_pChunk, ENumaArenaCleanup_HeapGarbage);
 		}
@@ -703,16 +702,16 @@ namespace NMib::NMemory
 				uint8 *pAddress = pChunk->f_GetBlockAddress(iBlock);
 				DMibFastCheck(Size == pChunk->f_GetBlockSize(iBlock));
 
-				if (this->mc_EnableCallbacks)
+				if constexpr (mc_EnableCallbacks)
 				{
-					if (m_pMemoryManager->m_Allocator.f_CanCommit())
+					if constexpr (t_CParams::CAllocator::f_CanCommit())
 					{
 						auto pChunkAddress = pChunk->f_GetAddress();
 
 						mint StartBit = (pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
 						mint nBits = Size / t_CParams::mc_HeapBlockSize;
 
-						if (this->mc_EnableCallbacks)
+						if constexpr (mc_EnableCallbacks)
 						{
 							pChunk->m_Committed.f_EnumSetBitRanges
 								(

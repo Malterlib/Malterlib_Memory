@@ -81,6 +81,8 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	class TCMemoryManagerArenaHeap : public t_CParams::CNotifier::CHeap
 	{
+		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CHeap::mc_EnableCallbacks;
+
 		template <typename t_CParams2>
 		friend class TCMemoryManagerArenaHeapChunk;
 

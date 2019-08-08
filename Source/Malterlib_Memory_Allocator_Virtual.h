@@ -28,7 +28,7 @@ namespace NMib::NMemory
 		static mint f_GranularityAlloc(bool _bLargePages = false);
 		static mint f_GranularityCommit(bool _bLargePages = false);
 		static mint f_GranularityProtect(bool _bLargePages = false);
-		static bool f_CanCommit();
+		constexpr static bool f_CanCommit();
 		static bool f_CanProtect();
 		static ch8 ms_HeapName[];
 
@@ -72,7 +72,7 @@ namespace NMib::NMemory
 	class CAllocator_VirtualNoCommit : public CAllocator_Virtual
 	{
 	public:
-		static bool f_CanCommit();
+		constexpr static bool f_CanCommit();
 		static bool f_CanProtect();
 		static void f_Commit(void *_pMem, mint _Size);
 		static void f_Decommit(void *_pMem, mint _Size);
@@ -95,7 +95,7 @@ namespace NMib::NMemory
 		static mint f_GranularityAlloc(bool _bLargePages = false);
 		static mint f_GranularityCommit(bool _bLargePages = false);
 		static mint f_GranularityProtect(bool _bLargePages = false);
-		static bool f_CanCommit();
+		constexpr static bool f_CanCommit();
 		static bool f_CanProtect();
 		static void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		static void *f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -128,7 +128,7 @@ namespace NMib::NMemory
 	class CAllocator_VirtualNoTrackingNoCommit : public CAllocator_VirtualNoTracking
 	{
 	public:
-		static bool f_CanCommit();
+		constexpr static bool f_CanCommit();
 		static bool f_CanProtect();
 		static void f_Commit(void *_pMem, mint _Size);
 		static void f_Decommit(void *_pMem, mint _Size);

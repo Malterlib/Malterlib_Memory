@@ -32,7 +32,7 @@ namespace NMib::NMemory
 		only_parameters_aliased inline_small mint f_TrySize(void *_pBlock);
 		mint f_SizePadded(mint _Size);
 		static inline_small fp32 f_Overhead(void const *_pBlock);
-		static inline_small bool f_CanCommit();
+		constexpr static inline_small bool f_CanCommit();
 		static inline_small bool f_CanProtect();
 		only_parameters_aliased static inline_small void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		only_parameters_aliased return_not_aliased inline_small void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);

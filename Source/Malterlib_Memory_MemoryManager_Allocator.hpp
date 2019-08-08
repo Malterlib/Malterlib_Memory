@@ -72,7 +72,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_small bool TCAllocator_MemoryManager<t_CParams>::f_CanCommit()
+	constexpr inline_small bool TCAllocator_MemoryManager<t_CParams>::f_CanCommit()
 	{
 		return false;
 	}

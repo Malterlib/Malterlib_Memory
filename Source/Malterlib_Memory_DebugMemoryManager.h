@@ -98,9 +98,9 @@ namespace NMib::NMemory
 			, m_bProtectOnDemand(false)
 			, m_bProtectionDemanded(false)
 		{
-			if (t_Options & EDebugMemoryManager_CheckUpper)
+			if constexpr (t_Options & EDebugMemoryManager_CheckUpper)
 				m_bCheckUpper = true;
-			else if (t_Options & EDebugMemoryManager_CheckRandom)
+			else if constexpr (t_Options & EDebugMemoryManager_CheckRandom)
 			{
 				NMib::NMisc::CAutoRandom Random;
 				if (Random.f_GetValue<uint32>() & 1)

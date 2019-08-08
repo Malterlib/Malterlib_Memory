@@ -13,7 +13,7 @@ namespace NMib::NMemory
 		t_CAggregateData::f_Construct();
 		m_Pool.f_Construct(_NumaNode, t_GrowSize);
 #	if DMibConfig_Memory_Shims_Enable
-		if (mc_Reporting)
+		if constexpr (mc_Reporting)
 		{
 			m_DebugName.f_Construct((NStr::CFStr256::CFormat("Pool {}") << fg_GetTypeName<t_CData>()).f_GetStr());
 			DMibMemoryGoingToReportScope(this, true);

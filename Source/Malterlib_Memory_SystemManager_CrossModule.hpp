@@ -115,28 +115,28 @@ namespace NMib::NMemory
 	}
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementationDefaults::fs_NonTracked_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 	{
-		if (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
+		if constexpr (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
 			return CCrossModuleImplementationExtra::fs_NonTracked_AllocWithSize(_pModule, _Size);
 		else
 			return CCrossModuleImplementationExtra::fs_AllocWithSizeDebug(_pModule, _Size, _pFile, _Line, _Flags);
 	}
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementationDefaults::fs_NonTracked_ReallocDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
 	{
-		if (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
+		if constexpr (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
 			return CCrossModuleImplementationExtra::fs_NonTracked_Realloc(_pModule, _pMemory, _Size, _OldSize, _AllocFlags);
 		else
 			return CCrossModuleImplementationExtra::fs_ReallocDebug(_pModule, _pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 	}
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementationDefaults::fs_NonTracked_ResizeDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
 	{
-		if (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
+		if constexpr (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
 			return CCrossModuleImplementationExtra::fs_NonTracked_Resize(_pModule, _pMemory, _Size, _OldSize, _AllocFlags);
 		else
 			return CCrossModuleImplementationExtra::fs_ResizeDebug(_pModule, _pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 	}
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementationDefaults::fs_NonTracked_AllocAlignedWithSizeDebug(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 	{
-		if (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
+		if constexpr (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
 			return CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSize(_pModule, _Size, _Alignment);
 		else
 			return CCrossModuleImplementationExtra::fs_AllocAlignedWithSizeDebug(_pModule, _Size, _Alignment, _pFile, _Line, _Flags);

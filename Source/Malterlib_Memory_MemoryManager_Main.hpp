@@ -874,7 +874,7 @@ namespace NMib::NMemory
 				)
 			;
 			auto pRet = m_Allocator.f_AllocAlignedWithSize(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
-			if (this->mc_EnableCallbacks)
+			if constexpr (mc_EnableCallbacks)
 				this->f_OnAlloc((uint8 *)pRet, _Size);
 			if (!_Functor(pRet, Size))
 				break;
@@ -923,7 +923,7 @@ namespace NMib::NMemory
 			)
 		;
 		auto pRet = m_Allocator.f_AllocAlignedWithSize(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
-		if (this->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 			this->f_OnAlloc((uint8 *)pRet, _Size);
 		return pRet;
 	}
@@ -1084,7 +1084,7 @@ namespace NMib::NMemory
 			}
 		}
 
-		if (this->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 			this->f_OnFree((uint8 *)_pMemory);
 
 		DMibMemLightweightTrack

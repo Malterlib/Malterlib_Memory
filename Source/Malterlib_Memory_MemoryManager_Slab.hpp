@@ -303,7 +303,7 @@ namespace NMib::NMemory
 	template <typename t_CParams, uint32 t_SlabType>
 	inline_always TCMemoryManagerSlab<t_CParams, t_SlabType> *TCMemoryManagerSlab<t_CParams, t_SlabType>::fs_CalcSlabLocation(uint8 *_pLocation)
 	{
-		if (t_CParams::mc_bRandomizeSlabHeader)
+		if constexpr (t_CParams::mc_bRandomizeSlabHeader)
 		{
 			mint Location = (mint)_pLocation;
 			mint Shift = TCHighestBitSetCorrect<mint, t_CParams::mc_SlabSize>::mc_Value;

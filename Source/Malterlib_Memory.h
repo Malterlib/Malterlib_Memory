@@ -265,7 +265,7 @@ namespace NMib::NMemory
 			return 0.0f;
 		}
 
-		static inline_small bool f_CanCommit()
+		constexpr static inline_small bool f_CanCommit()
 		{
 			return false;
 		}

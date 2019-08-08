@@ -226,15 +226,15 @@ namespace NMib::NMemory
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerThreadLocal;
 
-
 		static_assert(TCIsPowerOfTwo<t_CParams::mc_SubSlabSize>::mc_Value, "Must be aligned to power of two");
 		static_assert(TCIsPowerOfTwo<t_CParams::mc_SlabSize>::mc_Value, "Must be aligned to power of two");
 
+		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CGlobal::mc_EnableCallbacks;
+		
 		typename t_CParams::CAllocator m_Allocator;
 
 		mutable align_cacheline NThread::CMutual m_NumaArenasLock;
 		NIntrusive::TCAVLTree<&TCMemoryManagerNumaArena<t_CParams>::m_Link, typename TCMemoryManagerNumaArena<t_CParams>::CCompare> m_NumaArenas;
-
 
 		align_cacheline NMib::NThread::CMutual m_nArenasLock;
 		mint m_nMaxArenas;

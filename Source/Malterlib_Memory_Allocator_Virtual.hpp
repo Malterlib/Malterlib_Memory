@@ -37,7 +37,7 @@ namespace NMib::NMemory
 		return NSys::fg_Mem_VirtualGranularityProtect(_bLargePages);
 	}
 
-	inline_small bool CAllocator_Virtual::f_CanCommit()
+	constexpr inline_small bool CAllocator_Virtual::f_CanCommit()
 	{
 		return NSys::fg_Mem_VirtualCanCommit();
 	}
@@ -245,7 +245,7 @@ namespace NMib::NMemory
 	/// CAllocator_VirtualNoCommit
 	///
 
-	inline_small bool CAllocator_VirtualNoCommit::f_CanCommit()
+	constexpr inline_small bool CAllocator_VirtualNoCommit::f_CanCommit()
 	{
 		return 0;
 	}
@@ -295,7 +295,7 @@ namespace NMib::NMemory
 		return NSys::fg_Mem_VirtualGranularityProtect(_bLargePages);
 	}
 
-	inline_small bool CAllocator_VirtualNoTracking::f_CanCommit()
+	constexpr inline_small bool CAllocator_VirtualNoTracking::f_CanCommit()
 	{
 		return NSys::fg_Mem_VirtualCanCommit();
 	}
@@ -455,7 +455,7 @@ namespace NMib::NMemory
 	/// CAllocator_VirtualNoTrackingNoCommit
 	///
 
-	inline_small bool CAllocator_VirtualNoTrackingNoCommit::f_CanCommit()
+	constexpr inline_small bool CAllocator_VirtualNoTrackingNoCommit::f_CanCommit()
 	{
 		return 0;
 	}

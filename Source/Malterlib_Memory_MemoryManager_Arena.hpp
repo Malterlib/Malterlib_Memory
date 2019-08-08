@@ -379,9 +379,11 @@ namespace NMib::NMemory
 			bError = true;
 		if (fp_CheckFreeSmall<8>(_bBreak))
 			bError = true;
-		if (mc_MinAlignment == 4)
+		if constexpr (mc_MinAlignment == 4)
+		{
 			if (fp_CheckFreeSmall<12>(_bBreak))
 				bError = true;
+		}
 		if (fp_CheckFreeSmall<16>(_bBreak))
 			bError = true;
 

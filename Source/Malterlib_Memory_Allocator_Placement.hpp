@@ -56,7 +56,7 @@ namespace NMib::NMemory
 		return 0.0;
 	}
 
-	inline_small bool CAllocator_Placement::f_CanCommit()
+	constexpr inline_small bool CAllocator_Placement::f_CanCommit()
 	{
 		return false;
 	}

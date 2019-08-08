@@ -88,7 +88,7 @@ namespace NMib::NMemory
 
 		mint AlignedSize = f_Size(_pLink, pSlab);
 
-		if (this->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 		{
 			uint8 *pStart = (uint8 *)(_pLink + 1);
 			uint8 *pEnd = (uint8 *)_pLink + (AlignedSize * _pLink->m_nBlocks);
@@ -162,7 +162,7 @@ namespace NMib::NMemory
 
 					pAlloc = (CMemoryManagerSubSlab_NormalLink *)((uint8 *)pAlloc + (AlignedSize * iBlock));
 
-					if (this->mc_EnableCallbacks)
+					if constexpr (mc_EnableCallbacks)
 						this->f_OnCheckFree((uint8 *)pAlloc, AlignedSize, true);
 				}
 				else
@@ -170,7 +170,7 @@ namespace NMib::NMemory
 					static_assert(sizeof(*pAlloc) == sizeof(void *) * 2 + 4, "Should be packed");
 
 					pAlloc->m_Link.f_UnsafeUnlinkFirst();
-					if (this->mc_EnableCallbacks)
+					if constexpr (mc_EnableCallbacks)
 						this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), true);
 				}
 
@@ -202,7 +202,7 @@ namespace NMib::NMemory
 					pAlloc = (CMemoryManagerSubSlab_NormalLink *)(BaseAddress + ((((mint)pAlloc - BaseAddress) / AlignedSize) * AlignedSize));
 				}
 #endif
-				if (this->mc_EnableCallbacks)
+				if constexpr (mc_EnableCallbacks)
 					this->f_OnAlloc((uint8 *)pAlloc, AlignedSize);
 				_Size = AlignedSize;
 				return pAlloc;
@@ -294,7 +294,7 @@ namespace NMib::NMemory
 
 						pAlloc = (CMemoryManagerSubSlab_NormalLink *)((uint8 *)pAlloc + (AlignedSize * iBlock));
 
-						if (this->mc_EnableCallbacks)
+						if constexpr (mc_EnableCallbacks)
 							this->f_OnCheckFree((uint8 *)pAlloc, AlignedSize, true);
 					}
 					else
@@ -302,7 +302,7 @@ namespace NMib::NMemory
 						static_assert(sizeof(*pAlloc) == sizeof(void *) * 2 + 4, "Should be packed");
 
 						pAlloc->m_Link.f_UnsafeUnlinkFirst();
-						if (this->mc_EnableCallbacks)
+						if constexpr (mc_EnableCallbacks)
 							this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), true);
 					}
 
@@ -334,7 +334,7 @@ namespace NMib::NMemory
 						pAlloc = (CMemoryManagerSubSlab_NormalLink *)(BaseAddress + ((((mint)pAlloc - BaseAddress) / AlignedSize) * AlignedSize));
 					}
 	#endif
-					if (this->mc_EnableCallbacks)
+					if constexpr (mc_EnableCallbacks)
 						this->f_OnAlloc((uint8 *)pAlloc, AlignedSize);
 					if (!_Functor(pAlloc, AlignedSize))
 						break;
@@ -419,13 +419,13 @@ namespace NMib::NMemory
 			pNormalLink->m_nBlocks = nBlocks;
 			_pList->f_UnsafeInsertFirst(pNormalLink);
 
-			if (this->mc_EnableCallbacks)
+			if constexpr (mc_EnableCallbacks)
 				this->f_OnFillFree((uint8 *)(pNormalLink + 1), (pSlabAddress + nBlocks * _AlignedSize) - (uint8 *)(pNormalLink + 1));
 
 			pSlabAddress = pSlabAddress + nBlocks * _AlignedSize;
 		}
 
-		if (this->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 			this->f_OnAlloc((uint8 *)pSlabAddress, _AlignedSize);
 
 		return pSlabAddress;
@@ -498,7 +498,7 @@ namespace NMib::NMemory
 
 		CMemoryManagerSubSlab_NormalLink *pFreeMemory = (CMemoryManagerSubSlab_NormalLink *)_pMemory;
 
-		if (this->mc_EnableCallbacks)
+		if constexpr (mc_EnableCallbacks)
 		{
 			this->f_OnFree((uint8 *)pFreeMemory);
 			this->f_OnFillFree((uint8 *)(pFreeMemory + 1), AlignedSize - sizeof(*pFreeMemory));
@@ -511,10 +511,10 @@ namespace NMib::NMemory
 
 		if (unlikely((--pData[iSubSlab].m_Allocated.m_nAllocs) == 0))
 		{
-			if (t_CParams::mc_DeferCleanup & EDeferCleanup_NoCleanup)
+			if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_NoCleanup) != 0)
 			{
 			}
-			else if (t_CParams::mc_DeferCleanup & EDeferCleanup_Allocs)
+			else if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_Allocs) != 0)
 			{
 //					DMibFastCheck(_pSlab->f_GetNumPendingBits() == _pSlab->m_nPendingSubSlabs);
 				_pSlab->f_SetPendingBit(iSubSlab);

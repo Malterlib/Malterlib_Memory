@@ -8,7 +8,7 @@ namespace NMib::NMemory
 	template <typename t_CParams, uint32 t_SlabType>
 	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_CommitSubSlabs(mint _iSubSlab, mint _nSubSlabs)
 	{
-		if (this->m_pMemoryManager->m_Allocator.f_CanCommit())
+		if constexpr (t_CParams::CAllocator::f_CanCommit())
 		{
 			auto * pMemory = this->f_GetSlabStart();
 			m_CommittedSubSlabs.f_EnumFreeBitRanges
@@ -24,7 +24,7 @@ namespace NMib::NMemory
 			;
 
 			m_CommittedSubSlabs.template f_SetBitRange<true>(_iSubSlab, _nSubSlabs);
-			if (t_CParams::mc_DeferCleanup & EDeferCleanup_Commit)
+			if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_Commit) != 0)
 			{
 				m_DeferredDecommitSubSlabs.template f_SetBitRange<false>(_iSubSlab, _nSubSlabs);
 
@@ -38,12 +38,12 @@ namespace NMib::NMemory
 	template <typename t_CParams, uint32 t_SlabType>
 	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_DecommitSubSlabs(mint _iSubSlab, mint _nSubSlabs)
 	{
-		if (this->m_pMemoryManager->m_Allocator.f_CanCommit())
+		if constexpr (t_CParams::CAllocator::f_CanCommit())
 		{
-			if (t_CParams::mc_DeferCleanup & EDeferCleanup_Commit)
+			if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_Commit) != 0)
 			{
 				m_DeferredDecommitSubSlabs.template f_SetBitRange<true>(_iSubSlab, _nSubSlabs);
-				if (t_CParams::mc_bBackgroundCleanup)
+				if constexpr (t_CParams::mc_bBackgroundCleanup)
 					this->m_NeedDecommitTimestamp = this->m_pArena->m_pNumaArena->f_GetTimestamp();
 				this->m_pArena->fp_RequestCleanup();
 				if (!this->m_Link2.f_IsInList())
@@ -95,7 +95,7 @@ namespace NMib::NMemory
 					if (StartBit < EndBit)
 					{
 						m_CommittedSubSlabs.template f_SetBitRange<true>(StartBit, EndBit - StartBit);
-						if ((t_CParams::mc_DeferCleanup & EDeferCleanup_Commit) != 0)
+						if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_Commit) != 0)
 							m_DeferredDecommitSubSlabs.template f_SetBitRange<true>(StartBit, EndBit - StartBit);
 					}
 					return true;
@@ -105,11 +105,11 @@ namespace NMib::NMemory
 			)
 		;
 
-		if (t_CParams::mc_DeferCleanup & EDeferCleanup_Commit)
+		if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_Commit) != 0)
 		{
 			if (!this->m_Link2.f_IsInList() && !m_DeferredDecommitSubSlabs.f_IsFullyFree())
 			{
-				if (t_CParams::mc_bBackgroundCleanup)
+				if constexpr (t_CParams::mc_bBackgroundCleanup)
 					this->m_NeedDecommitTimestamp = this->m_pArena->m_pNumaArena->f_GetTimestamp();
 				this->m_pArena->fp_RequestCleanup();
 				this->m_pArena->m_SlabsNeedingDecommit.f_Insert(this);
@@ -120,7 +120,7 @@ namespace NMib::NMemory
 	template <typename t_CParams, uint32 t_SlabType>
 	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_DecommitDeferred()
 	{
-		if (!this->m_pMemoryManager->m_Allocator.f_CanCommit() || !(t_CParams::mc_DeferCleanup & EDeferCleanup_Commit))
+		if constexpr (!t_CParams::CAllocator::f_CanCommit() || !(t_CParams::mc_DeferCleanup & EDeferCleanup_Commit))
 			return;
 
 		auto * pMemory = this->f_GetSlabStart();

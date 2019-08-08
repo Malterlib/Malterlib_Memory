@@ -58,7 +58,7 @@ namespace NMib::NMemory
 	}
 
 
-	inline_small bool CAllocator_Heap::f_CanCommit()
+	constexpr inline_small bool CAllocator_Heap::f_CanCommit()
 	{
 		return false;
 	}
@@ -233,7 +233,7 @@ namespace NMib::NMemory
 		return f_GranularityAlloc();
 	}
 
-	inline_small bool CAllocator_NonTrackedHeap::f_CanCommit()
+	constexpr inline_small bool CAllocator_NonTrackedHeap::f_CanCommit()
 	{
 		return false;
 	}
@@ -371,7 +371,7 @@ namespace NMib::NMemory
 	}
 
 	template <mint t_AllocSize>
-	inline_small bool TCAllocator_Placement<t_AllocSize>::f_CanCommit()
+	constexpr inline_small bool TCAllocator_Placement<t_AllocSize>::f_CanCommit()
 	{
 		return false;
 	}
@@ -652,7 +652,7 @@ namespace NMib::NMemory
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	inline_small bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_CanCommit()
+	constexpr inline_small bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_CanCommit()
 	{
 		return false;
 	}

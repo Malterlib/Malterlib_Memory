@@ -63,14 +63,14 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerNumaArena<t_CParams>::f_OnNeedCleanup()
 	{
-		if (t_CParams::mc_bBackgroundCleanup)
+		if constexpr (t_CParams::mc_bBackgroundCleanup)
 			m_BackgroundCleanup.f_OnNeedCleanup();
 	}
 
 	template <typename t_CParams>
 	int64 TCMemoryManagerNumaArena<t_CParams>::f_GetTimestamp() const
 	{
-		if (t_CParams::mc_bBackgroundCleanup)
+		if constexpr (t_CParams::mc_bBackgroundCleanup)
 			return m_BackgroundCleanup.f_GetTimestamp();
 		return 0;
 	}
@@ -86,8 +86,11 @@ namespace NMib::NMemory
 	void TCMemoryManagerNumaArena<t_CParams>::f_RequestCleanup(ENumaArenaCleanup _Cleanup)
 	{
 		bool bNeedCleanup = !m_RequestedCleanup.f_FetchOr(_Cleanup);
-		if (t_CParams::mc_bBackgroundCleanup && bNeedCleanup)
-			m_BackgroundCleanup.f_OnNeedCleanup();
+		if constexpr (t_CParams::mc_bBackgroundCleanup)
+		{
+			if (bNeedCleanup)
+				m_BackgroundCleanup.f_OnNeedCleanup();
+		}
 	}
 
 	template <typename t_CParams>

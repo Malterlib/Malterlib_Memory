@@ -153,7 +153,7 @@ namespace NMib::NMemory
 
 			fp32 f_Overhead() const
 			{
-				if (EDataSize > t_DataSize)
+				if constexpr (EDataSize > t_DataSize)
 					return fp32(EDataSize - t_DataSize);
 				else
 					return 0.0f;
@@ -535,7 +535,7 @@ namespace NMib::NMemory
 
 			fp32 f_Overhead() const
 			{
-				if (EDataSize > t_DataSize)
+				if constexpr (EDataSize > t_DataSize)
 					return fp32(EDataSize - t_DataSize);
 				else
 					return 0.0f;
@@ -700,7 +700,7 @@ namespace NMib::NMemory
 				m_Pool.f_ReturnBlock(_pBlock);
 			}
 #if DMibConfig_Memory_Shims_Enable
-			if (mc_Reporting)
+			if constexpr (mc_Reporting)
 				DMibMemoryReportFree(this, m_DebugName.f_GetStr(), _pBlock, sizeof(t_CData), nullptr);
 #endif
 		}
@@ -722,7 +722,7 @@ namespace NMib::NMemory
 			}
 
 #if DMibConfig_Memory_Shims_Enable
-			if (mc_Reporting)
+			if constexpr (mc_Reporting)
 				DMibMemoryReportAlloc(this, m_DebugName.f_GetStr(), pBlock, 0, sizeof(t_CData), sizeof(t_CData), Overhead, nullptr);
 #endif
 			return pBlock;
@@ -758,7 +758,7 @@ namespace NMib::NMemory
 			}
 			t_CAggregateData::f_Destruct();
 #if DMibConfig_Memory_Shims_Enable
-			if (mc_Reporting)
+			if constexpr (mc_Reporting)
 				DMibMemoryReportAllocatorDelete(this, m_DebugName.f_GetStr());
 #endif
 		}
@@ -957,7 +957,7 @@ namespace NMib::NMemory
 			return sizeof(t_CType);
 		}
 
-		static inline_small bool f_CanCommit()
+		constexpr static inline_small bool f_CanCommit()
 		{
 			return false;
 		}
@@ -1186,7 +1186,7 @@ namespace NMib::NMemory
 			return sizeof(t_CType);
 		}
 
-		static inline_small bool f_CanCommit()
+		constexpr static inline_small bool f_CanCommit()
 		{
 			return false;
 		}
@@ -1387,7 +1387,7 @@ namespace NMib::NMemory
 			return sizeof(CData);
 		}
 
-		static inline_small bool f_CanCommit()
+		constexpr static inline_small bool f_CanCommit()
 		{
 			return false;
 		}

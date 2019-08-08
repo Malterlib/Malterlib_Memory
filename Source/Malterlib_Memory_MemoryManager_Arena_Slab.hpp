@@ -148,7 +148,7 @@ namespace NMib::NMemory
 				(
 					t_CParams::mc_SlabSize
 					, t_CParams::mc_SlabSize
-					, (m_pMemoryManager->m_Allocator.f_CanCommit() ? EAllocationFlag_NoCommit : EAllocationFlag_None) | EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags
+					, (t_CParams::CAllocator::f_CanCommit() ? EAllocationFlag_NoCommit : EAllocationFlag_None) | EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags
 					, m_NumaNode
 				)
 			;
