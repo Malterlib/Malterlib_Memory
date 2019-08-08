@@ -4,6 +4,56 @@
 Import "../Core/Lib_Malterlib.MTarget"
 Import "Apps/*/*.MHeader"
 
+%Repository "mimalloc"
+{
+	|
+	{
+		MalterlibMemoryManager MiMalloc
+		MalterlibEnableThirdPartyComparisonTests true
+	}
+
+	Repository
+	{
+		Type External
+		Remotes "upstream=https://github.com/microsoft/mimalloc.git;@(Repository.Remotes)"
+	}
+}
+
+%Import "../../External/mimalloc/CMakeLists.txt"
+{
+	Import.CMake_FullRebuildVersion 1
+	Import.CMake_Variables "MI_OVERRIDE=OFF;@(Import.CMake_Variables)"
+	Import.CMake_Variables "MI_USE_CXX=ON;@(Import.CMake_Variables)"
+	Import.CMake_Variables "CMAKE_BUILD_WITH_INSTALL_RPATH=ON;@(Import.CMake_Variables)"
+	{
+		&
+		{
+			PlatformFamily Linux
+			!HostPlatformFamily Linux
+		}
+	}
+	Compile
+	{
+		!!MalterlibCompileSupportTabSetings true
+		IndentWidth 2
+		TabWidth 2
+		UsesTabs false
+	}
+	Compile
+	{
+		!!CompileDialect C
+
+		PreprocessorDefines "MI_STAT=0;@(Compile.PreprocessorDefines)"
+	}
+	%Target Lib_mimalloc-static
+	{
+		%Group include
+		{
+			%File "../../External/mimalloc/include/^*"
+		}
+	}
+}
+
 %Group "{Malterlib}/{Lib_Malterlib_Memory}"
 {
 	%Group Memory
@@ -53,7 +103,6 @@ Import "Apps/*/*.MHeader"
 		}
 	}
 }
-
 
 Property
 {

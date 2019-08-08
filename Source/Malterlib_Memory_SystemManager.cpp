@@ -15,6 +15,8 @@
 #	include "Malterlib_Memory_SystemManager_DLMalloc.hpp"
 #elif defined(DMibConfig_MemoryManager_UseLLAlloc)
 #	include "Malterlib_Memory_SystemManager_LLAlloc.hpp"
+#elif defined(DMibConfig_MemoryManager_UseMiMalloc)
+#	include "Malterlib_Memory_SystemManager_MiMalloc.hpp"
 #else
 #	error "Invalid memory manager specified in build system"
 #endif
