@@ -884,6 +884,9 @@ namespace
 #ifdef DMemoryManagerTestEnable_MalterlibNew
 			f_DoTest<CMalterlibMemoryMalterlibNew, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib", _MaxAllocSize, _nThreads);
 			f_DoTest<CMalterlibMemoryMalterlibNew_NoCheckout, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib_Checkout", _MaxAllocSize, _nThreads);
+#if DMibPPtrBits >= 64
+			f_DoTest<CMalterlibMemoryMalterlibNew_LowBranch, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_LowBranch", _MaxAllocSize, _nThreads);
+#endif
 
 			//f_DoTest<CMalterlibMemoryMalterlibNew_Tracked, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_Tracked", _MaxAllocSize, _nThreads);
 			//f_DoTest<CMalterlibMemoryMalterlibNew_Debug, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_Debug", _MaxAllocSize, _nThreads);

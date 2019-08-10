@@ -16,17 +16,26 @@ namespace NMib::NMemory
 	};
 
 	DMibPStartPackedStruct;
-	struct CMemoryManagerSubSlab_NormalLink
+	struct CMemoryManagerSubSlab_NormalLinkWithBlocks
 	{
-		DMibListLinkDS_Link(CMemoryManagerSubSlab_NormalLink, m_Link);
+		CMemoryManagerSubSlab_NormalLinkWithBlocks() = delete;
+		~CMemoryManagerSubSlab_NormalLinkWithBlocks() = delete;
+
+		DMibListLinkDS_Link(CMemoryManagerSubSlab_NormalLinkWithBlocks, m_Link);
 		uint32 m_nBlocks;
-
-	private:
-		CMemoryManagerSubSlab_NormalLink();
-		~CMemoryManagerSubSlab_NormalLink();
-
 	} DMibPPackedStruct;
 	DMibPEndPackedStruct;
+
+	struct CMemoryManagerSubSlab_NormalLinkWithoutBlocks
+	{
+		CMemoryManagerSubSlab_NormalLinkWithoutBlocks() = delete;
+		~CMemoryManagerSubSlab_NormalLinkWithoutBlocks() = delete;
+
+		DMibListLinkDS_Link(CMemoryManagerSubSlab_NormalLinkWithoutBlocks, m_Link);
+	};
+
+	using CMemoryManagerSubSlab_NormalFreeListWithBlocks = DMibListLinkDS_List(CMemoryManagerSubSlab_NormalLinkWithBlocks, m_Link);
+	using CMemoryManagerSubSlab_NormalFreeListWithoutBlocks = DMibListLinkDS_List(CMemoryManagerSubSlab_NormalLinkWithoutBlocks, m_Link);
 
 	struct CMemoryManagerSubSlab_GarbageCollect
 	{

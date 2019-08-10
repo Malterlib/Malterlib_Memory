@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -16,19 +16,36 @@ namespace NMib::NMemory
 		mint iSubSlab;
 		mint SlabBucket;
 
-		if (SlabType > 0)
+		if constexpr (mc_bSpecialCaseSlabType0)
+		{
+			if (SlabType > 0)
+			{
+				iSubSlab = t_CParams::fs_DivideBySlabMultiplier(SubSlab, SlabType);
+				DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
+				SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
+			}
+			else
+			{
+				iSubSlab = SubSlab;
+				DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
+				SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
+				if constexpr (mc_bUseSmallSizes)
+				{
+					if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+						return fp_OverheadSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> const *)_pSlab, SlabBucket);
+				}
+			}
+		}
+		else
 		{
 			iSubSlab = t_CParams::fs_DivideBySlabMultiplier(SubSlab, SlabType);
 			DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
 			SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
-		}
-		else
-		{
-			iSubSlab = SubSlab;
-			DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
-			SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
-			if (SlabBucket < mc_nSmallSizeSlabs)
-				return fp_OverheadSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> const *)_pSlab, SlabBucket);
+			if constexpr (mc_bUseSmallSizes)
+			{
+				if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+					return fp_OverheadSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> const *)_pSlab, SlabBucket);
+			}
 		}
 
 		SlabBucket -= 2;
@@ -53,19 +70,36 @@ namespace NMib::NMemory
 		mint iSubSlab;
 		mint SlabBucket;
 
-		if (SlabType > 0)
+		if constexpr (mc_bSpecialCaseSlabType0)
+		{
+			if (SlabType > 0)
+			{
+				iSubSlab = t_CParams::fs_DivideBySlabMultiplier(SubSlab, SlabType);
+				DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
+				SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
+			}
+			else
+			{
+				iSubSlab = SubSlab;
+				DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
+				SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
+				if constexpr (mc_bUseSmallSizes)
+				{
+					if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+						return fp_SizeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> const *)_pSlab, SlabBucket);
+				}
+			}
+		}
+		else
 		{
 			iSubSlab = t_CParams::fs_DivideBySlabMultiplier(SubSlab, SlabType);
 			DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
 			SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
-		}
-		else
-		{
-			iSubSlab = SubSlab;
-			DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
-			SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
-			if (SlabBucket < mc_nSmallSizeSlabs)
-				return fp_SizeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> const *)_pSlab, SlabBucket);
+			if constexpr (mc_bUseSmallSizes)
+			{
+				if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+					return fp_SizeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> const *)_pSlab, SlabBucket);
+			}
 		}
 
 		SlabBucket -= 2;
@@ -91,7 +125,11 @@ namespace NMib::NMemory
 		if constexpr (mc_EnableCallbacks)
 		{
 			uint8 *pStart = (uint8 *)(_pLink + 1);
-			uint8 *pEnd = (uint8 *)_pLink + (AlignedSize * _pLink->m_nBlocks);
+			uint8 *pEnd;
+			if constexpr (t_CParams::mc_bUseFreeBlockCounting)
+				pEnd = (uint8 *)_pLink + (AlignedSize * _pLink->m_nBlocks);
+			else
+				pEnd = (uint8 *)_pLink + AlignedSize;
 
 			if (this->f_OnCheckFree(pStart, pEnd - pStart, _bBreak))
 				bError = true;
@@ -104,12 +142,16 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_always void *TCMemoryManagerArena<t_CParams>::fp_AllocNormal(mint &_Size)
 	{
-		CNormalFreeList *pList;
-		mint Size = fg_AlignUp(_Size, mc_MinNormalSizeAlignment);
+		CMemoryManagerSubSlab_NormalFreeList *pList;
+		mint Size;
+		if constexpr (mc_MinAllocSize > 1)
+			Size = fg_AlignUp(fg_Max(_Size, mc_MinAllocSize), mc_MinNormalSizeAlignment);
+		else
+			Size = fg_AlignUp(_Size, mc_MinNormalSizeAlignment);
 
 		DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(Size));
 
-		DMibFastCheck(Size >= 20);
+		DMibFastCheck(Size >= mc_MinNormalAllocSize);
 
 		mint AlignedSize;
 		mint SubIndex;
@@ -125,27 +167,39 @@ namespace NMib::NMemory
 				SlabBucket += SubIndex >> t_CParams::mc_SizesPerLevelShift;
 				SubIndex &= (mint(1) << t_CParams::mc_SizesPerLevelShift) - 1;
 
-				if (likely(Size > mc_Level0SmallestSize))
+				if constexpr (t_CParams::mc_bUseSmallSizes)
 				{
-					mint SlabIndex = SlabBucket - 4;
+					if (likely(Size > mc_Level0SmallestSize))
+					{
+						mint SlabIndex = SlabBucket - 4;
 
-					DMibFastCheck((SlabIndex-1) < mc_nNormalSizeLists);
-					DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
+						DMibFastCheck((SlabIndex-1) < mc_nNormalSizeLists);
+						DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-					pList = &m_NormalSizeSlabs[SubIndex][SlabIndex-1];
+						pList = &m_NormalSizeSlabs[SubIndex][SlabIndex-1];
+					}
+					else
+					{
+
+						mint InternalSlabBucketStart = sizeof(void *) * 2;
+						mint SlabIndex = (AlignedSize - InternalSlabBucketStart) / mc_MinNormalSizeAlignment;
+
+						DMibFastCheck(AlignedSize == Size);
+						DMibFastCheck(AlignedSize >= 8);
+						DMibFastCheck(SlabIndex < mc_nLevel0Lists);
+						DMibFastCheck(Size != mc_Level0SmallestSize || SlabIndex == (mc_nLevel0Lists - 1));
+
+						pList = &m_NormalSizeSlabsLevel0[SlabIndex];
+					}
 				}
 				else
 				{
+					mint SlabIndex = SlabBucket - 4;
 
-					mint InternalSlabBucketStart = sizeof(void *) * 2;
-					mint SlabIndex = (AlignedSize - InternalSlabBucketStart) / mc_MinNormalSizeAlignment;
+					DMibFastCheck((SlabIndex) < mc_nNormalSizeLists);
+					DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-					DMibFastCheck(AlignedSize == Size);
-					DMibFastCheck(AlignedSize >= 8);
-					DMibFastCheck(SlabIndex < mc_nLevel0Lists);
-					DMibFastCheck(Size != mc_Level0SmallestSize || SlabIndex == (mc_nLevel0Lists - 1));
-
-					pList = &m_NormalSizeSlabsLevel0[SlabIndex];
+					pList = &m_NormalSizeSlabs[SubIndex][SlabIndex];
 				}
 			}
 
@@ -156,19 +210,28 @@ namespace NMib::NMemory
 
 			if (likely(pAlloc))
 			{
-				if (pAlloc->m_nBlocks > 1)
+				if constexpr (t_CParams::mc_bUseFreeBlockCounting)
 				{
-					uint32 iBlock = --pAlloc->m_nBlocks;
+					if (pAlloc->m_nBlocks > 1)
+					{
+						uint32 iBlock = --pAlloc->m_nBlocks;
 
-					pAlloc = (CMemoryManagerSubSlab_NormalLink *)((uint8 *)pAlloc + (AlignedSize * iBlock));
+						pAlloc = (CMemoryManagerSubSlab_NormalLink *)((uint8 *)pAlloc + (AlignedSize * iBlock));
 
-					if constexpr (mc_EnableCallbacks)
-						this->f_OnCheckFree((uint8 *)pAlloc, AlignedSize, true);
+						if constexpr (mc_EnableCallbacks)
+							this->f_OnCheckFree((uint8 *)pAlloc, AlignedSize, true);
+					}
+					else
+					{
+						static_assert(sizeof(*pAlloc) == sizeof(void *) * 2 + 4, "Should be packed");
+
+						pAlloc->m_Link.f_UnsafeUnlinkFirst();
+						if constexpr (mc_EnableCallbacks)
+							this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), true);
+					}
 				}
 				else
 				{
-					static_assert(sizeof(*pAlloc) == sizeof(void *) * 2 + 4, "Should be packed");
-
 					pAlloc->m_Link.f_UnsafeUnlinkFirst();
 					if constexpr (mc_EnableCallbacks)
 						this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), true);
@@ -193,13 +256,16 @@ namespace NMib::NMemory
 //					DMibTrace("++{} {} {}" DMibNewLine, pData[iAlloc].m_Allocated.m_nAllocs << iAlloc << pSlab->m_SlabType);
 
 #if DMibPPtrBits >= 64 && defined(DMibPNoUnalignedAccess)
-				if ((AlignedSize & 4) && AlignedSize < 32)
+				if constexpr (t_CParams::mc_bUseFreeBlockCounting)
 				{
-					mint SubSlabMultiplier = t_CParams::ms_SlabTypeInfo[SubIndex].m_SubSlabMutiplier;
+					if ((AlignedSize & 4) && AlignedSize < 32)
+					{
+						mint SubSlabMultiplier = t_CParams::ms_SlabTypeInfo[SubIndex].m_SubSlabMutiplier;
 
-					mint BaseAddress = SlabStart + iAlloc * SubSlabMultiplier * t_CParams::mc_SubSlabSize;
+						mint BaseAddress = SlabStart + iAlloc * SubSlabMultiplier * t_CParams::mc_SubSlabSize;
 
-					pAlloc = (CMemoryManagerSubSlab_NormalLink *)(BaseAddress + ((((mint)pAlloc - BaseAddress) / AlignedSize) * AlignedSize));
+						pAlloc = (CMemoryManagerSubSlab_NormalLink *)(BaseAddress + ((((mint)pAlloc - BaseAddress) / AlignedSize) * AlignedSize));
+					}
 				}
 #endif
 				if constexpr (mc_EnableCallbacks)
@@ -222,10 +288,14 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocNormalBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 	{
-		CNormalFreeList *pList;
-		mint Size = fg_AlignUp(_Size, mc_MinNormalSizeAlignment);
+		CMemoryManagerSubSlab_NormalFreeList *pList;
+		mint Size;
+		if constexpr (mc_MinAllocSize > 1)
+			Size = fg_AlignUp(fg_Max(_Size, mc_MinAllocSize), mc_MinNormalSizeAlignment);
+		else
+			Size = fg_AlignUp(_Size, mc_MinNormalSizeAlignment);
 
-		DMibFastCheck(Size >= 20);
+		DMibFastCheck(Size >= mc_MinNormalAllocSize);
 
 		mint AlignedSize;
 		mint SubIndex;
@@ -241,27 +311,39 @@ namespace NMib::NMemory
 				SlabBucket += SubIndex >> t_CParams::mc_SizesPerLevelShift;
 				SubIndex &= (mint(1) << t_CParams::mc_SizesPerLevelShift) - 1;
 
-				if (likely(Size > mc_Level0SmallestSize))
+				if constexpr (t_CParams::mc_bUseSmallSizes)
 				{
-					mint SlabIndex = SlabBucket - 4;
+					if (likely(Size > mc_Level0SmallestSize))
+					{
+						mint SlabIndex = SlabBucket - 4;
 
-					DMibFastCheck((SlabIndex-1) < mc_nNormalSizeLists);
-					DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
+						DMibFastCheck((SlabIndex-1) < mc_nNormalSizeLists);
+						DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-					pList = &m_NormalSizeSlabs[SubIndex][SlabIndex-1];
+						pList = &m_NormalSizeSlabs[SubIndex][SlabIndex-1];
+					}
+					else
+					{
+
+						mint InternalSlabBucketStart = sizeof(void *) * 2;
+						mint SlabIndex = (AlignedSize - InternalSlabBucketStart) / mc_MinNormalSizeAlignment;
+
+						DMibFastCheck(AlignedSize == Size);
+						DMibFastCheck(AlignedSize >= 8);
+						DMibFastCheck(SlabIndex < mc_nLevel0Lists);
+						DMibFastCheck(Size != mc_Level0SmallestSize || SlabIndex == (mc_nLevel0Lists - 1));
+
+						pList = &m_NormalSizeSlabsLevel0[SlabIndex];
+					}
 				}
 				else
 				{
+					mint SlabIndex = SlabBucket - 4;
 
-					mint InternalSlabBucketStart = sizeof(void *) * 2;
-					mint SlabIndex = (AlignedSize - InternalSlabBucketStart) / mc_MinNormalSizeAlignment;
+					DMibFastCheck((SlabIndex) < mc_nNormalSizeLists);
+					DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-					DMibFastCheck(AlignedSize == Size);
-					DMibFastCheck(AlignedSize >= 8);
-					DMibFastCheck(SlabIndex < mc_nLevel0Lists);
-					DMibFastCheck(Size != mc_Level0SmallestSize || SlabIndex == (mc_nLevel0Lists - 1));
-
-					pList = &m_NormalSizeSlabsLevel0[SlabIndex];
+					pList = &m_NormalSizeSlabs[SubIndex][SlabIndex];
 				}
 			}
 
@@ -288,19 +370,28 @@ namespace NMib::NMemory
 
 				if (likely(pAlloc))
 				{
-					if (pAlloc->m_nBlocks > 1)
+					if constexpr (t_CParams::mc_bUseFreeBlockCounting)
 					{
-						uint32 iBlock = --pAlloc->m_nBlocks;
+						if (pAlloc->m_nBlocks > 1)
+						{
+							uint32 iBlock = --pAlloc->m_nBlocks;
 
-						pAlloc = (CMemoryManagerSubSlab_NormalLink *)((uint8 *)pAlloc + (AlignedSize * iBlock));
+							pAlloc = (CMemoryManagerSubSlab_NormalLink *)((uint8 *)pAlloc + (AlignedSize * iBlock));
 
-						if constexpr (mc_EnableCallbacks)
-							this->f_OnCheckFree((uint8 *)pAlloc, AlignedSize, true);
+							if constexpr (mc_EnableCallbacks)
+								this->f_OnCheckFree((uint8 *)pAlloc, AlignedSize, true);
+						}
+						else
+						{
+							static_assert(sizeof(*pAlloc) == sizeof(void *) * 2 + 4, "Should be packed");
+
+							pAlloc->m_Link.f_UnsafeUnlinkFirst();
+							if constexpr (mc_EnableCallbacks)
+								this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), true);
+						}
 					}
 					else
 					{
-						static_assert(sizeof(*pAlloc) == sizeof(void *) * 2 + 4, "Should be packed");
-
 						pAlloc->m_Link.f_UnsafeUnlinkFirst();
 						if constexpr (mc_EnableCallbacks)
 							this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), true);
@@ -325,13 +416,16 @@ namespace NMib::NMemory
 	//					DMibTrace("++{} {} {}" DMibNewLine, pData[iAlloc].m_Allocated.m_nAllocs << iAlloc << pSlab->m_SlabType);
 
 	#if DMibPPtrBits >= 64 && defined(DMibPNoUnalignedAccess)
-					if ((AlignedSize & 4) && AlignedSize < 32)
+					if constexpr (t_CParams::mc_bUseFreeBlockCounting)
 					{
-						mint SubSlabMultiplier = t_CParams::ms_SlabTypeInfo[SubIndex].m_SubSlabMutiplier;
+						if ((AlignedSize & 4) && AlignedSize < 32)
+						{
+							mint SubSlabMultiplier = t_CParams::ms_SlabTypeInfo[SubIndex].m_SubSlabMutiplier;
 
-						mint BaseAddress = SlabStart + iAlloc * SubSlabMultiplier * t_CParams::mc_SubSlabSize;
+							mint BaseAddress = SlabStart + iAlloc * SubSlabMultiplier * t_CParams::mc_SubSlabSize;
 
-						pAlloc = (CMemoryManagerSubSlab_NormalLink *)(BaseAddress + ((((mint)pAlloc - BaseAddress) / AlignedSize) * AlignedSize));
+							pAlloc = (CMemoryManagerSubSlab_NormalLink *)(BaseAddress + ((((mint)pAlloc - BaseAddress) / AlignedSize) * AlignedSize));
+						}
 					}
 	#endif
 					if constexpr (mc_EnableCallbacks)
@@ -349,7 +443,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocNormalUncached(CNormalFreeList *_pList, mint _AlignedSize, mint _SubIndex, mint _SlabBucket)
+	inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocNormalUncached(CMemoryManagerSubSlab_NormalFreeList *_pList, mint _AlignedSize, mint _SubIndex, mint _SlabBucket)
 	{
 		mint SizeType = 0;
 		mint SubSlabMultiplier = t_CParams::ms_SlabTypeInfo[_SubIndex].m_SubSlabMutiplier;
@@ -365,28 +459,36 @@ namespace NMib::NMemory
 
 		auto pSlab = fp_NewSlab(_SubIndex, SizeType);
 
-		CMemoryManagerSubSlab_Free *pExistingSlab = nullptr;
-		if (SizeType == 0)
-			pExistingSlab = pSlab->m_FreeSubSlabs.f_UnsafePop();
 		uint8 *pSlabAddress;
 		mint iAlloc;
 		auto pData = pSlab->f_GetSubSlabData();
 
-		if (pExistingSlab)
+		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			fp_CheckSlabNoLongerGarbage(pSlab);
+			CMemoryManagerSubSlab_Free *pExistingSlab = nullptr;
+			if (SizeType == 0)
+				pExistingSlab = pSlab->m_FreeSubSlabs.f_UnsafePop();
 
-			--pSlab->m_nFreeSubSlabs;
-			pSlabAddress = (uint8 *)pExistingSlab;
-			iAlloc = mint((uint8 *)pSlabAddress - pSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
-			iAlloc = t_CParams::fs_DivideBySlabMultiplier(iAlloc, _SubIndex);
+			if (pExistingSlab)
+			{
+				fp_CheckSlabNoLongerGarbage(pSlab);
+
+				--pSlab->m_nFreeSubSlabs;
+				pSlabAddress = (uint8 *)pExistingSlab;
+				iAlloc = mint((uint8 *)pSlabAddress - pSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
+				iAlloc = t_CParams::fs_DivideBySlabMultiplier(iAlloc, _SubIndex);
+			}
+			else
+			{
+				iAlloc = pSlab->f_FindFreeBitAndSet(SizeType) << SizeType;
+				pSlab->f_CommitSubSlabs(iAlloc, (mint(1) << SizeType));
+				pSlabAddress = pSlab->f_GetSlabStart() + iAlloc * t_CParams::mc_SubSlabSize * SubSlabMultiplier;
+			}
 		}
 		else
 		{
 			iAlloc = pSlab->f_FindFreeBitAndSet(SizeType) << SizeType;
-
 			pSlab->f_CommitSubSlabs(iAlloc, (mint(1) << SizeType));
-
 			pSlabAddress = pSlab->f_GetSlabStart() + iAlloc * t_CParams::mc_SubSlabSize * SubSlabMultiplier;
 		}
 
@@ -404,7 +506,11 @@ namespace NMib::NMemory
 		++Alloc.m_nAllocs;
 
 #if defined(DMibPNoUnalignedAccess)
-		CMemoryManagerSubSlab_NormalLink *pNormalLink = (CMemoryManagerSubSlab_NormalLink *)fg_AlignUp(pSlabAddress, sizeof(void *));
+		CMemoryManagerSubSlab_NormalLink *pNormalLink;
+		if constexpr (t_CParams::mc_bUseFreeBlockCounting)
+			pNormalLink = (CMemoryManagerSubSlab_NormalLink *)fg_AlignUp(pSlabAddress, sizeof(void *));
+		else
+			pNormalLink = (CMemoryManagerSubSlab_NormalLink *)pSlabAddress;
 #else
 		CMemoryManagerSubSlab_NormalLink *pNormalLink = (CMemoryManagerSubSlab_NormalLink *)pSlabAddress;
 #endif
@@ -415,14 +521,24 @@ namespace NMib::NMemory
 		if (nBlocks > 1)
 		{
 			--nBlocks;
+			if constexpr (t_CParams::mc_bUseFreeBlockCounting)
+			{
+				pNormalLink->m_nBlocks = nBlocks;
+				_pList->f_UnsafeInsertFirst(pNormalLink);
 
-			pNormalLink->m_nBlocks = nBlocks;
-			_pList->f_UnsafeInsertFirst(pNormalLink);
+				if constexpr (mc_EnableCallbacks)
+					this->f_OnFillFree((uint8 *)(pNormalLink + 1), (pSlabAddress + nBlocks * _AlignedSize) - (uint8 *)(pNormalLink + 1));
 
-			if constexpr (mc_EnableCallbacks)
-				this->f_OnFillFree((uint8 *)(pNormalLink + 1), (pSlabAddress + nBlocks * _AlignedSize) - (uint8 *)(pNormalLink + 1));
+				pSlabAddress = pSlabAddress + nBlocks * _AlignedSize;
+			}
+			else
+			{
+				if constexpr (mc_EnableCallbacks)
+					this->f_OnFillFree(pSlabAddress + _AlignedSize, nBlocks * _AlignedSize);
 
-			pSlabAddress = pSlabAddress + nBlocks * _AlignedSize;
+				for (auto pLinkAddress = pSlabAddress + nBlocks  * _AlignedSize; pLinkAddress > pSlabAddress; pLinkAddress -= _AlignedSize)
+					_pList->f_UnsafeInsertFirst((CMemoryManagerSubSlab_NormalLink *)pLinkAddress);
+			}
 		}
 
 		if constexpr (mc_EnableCallbacks)
@@ -443,15 +559,27 @@ namespace NMib::NMemory
 		mint iSubSlab;
 		mint SlabBucket;
 
-		if (SlabType == 0)
+		if constexpr (mc_bSpecialCaseSlabType0)
 		{
-			iSubSlab = SubSlab;
-			DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
-			SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
-			if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+			if (SlabType == 0)
 			{
-				fp_FreeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> *)_pSlab, SlabBucket);
-				return;
+				iSubSlab = SubSlab;
+				DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
+				SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
+				if constexpr (t_CParams::mc_bUseSmallSizes)
+				{
+					if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+					{
+						fp_FreeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> *)_pSlab, SlabBucket);
+						return;
+					}
+				}
+			}
+			else
+			{
+				iSubSlab = t_CParams::fs_DivideBySlabMultiplier(SubSlab, SlabType);
+				DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
+				SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
 			}
 		}
 		else
@@ -459,41 +587,66 @@ namespace NMib::NMemory
 			iSubSlab = t_CParams::fs_DivideBySlabMultiplier(SubSlab, SlabType);
 			DMibFastCheck(iSubSlab < _pSlab->f_GetNumSubSlabs());
 			SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
+			if constexpr (t_CParams::mc_bUseSmallSizes)
+			{
+				if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+				{
+					fp_FreeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> *)_pSlab, SlabBucket);
+					return;
+				}
+			}
 		}
-
 
 		SlabBucket -= 2;
 
 		mint AlignedSize;
 
-		CNormalFreeList *pList;
+		CMemoryManagerSubSlab_NormalFreeList *pList;
 		mint SlabIndex;
 
-		if (likely(SlabBucket > 4))
+		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
+			if (likely(SlabBucket > 4))
+			{
+				mint SlabBucketStart = mint(1) << SlabBucket;
+
+				AlignedSize = SlabBucketStart + (SlabType << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
+
+				SlabIndex = SlabBucket - 4;
+
+				DMibFastCheck((SlabIndex-1) < mc_nNormalSizeLists);
+				DMibFastCheck(SlabType < t_CParams::mc_NumSizesPerLevel);
+
+				pList = &m_NormalSizeSlabs[SlabType][SlabIndex-1];
+			}
+			else
+			{
+				mint InternalSlabBucketStart = sizeof(void *) * 2;
+				mint SlabBucketStart = mint(1) << SlabBucket;
+				AlignedSize = SlabBucketStart + (SlabType << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
+
+				SlabIndex = (AlignedSize - InternalSlabBucketStart) / mc_MinNormalSizeAlignment;
+
+				DMibFastCheck(SlabIndex < mc_nLevel0Lists);
+				DMibFastCheck(AlignedSize != mc_Level0SmallestSize || SlabIndex == (mc_nLevel0Lists - 1));
+
+				pList = &m_NormalSizeSlabsLevel0[SlabIndex];
+			}
+		}
+		else
+		{
+			DMibFastCheck(SlabBucket >= 4);
+
 			mint SlabBucketStart = mint(1) << SlabBucket;
 
 			AlignedSize = SlabBucketStart + (SlabType << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
 
 			SlabIndex = SlabBucket - 4;
 
-			DMibFastCheck((SlabIndex-1) < mc_nNormalSizeLists);
+			DMibFastCheck(SlabIndex < mc_nNormalSizeLists);
 			DMibFastCheck(SlabType < t_CParams::mc_NumSizesPerLevel);
 
-			pList = &m_NormalSizeSlabs[SlabType][SlabIndex-1];
-		}
-		else
-		{
-			mint InternalSlabBucketStart = sizeof(void *) * 2;
-			mint SlabBucketStart = mint(1) << SlabBucket;
-			AlignedSize = SlabBucketStart + (SlabType << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
-
-			SlabIndex = (AlignedSize - InternalSlabBucketStart) / mc_MinNormalSizeAlignment;
-
-			DMibFastCheck(SlabIndex < mc_nLevel0Lists);
-			DMibFastCheck(AlignedSize != mc_Level0SmallestSize || SlabIndex == (mc_nLevel0Lists - 1));
-
-			pList = &m_NormalSizeSlabsLevel0[SlabIndex];
+			pList = &m_NormalSizeSlabs[SlabType][SlabIndex];
 		}
 
 		CMemoryManagerSubSlab_NormalLink *pFreeMemory = (CMemoryManagerSubSlab_NormalLink *)_pMemory;
@@ -506,7 +659,9 @@ namespace NMib::NMemory
 
 		DMibFastCheck(pData[iSubSlab].m_Allocated.m_nAllocs > 0);
 
-		pFreeMemory->m_nBlocks = 1;
+		if constexpr (t_CParams::mc_bUseFreeBlockCounting)
+			pFreeMemory->m_nBlocks = 1;
+
 		pList->f_UnsafeInsertFirst(pFreeMemory);
 
 		if (unlikely((--pData[iSubSlab].m_Allocated.m_nAllocs) == 0))

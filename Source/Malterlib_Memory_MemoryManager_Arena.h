@@ -75,7 +75,23 @@ namespace NMib::NMemory
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerThreadLocal;
 
-		typedef DMibListLinkDS_List(CMemoryManagerSubSlab_NormalLink, m_Link) CNormalFreeList;
+		using CMemoryManagerSubSlab_NormalLink = typename TCChooseType
+			<
+				t_CParams::mc_bUseFreeBlockCounting
+				, CMemoryManagerSubSlab_NormalLinkWithBlocks
+				, CMemoryManagerSubSlab_NormalLinkWithoutBlocks
+			>
+			::CType
+		;
+
+		using CMemoryManagerSubSlab_NormalFreeList = typename TCChooseType
+			<
+				t_CParams::mc_bUseFreeBlockCounting
+				, CMemoryManagerSubSlab_NormalFreeListWithBlocks
+				, CMemoryManagerSubSlab_NormalFreeListWithoutBlocks
+			>
+			::CType
+		;
 
 	public:
 		// Links need to be public
@@ -83,7 +99,6 @@ namespace NMib::NMemory
 		DMibMemoryManagerLink(TCMemoryManagerArena, m_Link);
 		DMibMemoryManagerLink(TCMemoryManagerArena, m_CleanupLink);
 	private:
-
 
 		template <uint32 t_SlabType>
 		TCMemoryManagerSlabShared<t_CParams> *fp_CreateSlab(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
@@ -121,7 +136,7 @@ namespace NMib::NMemory
 
 		void fp_AllocSmallSizeBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
 
-		void *fp_AllocNormalUncached(CNormalFreeList *_pList, mint _AlignedSize, mint _SubIndex, mint _SlabBucket);
+		void *fp_AllocNormalUncached(CMemoryManagerSubSlab_NormalFreeList *_pList, mint _AlignedSize, mint _SubIndex, mint _SlabBucket);
 		void *fp_AllocNormal(mint &_Size);
 
 		void fp_AllocNormalBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
@@ -149,8 +164,8 @@ namespace NMib::NMemory
 
 		bool fp_CheckFree(CMemoryManagerSubSlab_NormalLink *_pLink, bool _bBreak);
 
-		bool fp_ProcessMessages(CNormalFreeList *_pFreeList);
-		bool fp_ProcessMessageList(CNormalFreeList *_pFreeList, mint &o_MessageList);
+		bool fp_ProcessMessages(CMemoryManagerSubSlab_NormalFreeList *_pFreeList);
+		bool fp_ProcessMessageList(CMemoryManagerSubSlab_NormalFreeList *_pFreeList, mint &o_MessageList);
 
 
 		void fp_CheckMessages();
@@ -162,35 +177,74 @@ namespace NMib::NMemory
 		void fp_RequestCleanup();
 	public:
 
+#ifdef DCompiler_MSVC_Workaround
+		static constexpr bool mc_MinArraySize = 1;
+#else
+		static constexpr bool mc_MinArraySize = 0;
+#endif
+
+		static constexpr bool mc_bUseFreeBlockCounting = t_CParams::mc_bUseFreeBlockCounting;
+		static constexpr bool mc_bSpecialCaseSlabType0 = t_CParams::mc_bSpecialCaseSlabType0;
+		static constexpr bool mc_bUseSmallSizes = t_CParams::mc_bUseSmallSizes;
+		static constexpr mint mc_MinNormalAllocSize = mc_bUseFreeBlockCounting ? (sizeof(void *) * 2 + 4) : sizeof(void *) * 2;
+		static constexpr mint mc_MinAllocSize = mc_bUseSmallSizes ? 1 : mc_MinNormalAllocSize;
 		static constexpr mint mc_MinAlignment = 4; // Can be 4 or 8
 		static constexpr mint mc_nSmallSizeSlabsAligned = NMib::TCHighestBitSetCorrect<mint, mc_MinAlignment>::mc_Value + 1;
-		static constexpr mint mc_nSmallSizeSlabs = mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment*2) / mc_MinAlignment;
+		static constexpr mint mc_nSmallSizeSlabs = mc_bUseSmallSizes ? (mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment*2) / mc_MinAlignment) : mc_MinArraySize;
 		static constexpr mint mc_MinAlignmentCalc = 16 / t_CParams::mc_NumSizesPerLevel;
 		static constexpr mint mc_MinNormalSizeAlignment = mc_MinAlignmentCalc < 4 ? 4 : mc_MinAlignmentCalc;
-		static constexpr mint mc_nLevel0Lists = (32 - sizeof(void *) * 2) / mc_MinNormalSizeAlignment;
-		static constexpr mint mc_nNormalSizeLists = t_CParams::mc_NumNormalSizeLevels-1;
+		static constexpr mint mc_nLevel0Lists = mc_bUseSmallSizes ? (32 - sizeof(void *) * 2) / mc_MinNormalSizeAlignment : mc_MinArraySize;
+		static constexpr mint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels-1 : t_CParams::mc_NumNormalSizeLevels;
 		static constexpr mint mc_Level0SmallestSize = 32 - mc_MinNormalSizeAlignment;
-		static constexpr mint mc_SmallSizeSlabsLargestSize = 16;
+		static constexpr mint mc_SmallSizeSlabsLargestSize = mc_bUseSmallSizes ? (mc_bUseFreeBlockCounting ? 16 : 12) : 0;
 		static constexpr mint mc_NumSubSlabSizeLevels = t_CParams::mc_NumSizeLevels - TCHighestBitSetCorrect<mint, t_CParams::mc_SubSlabSize>::mc_Value;
 		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CArena::mc_EnableCallbacks;
 
+		static_assert(mc_bUseSmallSizes || sizeof(void *) > 4, "Not supported on 32 bit");
+
 	private:
+		static constexpr mint mc_SmallAllocCategoryJumpTableSize = mc_bUseSmallSizes ? (mc_bUseFreeBlockCounting ? 6 : 5) : 1;
 
 		using FSmallAllocJump = void *(*)(TCMemoryManagerArena *);
-#ifdef DCompiler_MSVC_Workaround
-		static FSmallAllocJump mc_SmallAllocCategoryJumpTable[6];
-#else
-		static constexpr FSmallAllocJump mc_SmallAllocCategoryJumpTable[6] =
+		struct CSmallAllocJumbTable
+		{
+			FSmallAllocJump m_Table[mc_SmallAllocCategoryJumpTableSize];
+		};
+		static constexpr CSmallAllocJumbTable mc_SmallAllocCategoryJumpTable = []() constexpr -> CSmallAllocJumbTable
 			{
-				&fsp_AllocSmall<1>
-				, &fsp_AllocSmall<2>
-				, &fsp_AllocSmall<4>
-				, &fsp_AllocSmall<8>
-				, &fsp_AllocSmall<12>
-				, &fsp_AllocSmall<16>
+				if constexpr (mc_bUseSmallSizes)
+				{
+					if constexpr (mc_bUseFreeBlockCounting)
+					{
+						return
+							{
+								&fsp_AllocSmall<1>
+								, &fsp_AllocSmall<2>
+								, &fsp_AllocSmall<4>
+								, &fsp_AllocSmall<8>
+								, &fsp_AllocSmall<12>
+								, &fsp_AllocSmall<16>
+							}
+						;
+					}
+					else
+					{
+						return
+							{
+								&fsp_AllocSmall<1>
+								, &fsp_AllocSmall<2>
+								, &fsp_AllocSmall<4>
+								, &fsp_AllocSmall<8>
+								, &fsp_AllocSmall<12>
+							}
+						;
+					}
+				}
+				else
+					return {nullptr};
 			}
+			()
 		;
-#endif
 
 		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_FreeSlabs;
 #ifndef DDocumentation_Doxygen
@@ -218,8 +272,8 @@ namespace NMib::NMemory
 		DMibMemoryManagerList(CMemoryManagerSubSlab_SmallSizeLink, m_Link) m_SmallSizeSlabsFull;
 		DMibMemoryManagerList(CMemoryManagerSubSlab_SmallSizeLink, m_Link) m_SmallSizeSlabs[mc_nSmallSizeSlabs];
 
-		CNormalFreeList m_NormalSizeSlabsLevel0[mc_nLevel0Lists];
-		CNormalFreeList m_NormalSizeSlabs[t_CParams::mc_NumSizesPerLevel][mc_nNormalSizeLists];
+		CMemoryManagerSubSlab_NormalFreeList m_NormalSizeSlabsLevel0[mc_nLevel0Lists];
+		CMemoryManagerSubSlab_NormalFreeList m_NormalSizeSlabs[t_CParams::mc_NumSizesPerLevel][mc_nNormalSizeLists];
 
 		TCMemoryManager<t_CParams> *m_pMemoryManager;
 		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;

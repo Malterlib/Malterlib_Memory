@@ -195,6 +195,9 @@ namespace NMib::NMemory
 
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_None;
 		static constexpr bool mc_bFullGarbageCollect = false;
+		static constexpr bool mc_bUseSmallSizes = true;
+		static constexpr bool mc_bSpecialCaseSlabType0 = true;
+		static constexpr bool mc_bUseFreeBlockCounting = true;
 
 		static DMalterlibMemoryConstExprWorkaround uint16 ms_NumSubSlabs[mc_NumSizesPerLevel];
 		static DMalterlibMemoryConstExprWorkaround CSlabTypeInfo ms_SlabTypeInfo[mc_NumSizesPerLevel];

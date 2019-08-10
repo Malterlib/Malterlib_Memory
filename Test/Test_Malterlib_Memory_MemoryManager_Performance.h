@@ -167,6 +167,68 @@ namespace
 		}
 	};
 
+#if DMibPPtrBits >= 64
+	class CMalterlibMemoryMalterlibNew_LowBranch
+	{
+		struct CParams : public NMib::NMemory::CDefaultMemoryManagerParams
+		{
+			static constexpr bool mc_bUseSmallSizes = false;
+			static constexpr bool mc_bSpecialCaseSlabType0 = false;
+			static constexpr bool mc_bUseFreeBlockCounting = false;
+		};
+
+		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+	public:
+		CMalterlibMemoryMalterlibNew_LowBranch()
+			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+		{
+		}
+		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
+		{
+			return true;
+		}
+		void f_SetNumaNode(NMib::ENumaNode _Node)
+		{
+			m_MemoryManager.f_SetNumaNode(_Node);
+		}
+
+		bool f_Init(mint _nThreads, mint _MaxSize)
+		{
+			return true;
+		}
+		void f_InitThread()
+		{
+		}
+
+		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		{
+			return m_MemoryManager.f_Checkout();
+		}
+
+		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
+		{
+			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+		}
+
+		inline_small void *f_Alloc(mint _Size)
+		{
+			return m_MemoryManager.f_Alloc(_Size);
+		}
+
+		inline_small void f_FreeNoSize(void *_pMem)
+		{
+			m_MemoryManager.f_FreeNoSize(_pMem);
+		}
+
+		void f_Clear()
+		{
+		}
+		void f_CheckHeap()
+		{
+		}
+	};
+#endif
+
 	class CMalterlibMemoryMalterlibNew_Debug
 	{
 		NMib::NMemory::TCMemoryManagerDebug<NMib::NMemory::CDefaultMemoryManagerParams, false> m_MemoryManager;

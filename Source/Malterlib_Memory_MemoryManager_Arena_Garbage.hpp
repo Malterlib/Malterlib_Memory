@@ -81,12 +81,15 @@ namespace NMib::NMemory
 				)
 			;
 
-			auto pNewFirst = m_SlabsToGarbageCollect[_SlabType].f_GetFirst();
+			if constexpr (t_CParams::mc_bUseSmallSizes)
+			{
+				auto pNewFirst = m_SlabsToGarbageCollect[_SlabType].f_GetFirst();
 
-			if (pNewFirst == pSlab)
-				fp_FreeSmallSubSlabs(pSlab);
+				if (pNewFirst == pSlab)
+					fp_FreeSmallSubSlabs(pSlab);
 
-			DMibFastCheck(m_SlabsToGarbageCollect[_SlabType].f_GetFirst() != pSlab);
+				DMibFastCheck(m_SlabsToGarbageCollect[_SlabType].f_GetFirst() != pSlab);
+			}
 
 			return true;
 		}
@@ -122,8 +125,11 @@ namespace NMib::NMemory
 				)
 			;
 
-			if (pSlab->m_Link1.f_IsInList())
-				fp_FreeSmallSubSlabs(pSlab);
+			if constexpr (t_CParams::mc_bUseSmallSizes)
+			{
+				if (pSlab->m_Link1.f_IsInList())
+					fp_FreeSmallSubSlabs(pSlab);
+			}
 
 			DMibFastCheck(!pSlab->m_Link1.f_IsInList());
 		}
@@ -153,8 +159,11 @@ namespace NMib::NMemory
 					)
 				;
 
-				if (pSlab->m_Link1.f_IsInList())
-					fp_FreeSmallSubSlabs(pSlab);
+				if constexpr (t_CParams::mc_bUseSmallSizes)
+				{
+					if (pSlab->m_Link1.f_IsInList())
+						fp_FreeSmallSubSlabs(pSlab);
+				}
 
 				DMibFastCheck(!pSlab->m_Link1.f_IsInList());
 			}
@@ -166,7 +175,7 @@ namespace NMib::NMemory
 	{
 		fp_CheckMessages();
 
-		if constexpr (t_CParams::mc_DeferCleanup & EDeferCleanup_NoCleanup)
+		if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_NoCleanup) != 0)
 			return false;
 
 		return fp_GarbageCollectPerform(_SlabType);

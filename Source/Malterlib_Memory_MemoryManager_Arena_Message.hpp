@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -21,7 +21,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessageList(CNormalFreeList *_pFreeList, mint &o_MessageList)
+	inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessageList(CMemoryManagerSubSlab_NormalFreeList *_pFreeList, mint &o_MessageList)
 	{
 		mint Messages = o_MessageList;
 
@@ -43,12 +43,11 @@ namespace NMib::NMemory
 			CMessage *pFreeBlock = (CMessage *)(Messages & (~mint(3)));
 			mint NextMessage = pFreeBlock->m_Next;
 
-			switch (FreeLinkType)
+			if constexpr (t_CParams::mc_bUseSmallSizes)
 			{
-			case EMessageType_FreeNormalBlock:
+				if (likely(FreeLinkType == EMessageType_FreeNormalBlock))
 				{
 					CMessage_FreeNormalBlock *pBlock = (CMessage_FreeNormalBlock *)pFreeBlock;
-					//DMibDTrace("Freeing normal block: {}" DMibNewLine, pBlock);
 					uint8 *pEndOfSlab = fg_AlignUp((uint8 *)pBlock + 1, t_CParams::mc_SlabSize);
 					CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
@@ -56,11 +55,10 @@ namespace NMib::NMemory
 					TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 					fp_Free(pBlock, pSlab);
 				}
-				break;
-			case EMessageType_FreeSmallBlock:
+				else
 				{
+					DMibFastCheck(FreeLinkType == EMessageType_FreeSmallBlock);
 					CMessage_FreeSmallBlock *pBlock = (CMessage_FreeSmallBlock *)pFreeBlock;
-					//DMibDTrace("Freeing small block: {}" DMibNewLine, pBlock->m_pBlock);
 					uint8 *pEndOfSlab = fg_AlignUp((uint8 *)pBlock->m_pBlock + 1, t_CParams::mc_SlabSize);
 					CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
@@ -69,7 +67,16 @@ namespace NMib::NMemory
 					fp_Free(pBlock->m_pBlock, pSlab);
 					m_pMemoryManager->f_Free(pBlock, sizeof(CMessage_FreeSmallBlock));
 				}
-				break;
+			}
+			else
+			{
+				CMessage_FreeNormalBlock *pBlock = (CMessage_FreeNormalBlock *)pFreeBlock;
+				uint8 *pEndOfSlab = fg_AlignUp((uint8 *)pBlock + 1, t_CParams::mc_SlabSize);
+				CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
+
+				DMibFastCheck(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+				TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
+				fp_Free(pBlock, pSlab);
 			}
 
 			Messages = NextMessage;
@@ -88,7 +95,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessages(CNormalFreeList *_pFreeList)
+	inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessages(CMemoryManagerSubSlab_NormalFreeList *_pFreeList)
 	{
 		if (_pFreeList)
 		{

@@ -5,20 +5,6 @@
 
 namespace NMib::NMemory
 {
-#ifdef DCompiler_MSVC_Workaround
-	template <typename t_CParams>
-	typename TCMemoryManagerArena<t_CParams>::FSmallAllocJump TCMemoryManagerArena<t_CParams>::mc_SmallAllocCategoryJumpTable[6] =
-		{
-			&fsp_AllocSmall<1>
-			, &fsp_AllocSmall<2>
-			, &fsp_AllocSmall<4>
-			, &fsp_AllocSmall<8>
-			, &fsp_AllocSmall<12>
-			, &fsp_AllocSmall<16>
-		}
-	;
-#endif
-
 	template <typename t_CParams>
 	inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocSmallSize(mint &_Size)
 	{
@@ -251,7 +237,7 @@ namespace NMib::NMemory
 		auto &Slabs = _pThis->m_SmallSizeSlabs[_Index];
 		CSubSlab *pSlab = (CSubSlab *)Slabs.f_GetFirst();
 		if (unlikely(!pSlab))
-			return mc_SmallAllocCategoryJumpTable[_Index](_pThis);
+			return mc_SmallAllocCategoryJumpTable.m_Table[_Index](_pThis);
 
 		bool bFull;
 		void *pAlloc = pSlab->f_Alloc(bFull);
@@ -362,7 +348,7 @@ namespace NMib::NMemory
 			CMemoryManagerSubSlab_Free *pFreeSubSlab = (CMemoryManagerSubSlab_Free *)_pSubSlab;
 			pFreeSubSlab = new(pFreeSubSlab) CMemoryManagerSubSlab_Free();
 			_pSlab->m_FreeSubSlabs.f_UnsafeInsert(pFreeSubSlab);
-			if constexpr (t_CParams::mc_DeferCleanup & EDeferCleanup_OneSizeBlocks)
+			if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_OneSizeBlocks) || !t_CParams::mc_bUseSmallSizes)
 				fp_SlabHasGarbageInline(_pSlab);
 			else
 				fp_FreeSmallSubSlabs(_pSlab);

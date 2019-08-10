@@ -186,7 +186,8 @@ namespace NMib::NMemory
 			// Unlink from any linked lists
 			this->m_Link0.f_Unlink();
 			this->m_Link1.f_Unlink();
-			this->m_FreeSubSlabs.f_Clear();
+			if constexpr (t_CParams::mc_bUseSmallSizes)
+				this->m_FreeSubSlabs.f_Clear();
 			auto pNumaArena = pArena->m_pNumaArena;
 			this->m_FreeTimestamp = pNumaArena->f_GetTimestamp();
 			auto FullySetLevel = this->m_FullySetLevel;
