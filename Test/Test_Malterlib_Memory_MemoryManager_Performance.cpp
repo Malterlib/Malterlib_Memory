@@ -13,6 +13,9 @@ namespace
 	using namespace NMib::NMemory;
 
 	constexpr mint gc_TestSize = 512;
+	constexpr mint gc_TestSizeEnd = 4096;
+	constexpr mint gc_TestMaxMemory = 256*1024*1024;
+	constexpr mint gc_ArrayLimit = 16u * 1024u;
 
 #if 0
 	struct CDisplayStats
@@ -108,10 +111,10 @@ namespace
 				, m_pAllocations(nullptr)
 				, m_MaxAllocSize(_MaxAllocSize - 1)
 				, m_nIterations(0)
-				, m_MaxAllocatedMemory(256*1024*1024)
+				, m_MaxAllocatedMemory(gc_TestMaxMemory)
 				, m_ArraySize(0)
 			{
-				m_ArraySize = NMib::fg_Min(((m_MaxAllocatedMemory * 2) / _MaxAllocSize), (16u * 1024u)) - 1;
+				m_ArraySize = NMib::fg_Min(((m_MaxAllocatedMemory * 2) / _MaxAllocSize), gc_ArrayLimit) - 1;
 
 				mint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
 				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
@@ -212,7 +215,7 @@ namespace
 				, m_pAllocations(nullptr)
 				, m_MaxAllocSize(_MaxAllocSize - 1)
 				, m_nIterations(0)
-				, m_MaxAllocatedMemory(256*1024*1024)
+				, m_MaxAllocatedMemory(gc_TestMaxMemory)
 				, m_ArraySize(0)
 				, m_AlignBits(NMib::fg_GetHighestBitSet(_MaxAllocSize))
 			{
@@ -220,7 +223,7 @@ namespace
 					m_AlignBits = 0;
 				if (m_AlignBits == 0)
 					m_AlignBits = 1;
-				m_ArraySize = NMib::fg_Min(((m_MaxAllocatedMemory * 2) / _MaxAllocSize), (16u * 1024u)) - 1;
+				m_ArraySize = NMib::fg_Min(((m_MaxAllocatedMemory * 2) / _MaxAllocSize), gc_ArrayLimit) - 1;
 
 				mint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
 				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
@@ -322,10 +325,10 @@ namespace
 				, m_pAllocations(nullptr)
 				, m_MaxAllocSize(_MaxAllocSize)
 				, m_nIterations(0)
-				, m_MaxAllocatedMemory(256*1024*1024)
+				, m_MaxAllocatedMemory(gc_TestMaxMemory)
 				, m_ArraySize(0)
 			{
-				m_ArraySize = NMib::fg_Min((m_MaxAllocatedMemory / _MaxAllocSize), (16u * 1024u)) - 1;
+				m_ArraySize = NMib::fg_Min((m_MaxAllocatedMemory / _MaxAllocSize), gc_ArrayLimit) - 1;
 
 				mint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
 				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
@@ -655,7 +658,7 @@ namespace
 				NMib::NProcess::CProcessLaunchParams Params;
 				Params.m_Target = NMib::NFile::CFile::fs_GetProgramPath();
 				Params.m_Parameters = NMib::NStr::CStr::CFormat("--Tests \"{}/{}\" --TestLogger Registry --TestResults (All ProcessRecursive) --TestGroups Performance") << fg_TestGetCurrentPath() << _pName;
-				DMibTrace("{}\r\n", Params.m_Parameters);
+				//DMibTrace("{}\r\n", Params.m_Parameters);
 				void *pProcess = nullptr;
 
 				NMib::NStorage::TCUniquePointer<NMib::NProcess::CProcessLaunch> pProcessLaunch;
@@ -891,37 +894,34 @@ namespace
 			 */
 #endif
 
+#ifdef DMibConfig_MemoryManager_UseMalterlib
+			ETestMeasureType ApplicationMeasureType = ETestMeasureType_Normal;
+#else
+			ETestMeasureType ApplicationMeasureType = ETestMeasureType_Reference;
+#endif
+
 #ifdef DMibConfig_OverrideSystemMalloc
 			NMib::NStr::CStr SystemMallocOverrideSuffix = " (Overridden)";
+			ETestMeasureType SystemMeasureType = ApplicationMeasureType;
 #else
 			NMib::NStr::CStr SystemMallocOverrideSuffix;
+			ETestMeasureType SystemMeasureType = ETestMeasureType_Reference;
 #endif
 
 #ifdef DMemoryManagerTestEnable_OSX
-			f_DoTest<CMalterlibMemoryOSX, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "OSX" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryOSX, tf_CAllocPattern>(PerfTest, MemoryTest, SystemMeasureType, "OSX" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
 #endif
 #ifdef DMemoryManagerTestEnable_StdLib
-			f_DoTest<CMalterlibMemoryStdLib, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "StdLib" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryStdLib, tf_CAllocPattern>(PerfTest, MemoryTest, SystemMeasureType, "StdLib" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
 #endif
 #ifdef DMemoryManagerTestEnable_Application
-			f_DoTest<CMalterlibMemoryApplication, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "Application", _MaxAllocSize, _nThreads);
-#endif
-
-#ifdef DMemoryManagerTestEnable_LLAlloc
-			f_DoTest<CMalterlibMemoryLLAlloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "LLAlloc", _MaxAllocSize, _nThreads);
-#endif
-#ifdef DMemoryManagerTestEnable_DlMalloc
-			f_DoTest<CMalterlibMemoryDlMallocClear, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "DlMalloc_ST", _MaxAllocSize, _nThreads);
-#endif
-#ifdef DMemoryManagerTestEnable_DlMallocMultiThreaded
-			f_DoTest<CMalterlibMemoryDlMallocMultiThreadedClear, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "DlMalloc", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryApplication, tf_CAllocPattern>(PerfTest, MemoryTest, ApplicationMeasureType, "Application", _MaxAllocSize, _nThreads);
 #endif
 #ifdef DMemoryManagerTestEnable_TcMalloc
 			f_DoTest<CMalterlibMemoryTcMalloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "TcMalloc", _MaxAllocSize, _nThreads);
 #endif
-
-#ifdef DMemoryManagerTestEnable_PtMalloc
-			f_DoTest<CMalterlibMemoryPtMalloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "PtMalloc", _MaxAllocSize, _nThreads);
+#ifdef DMemoryManagerTestEnable_MiMalloc
+			f_DoTest<CMalterlibMemoryMiMalloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "MiMalloc", _MaxAllocSize, _nThreads);
 #endif
 #ifdef DMemoryManagerTestEnable_WindowsLF
 			f_DoTest<TCMalterlibMemoryWindowsLF<false>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "WindowsLF", _MaxAllocSize, _nThreads);
@@ -942,105 +942,38 @@ namespace
 		}
 
 		template <typename tf_CAllocPattern>
-		void f_DoTests(tf_CAllocPattern const &_Pattern, mint _nThreads)
-		{
-			mint nPhysicalCores = NMib::NSys::fg_Thread_GetPhysicalCores();
-			mint nVirtualCores = NMib::NSys::fg_Thread_GetVirtualCores();
-			for
-#if 1
-				(
-					mint i = 1
-					; i <= 1024*1024*8
-					; i = i << 1
-				)
-#else
-				(
-					mint i = 1
-					//; i <= 1024*1024*8
-#if DMibPPtrBits == 64
-					; i <= 12
-#else
-					; i <= 4
-#endif
-					; i = i < 4 ? i << 1 : i + 4
-				)
-#endif
-			{
-				if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
-				{
-					if (i == gc_TestSize && (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores || _nThreads == nPhysicalCores * 2))
-					{
-						DMibTestSuite(NMib::NStr::CStr::CFormat("Max Alloc({})") << i)
-						{
-							f_DoTests(i, _Pattern, _nThreads);
-						};
-
-					}
-					else
-					{
-						DMibTestSuite(CTestCategory(NMib::NStr::CStr::CFormat("Max Alloc({})") << i) << CTestGroup("Manual"))
-						{
-							f_DoTests(i, _Pattern, _nThreads);
-						};
-					}
-				}
-				else
-				{
-					DMibTestCategory(NMib::NStr::CStr::CFormat("Max Alloc({})") << i)
-					{
-						f_DoTests(i, _Pattern, _nThreads);
-					};
-				}
-			}
-		}
-
-		template <typename tf_CAllocPattern>
-		void f_DoPattern(ch8 const *_pPattern, tf_CAllocPattern const &_Pattern)
+		void f_DoTests(ch8 const *_pPattern, tf_CAllocPattern const &_Pattern)
 		{
 			auto fRunTests = [&]
 				{
-					mint nPhysicalCores = NMib::NSys::fg_Thread_GetPhysicalCores();
-					mint nCores = m_nCores;
-					//nCores = 1;
-					mint i = 1;
-					for (; i < nCores; i = i << 1)
+					for
+		#if 1
+						(
+							mint i = 1
+							; i <= 1024*1024*8
+							; i = i << 1
+						)
+		#else
+						(
+							mint i = 1
+							//; i <= 1024*1024*8
+		#if DMibPPtrBits == 64
+							; i <= 12
+		#else
+							; i <= 4
+		#endif
+							; i = i < 4 ? i << 1 : i + 4
+						)
+		#endif
 					{
-						DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << i)
+						DMibTestCategory(NMib::NStr::CStr::CFormat("Max Alloc({})") << i)
 						{
-							f_DoTests(_Pattern, i);
-						};
-					}
-					if (!NMib::fg_IsPowerOfTwo(nPhysicalCores) && nPhysicalCores != nCores)
-					{
-						DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << nPhysicalCores)
-						{
-							f_DoTests(_Pattern, nPhysicalCores);
-						};
-					}
-					i = nCores;
-					DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << i)
-					{
-						f_DoTests(_Pattern, i);
-					};
-					i = i << 1;
-					mint nEndCores = nCores * 2;
-	#if 0
-					mint nEndCores = NMib::fg_Min(nCores*1024, 64u); // Max 4096 threads as it taskes some time to start threads
-					//mint nEndCores = NMib::fg_Min(nCores*1024, 4096u); // Max 4096 threads as it taskes some time to start threads
-					if (NMib::NSys::fg_System_BeingDebugged() && !(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
-						nEndCores = NMib::fg_Min(nEndCores, 128u); // Running in debugger the debugger makes creating threads really slow
-	#endif
-
-					for (; i <= nEndCores; i = i << 1)
-					{
-						DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << i)
-						{
-							f_DoTests(_Pattern, i);
+							f_DoPattern(_pPattern, _Pattern, i);
 						};
 					}
 				}
 			;
-			if (NMib::NStr::fg_StrCmp(_pPattern, "Random") == 0)
+			if (NMib::NStr::fg_StrStartsWith(_pPattern, "Random"))
 			{
 				DMibTestCategory(_pPattern)
 				{
@@ -1056,49 +989,79 @@ namespace
 			}
 		}
 
+		template <typename tf_CAllocPattern>
+		void f_DoPattern(ch8 const *_pPattern, tf_CAllocPattern const &_Pattern, mint _MaxAlloc)
+		{
+			mint nPhysicalCores = NMib::NSys::fg_Thread_GetPhysicalCores();
+			mint nVirtualCores = NMib::NSys::fg_Thread_GetVirtualCores();
+			mint nCores = m_nCores;
+			//nCores = 1;
+			mint i = 1;
+
+			auto fRunTest = [&](mint _nThreads)
+				{
+					if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
+					{
+						if
+							(
+							 	(_MaxAlloc >= gc_TestSize && _MaxAlloc <= gc_TestSizeEnd)
+							 	&& (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores || _nThreads == nPhysicalCores * 2)
+							)
+						{
+							DMibTestSuite(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads)
+							{
+								f_DoTests(_MaxAlloc, _Pattern, _nThreads);
+							};
+						}
+						else
+						{
+							DMibTestSuite(CTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads) << CTestGroup("Manual"))
+							{
+								f_DoTests(_MaxAlloc, _Pattern, _nThreads);
+							};
+						}
+					}
+					else
+					{
+						DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads)
+						{
+							f_DoTests(_MaxAlloc, _Pattern, _nThreads);
+						};
+					}
+				}
+			;
+
+			for (; i < nCores; i = i << 1)
+				fRunTest(i);
+			if (!NMib::fg_IsPowerOfTwo(nPhysicalCores) && nPhysicalCores != nCores)
+				fRunTest(nPhysicalCores);
+			i = nCores;
+			fRunTest(i);
+			i = i << 1;
+			mint nEndCores = nCores * 2;
+#if 0
+			mint nEndCores = NMib::fg_Min(nCores*1024, 64u); // Max 4096 threads as it taskes some time to start threads
+			//mint nEndCores = NMib::fg_Min(nCores*1024, 4096u); // Max 4096 threads as it taskes some time to start threads
+			if (NMib::NSys::fg_System_BeingDebugged() && !(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
+				nEndCores = NMib::fg_Min(nEndCores, 128u); // Running in debugger the debugger makes creating threads really slow
+#endif
+
+			for (; i <= nEndCores; i = i << 1)
+			{
+				fRunTest(i);
+			}
+		}
+
 		void f_DoPatterns()
 		{
-			f_DoPattern("Random", CAllocPattern_Random());
-			f_DoPattern("OneSize", CAllocPattern_OneSize());
-			f_DoPattern("OneSizeLinear", CAllocPattern_OneSizeLinear());
-			f_DoPattern("RandomAligned", CAllocPattern_RandomAlignment());
+			f_DoTests("Random", CAllocPattern_Random());
+			f_DoTests("OneSize", CAllocPattern_OneSize());
+			f_DoTests("OneSizeLinear", CAllocPattern_OneSizeLinear());
+			f_DoTests("RandomAligned", CAllocPattern_RandomAlignment());
 		}
 
 		void f_DoTests()
 		{
-#if 0
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(32)/Max Alloc(1)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(1)/Max Alloc(1)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-			--Tests Malterlib/Mem/MemoryManager* --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-			--Tests --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(16)/*" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(32)/Max Alloc(1)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(16)/Max Alloc(4)/*" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(16)/Max Alloc(4)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(1)/Max Alloc(131072)/MalterlibNewNoCommit" --TestLogger Registry --TestResults (All ProcessRecursive) --TestGroups Performance
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(32)/Max Alloc(512)" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(4)/Max Alloc(512)" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(1)/*" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/OneSize/Threads(1)/*" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/RandomAligned/Threads(1)/*" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/RandomAligned/Threads(1)/Max Alloc(32768)" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(4)/*" --TestGroups Performance --TestResults (All DetailedPerformance CompareToBaseline)
-
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(4)/Max Alloc(1)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/OneSize/Threads(1)/Max Alloc(8)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/OneSize/Threads(1)/Max Alloc(1)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(1)/Max Alloc(1024)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/OneSize/Threads(1)/Max Alloc(16)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(4)/Max Alloc(16)/MalterlibNewNoCommit" --TestLogger Registry --TestResults (All ProcessRecursive DetailedPerformance) --TestGroups Performance
-
-			--Tests "Malterlib/Mem/MemoryManager/Performance/Synthetic/Random/Threads(1)/Max Alloc(262144)/MalterlibNew" --TestLogger Registry --TestResults (All ProcessRecursive) --TestGroups Performance
-#endif
-
-
 			DMibTestCategory(CTestCategory("Synthetic") << CTestGroup("Performance"))
 			{
 				f_DoPatterns();

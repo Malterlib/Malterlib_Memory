@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 Import "../Core/Lib_Malterlib.MTarget"
@@ -338,14 +338,6 @@ Property
 		{
 			!!PlatformFamily "OSX"
 		}
-		MemoryManagerTestEnable_DlMalloc true
-		{
-			!!MalterlibEnableThirdPartyComparisonTests true
-		}
-		MemoryManagerTestEnable_DlMallocMultiThreaded true
-		{
-			!!MalterlibEnableThirdPartyComparisonTests true
-		}
 		MemoryManagerTestEnable_Application true
 		MemoryManagerTestEnable_StdLib true
 //			MemoryManagerTestEnable_Virtual true
@@ -357,29 +349,20 @@ Property
 		{
 			!!PlatformFamily "Windows"
 		}
-		MemoryManagerTestEnable_PtMalloc true
-		{
-			&
-			{
-				PlatformFamily "Windows"
-				MalterlibEnableThirdPartyComparisonTests true
-			}
-		}
-		MemoryManagerTestEnable_LLAlloc true
-		{
-			&
-			{
-				PlatformFamily "Windows"
-				MalterlibEnableThirdPartyComparisonTests true
-			}
-		}
 		MemoryManagerTestEnable_TcMalloc true
 		{
 			&
 			{
-				PlatformFamily "Windows"
 				MalterlibEnableThirdPartyComparisonTests true
+				!
+				{
+					Architecture x86
+				}
 			}
+		}
+		MemoryManagerTestEnable_MiMalloc true
+		{
+			!!MalterlibEnableThirdPartyComparisonTests true
 		}
 	}
 	Target
@@ -395,14 +378,24 @@ Property
 	}
 	Compile
 	{
+		&
+		{
+			CompileDialect C
+			MalterlibEnableThirdPartyComparisonTests true
+		}
+		SearchPath "@('../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
+	}
+	Compile
+	{
 		!!CompileDialect C
 
 		SearchPath "@('..'->MakeAbsolute());@(Compile.SearchPath)"
-		SearchPath "@(Builtin.BasePathAbsolute)/SDK/TCMalloc/windows;@(Compile.SearchPath)"
+
+		Warnings_DeprecatedDeclarations "false"
 		{
-			!!PlatformFamily "Windows"
+			!!GeneratorFamily Xcode
 		}
-		SearchPath "@(Builtin.BasePathAbsolute)/SDK/TCMalloc;@(Compile.SearchPath)"
+
 		PreprocessorDefines "PERFTOOLS_DLL_DECL=;@(Compile.PreprocessorDefines)"
 		PreprocessorDefines "DMemoryManagerTestEnable_OSX;@(Compile.PreprocessorDefines)"
 		{
@@ -420,14 +413,6 @@ Property
 		{
 			!!MemoryManagerTestEnable_Application "true"
 		}
-		PreprocessorDefines "DMemoryManagerTestEnable_DlMalloc;@(Compile.PreprocessorDefines)"
-		{
-			!!MemoryManagerTestEnable_DlMalloc "true"
-		}
-		PreprocessorDefines "DMemoryManagerTestEnable_DlMallocMultiThreaded;@(Compile.PreprocessorDefines)"
-		{
-			!!MemoryManagerTestEnable_DlMallocMultiThreaded "true"
-		}
 		PreprocessorDefines "DMemoryManagerTestEnable_Virtual;@(Compile.PreprocessorDefines)"
 		{
 			!!MemoryManagerTestEnable_Virtual "true"
@@ -440,22 +425,23 @@ Property
 		{
 			!!MemoryManagerTestEnable_WindowsLF "true"
 		}
-		PreprocessorDefines "DMemoryManagerTestEnable_PtMalloc;@(Compile.PreprocessorDefines)"
-		{
-			!!MemoryManagerTestEnable_PtMalloc "true"
-		}
-		PreprocessorDefines "DMemoryManagerTestEnable_LLAlloc;@(Compile.PreprocessorDefines)"
-		{
-			!!MemoryManagerTestEnable_LLAlloc "true"
-		}
 		PreprocessorDefines "DMemoryManagerTestEnable_TcMalloc;@(Compile.PreprocessorDefines)"
 		{
-			!!MemoryManagerTestEnable_TcMalloc "true"
+			&
+			{
+				MemoryManagerTestEnable_TcMalloc "true"
+				!Architecture x86
+			}
+		}
+		PreprocessorDefines "DMemoryManagerTestEnable_MiMalloc;@(Compile.PreprocessorDefines)"
+		{
+			!!MemoryManagerTestEnable_MiMalloc "true"
 		}
 		PreprocessorDefines "DMibConfig_OverrideSystemMalloc;@(Compile.PreprocessorDefines)"
 		{
 			!!MalterlibMemoryManager_EnableOverrideSystemMalloc true
 		}
+		PreprocessorDefines "DMibConfig_MemoryManager_Use@(MalterlibMemoryManager);@(Compile.PreprocessorDefines)"
 	}
 	%Group Documentation
 	{
@@ -485,13 +471,17 @@ Property
 	{
 		Dependency.Link "false"
 	}
+	%Dependency "Lib_mimalloc-static"
+	{
+		!!MalterlibEnableThirdPartyComparisonTests true
+	}
 }
 
 
 Property
 {
 	!!MalterlibEnableInternalTests true
-	
+
 	MalterlibTests "Malterlib_Memory;@(MalterlibTests)"
 	MalterlibTestExtraGroups_Malterlib_Memory "{Test}/{Malterlib_Memory}"
 }
@@ -502,6 +492,6 @@ Property
 	{
 		MalterlibEnableInternalWorkspaces true
 	}
-	
+
 	%Target "@(Malterlib_Memory_App_Targets)"
 }

@@ -8,13 +8,6 @@
 #ifndef DMibPWindowsTest
 #	undef DMemoryManagerTestEnable_WindowsDefault
 #	undef DMemoryManagerTestEnable_WindowsLF
-#	undef DMemoryManagerTestEnable_PtMalloc
-#	undef DMemoryManagerTestEnable_LLAlloc
-#	undef DMemoryManagerTestEnable_TcMalloc
-#endif
-
-#if DMibPPtrBits != 64
-#	undef DMemoryManagerTestEnable_TcMalloc
 #endif
 
 #ifdef DMemoryManagerTestEnable_Application
@@ -27,26 +20,12 @@
 #include <Mib/Memory/MemoryManagerTracked>
 #endif
 
-#ifdef DMemoryManagerTestEnable_DlMalloc
-#include "../../../SDK/DLMalloc/dlmalloc_singlethreaded.h"
-#include "../../../SDK/DLMalloc/dlmalloc_singlethreadedclear.h"
-#endif
-
-#ifdef DMemoryManagerTestEnable_DlMallocMultiThreaded
-#include "../../../SDK/DLMalloc/dlmalloc_multithreaded.h"
-#include "../../../SDK/DLMalloc/dlmalloc_multithreadedclear.h"
-#endif
-
-#ifdef DMemoryManagerTestEnable_PtMalloc
-#include "../../../SDK/PTMalloc/ptmalloc_cpp.h"
-#endif
-
 #ifdef DMemoryManagerTestEnable_TcMalloc
-#include <google/tcmalloc.h>
+#include <gperftools/tcmalloc.h>
 #endif
 
-#ifdef DMemoryManagerTestEnable_LLAlloc
-#include "../../../SDK/LLAlloc/ll_alloc.h"
+#ifdef DMemoryManagerTestEnable_MiMalloc
+#include <mimalloc.h>
 #endif
 
 #if defined(DMemoryManagerTestEnable_WindowsDefault) || defined(DMemoryManagerTestEnable_WindowsLF)
@@ -531,77 +510,6 @@ namespace
 	};
 #endif
 
-	//#define VirtualLimit 1024*1024
-	#define VirtualLimit -1
-
-#ifdef DMemoryManagerTestEnable_PtMalloc
-	class CMalterlibMemoryPtMalloc
-	{
-	public:
-		CMalterlibMemoryPtMalloc()
-		{
-		}
-		~CMalterlibMemoryPtMalloc()
-		{
-		}
-
-		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
-		{
-			if (_bAlignment)
-				return false;
-			return _nThreads <= 4;
-		}
-
-		void f_SetNumaNode(NMib::ENumaNode _Node)
-		{
-		}
-
-		bool f_Init(mint _nThreads, mint _MaxSize)
-		{
-			NAllocator_PtMalloc::mallopt(M_TRIM_THRESHOLD, -1);
-
-			if (VirtualLimit < 0)
-				NAllocator_PtMalloc::mallopt(M_MMAP_THRESHOLD, NMib::TCLimitsInt<int>::mc_Max);
-			else
-				NAllocator_PtMalloc::mallopt(M_MMAP_THRESHOLD, VirtualLimit);
-			// Do init from one thread
-			NAllocator_PtMalloc::free(NAllocator_PtMalloc::malloc(1));
-			return true;
-		}
-		void f_InitThread()
-		{
-		}
-		int f_Checkout()
-		{
-			return 0;
-		}
-
-		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
-		{
-			return nullptr;
-		}
-
-		inline_small void *f_Alloc(mint _Size)
-		{
-			return NAllocator_PtMalloc::malloc(_Size);
-		}
-
-		inline_small void f_FreeNoSize(void *_pMem)
-		{
-			NAllocator_PtMalloc::free(_pMem);
-		}
-
-		void f_Clear()
-		{
-
-		}
-		void f_CheckHeap()
-		{
-		}
-	};
-#endif
-
-
 #ifdef DMemoryManagerTestEnable_TcMalloc
 	class CMalterlibMemoryTcMalloc
 	{
@@ -619,9 +527,7 @@ namespace
 
 		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
-			if (_bAlignment)
-				return false;
-			return _nThreads <= 4;
+			return true;
 		}
 
 		bool f_Init(mint _nThreads, mint _MaxSize)
@@ -639,7 +545,7 @@ namespace
 
 		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
 		{
-			return nullptr;
+			return tc_memalign(_Alignment, _Size);;
 		}
 
 		inline_small void *f_Alloc(mint _Size)
@@ -663,32 +569,31 @@ namespace
 #endif
 
 
-
-#ifdef DMemoryManagerTestEnable_LLAlloc
-	class CMalterlibMemoryLLAlloc
+#ifdef DMemoryManagerTestEnable_MiMalloc
+	class CMalterlibMemoryMiMalloc
 	{
 	public:
-		CMalterlibMemoryLLAlloc()
+		CMalterlibMemoryMiMalloc()
 		{
 		}
-		~CMalterlibMemoryLLAlloc()
+		~CMalterlibMemoryMiMalloc()
+		{
+		}
+
+		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 		}
 
 		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
 			if (_bAlignment)
-				return false; // Seems to be a bug in llalloc for aligned blocks
+				return true;
 			return true;
-		}
-
-		void f_SetNumaNode(NMib::ENumaNode _Node)
-		{
 		}
 
 		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
-			llalloc_free(llalloc_malloc(1));
+			mi_free(mi_malloc(1));
 			return true;
 		}
 		void f_InitThread()
@@ -701,294 +606,17 @@ namespace
 
 		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
 		{
-			return llalloc_memalign(_Size, _Alignment);
+			return mi_malloc_aligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(mint _Size)
 		{
-			return llalloc_malloc(_Size);
+			return mi_malloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			llalloc_free(_pMem);
-		}
-
-		void f_Clear()
-		{
-
-		}
-		void f_CheckHeap()
-		{
-		}
-	};
-#endif
-
-
-#ifdef DMemoryManagerTestEnable_DlMalloc
-	class CMalterlibMemoryDlMalloc
-	{
-		NAllocator_DlMalloc::mspace m_Heap;
-	public:
-
-		CMalterlibMemoryDlMalloc()
-			: m_Heap(nullptr)
-		{
-		}
-		~CMalterlibMemoryDlMalloc()
-		{
-			if (m_Heap)
-				NAllocator_DlMalloc::destroy_mspace(m_Heap);
-		}
-
-		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
-		{
-			return _nThreads == 1;
-		}
-
-		void f_SetNumaNode(NMib::ENumaNode _Node)
-		{
-		}
-
-		bool f_Init(mint _nThreads, mint _MaxSize)
-		{
-			if (_nThreads > 1)
-				return false;
-			m_Heap = NAllocator_DlMalloc::create_mspace(0, false);
-			NAllocator_DlMalloc::mspace_mallopt(M_TRIM_THRESHOLD, -1);
-
-			if (VirtualLimit < 0)
-				NAllocator_DlMalloc::mspace_mallopt(M_MMAP_THRESHOLD, NMib::TCLimitsInt<int>::mc_Max);
-			else
-				NAllocator_DlMalloc::mspace_mallopt(M_MMAP_THRESHOLD, VirtualLimit);
-			return true;
-		}
-		void f_InitThread()
-		{
-		}
-		int f_Checkout()
-		{
-			return 0;
-		}
-
-		inline_small void *f_Alloc(mint _Size)
-		{
-			return NAllocator_DlMalloc::mspace_malloc(m_Heap, _Size);
-		}
-
-		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
-		{
-			return NAllocator_DlMalloc::mspace_memalign(m_Heap, _Size, _Alignment);
-		}
-
-		inline_small void f_FreeNoSize(void *_pMem)
-		{
-			NAllocator_DlMalloc::mspace_free(m_Heap, _pMem);
-		}
-
-		void f_Clear()
-		{
-
-		}
-		void f_CheckHeap()
-		{
-		}
-	};
-
-	class CMalterlibMemoryDlMallocClear
-	{
-		NAllocator_DlMalloc::mspace m_Heap;
-	public:
-
-		CMalterlibMemoryDlMallocClear()
-			: m_Heap(nullptr)
-		{
-		}
-		~CMalterlibMemoryDlMallocClear()
-		{
-			if (m_Heap)
-				NAllocator_DlMalloc::destroy_mspace(m_Heap);
-		}
-
-		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
-		{
-			return _nThreads == 1;
-		}
-
-		void f_SetNumaNode(NMib::ENumaNode _Node)
-		{
-		}
-
-		bool f_Init(mint _nThreads, mint _MaxSize)
-		{
-			if (_nThreads > 1)
-				return false;
-			m_Heap = NAllocator_DlMalloc::create_mspace(0, false);
-			NAllocator_DlMalloc::mspace_mallopt(M_TRIM_THRESHOLD, 4096*1024*2);
-
-			if (VirtualLimit < 0)
-				NAllocator_DlMalloc::mspace_mallopt(M_MMAP_THRESHOLD, NMib::TCLimitsInt<int>::mc_Max);
-			else
-				NAllocator_DlMalloc::mspace_mallopt(M_MMAP_THRESHOLD, VirtualLimit);
-			return true;
-		}
-		void f_InitThread()
-		{
-		}
-		int f_Checkout()
-		{
-			return 0;
-		}
-
-		inline_small void *f_Alloc(mint _Size)
-		{
-			return NAllocator_DlMalloc::mspace_malloc(m_Heap, _Size);
-		}
-
-		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
-		{
-			return NAllocator_DlMalloc::mspace_memalign(m_Heap, _Size, _Alignment);
-		}
-
-
-		inline_small void f_FreeNoSize(void *_pMem)
-		{
-			NAllocator_DlMalloc::mspace_free(m_Heap, _pMem);
-		}
-
-		void f_Clear()
-		{
-
-		}
-		void f_CheckHeap()
-		{
-		}
-	};
-#endif
-
-#ifdef DMemoryManagerTestEnable_DlMallocMultiThreaded
-
-	class CMalterlibMemoryDlMallocMultiThreaded
-	{
-		NAllocator_DlMallocMultiThreaded::mspace m_Heap;
-	public:
-		CMalterlibMemoryDlMallocMultiThreaded()
-			: m_Heap(nullptr)
-		{
-		}
-		~CMalterlibMemoryDlMallocMultiThreaded()
-		{
-			if (m_Heap)
-				NAllocator_DlMallocMultiThreaded::destroy_mspace(m_Heap);
-		}
-
-		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
-		{
-			return _nThreads <= 3;
-		}
-
-		void f_SetNumaNode(NMib::ENumaNode _Node)
-		{
-		}
-
-		bool f_Init(mint _nThreads, mint _MaxSize)
-		{
-			m_Heap = NAllocator_DlMallocMultiThreaded::create_mspace(0, true);
-			NAllocator_DlMallocMultiThreaded::mspace_mallopt(M_TRIM_THRESHOLD, -1);
-
-			if (VirtualLimit < 0)
-				NAllocator_DlMallocMultiThreaded::mspace_mallopt(M_MMAP_THRESHOLD, NMib::TCLimitsInt<int>::mc_Max);
-			else
-				NAllocator_DlMallocMultiThreaded::mspace_mallopt(M_MMAP_THRESHOLD, VirtualLimit);
-			return true;
-		}
-		void f_InitThread()
-		{
-		}
-		int f_Checkout()
-		{
-			return 0;
-		}
-
-		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
-		{
-			return NAllocator_DlMallocMultiThreaded::mspace_memalign(m_Heap, _Size, _Alignment);
-		}
-
-		inline_small void *f_Alloc(mint _Size)
-		{
-			return NAllocator_DlMallocMultiThreaded::mspace_malloc(m_Heap, _Size);
-		}
-
-		inline_small void f_FreeNoSize(void *_pMem)
-		{
-			NAllocator_DlMallocMultiThreaded::mspace_free(m_Heap, _pMem);
-		}
-
-		void f_Clear()
-		{
-
-		}
-		void f_CheckHeap()
-		{
-		}
-	};
-	class CMalterlibMemoryDlMallocMultiThreadedClear
-	{
-		NAllocator_DlMallocMultiThreaded::mspace m_Heap;
-	public:
-		CMalterlibMemoryDlMallocMultiThreadedClear()
-			: m_Heap(nullptr)
-		{
-		}
-		~CMalterlibMemoryDlMallocMultiThreadedClear()
-		{
-			if (m_Heap)
-				NAllocator_DlMallocMultiThreaded::destroy_mspace(m_Heap);
-		}
-
-		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
-		{
-			return _nThreads <= 3;
-		}
-
-		void f_SetNumaNode(NMib::ENumaNode _Node)
-		{
-		}
-
-		bool f_Init(mint _nThreads, mint _MaxSize)
-		{
-			m_Heap = NAllocator_DlMallocMultiThreaded::create_mspace(0, true);
-			NAllocator_DlMallocMultiThreaded::mspace_mallopt(M_TRIM_THRESHOLD, 4096*1024*2);
-
-			if (VirtualLimit < 0)
-				NAllocator_DlMallocMultiThreaded::mspace_mallopt(M_MMAP_THRESHOLD, NMib::TCLimitsInt<int>::mc_Max);
-			else
-				NAllocator_DlMallocMultiThreaded::mspace_mallopt(M_MMAP_THRESHOLD, VirtualLimit);
-
-			return true;
-		}
-		void f_InitThread()
-		{
-		}
-		int f_Checkout()
-		{
-			return 0;
-		}
-
-		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
-		{
-			return NAllocator_DlMallocMultiThreaded::mspace_memalign(m_Heap, _Size, _Alignment);
-		}
-
-		inline_small void *f_Alloc(mint _Size)
-		{
-			return NAllocator_DlMallocMultiThreaded::mspace_malloc(m_Heap, _Size);
-		}
-
-		inline_small void f_FreeNoSize(void *_pMem)
-		{
-			NAllocator_DlMallocMultiThreaded::mspace_free(m_Heap, _pMem);
+			mi_free(_pMem);
 		}
 
 		void f_Clear()
