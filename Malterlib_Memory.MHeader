@@ -19,6 +19,183 @@ Import "Apps/*/*.MHeader"
 	}
 }
 
+%Repository "gperftools"
+{
+	|
+	{
+		MalterlibMemoryManager TcMalloc
+		MalterlibEnableThirdPartyComparisonTests true
+	}
+
+	Repository
+	{
+		Type External
+		Remotes "upstream=https://github.com/gperftools/gperftools.git;@(Repository.Remotes)"
+	}
+}
+
+%Group "{Malterlib}/{TCMalloc}"
+{
+	Compile
+	{
+		&
+		{
+			CompileDialect C
+		}
+
+		SearchPath "@('../../External/gperftools/src'->MakeAbsolute());@(Compile.SearchPath)"
+		SearchPath "@('../../External/gperftools/src/windows'->MakeAbsolute());@(Compile.SearchPath)"
+		{
+			!!PlatformFamily "Windows"
+		}
+		SearchPath "@('Source/TCMalloc'->MakeAbsolute())/@(PlatformFamily)/@(Architecture);@(Compile.SearchPath)"
+		SearchPath "@('Source/TCMalloc/Shared'->MakeAbsolute());@(Compile.SearchPath)"
+		PreprocessorDefines "TCMALLOC_NO_REPLACE_SYSTEM_MALLOC;@(Compile.PreprocessorDefines)"
+	}
+	%Group TcMalloc
+	{
+		!!MalterlibEnableThirdPartyComparisonTests true
+		%File "Source/TCMalloc/^*"
+		%Group External
+		{
+			Property
+			{
+				ExcludeFiles "*/tests/*;@(ExcludeFiles)"
+				ExcludeFiles "*/solaris/*;@(ExcludeFiles)"
+				ExcludeFiles "*/nm-pdb.c;@(ExcludeFiles)"
+				ExcludeFiles "*/preamble_patcher_test.cc;@(ExcludeFiles)"
+				ExcludeFiles "*/addr2line-pdb.c;@(ExcludeFiles)"
+			}
+			%Group Source
+			{
+				Compile
+				{
+					!!MalterlibCompileSupportTabSetings true
+					IndentWidth 2
+					TabWidth 2
+					UsesTabs false
+				}
+				Compile.Disabled true
+				{
+					!MemoryManagerTestEnable_TcMalloc "true"
+				}
+
+				!!MalterlibEnableThirdPartyComparisonTests true
+				%File "../../External/gperftools/src/^*.h"
+				%File "../../External/gperftools/src/^*.c"
+				%File "../../External/gperftools/src/^*.cc"
+				%File "../../External/gperftools/src/debugallocation.cc"
+				{
+					Compile.Disabled true
+				}
+				%File "../../External/gperftools/src/heap-profiler.cc"
+				{
+					Compile.Disabled true
+				}
+				%File "../../External/gperftools/src/system-alloc.cc"
+				{
+					Compile.Disabled true
+					{
+						!!PlatformFamily Windows
+					}
+				}
+				%File "../../External/gperftools/src/profiledata.cc"
+				{
+					Compile.Disabled true
+					{
+						!!PlatformFamily Windows
+					}
+				}
+				%File "../../External/gperftools/src/profile-handler.cc"
+				{
+					Compile.Disabled true
+					{
+						!!PlatformFamily Windows
+					}
+				}
+				%File "../../External/gperftools/src/heap-profile-table.cc"
+				{
+					Compile.Disabled true
+					{
+						!!PlatformFamily Windows
+					}
+				}
+				%File "../../External/gperftools/src/profiler.cc"
+				{
+					Compile.Disabled true
+					{
+						!!PlatformFamily Windows
+					}
+				}
+				%File "../../External/gperftools/src/maybe_threads.cc"
+				{
+					Compile.Disabled true
+					{
+						!!PlatformFamily Windows
+					}
+				}
+				%File "../../External/gperftools/src/emergency_malloc.cc"
+				{
+					Compile.Disabled true
+					{
+						!!PlatformFamily Windows
+					}
+				}
+				%File "../../External/gperftools/src/emergency_malloc_for_stacktrace.cc"
+				{
+					Compile.Disabled true
+					{
+						!!PlatformFamily Windows
+					}
+				}
+				%File "../../External/gperftools/src/heap-checker.cc"
+				{
+					Compile.Disabled true
+					{
+						!!PlatformFamily Windows
+					}
+				}
+				%File "../../External/gperftools/src/heap-checker-bcad.cc"
+				{
+					Compile.Disabled true
+					{
+						!!PlatformFamily Windows
+					}
+				}
+				%Group base
+				{
+					%File "../../External/gperftools/src/base/thread_lister.c"
+					{
+						Compile.Disabled true
+						{
+							!!PlatformFamily Windows
+						}
+					}
+				}
+				%Group windows
+				{
+					Compile.Disabled true
+					{
+						!PlatformFamily "Windows"
+					}
+					%File "../../External/gperftools/src/windows/override_functions.cc"
+					{
+						Compile.Disabled true
+					}
+					%File "../../External/gperftools/src/windows/patch_functions.cc"
+					{
+						Compile.Disabled true
+					}
+ 					%File "../../External/gperftools/src/windows/get_mangled_names.cc"
+					{
+						Compile.Disabled true
+					}
+				}
+			}
+		}
+	}
+}
+
 %Import "../../External/mimalloc/CMakeLists.txt"
 {
 	Import.CMake_FullRebuildVersion 1
@@ -211,6 +388,10 @@ Property
 		{
 			!!PlatformType "Windows"
 		}
+		ExtraGroups "{Malterlib}/{TCMalloc};@(Target.ExtraGroups)"
+		{
+			!!MalterlibEnableThirdPartyComparisonTests true
+		}
 	}
 	Compile
 	{
@@ -289,133 +470,6 @@ Property
 			Compile.Disabled true
 			{
 				!!MalterlibTestsMem_EnablePerfTests false
-			}
-			%Group SDK
-			{
-				%Group DLMalloc
-				{
-					!!MalterlibEnableThirdPartyComparisonTests true
-					%Group "MultiThreaded"
-					{
-						%File ../../SDK/DLMalloc/dlmalloc_multithreaded.cpp
-						%File ../../SDK/DLMalloc/dlmalloc_multithreaded.h
-						%File ../../SDK/DLMalloc/dlmalloc_multithreadedclear.cpp
-						%File ../../SDK/DLMalloc/dlmalloc_multithreadedclear.h
-						Compile.Disabled true
-						{
-							!MemoryManagerTestEnable_DlMallocMultiThreaded "true"
-						}
-					}
-					%Group "SingleThreadedr"
-					{
-						%File ../../SDK/DLMalloc/dlmalloc_singlethreaded.cpp
-						%File ../../SDK/DLMalloc/dlmalloc_singlethreaded.h
-						%File ../../SDK/DLMalloc/dlmalloc_singlethreadedclear.cpp
-						%File ../../SDK/DLMalloc/dlmalloc_singlethreadedclear.h
-						Compile.Disabled true
-						{
-							!MemoryManagerTestEnable_DlMalloc "true"
-						}
-					}
-					%File ../../SDK/DLMalloc/malloc.c
-					{
-						Compile.Disabled true
-					}
-					%File ../../SDK/DLMalloc/malloc.h
-				}
-				%Group TcMalloc
-				{
-					!!MalterlibEnableThirdPartyComparisonTests true
-					%File ../../SDK/TCMalloc/base/dynamic_annotations.c
-					%File ../../SDK/TCMalloc/base/logging.cc
-					%File ../../SDK/TCMalloc/base/low_level_alloc.cc
-					%File ../../SDK/TCMalloc/base/spinlock.cc
-					%File ../../SDK/TCMalloc/base/spinlock_internal.cc
-					%File ../../SDK/TCMalloc/base/sysinfo.cc
-					%File ../../SDK/TCMalloc/base/thread_lister.c
-					%File ../../SDK/TCMalloc/central_freelist.cc
-					%File ../../SDK/TCMalloc/common.cc
-					%File ../../SDK/TCMalloc/heap-checker-bcad.cc
-					%File ../../SDK/TCMalloc/heap-checker.cc
-					%File ../../SDK/TCMalloc/heap-profile-table.cc
-					%File ../../SDK/TCMalloc/internal_logging.cc
-					%File ../../SDK/TCMalloc/malloc_extension.cc
-					%File ../../SDK/TCMalloc/malloc_hook.cc
-					%File ../../SDK/TCMalloc/memory_region_map.cc
-					%File ../../SDK/TCMalloc/page_heap.cc
-					%File ../../SDK/TCMalloc/raw_printer.cc
-					%File ../../SDK/TCMalloc/sampler.cc
-					%File ../../SDK/TCMalloc/span.cc
-					%File ../../SDK/TCMalloc/stack_trace_table.cc
-					%File ../../SDK/TCMalloc/stacktrace.cc
-					%File ../../SDK/TCMalloc/static_vars.cc
-					%File ../../SDK/TCMalloc/symbolize.cc
-					%File ../../SDK/TCMalloc/tcmalloc.cc
-					%File ../../SDK/TCMalloc/tcmalloc.h
-					%File ../../SDK/TCMalloc/thread_cache.cc
-					%Group Windows
-					{
-						%File ../../SDK/TCMalloc/windows/google/tcmalloc.h
-						%File ../../SDK/TCMalloc/windows/port.cc
-						Compile.Disabled true
-						{
-							!PlatformFamily "Windows"
-						}
-					}
-					Compile.Disabled true
-					{
-						!MemoryManagerTestEnable_TcMalloc "true"
-					}
-				}
-				%Group PtMalloc
-				{
-					!!MalterlibEnableThirdPartyComparisonTests true
-					%Group sysdeps
-					{
-						%Group generic
-						{
-							%File ../../SDK/PTMalloc/sysdeps/generic/atomic.h
-							%File ../../SDK/PTMalloc/sysdeps/generic/malloc-machine.h
-							%File ../../SDK/PTMalloc/sysdeps/generic/thread-st.h
-						}
-						%File ../../SDK/PTMalloc/sysdeps/win32/malloc-machine.h
-					}
-					%File ../../SDK/PTMalloc/lran2.h
-					%File ../../SDK/PTMalloc/malloc-2.8.3.h
-					%File ../../SDK/PTMalloc/malloc-private.h
-					%File ../../SDK/PTMalloc/malloc.c
-					{
-						Compile.Disabled true
-					}
-					%File ../../SDK/PTMalloc/ptmalloc3.c
-					{
-						Compile.Disabled true
-					}
-					%File ../../SDK/PTMalloc/ptmalloc_cpp.cpp
-					%File ../../SDK/PTMalloc/ptmalloc_cpp.h
-					%File ../../SDK/PTMalloc/ptmalloc_cpp_malloc.cpp
-					Compile.Disabled true
-					{
-						!MemoryManagerTestEnable_PtMalloc "true"
-					}
-				}
-				%Group LLAlloc
-				{
-					!!MalterlibEnableThirdPartyComparisonTests true
-					%File ../../SDK/LLAlloc/compiler.h
-					%File ../../SDK/LLAlloc/gcc.h
-					%File ../../SDK/LLAlloc/ll_alloc.c
-					%File ../../SDK/LLAlloc/ll_alloc.h
-					%File ../../SDK/LLAlloc/ll_asm.h
-					%File ../../SDK/LLAlloc/ll_list.h
-					%File ../../SDK/LLAlloc/ming.h
-					%File ../../SDK/LLAlloc/vs.h
-					%File ../../SDK/LLAlloc/win_stub.cc
-					Compile.Disabled true
-					{
-						!MemoryManagerTestEnable_LLAlloc "true"
-					}
-				}
 			}
 			%File Test/Test_Malterlib_Memory_MemoryManager_Performance.h
 			%File Test/Test_Malterlib_Memory_MemoryManager_Performance.cpp

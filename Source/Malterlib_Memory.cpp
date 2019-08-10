@@ -181,6 +181,8 @@ namespace NMib::NMemory
 			"QQuickEventPoint::estimatedVelocity",
 			"QV4::QQmlQPointer<QObject>::init",
 			"QPointer<QQmlEngine>::operator=",
+			"TCMallocGuard::TCMallocGuard",
+			"GoogleInitializer::GoogleInitializer",
 			nullptr
 		}
 	;
