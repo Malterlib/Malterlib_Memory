@@ -198,6 +198,12 @@ Import "Apps/*/*.MHeader"
 
 %Import "../../External/mimalloc/CMakeLists.txt"
 {
+	|
+	{
+		MalterlibMemoryManager MiMalloc
+		MalterlibEnableThirdPartyComparisonTests true
+	}
+
 	Import.CMake_FullRebuildVersion 1
 	Import.CMake_Variables "MI_OVERRIDE=OFF;@(Import.CMake_Variables)"
 	Import.CMake_Variables "MI_USE_CXX=ON;@(Import.CMake_Variables)"
