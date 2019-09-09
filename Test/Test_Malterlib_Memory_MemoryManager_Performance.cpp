@@ -4,6 +4,7 @@
 #include <Mib/Core/Core>
 #include <Mib/Test/Memory>
 #include <Mib/Test/Performance>
+#include <Mib/Test/ResultParser>
 #include <Mib/Process/ProcessLaunch>
 #include "Test_Malterlib_Memory_MemoryManager_Performance.h"
 
@@ -657,8 +658,21 @@ namespace
 
 				NMib::NProcess::CProcessLaunchParams Params;
 				Params.m_Target = NMib::NFile::CFile::fs_GetProgramPath();
-				Params.m_Parameters = NMib::NStr::CStr::CFormat("--Tests \"{}/{}\" --TestLogger Registry --TestResults (All ProcessRecursive) --TestGroups Performance") << fg_TestGetCurrentPath() << _pName;
-				//DMibTrace("{}\r\n", Params.m_Parameters);
+				Params.m_Parameters = NMib::NProcess::CProcessLaunchParams::fs_GetParams
+					(
+						{
+							"--test"
+							, fg_TestGetCurrentPath() / _pName
+							, "--test-logger"
+							, "Registry"
+							, "--filter-results"
+							, "[\"All\"]"
+							, "--process-recursive"
+							, "--test-groups"
+							, "[\"Performance\"]"
+						}
+					)
+				;
 				void *pProcess = nullptr;
 
 				NMib::NStorage::TCUniquePointer<NMib::NProcess::CProcessLaunch> pProcessLaunch;
