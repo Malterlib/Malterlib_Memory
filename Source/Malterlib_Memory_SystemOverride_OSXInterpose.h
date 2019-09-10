@@ -59,6 +59,8 @@ extern "C" uint32_t __psynch_cvwait(user_addr_t cv, uint64_t cvlsgen, uint32_t c
 extern "C" void _malloc_fork_prepare() __attribute__((weak_import));
 extern "C" void _malloc_fork_child() __attribute__((weak_import));
 extern "C" void _malloc_fork_parent() __attribute__((weak_import));
+extern "C" void __exit(int _0) __attribute__((weak_import));
+extern "C" void _exit(int _0) __attribute__((weak_import));
 
 #define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) d_Return (*d_Function)(__VA_ARGS__);
 

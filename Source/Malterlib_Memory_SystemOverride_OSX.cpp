@@ -122,8 +122,10 @@ namespace NMib
 		void fg_MalterlibSystem_ForkPrepare();
 		void fg_MalterlibSystem_ForkParent();
 		void fg_MalterlibSystem_ForkChild();
-		
+
+#ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
 		NStorage::TCAggregateSimple<NInstrumentation::CMHook> g_FunctionHooks = {DAggregateInit};
+#endif
 
 		bool g_bAtExitCalled = false;
 	}
@@ -243,10 +245,10 @@ extern "C"
 	bool g_MalterlibMallocBeforeMallocCalled = false;
 	bool g_MalterlibMallocAfterMallocCalled = false;
 
-	void (* exit_reenter)(int) __attribute__((noreturn));
-	
+#ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
 	void fg_InterposeOverride();
 	void fg_InterposeOverrideUnhook();
+#endif
 	
 	void fg_MalterlibSystem_DestroyLate()
 	{
@@ -256,12 +258,21 @@ extern "C"
 	}
 }
 
+void fg_ExitReenter(int _Value)
+{
+	if (g_OriginalFunctions.__exit)
+		return g_OriginalFunctions.__exit(_Value);
+	else if (g_OriginalFunctions._exit)
+		return g_OriginalFunctions._exit(_Value);
+}
+
+
 void fg_MalterlibMallocOverride_PreDestroyNonTrackedMemoryManager()
 {
 	if (!g_MalterlibMallocOveriddenInterposersInstalled)
 		return;
-	NSys::g_FunctionHooks->f_Suspend();
 #ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
+	NSys::g_FunctionHooks->f_Suspend();
 	if (CSystem::ms_PlatformVersion < 10'11'00)
 	{
 		if (malloc_reenter)
@@ -270,13 +281,12 @@ void fg_MalterlibMallocOverride_PreDestroyNonTrackedMemoryManager()
 			malloc_reenter = nullptr;
 		}
 	}
-#endif
-	NSys::g_FunctionHooks->f_Unhook((void **)&exit_reenter);
 	if (!g_bMemoryManagerNeededAfterDestroy)
 		fg_InterposeOverrideUnhook();
 	NSys::g_FunctionHooks->f_Resume();
 	if (!g_bMemoryManagerNeededAfterDestroy)
 		NSys::g_FunctionHooks.f_Destruct();
+#endif
 }
 
 extern "C"
@@ -308,9 +318,19 @@ extern "C"
 	{
 		if (NSys::g_bAtExitCalled) // If atexit has not been called this is an abnormal exit so don't try to do any cleanup
 			fg_MalterlibSystem_DestroyLate();
-		return exit_reenter(_ExitCode);
+		return fg_ExitReenter(_ExitCode);
 	}
-	
+
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib___exit(int _ExitCode)
+	{
+		return fg_MalterlibSystem_Hooked_Exit(_ExitCode);
+	}
+
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__exit(int _ExitCode)
+	{
+		return fg_MalterlibSystem_Hooked_Exit(_ExitCode);
+	}
+
 	bool fg_InstallAllocInterposers_GetReentries(bool _bNeedMalloc)
 	{
 #ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
@@ -325,17 +345,6 @@ extern "C"
 			}
 		}
 #endif
-		
-		(void * &)exit_reenter = dlsym(RTLD_DEFAULT, "__exit");
-		
-		if (!exit_reenter)
-			(void * &)exit_reenter = dlsym(RTLD_DEFAULT, "_exit");
-		
-		if (!exit_reenter)
-		{
-			DMibOverrideTrace("No __exit found, malloc override not enabled!\n", 0);
-			return false;
-		}
 		return true;
 	}
 	
@@ -347,11 +356,9 @@ extern "C"
 		NSys::fg_CreateSystemMalloc(true);
 		g_GlobalState.f_Construct();
 		
-		NSys::g_FunctionHooks.f_Construct();
-
-
-		NSys::g_FunctionHooks->f_Suspend();
 #ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
+		NSys::g_FunctionHooks.f_Construct();
+		NSys::g_FunctionHooks->f_Suspend();
 		if (_bNeedMalloc && CSystem::ms_PlatformVersion < 10'11'00)
 		{
 			if (!NSys::g_FunctionHooks->f_SetHook((void **)&malloc_reenter, (void *)&fg_MalterlibSystem_Hooked_Malloc))
@@ -360,16 +367,16 @@ extern "C"
 				DMibPDebugBreak;
 			}
 		}
-#endif
 		if (!NSys::g_FunctionHooks->f_SetHook((void **)&exit_reenter, (void *)&fg_MalterlibSystem_Hooked_Exit))
 		{
 			DMibOverrideTrace("Failed to hook exit, aborting!\n", 0);
 			DMibPDebugBreak;
 		}
-		
+
 		fg_InterposeOverride();
 
 		NSys::g_FunctionHooks->f_Resume();
+#endif
 
 		g_MalterlibMallocOveriddenInterposersInstalled = true;
 
@@ -2830,9 +2837,10 @@ extern "C"
 
 extern "C"
 {
+#ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
 	void fg_InterposeOverride()
 	{
-#define DMibMemoryInterpose_Hooks 
+#define DMibMemoryInterpose_Hooks
 	
 #define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
 		if (!NSys::g_FunctionHooks->f_SetHook((void **)&(g_OriginalFunctions.d_Function), (void *)&fg_Malterlib_##d_Function))\
@@ -2850,7 +2858,6 @@ extern "C"
 
 	void fg_InterposeOverrideUnhook()
 	{
-	
 #define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
 		if (!NSys::g_FunctionHooks->f_Unhook((void **)&(g_OriginalFunctions.d_Function)))\
 		{\
@@ -2863,8 +2870,9 @@ extern "C"
 #define DMibMemoryInterposeCpp3(d_Return, d_Function, ...)
 
 #include "Malterlib_Memory_SystemOverride_OSXInterposeFunctions.h"
-#undef DMibMemoryInterpose_Hooks 
+#undef DMibMemoryInterpose_Hooks
 	}
+#endif
 }
 
 #endif

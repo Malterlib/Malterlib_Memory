@@ -77,10 +77,9 @@
 
 #endif
 
-#if defined(DMibMemoryInterpose_Hooks) && !defined(DMibMemoryOverrideDll)
+#if defined(DMibMemoryInterpose_Hooks)
 #define DMibMemoryInterpose_SomeHooks
 #endif
-
 
 #ifndef DMibMemoryInterpose_SomeHooks
 DMibMemoryInterpose0(malloc_zone_t *, malloc_default_zone) 
@@ -173,6 +172,8 @@ DMibMemoryInterpose0(void, _malloc_fork_prepare)
 DMibMemoryInterpose0(void, _malloc_fork_child)
 DMibMemoryInterpose0(void, _malloc_fork_parent)
 
+DMibMemoryInterpose1(void, __exit, int _0)
+DMibMemoryInterpose1(void, _exit, int _0)
 
 // This needs to be last, as it will override the function used to allocate memory vm_region_64
 DMibMemoryInterpose7(mach_msg_return_t ,mach_msg_trap, mach_msg_header_t *_0, mach_msg_option_t _1, mach_msg_size_t _2, mach_msg_size_t _3, mach_port_name_t _4, mach_msg_timeout_t _5, mach_port_name_t _6)
