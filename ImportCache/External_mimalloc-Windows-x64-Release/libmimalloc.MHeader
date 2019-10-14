@@ -24,6 +24,10 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 		{
 			Compile.Type C++
 		}
+		%File "../../../../External/mimalloc/src/memory.c"
+		{
+			Compile.Type C++
+		}
 		%File "../../../../External/mimalloc/src/segment.c"
 		{
 			Compile.Type C++
@@ -80,6 +84,10 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 			Compile.Type C++
 		}
 		%File "../../../../External/mimalloc/src/os.c"
+		{
+			Compile.Type C++
+		}
+		%File "../../../../External/mimalloc/src/memory.c"
 		{
 			Compile.Type C++
 		}
