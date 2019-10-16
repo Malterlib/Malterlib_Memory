@@ -663,12 +663,12 @@ namespace
 						{
 							"--test"
 							, fg_TestGetCurrentPath() / _pName
-							, "--test-logger"
+							, "--logger"
 							, "Registry"
 							, "--filter-results"
 							, "[\"All\"]"
 							, "--process-recursive"
-							, "--test-groups"
+							, "--groups"
 							, "[\"Performance\"]"
 						}
 					)
@@ -806,6 +806,8 @@ namespace
 					{
 						if (_OutputType == NMib::NProcess::EProcessLaunchOutputType_StdOut)
 							ResultParser.f_FeedText(_Output);
+						else
+							DMibDTrace("{}", _Output);
 					}
 				;
 				{

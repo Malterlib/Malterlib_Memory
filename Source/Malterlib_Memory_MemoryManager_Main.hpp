@@ -167,6 +167,8 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	TCMemoryManager<t_CParams>::~TCMemoryManager()
 	{
+		f_DestroyCleanupThreads();
+
 		// Remove all big blocks
 		{
 			DMibMemLightweightTrackDisableScope;
