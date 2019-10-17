@@ -40,6 +40,17 @@ namespace NMib::NMemory
 
 	void DMibCrossmoduleAPI CCrossModuleImplementation::fs_DestroyNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 	{
+#if !defined(DMibMemoryOverrideDll)
+		if (fg_GetSys()->f_IsDll())
+			mi_process_done();
+		else
+#endif
+		{
+#ifndef DMibConfig_HeapNeverDestroyed
+			if (!g_bMemoryManagerNeededAfterDestroy)
+				mi_process_done();
+#endif
+		}
 	}
 
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
