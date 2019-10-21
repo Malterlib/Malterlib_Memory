@@ -228,7 +228,7 @@ namespace NMib::NMemory
 					{
 						auto &LocalArena = *_pLocalArena;
 						auto &MemoryManager = *m_pMemoryManager;
-						if (MemoryManager.m_bCanDoLazyCheckout)
+						if (MemoryManager.m_bCanDoLazyCheckout && !LocalArena.m_TemporaryReturnCheckoutCount)
 						{
 							++MemoryManager.fp_CheckoutHelper(LocalArena)->m_CheckoutCount;
 							DMibFastCheck(fg_GetSys()->f_ThreadCreated());

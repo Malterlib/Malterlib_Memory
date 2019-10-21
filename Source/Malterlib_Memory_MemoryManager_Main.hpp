@@ -474,7 +474,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void *TCMemoryManager<t_CParams>::fp_AllocWithCheckout(mint &_Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena)
 	{
-		if (unlikely(m_bCanDoLazyCheckout))
+		if (unlikely(m_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount))
 		{
 			++fp_CheckoutHelper(_LocalArena)->m_CheckoutCount;
 			DMibFastCheck(fg_GetSys()->f_ThreadCreated());
@@ -502,7 +502,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchWithCheckout(mint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 	{
-		if (unlikely(m_bCanDoLazyCheckout))
+		if (unlikely(m_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount))
 		{
 			++fp_CheckoutHelper(_LocalArena)->m_CheckoutCount;
 			DMibFastCheck(fg_GetSys()->f_ThreadCreated());

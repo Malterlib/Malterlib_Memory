@@ -31,7 +31,7 @@ extern "C"
 		if (!NMib::g_bCreatedSystem)
 			NMib::NSys::fg_CreateSystem();
 #endif
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		__size = NMib::fg_AlignUp(__size, 16);
 #		if DMibConfig_MalterlibMemoryManager_Debug
@@ -47,7 +47,7 @@ extern "C"
 		if (!NMib::g_bCreatedSystem)
 			NMib::NSys::fg_CreateSystem();
 #endif
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		mint Size = __nmemb * __size;
 		Size = NMib::fg_AlignUp(Size, 16);
@@ -66,7 +66,7 @@ extern "C"
 		if (!NMib::g_bCreatedSystem)
 			NMib::NSys::fg_CreateSystem();
 #endif
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		__size = NMib::fg_AlignUp(__size, 16);
 #		if DMibConfig_MalterlibMemoryManager_Debug
@@ -78,14 +78,14 @@ extern "C"
 	
 	module_export void free (void *__ptr) __THROW
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		NMib::NMemory::CAllocator_NonTrackedHeap::f_FreeNoSize(__ptr);
 	}
 
 	module_export void cfree (void *__ptr) __THROW
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		NMib::NMemory::CAllocator_NonTrackedHeap::f_FreeNoSize(__ptr);
 	}
@@ -95,7 +95,7 @@ extern "C"
 		if (!NMib::g_bCreatedSystem)
 			NMib::NSys::fg_CreateSystem();
 #endif
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		__size = NMib::fg_AlignUp(__size, __alignment);
 #		if DMibConfig_MalterlibMemoryManager_Debug
@@ -110,7 +110,7 @@ extern "C"
 		if (!NMib::g_bCreatedSystem)
 			NMib::NSys::fg_CreateSystem();
 #endif
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		__size = NMib::fg_AlignUp(__size, NMib::NSys::NPrivate::g_PageSize);
 #		if DMibConfig_MalterlibMemoryManager_Debug
@@ -125,7 +125,7 @@ extern "C"
 		if (!NMib::g_bCreatedSystem)
 			NMib::NSys::fg_CreateSystem();
 #endif
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		__size = NMib::fg_AlignUp(__size, NMib::NSys::NPrivate::g_PageSize);
 #		if DMibConfig_MalterlibMemoryManager_Debug

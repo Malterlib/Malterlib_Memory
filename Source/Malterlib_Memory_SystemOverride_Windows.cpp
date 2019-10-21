@@ -119,21 +119,21 @@ extern "C"
 
 	MemDeclNaR void * DDefaultCallingConv malloc (size_t sz)
 	{		
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_Alloc(sz);
 	}
 
 	void * DDefaultCallingConv _malloc_base (size_t sz)
 	{		
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_Alloc(sz);
 	}
 
 	void * DDefaultCallingConv _malloc_dbg (size_t sz, int BlockType, const char *Filename, int Line) 
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_AllocDebug(sz, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 	}
@@ -146,7 +146,7 @@ extern "C"
 	
 	MemDeclNaR void * DDefaultCallingConv calloc (size_t nelem, size_t elsize)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = nelem * elsize;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Alloc(Size);
@@ -155,7 +155,7 @@ extern "C"
 	}
 	void * DDefaultCallingConv _calloc_dbg (size_t nelem, size_t elsize, int BlockType, const char *Filename, int Line) 
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = nelem * elsize;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_AllocDebug(Size, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
@@ -172,7 +172,7 @@ extern "C"
 		int * errno_tmp
 		)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = nNum * nSize;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_AllocDebug(Size, szFileName, nLine, (nBlockUse == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
@@ -183,7 +183,7 @@ extern "C"
 
 	void * DDefaultCallingConv _calloc_impl (size_t nelem, size_t elsize, int * errno_tmp)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = nelem * elsize;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Alloc(Size);
@@ -193,7 +193,7 @@ extern "C"
 
 	void * DDefaultCallingConv _calloc_base (size_t nelem, size_t elsize)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = nelem * elsize;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Alloc(Size);
@@ -203,7 +203,7 @@ extern "C"
 
 	_CRTIMP __checkReturn __bcount_opt(_Size) void * __cdecl _malloc_crt(__in size_t _Size)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		_Size = NMib::fg_AlignUp(_Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Alloc(_Size);
 		return addr;
@@ -211,7 +211,7 @@ extern "C"
 
 	_CRTIMP void * __cdecl _calloc_crt(size_t count, size_t size)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = count * size;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Alloc(Size);
@@ -220,14 +220,14 @@ extern "C"
 	}
 	_CRTIMP __checkReturn __bcount_opt(_Size) void * __cdecl _realloc_crt(__inout_opt void *_Ptr, __in size_t _Size)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		_Size = NMib::fg_AlignUp(_Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Resize(_Ptr, _Size, 0);
 		return addr;
 	}
 	_CRTIMP __checkReturn __bcount_opt(_Size*_Count) void * __cdecl _recalloc_crt(__inout_opt void *_Ptr, __in size_t _Count, __in size_t _Size)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = _Count * _Size;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0);
@@ -238,7 +238,7 @@ extern "C"
 	_ACRTIMP _CRTALLOCATOR _CRTRESTRICT
 	void * __cdecl _recalloc_base(_Pre_maybenull_ _Post_invalid_ void *_Ptr, _In_ size_t _Count, _In_ size_t _Size)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = _Count * _Size;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0);
@@ -253,19 +253,19 @@ extern "C"
 
 	MemDeclNa void DDefaultCallingConv free (void * ptr)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		NMib::NMemory::fg_FreeNoSize(ptr);
 	}
 
 	void DDefaultCallingConv _free_base (void * ptr)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		NMib::NMemory::fg_FreeNoSize(ptr);
 	}
 
 	void DDefaultCallingConv _free_dbg (void * ptr, int) 
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		NMib::NMemory::fg_FreeNoSize(ptr);
 	}	
 	
@@ -278,7 +278,7 @@ extern "C"
 
 	MemDeclNaR void * DDefaultCallingConv memalign (size_t alignment, size_t size)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		return NMib::NMemory::fg_AllocAligned(size, alignment);
 	}	
 	
@@ -290,28 +290,28 @@ extern "C"
 
 	MemDeclNaR void * DDefaultCallingConv realloc (void * ptr, size_t sz)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_Resize(ptr, sz, 0);
 	}
 	
 	void * DDefaultCallingConv _realloc_base (void * ptr, size_t sz)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_Resize(ptr, sz, 0);
 	}
 	
 	void * DDefaultCallingConv _realloc_dbg (void * ptr, size_t sz, int BlockType, const char *Filename, int Line) 
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_ResizeDebug(ptr, sz, 0, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 	}
 
 	MemDeclNaR void * DDefaultCallingConv _recalloc(void * memblock,size_t count,size_t size)
 	{
-		DMibMemLightweightTrackAddFlagsScope(EMemoryReportLightweightScopeFlag_InCScope);
+		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = size * count;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		return NMib::NMemory::fg_Resize(memblock, Size, 0);

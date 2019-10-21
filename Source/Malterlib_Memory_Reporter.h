@@ -70,12 +70,30 @@ namespace NMib::NMemory
 		EMemoryReportLightweightScopeFlag m_OldFlags;
 	};
 
+	class CMemoryReportLightweightScopeFlagLowLevelScope
+	{
+	public:
+		CMemoryReportLightweightScopeFlagLowLevelScope(EMemoryReportLightweightScopeFlag _AddFlags)
+		{
+			m_OldFlags = fg_MemoryLightweightScopeAddFlags(_AddFlags);
+		}
+		~CMemoryReportLightweightScopeFlagLowLevelScope()
+		{
+			fg_MemoryLightweightScopeSetFlags(m_OldFlags);
+		}
+
+	private:
+		EMemoryReportLightweightScopeFlag m_OldFlags;
+	};
+
 	#define DMibMemLightweightTrackDisableScope NMib::NMemory::CMemoryReportLightweightScope DisableLightweightTrack(nullptr)
 	#define DMibMemLightweightTrackAddFlagsScope(d_Flags) NMib::NMemory::CMemoryReportLightweightScopeFlagScope AddLightweightTrackScopFlags(d_Flags)
+	#define DMibMemLightweightTrackAddFlagsLowLevelScope(d_Flags) NMib::NMemory::CMemoryReportLightweightScopeFlagLowLevelScope AddLightweightTrackScopFlags(d_Flags)
 #else
 	#define DMibMemLightweightTrack(d_Expression)
 	#define DMibMemLightweightTrackDisableScope
 	#define DMibMemLightweightTrackAddFlagsScope(d_Flags)
+	#define DMibMemLightweightTrackAddFlagsLowLevelScope(d_Flags)
 #endif
 
 #if DMibConfig_Memory_Shims_Enable
