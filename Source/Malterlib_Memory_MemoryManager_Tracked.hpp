@@ -342,7 +342,7 @@ namespace NMib::NMemory
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 
-		_Alignment = fg_Max(_Alignment, sizeof(void *) * 2);
+		_Alignment = fg_Max(_Alignment, sizeof(void *) * 2, NTraits::TCAlignmentOf<CPreBlockData>::mc_Value);
 
 		mint NeededSize = fg_AlignUp(_Size, _Alignment) + fg_AlignUp(sizeof(CPreBlockData), _Alignment);
 		uint8 *pAlloc = (uint8 *)t_CSuper::f_AllocAlignedWithSize(NeededSize, _Alignment);
@@ -353,6 +353,7 @@ namespace NMib::NMemory
 		CPreBlockData *pPreBlock = (CPreBlockData *)pRet - 1;
 
 		pPreBlock->m_HeaderSize = pRet - pAlloc;
+		pPreBlock->m_TotalSize = NeededSize;
 
 		_Size = NeededSize - pPreBlock->m_HeaderSize;
 
@@ -371,6 +372,8 @@ namespace NMib::NMemory
 		};
 
 		CFunctorOptions Options;
+
+		_Alignment = fg_Max(_Alignment, sizeof(void *) * 2, NTraits::TCAlignmentOf<CPreBlockData>::mc_Value);
 
 		Options.m_pFunctor = &_Functor;
 		Options.m_RequestedSize = fg_AlignUp(_Size, _Alignment) + fg_AlignUp(sizeof(CPreBlockData), _Alignment);
@@ -392,6 +395,7 @@ namespace NMib::NMemory
 					CPreBlockData *pPreBlock = (CPreBlockData *)pRet - 1;
 
 					pPreBlock->m_HeaderSize = pRet - pAlloc;
+					pPreBlock->m_TotalSize = _Size;
 
 					mint Size = _Size - pPreBlock->m_HeaderSize;
 
@@ -446,7 +450,7 @@ namespace NMib::NMemory
 		CPreBlockData *pPreBlock;
 		uint8 *pAlloc;
 		{
-			mint Alignment = sizeof(void *) * 2;
+			mint Alignment = fg_Max(sizeof(void *) * 2, NTraits::TCAlignmentOf<CPreBlockData>::mc_Value);
 
 			mint NeededSize = fg_AlignUp(_Size, Alignment) + fg_AlignUp(sizeof(CPreBlockData), Alignment);
 			pAlloc = (uint8 *)t_CSuper::f_Realloc(pOldMemory, NeededSize, OldSize);
@@ -457,6 +461,7 @@ namespace NMib::NMemory
 			pPreBlock = (CPreBlockData *)pRet - 1;
 
 			pPreBlock->m_HeaderSize = pRet - pAlloc;
+			pPreBlock->m_TotalSize = NeededSize;
 
 			_Size = NeededSize - pPreBlock->m_HeaderSize;
 		}
@@ -503,7 +508,7 @@ namespace NMib::NMemory
 		CPreBlockData *pPreBlock;
 		uint8 *pAlloc;
 		{
-			mint Alignment = sizeof(void *) * 2;
+			mint Alignment = fg_Max(sizeof(void *) * 2, NTraits::TCAlignmentOf<CPreBlockData>::mc_Value);
 
 			mint NeededSize = fg_AlignUp(_Size, Alignment) + fg_AlignUp(sizeof(CPreBlockData), Alignment);
 			pAlloc = (uint8 *)t_CSuper::f_Resize(pOldMemory, NeededSize, OldSize);
@@ -514,6 +519,7 @@ namespace NMib::NMemory
 			pPreBlock = (CPreBlockData *)pRet - 1;
 
 			pPreBlock->m_HeaderSize = pRet - pAlloc;
+			pPreBlock->m_TotalSize = NeededSize;
 
 			_Size = NeededSize - pPreBlock->m_HeaderSize;
 		}
@@ -573,7 +579,7 @@ namespace NMib::NMemory
 
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportExpression(mint Size = f_SizePadded(_Size));
-		t_CSuper::f_Free(pMemory, _Size + pPreBlock->m_HeaderSize);
+		t_CSuper::f_Free(pMemory, pPreBlock->m_TotalSize);
 		DMibMemoryReportFree(this, mp_pName, _pMemory, Size, &AllocationInfo);
 	}
 

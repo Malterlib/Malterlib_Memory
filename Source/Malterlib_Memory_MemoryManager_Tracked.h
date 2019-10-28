@@ -52,6 +52,7 @@ namespace NMib::NMemory
 		struct DMibPAlignType(CPreBlockData, 16)
 		{
 			mint m_HeaderSize;
+			mint m_TotalSize;
 			t_CAllocationInfo m_AllocationInfo;
 		};
 
