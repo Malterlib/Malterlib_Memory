@@ -652,6 +652,7 @@ namespace NMib::NMemory
 #ifndef DMibNoAggregateConstexpr
 		constexpr TCPoolAggregateData(EAggregateInitialization _Init)
 			: t_CLock(_Init)
+			, m_bDoneInit(false)
 		{
 		}
 		inline_always TCPoolAggregateData()
@@ -1114,7 +1115,9 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CType, mint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
-	NStorage::TCAggregate<typename TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>::CPoolType, 16> TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>::ms_Pool = {DAggregateInit};
+	constinit NStorage::TCAggregate<typename TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>::CPoolType, 16>
+		TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>::ms_Pool = {DAggregateInit}
+	;
 
 	template <typename t_CType>
 	void fg_StaticPoolDelete(t_CType *_pToDelete)

@@ -26,16 +26,16 @@ namespace NMib
 //		NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<int(NMib::NMemory::EDebugMemoryManager_CheckUpper) | int(NMib::NMemory::EDebugMemoryManager_ProtectOnDemand)>> g_DebugMemoryManager = {0};
 
 #if 1
-	NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<(NMib::NMemory::EDebugMemoryManager)int(NMib::NMemory::EDebugMemoryManager_CheckUpper)>> g_DebugMemoryManager
+	constinit NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<(NMib::NMemory::EDebugMemoryManager)int(NMib::NMemory::EDebugMemoryManager_CheckUpper)>> g_DebugMemoryManager
 		= {DAggregateInit}
 	;
 #else
-	NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<(NMib::NMemory::EDebugMemoryManager)int(0)>> g_DebugMemoryManager = {DAggregateInit};
+	constinit NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<(NMib::NMemory::EDebugMemoryManager)int(0)>> g_DebugMemoryManager = {DAggregateInit};
 #endif
 
-	NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
-	mint g_MemoryManagerForkedCount = 0;
-	bool g_MemoryManagerUnforked = false;
+	constinit NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
+	constinit mint g_MemoryManagerForkedCount = 0;
+	constinit bool g_MemoryManagerUnforked = false;
 
 	NThread::TMutual<NThread::CEventAutoResetAggregate, true> &fg_GetDebugMemoryManagerLock()
 	{

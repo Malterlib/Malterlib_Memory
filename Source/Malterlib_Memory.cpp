@@ -193,7 +193,7 @@ namespace NMib::NMemory
 
 #	if DMibConfig_Memory_Shims_EnableGlobal
 	DMibCompilerMessage("---- Global memory shims enabled");
-	NAtomic::TCAtomicAggregate<CGlobalReportMemory *> g_pGlobalMemoryReporter = {0};
+	constinit NAtomic::TCAtomicAggregate<CGlobalReportMemory *> g_pGlobalMemoryReporter = {0};
 #	endif
 
 #	if DMibConfig_Memory_Shims_EnableLocal
@@ -205,7 +205,7 @@ namespace NMib::NMemory
 		TCAutoClearInt<mint> m_ReportDepth;
 	};
 
-	NStorage::TCAggregate
+	constinit NStorage::TCAggregate
 	<
 		NThread::TCThreadLocal
 		<

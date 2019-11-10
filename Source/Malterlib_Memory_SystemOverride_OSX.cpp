@@ -125,7 +125,7 @@ namespace NMib
 		void fg_MalterlibSystem_ForkChild();
 
 #ifdef DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport
-		NStorage::TCAggregateSimple<NInstrumentation::CMHook> g_FunctionHooks = {DAggregateInit};
+		constinit NStorage::TCAggregateSimple<NInstrumentation::CMHook> g_FunctionHooks = {DAggregateInit};
 #endif
 
 		bool g_bAtExitCalled = false;
@@ -213,7 +213,7 @@ namespace
 		mint m_iThreadLocalReentrant;
 	};
 	
-	NStorage::TCAggregateSimple<CLowLevelGlobalState> g_LowLevelGlobalState = {DAggregateInit};
+	constinit NStorage::TCAggregateSimple<CLowLevelGlobalState> g_LowLevelGlobalState = {DAggregateInit};
 	
 	struct CGlobalState
 	{
@@ -230,7 +230,7 @@ namespace
 #endif
 	};
 	
-	NStorage::TCAggregateSimple<CGlobalState> g_GlobalState = {DAggregateInit};
+	constinit NStorage::TCAggregateSimple<CGlobalState> g_GlobalState = {DAggregateInit};
 }
 
 extern "C"
@@ -1362,7 +1362,7 @@ namespace
 		NContainer::TCRegions<mint, CRegionData, CAllocator_VirtualNoTracking> m_Regions;
 	};
 
-	NStorage::TCAggregate<NThread::TCThreadLocal<CInvalidRegionCacheThreadLocal>> g_InvalidRegionCache = {DAggregateInit};
+	constinit NStorage::TCAggregate<NThread::TCThreadLocal<CInvalidRegionCacheThreadLocal>> g_InvalidRegionCache = {DAggregateInit};
 
 	int g_bIsBeingDebugged = -1;
 
@@ -2827,7 +2827,7 @@ extern "C"
 #endif
 	}
 
-	NAtomic::TCAtomic<mint> g_Sequence = {DAggregateInit};
+	constinit NAtomic::TCAtomic<mint> g_Sequence = {DAggregateInit};
 
 	assure_used mach_msg_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_mach_msg_trap
 		(

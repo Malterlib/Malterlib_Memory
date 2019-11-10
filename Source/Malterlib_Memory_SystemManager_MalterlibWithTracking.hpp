@@ -5,11 +5,11 @@
 
 namespace NMib
 {
-	NMib::NStorage::TCAggregateSimple<CMemoryManager> g_MainHeap = {DAggregateInit};
-	bool g_bMainHeapConstructed = false;
+	constinit NMib::NStorage::TCAggregateSimple<CMemoryManager> g_MainHeap = {DAggregateInit};
+	constinit bool g_bMainHeapConstructed = false;
 
-	NMib::NStorage::TCAggregateSimple<CMemoryManagerNonTracked> g_NonTrackedHeap = {DAggregateInit};
-	bool g_bNonTrackedHeapConstructed = false;
+	constinit NMib::NStorage::TCAggregateSimple<CMemoryManagerNonTracked> g_NonTrackedHeap = {DAggregateInit};
+	constinit bool g_bNonTrackedHeapConstructed = false;
 
 #if DMibEnableSafeCheck > 0
 	static auto &fg_NonTrackedHeap()
@@ -29,9 +29,9 @@ namespace NMib
 	#define DMainHeap g_MainHeap
 #endif
 
-	NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
-	mint g_MemoryManagerForkedCount = 0;
-	bool g_MemoryManagerUnforked = false;
+	constinit NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
+	constinit mint g_MemoryManagerForkedCount = 0;
+	constinit bool g_MemoryManagerUnforked = false;
 }
 
 namespace NMib::NMemory

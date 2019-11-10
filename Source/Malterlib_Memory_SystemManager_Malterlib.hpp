@@ -10,12 +10,12 @@
 
 namespace NMib
 {
-	NMib::NStorage::TCAggregateSimple<CMemoryManager> g_MainHeap = {DAggregateInit};
-	bool g_bMainHeapConstructed = false;
+	constinit NMib::NStorage::TCAggregateSimple<CMemoryManager> g_MainHeap = {DAggregateInit};
+	constinit bool g_bMainHeapConstructed = false;
 
-	NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
-	mint g_MemoryManagerForkedCount = 0;
-	bool g_MemoryManagerUnforked = false;
+	constinit NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
+	constinit mint g_MemoryManagerForkedCount = 0;
+	constinit bool g_MemoryManagerUnforked = false;
 
 #if DMibEnableSafeCheck > 0
 	static auto &fg_MainHeap()

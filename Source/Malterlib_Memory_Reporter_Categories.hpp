@@ -30,12 +30,12 @@ namespace NMib::NMemory
 		ch8 m_Name[64];
 	};
 
-	NThread::CMutualAggregate g_AllCategoriesLock = {DAggregateInit};
-	bool g_bAllCategoriesInit = true;
-	NIntrusive::TCAVLTreeAggregate<&CMemoryCategory::m_Link, CMemoryCategory::CCompare> g_AllCategories = {DAggregateInit};
-	NStorage::TCAggregateSimple<TCPoolGrowing<CDynamicMemoryCategory, 128, NMib::NThread::CNoLock, CAllocator_VirtualNoTracking>> g_CategoriesPool = {DAggregateInit};
+	constinit NThread::CMutualAggregate g_AllCategoriesLock = {DAggregateInit};
+	constinit bool g_bAllCategoriesInit = true;
+	constinit NIntrusive::TCAVLTreeAggregate<&CMemoryCategory::m_Link, CMemoryCategory::CCompare> g_AllCategories = {DAggregateInit};
+	constinit NStorage::TCAggregateSimple<TCPoolGrowing<CDynamicMemoryCategory, 128, NMib::NThread::CNoLock, CAllocator_VirtualNoTracking>> g_CategoriesPool = {DAggregateInit};
 
-	NAtomic::TCAtomicAggregate<int64> g_CyclesTimer = {DAggregateInit};
+	constinit NAtomic::TCAtomicAggregate<int64> g_CyclesTimer = {DAggregateInit};
 	int64 g_CyclesTimerFrequency = 0;
 
 #ifdef DPlatformFamily_Windows
@@ -247,9 +247,9 @@ namespace NMib::NMemory
 
 	};
 
-	NThread::CMutualAggregate g_PerfcountersLock = {DAggregateInit};
-	bool g_PerfcountersInit = false;
-	NStorage::TCAggregateSimple<CPerformanceCounters> g_Perfcounters = {DAggregateInit};
+	constinit NThread::CMutualAggregate g_PerfcountersLock = {DAggregateInit};
+	constinit bool g_PerfcountersInit = false;
+	constinit NStorage::TCAggregateSimple<CPerformanceCounters> g_Perfcounters = {DAggregateInit};
 #endif
 
 	void fg_InitCategories()

@@ -14,7 +14,7 @@ namespace NMib
 		void f_Unregister(NMemory::CMemoryManagerCrossModule *_pModule) override;
 	};
 	
-	NStorage::TCAggregateSimple<CMemoryManagerCrossModuleInterfaceServer> g_CrossModuleInterfaceServer = {DAggregateInit};
+	constinit NStorage::TCAggregateSimple<CMemoryManagerCrossModuleInterfaceServer> g_CrossModuleInterfaceServer = {DAggregateInit};
 
 	void CSystem::fp_CreateNonTrackedMemoryManager()
 	{
