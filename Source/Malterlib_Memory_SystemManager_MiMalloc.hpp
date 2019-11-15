@@ -35,6 +35,7 @@ namespace NMib::NMemory
 #endif
 	void DMibCrossmoduleAPI CCrossModuleImplementation::fs_CreateNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 	{
+		mi_process_load();
 		mi_process_init();
 	}
 
@@ -60,6 +61,7 @@ namespace NMib::NMemory
 		inline_always static void DMibCrossmoduleAPI fs_CreateMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
 			DMibMemoryReportAllocatorName(g_pMemoryManagerName, g_pMemoryManagerName);
+			mi_process_load();
 			mi_process_init();
 		}
 
