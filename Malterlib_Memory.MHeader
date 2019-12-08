@@ -8,13 +8,13 @@ Import "Apps/*/*.MHeader"
 {
 	|
 	{
-		MalterlibMemoryManager MiMalloc
+		MalterlibMemoryManager "MiMalloc"
 		MalterlibEnableThirdPartyComparisonTests true
 	}
 
 	Repository
 	{
-		Type External
+		Type "External"
 		Remotes "upstream=https://github.com/microsoft/mimalloc.git;@(Repository.Remotes)"
 	}
 }
@@ -23,13 +23,13 @@ Import "Apps/*/*.MHeader"
 {
 	|
 	{
-		MalterlibMemoryManager TcMalloc
+		MalterlibMemoryManager "TcMalloc"
 		MalterlibEnableThirdPartyComparisonTests true
 	}
 
 	Repository
 	{
-		Type External
+		Type "External"
 		Remotes "upstream=https://github.com/gperftools/gperftools.git;@(Repository.Remotes)"
 	}
 }
@@ -40,7 +40,7 @@ Import "Apps/*/*.MHeader"
 	{
 		&
 		{
-			CompileDialect C
+			CompileDialect "C"
 		}
 
 		SearchPath "@('../../External/gperftools/src'->MakeAbsolute());@(Compile.SearchPath)"
@@ -52,11 +52,11 @@ Import "Apps/*/*.MHeader"
 		SearchPath "@('Source/TCMalloc/Shared'->MakeAbsolute());@(Compile.SearchPath)"
 		PreprocessorDefines "TCMALLOC_NO_REPLACE_SYSTEM_MALLOC;@(Compile.PreprocessorDefines)"
 	}
-	%Group TcMalloc
+	%Group "TcMalloc"
 	{
 		!!MalterlibEnableThirdPartyComparisonTests true
 		%File "Source/TCMalloc/^*"
-		%Group External
+		%Group "External"
 		{
 			Property
 			{
@@ -66,7 +66,7 @@ Import "Apps/*/*.MHeader"
 				ExcludeFiles "*/preamble_patcher_test.cc;@(ExcludeFiles)"
 				ExcludeFiles "*/addr2line-pdb.c;@(ExcludeFiles)"
 			}
-			%Group Source
+			%Group "Source"
 			{
 				Compile
 				{
@@ -77,7 +77,7 @@ Import "Apps/*/*.MHeader"
 				}
 				Compile.Disabled true
 				{
-					!MemoryManagerTestEnable_TcMalloc "true"
+					!MemoryManagerTestEnable_TcMalloc true
 				}
 
 				!!MalterlibEnableThirdPartyComparisonTests true
@@ -96,83 +96,83 @@ Import "Apps/*/*.MHeader"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily Windows
+						!!PlatformFamily "Windows"
 					}
 				}
 				%File "../../External/gperftools/src/profiledata.cc"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily Windows
+						!!PlatformFamily "Windows"
 					}
 				}
 				%File "../../External/gperftools/src/profile-handler.cc"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily Windows
+						!!PlatformFamily "Windows"
 					}
 				}
 				%File "../../External/gperftools/src/heap-profile-table.cc"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily Windows
+						!!PlatformFamily "Windows"
 					}
 				}
 				%File "../../External/gperftools/src/profiler.cc"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily Windows
+						!!PlatformFamily "Windows"
 					}
 				}
 				%File "../../External/gperftools/src/maybe_threads.cc"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily Windows
+						!!PlatformFamily "Windows"
 					}
 				}
 				%File "../../External/gperftools/src/emergency_malloc.cc"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily Windows
+						!!PlatformFamily "Windows"
 					}
 				}
 				%File "../../External/gperftools/src/emergency_malloc_for_stacktrace.cc"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily Windows
+						!!PlatformFamily "Windows"
 					}
 				}
 				%File "../../External/gperftools/src/heap-checker.cc"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily Windows
+						!!PlatformFamily "Windows"
 					}
 				}
 				%File "../../External/gperftools/src/heap-checker-bcad.cc"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily Windows
+						!!PlatformFamily "Windows"
 					}
 				}
-				%Group base
+				%Group "base"
 				{
 					%File "../../External/gperftools/src/base/thread_lister.c"
 					{
 						Compile.Disabled true
 						{
-							!!PlatformFamily Windows
+							!!PlatformFamily "Windows"
 						}
 					}
 				}
-				%Group windows
+				%Group "windows"
 				{
 					Compile.Disabled true
 					{
@@ -200,7 +200,7 @@ Import "Apps/*/*.MHeader"
 {
 	|
 	{
-		MalterlibMemoryManager MiMalloc
+		MalterlibMemoryManager "MiMalloc"
 		MalterlibEnableThirdPartyComparisonTests true
 	}
 
@@ -211,8 +211,8 @@ Import "Apps/*/*.MHeader"
 	{
 		&
 		{
-			PlatformFamily Linux
-			!HostPlatformFamily Linux
+			PlatformFamily "Linux"
+			!HostPlatformFamily "Linux"
 		}
 	}
 	Compile
@@ -224,13 +224,13 @@ Import "Apps/*/*.MHeader"
 	}
 	Compile
 	{
-		!!CompileDialect C
+		!!CompileDialect "C"
 
 		PreprocessorDefines "MI_STAT=0;@(Compile.PreprocessorDefines)"
 	}
-	%Target Lib_mimalloc-static
+	%Target "Lib_mimalloc-static"
 	{
-		%Group include
+		%Group "include"
 		{
 			%File "../../External/mimalloc/include/^*"
 		}
@@ -239,9 +239,9 @@ Import "Apps/*/*.MHeader"
 
 %Group "{Malterlib}/{Lib_Malterlib_Memory}"
 {
-	%Group Memory
+	%Group "Memory"
 	{
-		%Group Include
+		%Group "Include"
 		{
 			Compile.Type "C++"
 			{
@@ -266,7 +266,7 @@ Import "Apps/*/*.MHeader"
 		{
 			Compile.Disabled true
 		}
-		%Group Documentation
+		%Group "Documentation"
 		{
 			%File "Documentation/*"
 			%File "Documentation/*.md"
@@ -308,7 +308,7 @@ Property
 	}
 }
 
-%Target Dll_Test_Malterlib_Helper_Memory
+%Target "Dll_Test_Malterlib_Helper_Memory"
 {
 	Property
 	{
@@ -324,11 +324,11 @@ Property
 	}
 	Compile
 	{
-		!!CompileDialect C
+		!!CompileDialect "C"
 		PrefixHeader ""
 	}
-	%File Test/Test_Malterlib_Memory_DllMain.cpp
-	%Dependency Lib_Malterlib
+	%File "Test/Test_Malterlib_Memory_DllMain.cpp"
+	%Dependency "Lib_Malterlib"
 }
 
 
@@ -362,7 +362,7 @@ Property
 				MalterlibEnableThirdPartyComparisonTests true
 				!
 				{
-					Architecture x86
+					Architecture "x86"
 				}
 			}
 		}
@@ -386,62 +386,62 @@ Property
 	{
 		&
 		{
-			CompileDialect C
+			CompileDialect "C"
 			MalterlibEnableThirdPartyComparisonTests true
 		}
 		SearchPath "@('../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
 	}
 	Compile
 	{
-		!!CompileDialect C
+		!!CompileDialect "C"
 
 		SearchPath "@('..'->MakeAbsolute());@(Compile.SearchPath)"
 
-		Warnings_DeprecatedDeclarations "false"
+		Warnings_DeprecatedDeclarations false
 		{
-			!!GeneratorFamily Xcode
+			!!GeneratorFamily "Xcode"
 		}
 
 		PreprocessorDefines "PERFTOOLS_DLL_DECL=;@(Compile.PreprocessorDefines)"
 		PreprocessorDefines "DMemoryManagerTestEnable_OSX;@(Compile.PreprocessorDefines)"
 		{
-			!!MemoryManagerTestEnable_OSX "true"
+			!!MemoryManagerTestEnable_OSX true
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_MalterlibNew;@(Compile.PreprocessorDefines)"
 		{
-			!!MemoryManagerTestEnable_MalterlibNew "true"
+			!!MemoryManagerTestEnable_MalterlibNew true
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_StdLib;@(Compile.PreprocessorDefines)"
 		{
-			!!MemoryManagerTestEnable_StdLib "true"
+			!!MemoryManagerTestEnable_StdLib true
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_Application;@(Compile.PreprocessorDefines)"
 		{
-			!!MemoryManagerTestEnable_Application "true"
+			!!MemoryManagerTestEnable_Application true
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_Virtual;@(Compile.PreprocessorDefines)"
 		{
-			!!MemoryManagerTestEnable_Virtual "true"
+			!!MemoryManagerTestEnable_Virtual true
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_WindowsDefault;@(Compile.PreprocessorDefines)"
 		{
-			!!MemoryManagerTestEnable_WindowsDefault "true"
+			!!MemoryManagerTestEnable_WindowsDefault true
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_WindowsLF;@(Compile.PreprocessorDefines)"
 		{
-			!!MemoryManagerTestEnable_WindowsLF "true"
+			!!MemoryManagerTestEnable_WindowsLF true
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_TcMalloc;@(Compile.PreprocessorDefines)"
 		{
 			&
 			{
-				MemoryManagerTestEnable_TcMalloc "true"
-				!Architecture x86
+				MemoryManagerTestEnable_TcMalloc true
+				!Architecture "x86"
 			}
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_MiMalloc;@(Compile.PreprocessorDefines)"
 		{
-			!!MemoryManagerTestEnable_MiMalloc "true"
+			!!MemoryManagerTestEnable_MiMalloc true
 		}
 		PreprocessorDefines "DMibConfig_OverrideSystemMalloc;@(Compile.PreprocessorDefines)"
 		{
@@ -449,33 +449,33 @@ Property
 		}
 		PreprocessorDefines "DMibConfig_MemoryManager_Use@(MalterlibMemoryManager);@(Compile.PreprocessorDefines)"
 	}
-	%Group Documentation
+	%Group "Documentation"
 	{
-		%File Documentation/MemoryManager.md
-		%File Documentation/MemoryManagerSlabs.md
-		%File ../Core/Documentation/Markdown.css
+		%File "Documentation/MemoryManager.md"
+		%File "Documentation/MemoryManagerSlabs.md"
+		%File "../Core/Documentation/Markdown.css"
 	}
-	%Group Tests
+	%Group "Tests"
 	{
-		%Group Performance
+		%Group "Performance" 
 		{
 			Compile.Disabled true
 			{
 				!!MalterlibTestsMem_EnablePerfTests false
 			}
-			%File Test/Test_Malterlib_Memory_MemoryManager_Performance.h
-			%File Test/Test_Malterlib_Memory_MemoryManager_Performance.cpp
+			%File "Test/Test_Malterlib_Memory_MemoryManager_Performance.h"
+			%File "Test/Test_Malterlib_Memory_MemoryManager_Performance.cpp"
 		}
 
-		%File Test/Test_Malterlib_Memory_DebugMemoryManager.cpp
-		%File Test/Test_Malterlib_Memory_MemoryManager_Basics.cpp
-		%File Test/Test_Malterlib_Memory_MemoryManager_Debug.cpp
-		%File Test/Test_Malterlib_Memory_Pool.cpp
+		%File "Test/Test_Malterlib_Memory_DebugMemoryManager.cpp"
+		%File "Test/Test_Malterlib_Memory_MemoryManager_Basics.cpp"
+		%File "Test/Test_Malterlib_Memory_MemoryManager_Debug.cpp"
+		%File "Test/Test_Malterlib_Memory_Pool.cpp"
 	}
-	%Dependency Lib_Malterlib
+	%Dependency "Lib_Malterlib"
 	%Dependency "Dll_Test_Malterlib_Helper_Memory"
 	{
-		Dependency.Link "false"
+		Dependency.Link false
 	}
 	%Dependency "Lib_mimalloc-static"
 	{

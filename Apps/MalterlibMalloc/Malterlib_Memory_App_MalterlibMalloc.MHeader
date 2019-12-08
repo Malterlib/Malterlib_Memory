@@ -14,17 +14,17 @@
 	Target
 	{
 		FileName "MalterlibMalloc"
-		Type SharedDynamicLibrary
+		Type "SharedDynamicLibrary"
 		GenerateScheme true
 		{
-			!!GeneratorFamily Xcode
+			!!GeneratorFamily "Xcode"
 		}
 		LinkWithLibraries "-install_name @rpath/MalterlibMalloc.dylib @(Target.LinkWithLibraries)"
 		{
-			!!PlatformFamily OSX
+			!!PlatformFamily "OSX"
 		}
 	}
-	%Group Source
+	%Group "Source"
 	{
 		%File "Source/*"
 		%File "../../Source/Malterlib_Memory_SystemOverride_OSXLibSystem.cpp"
@@ -44,7 +44,7 @@
 	Property.MalterlibMemoryManager_OverrideDll true
 	Compile
 	{
-		!!CompileDialect C
+		!!CompileDialect "C"
 		PreprocessorDefines "DMibMemoryOverrideDll;@(Compile.PreprocessorDefines)"
 	}
 	
