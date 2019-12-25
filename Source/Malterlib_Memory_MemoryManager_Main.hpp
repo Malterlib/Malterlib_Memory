@@ -468,6 +468,10 @@ namespace NMib::NMemory
 	void TCMemoryManager<t_CParams>::f_SetNumaNode(ENumaNode _NumaNode)
 	{
 		(*m_LocalNumaNode).m_Node = _NumaNode;
+
+		if (m_bCanDoLazyCheckout)
+			f_LazyReturnCheckout();
+
 		m_LocalArena.f_ReinitForThread();
 	}
 
