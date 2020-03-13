@@ -6,6 +6,7 @@
 #include <Mib/Core/Core>
 #include <Mib/Core/System>
 #include <Mib/Instrumentation/FunctionHook>
+#include <Mib/Memory/Pool>
 
 #include <malloc/malloc.h>
 #include <stdlib.h>
@@ -1359,7 +1360,9 @@ namespace
 			}
 		};
 
-		NContainer::TCRegions<mint, CRegionData, CAllocator_VirtualNoTracking> m_Regions;
+		using CRegionAllocator = TCStaticPoolAllocator<NContainer::TCMapTreeMember<mint, NContainer::TCRegionData<mint, CRegionData>>, 128, CAllocator_VirtualNoTracking>;
+
+		NContainer::TCRegions<mint, CRegionData, CRegionAllocator> m_Regions;
 	};
 
 	constinit NStorage::TCAggregate<NThread::TCThreadLocal<CInvalidRegionCacheThreadLocal>> g_InvalidRegionCache = {DAggregateInit};
@@ -1373,7 +1376,7 @@ namespace
 
 	inline_never bool fg_IsInvalidRegionSlowPath(const void *_pMemory)
 	{
-		if (g_InvalidRegionCache.f_WasDestructed() || !g_bCreatedSystem)
+		if (g_InvalidRegionCache.f_WasDestructed() || !g_bCreatedSystem || fg_GetSys()->f_ThreadDestroyed() || !fg_GetSys()->f_ThreadCreated())
 			return false;
 
 		auto &Cache = **g_InvalidRegionCache;
