@@ -139,9 +139,14 @@ namespace NMib::NMemory
 			if (!m_bProtectOnDemand || m_bProtectionDemanded)
 				NSys::fg_Mem_VirtualProtect(pBlockStart, GranularityProtect*2 + UserNeededSize, EProtect_ReadWrite);
 
-			m_Heap.f_Free(pBlock, pMemBlock->m_RealSize);
+			mint Size = pMemBlock->m_RealSize;
 
 			m_FreeBlocks.f_Remove(pMemBlock);
+
+			{
+				DMibUnlock(m_Lock);
+				m_Heap.f_Free(pBlock, Size);
+			}
 		}
 
 		~TCDebugMemoryManager()
@@ -149,6 +154,8 @@ namespace NMib::NMemory
 			// Memory leaks
 			//if (!m_Blocks.f_IsEmpty())
 			//	DMibPDebugBreak;
+
+			DMibLock(m_Lock);
 
 			while (!m_FreeBlocks.f_IsEmpty())
 				fp_RemoveFreeBlock();
@@ -185,13 +192,18 @@ namespace NMib::NMemory
 
 		void *f_AllocWithSize(mint &_Size, mint _Alignment)
 		{
-			DMibLock(m_Lock);
 			_Alignment = fg_Max(mint(1 << EMemoryManagerAlignment), _Alignment);
 			mint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
 			if (_Size == 0)
 				_Size = 1;
 
 			_Size = fg_AlignUp(_Size, _Alignment);
+			mint UserNeededSize = fg_AlignUp(_Size, GranularityProtect);
+			mint NeededSize = UserNeededSize + GranularityProtect*3;
+
+			uint8 *pBlock = (uint8 *)m_Heap.f_AllocAlignedWithSize(NeededSize, _Alignment);
+
+			DMibLock(m_Lock);
 
 			CReportMemoryLightweight *pReporter = (CReportMemoryLightweight *)m_Heap.f_GetCustomThreadLocal(0);
 			if (pReporter)
@@ -199,10 +211,6 @@ namespace NMib::NMemory
 
 			mint OriginalSize = _Size;
 
-			mint UserNeededSize = fg_AlignUp(_Size, GranularityProtect);
-			mint NeededSize = UserNeededSize + GranularityProtect*3;
-
-			uint8 *pBlock = (uint8 *)m_Heap.f_AllocAlignedWithSize(NeededSize, _Alignment);
 			uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
 			uint8 *pRetBlock = pBlockStart + GranularityProtect;
 
@@ -274,11 +282,10 @@ namespace NMib::NMemory
 			if (!m_bProtectOnDemand || m_bProtectionDemanded)
 				NSys::fg_Mem_VirtualProtect(pRetBlock, UserNeededSize, EProtect_Exec);
 
+			m_Blocks.f_Remove(pMemBlock);
 
 			while (m_nFreeMemBytes > m_nMaxFreeMemory)
 				fp_RemoveFreeBlock();
-
-			m_Blocks.f_Remove(pMemBlock);
 		}
 
 		mint f_Size(const void *_pBlock) const

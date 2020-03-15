@@ -1407,7 +1407,7 @@ namespace
 		return Info.user_tag < 240 || Info.user_tag > 255;
 	}
 
-	inline_always bool fg_IsInvalidRegion(const void *_pMemory)
+	[[maybe_unused]] inline_always bool fg_IsInvalidRegion(const void *_pMemory)
 	{
 		if ((uint8 *)_pMemory != fg_AlignUp((uint8 *)_pMemory, 16))
 			return true; // Unaligned memory can never be OK
