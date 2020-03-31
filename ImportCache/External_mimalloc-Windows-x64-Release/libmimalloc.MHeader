@@ -20,11 +20,19 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 		{
 			Compile.Type C++
 		}
+		%File "../../../../External/mimalloc/src/random.c"
+		{
+			Compile.Type C++
+		}
 		%File "../../../../External/mimalloc/src/os.c"
 		{
 			Compile.Type C++
 		}
-		%File "../../../../External/mimalloc/src/memory.c"
+		%File "../../../../External/mimalloc/src/arena.c"
+		{
+			Compile.Type C++
+		}
+		%File "../../../../External/mimalloc/src/region.c"
 		{
 			Compile.Type C++
 		}
@@ -83,11 +91,19 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 		{
 			Compile.Type C++
 		}
+		%File "../../../../External/mimalloc/src/random.c"
+		{
+			Compile.Type C++
+		}
 		%File "../../../../External/mimalloc/src/os.c"
 		{
 			Compile.Type C++
 		}
-		%File "../../../../External/mimalloc/src/memory.c"
+		%File "../../../../External/mimalloc/src/arena.c"
+		{
+			Compile.Type C++
+		}
+		%File "../../../../External/mimalloc/src/region.c"
 		{
 			Compile.Type C++
 		}
@@ -153,7 +169,7 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 {
 	Compile
 	{
-		!!Compile.Type C
+		!!Compile.Type C++
 		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
 		PreprocessorDefines ";@(Compile.PreprocessorDefines)"
 	}
@@ -168,8 +184,8 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 	{
 		%File "../../../../External/mimalloc/test/test-stress.c"
 		{
-			Compile.Type C
+			Compile.Type C++
 		}
 	}
-	%Dependency Lib_mimalloc-static
+	%Dependency Dll_mimalloc
 }
