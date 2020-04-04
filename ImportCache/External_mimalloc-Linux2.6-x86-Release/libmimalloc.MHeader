@@ -1,191 +1,191 @@
 Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
-%Target Lib_mimalloc-static
+%Target "Lib_mimalloc-static"
 {
 	Compile
 	{
-		!!Compile.Type C++
+		!!Compile.Type "C++"
 		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
 		PreprocessorDefines "MI_STATIC_LIB;NDEBUG;@(Compile.PreprocessorDefines)"
 	}
-	Property.MalterlibTargetNameType Normal
+	Property.MalterlibTargetNameType "Normal"
 	Target.Group "External/libmimalloc"
 	{
 		!!Target.Group ""
 	}
-	Target.Type StaticLibrary
-	Target.BaseName mimalloc-static
-	%Group src
+	Target.Type "StaticLibrary"
+	Target.BaseName "mimalloc-static"
+	%Group "src"
 	{
 		%File "../../../../External/mimalloc/src/stats.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/random.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/os.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/arena.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/region.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/segment.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/page.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/alloc.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/alloc-aligned.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/alloc-posix.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/heap.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/options.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/init.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 	}
 }
-%Target Exe_mimalloc-test-stress
+%Target "Exe_mimalloc-test-stress"
 {
 	Compile
 	{
-		!!Compile.Type C++
+		!!Compile.Type "C++"
 		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
 		PreprocessorDefines "NDEBUG;@(Compile.PreprocessorDefines)"
 	}
-	Property.MalterlibTargetNameType Normal
+	Property.MalterlibTargetNameType "Normal"
 	Target.Group "External/libmimalloc"
 	{
 		!!Target.Group ""
 	}
-	Target.Type ConsoleExecutable
-	Target.BaseName mimalloc-test-stress
-	%Group test
+	Target.Type "ConsoleExecutable"
+	Target.BaseName "mimalloc-test-stress"
+	%Group "test"
 	{
 		%File "../../../../External/mimalloc/test/test-stress.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 	}
-	%Dependency Dll_mimalloc
+	%Dependency "Dll_mimalloc"
 }
-%Target Exe_mimalloc-test-api
+%Target "Exe_mimalloc-test-api"
 {
 	Compile
 	{
-		!!Compile.Type C++
+		!!Compile.Type "C++"
 		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
 		PreprocessorDefines "NDEBUG;@(Compile.PreprocessorDefines)"
 	}
-	Property.MalterlibTargetNameType Normal
+	Property.MalterlibTargetNameType "Normal"
 	Target.Group "External/libmimalloc"
 	{
 		!!Target.Group ""
 	}
-	Target.Type ConsoleExecutable
-	Target.BaseName mimalloc-test-api
-	%Group test
+	Target.Type "ConsoleExecutable"
+	Target.BaseName "mimalloc-test-api"
+	%Group "test"
 	{
 		%File "../../../../External/mimalloc/test/test-api.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 	}
-	%Dependency Lib_mimalloc-static
+	%Dependency "Lib_mimalloc-static"
 }
-%Target Dll_mimalloc
+%Target "Dll_mimalloc"
 {
 	Compile
 	{
-		!!Compile.Type C++
+		!!Compile.Type "C++"
 		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
 		PreprocessorDefines "MI_SHARED_LIB;MI_SHARED_LIB_EXPORT;NDEBUG;mimalloc_EXPORTS;@(Compile.PreprocessorDefines)"
 	}
-	Property.MalterlibTargetNameType Normal
+	Property.MalterlibTargetNameType "Normal"
 	Target.Group "External/libmimalloc"
 	{
 		!!Target.Group ""
 	}
-	Target.Type SharedDynamicLibrary
-	Target.BaseName mimalloc
-	%Group src
+	Target.Type "SharedDynamicLibrary"
+	Target.BaseName "mimalloc"
+	%Group "src"
 	{
 		%File "../../../../External/mimalloc/src/stats.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/random.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/os.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/arena.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/region.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/segment.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/page.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/alloc.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/alloc-aligned.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/alloc-posix.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/heap.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/options.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 		%File "../../../../External/mimalloc/src/init.c"
 		{
-			Compile.Type C++
+			Compile.Type "C++"
 		}
 	}
 }
