@@ -124,6 +124,10 @@ namespace NMib::NMemory
 			"_dispatch_timer_unote_arm",
 			"localtime",
 			"realizeClassWithoutSwift",
+			"load_categories_nolock",
+			"cache_fill",
+			"objc_object::rootAutorelease2",
+			"_os_activity_create_addr",
 #elif defined(DPlatformFamily_Linux)
 			"qt_load_library_runtime",
 			"qt_set_x11_resources",
