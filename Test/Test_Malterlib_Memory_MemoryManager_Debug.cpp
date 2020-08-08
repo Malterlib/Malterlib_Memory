@@ -19,12 +19,21 @@ namespace
 	class CDebug_Tests : public CTest
 	{
 	public:
-		struct CDebugOptionsWithoutGuard : public CMemoryManagerDebugOptionsDefault 
+		struct CDebugOptions : public CMemoryManagerDebugOptionsDefault
+		{
+			enum
+			{
+				mc_StackTraceDepth 	= 0
+			};
+		};
+
+		struct CDebugOptionsWithoutGuard : public CDebugOptions
 		{
 			enum
 			{
 				mc_nPreGuardBytes		= 0
 				, mc_nPostGuardBytes	= 0
+				, mc_StackTraceDepth 	= 0
 			};
 		};
 
@@ -54,7 +63,7 @@ namespace
 				MeasureMemory.f_Start();
 				
 				{
-					TCMemoryManagerTracked<TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true>> MemoryManager{"Test", CMemoryManagerConfig()};
+					TCMemoryManagerTracked<TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions>> MemoryManager{"Test", CMemoryManagerConfig()};
 					mint LastAlloc = 0;
 					auto Checkout = MemoryManager.f_Checkout();
 					for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize; ++MemorySize)
@@ -111,7 +120,7 @@ namespace
 			};
 			DMibTestSuite("Leaks")
 			{
-				TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true> MemoryManager{CMemoryManagerConfig()};
+				TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 				
 				uint8 *pAlloc = nullptr;
 				bool bFoundAlloc = false;
@@ -266,7 +275,7 @@ namespace
 							DMibTestSuite("Freed")
 							{
 								f_Dummy();
-								TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true> MemoryManager{CMemoryManagerConfig()};
+								TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 								auto Checkout = MemoryManager.f_Checkout();
 								
 								auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after being freed");
@@ -301,7 +310,7 @@ namespace
 						
 						DMibTestSuite("Pre block")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
@@ -334,7 +343,7 @@ namespace
 						
 						DMibTestSuite("Post block")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
@@ -365,7 +374,7 @@ namespace
 
 						DMibTestSuite("Pre block aligned")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
@@ -399,7 +408,7 @@ namespace
 						
 						DMibTestSuite("Post block alligned")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
@@ -433,7 +442,7 @@ namespace
 
 						DMibTestSuite("Pre block realloc")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
@@ -524,7 +533,7 @@ namespace
 						
 						DMibTestSuite("Post block realloc")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
@@ -617,7 +626,7 @@ namespace
 						
 						DMibTestSuite("Pre block resize")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
@@ -707,7 +716,7 @@ namespace
 						
 						DMibTestSuite("Post block resize")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
