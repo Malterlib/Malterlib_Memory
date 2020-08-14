@@ -662,6 +662,11 @@ namespace NMib::NMemory
 
 		mint m_bDoneInit;
 
+		inline_small void f_Construct()
+		{
+			// Hide lock construct
+		}
+
 		inline_small void f_InitDone()
 		{
 			m_bDoneInit = true;
