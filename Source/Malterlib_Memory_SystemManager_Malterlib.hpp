@@ -104,6 +104,11 @@ namespace NMib::NMemory
 	{
 		static constexpr bool mc_bSizePenalty = false;
 
+		inline_always static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule)
+		{
+			return true;
+		}
+
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_GarbageCollect(CMemoryManagerCrossModule *_pModule)
 		{
 			DMainHeap->f_GarbageCollect(true);

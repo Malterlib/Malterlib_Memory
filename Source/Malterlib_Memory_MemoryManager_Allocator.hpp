@@ -83,6 +83,11 @@ namespace NMib::NMemory
 		return false;
 	}
 
+	inline_small bool f_DeterministicSize()
+	{
+		return true;
+	}
+
 	template <typename t_CParams>
 	only_parameters_aliased inline_small void TCAllocator_MemoryManager<t_CParams>::f_Protect(void *_pMem, mint _Size, uaint _Protect)
 	{

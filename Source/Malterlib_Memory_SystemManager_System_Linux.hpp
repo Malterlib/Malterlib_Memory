@@ -95,6 +95,11 @@ namespace NMib::NMemory
 			return CCrossModuleImplementation::fs_Alloc(_pModule, _Size);
 #endif
 		}
+
+		inline_always static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule)
+		{
+			return false;
+		}
 	};
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 	{

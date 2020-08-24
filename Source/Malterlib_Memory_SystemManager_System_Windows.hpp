@@ -111,6 +111,11 @@ namespace NMib::NMemory
 			HeapFree(g_pMainHeap, 0, _pMemory);
 		}
 
+		inline_always static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule)
+		{
+			return true;
+		}
+
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
 			HeapFree(g_pMainHeap, 0, _pMemory);
@@ -149,7 +154,6 @@ namespace NMib::NMemory
 			DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, _Alignment, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
-
 	};
 
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)

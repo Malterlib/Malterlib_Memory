@@ -108,6 +108,11 @@ namespace NMib::NMemory
 			g_DefaultZone->free(g_DefaultZone, _pMemory);
 		}
 
+		inline_always static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule)
+		{
+			return false;
+		}
+
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
 			g_DefaultZone->free(g_DefaultZone, _pMemory);

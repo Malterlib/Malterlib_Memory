@@ -30,6 +30,7 @@ namespace NMib::NMemory
 		static mint f_GranularityProtect(bool _bLargePages = false);
 		constexpr static bool f_CanCommit();
 		static bool f_CanProtect();
+		static bool f_DeterministicSize();
 		static ch8 ms_HeapName[];
 
 #if DMibConfig_Memory_Shims_Enable
@@ -97,6 +98,7 @@ namespace NMib::NMemory
 		static mint f_GranularityProtect(bool _bLargePages = false);
 		constexpr static bool f_CanCommit();
 		static bool f_CanProtect();
+		static bool f_DeterministicSize();
 		static void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		static void *f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static void *f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);

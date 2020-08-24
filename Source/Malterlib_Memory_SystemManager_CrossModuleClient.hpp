@@ -156,6 +156,15 @@ namespace NMib
 					}
 				;
 			}
+
+			if (NMemory::g_CrossModule.m_Version < 0x104)
+			{
+				NMemory::g_CrossModule.m_fAllocHasDeterministicSize = [](CMemoryManagerCrossModule *_pModule)
+					{
+						return false;
+					}
+				;
+			}
 		}
 		
 		NMemory::g_CrossModule.m_fCreateNonTrackedMemoryManager(&NMemory::g_CrossModule);
@@ -275,6 +284,11 @@ namespace NMib::NMemory
 	void fg_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 	{
 		return g_CrossModule.m_fAllocBatch(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_Functor);
+	}
+
+	bool fg_AllocHasDeterministicSize()
+	{
+		return g_CrossModule.m_fAllocHasDeterministicSize(&g_CrossModule);
 	}
 
 	void fg_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)

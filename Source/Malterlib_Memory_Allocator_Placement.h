@@ -32,6 +32,7 @@ namespace NMib::NMemory
 		inline_always static fp32 f_Overhead(void const *_pBlock);
 		constexpr inline_always static bool f_CanCommit();
 		inline_always static bool f_CanProtect();
+		inline_always static bool f_DeterministicSize();
 		inline_always only_parameters_aliased static void f_Protect(void *_pMem, mint _Size, uaint _Protect);
 		inline_always only_parameters_aliased static malloc_like void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		inline_always only_parameters_aliased static malloc_like void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);

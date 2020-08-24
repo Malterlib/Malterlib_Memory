@@ -68,6 +68,11 @@ namespace NMib::NMemory
 		return false;
 	}
 
+	inline_small bool CAllocator_Heap::f_DeterministicSize()
+	{
+		return NMib::NMemory::fg_AllocHasDeterministicSize();
+	}
+
 	only_parameters_aliased inline_small void CAllocator_Heap::f_Protect(void *_pMem, mint _Size, uaint _Protect)
 	{
 
@@ -243,6 +248,11 @@ namespace NMib::NMemory
 		return false;
 	}
 
+	inline_small bool CAllocator_NonTrackedHeap::f_DeterministicSize()
+	{
+		return NMib::NMemory::fg_AllocHasDeterministicSize();
+	}
+
 	only_parameters_aliased inline_small void CAllocator_NonTrackedHeap::f_Protect(void *_pMem, mint _Size, uaint _Protect)
 	{
 
@@ -380,6 +390,12 @@ namespace NMib::NMemory
 	inline_small bool TCAllocator_Placement<t_AllocSize>::f_CanProtect()
 	{
 		return false;
+	}
+
+	template <mint t_AllocSize>
+	inline_small bool TCAllocator_Placement<t_AllocSize>::f_DeterministicSize()
+	{
+		return true;
 	}
 
 	template <mint t_AllocSize>
@@ -661,6 +677,12 @@ namespace NMib::NMemory
 	inline_small bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_CanProtect()
 	{
 		return false;
+	}
+
+	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
+	inline_small bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_DeterministicSize()
+	{
+		return true;
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>

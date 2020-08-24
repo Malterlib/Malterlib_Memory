@@ -137,6 +137,11 @@ namespace NMib::NMemory
 		{
 			g_DebugMemoryManager->f_DemandProtection();
 		}
+
+		inline_always static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule)
+		{
+			return true;
+		}
 	};
 
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)

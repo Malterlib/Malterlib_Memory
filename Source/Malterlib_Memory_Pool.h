@@ -973,6 +973,11 @@ namespace NMib::NMemory
 			return false;
 		}
 
+		static inline_small bool f_DeterministicSize()
+		{
+			return true;
+		}
+
 		static inline_small void f_Protect(void *_pMem, mint _Size, uaint _Protect)
 		{
 
@@ -1204,6 +1209,11 @@ namespace NMib::NMemory
 			return false;
 		}
 
+		static inline_small bool f_DeterministicSize()
+		{
+			return true;
+		}
+
 		static inline_small void f_Protect(void *_pMem, mint _Size, uaint _Protect)
 		{
 
@@ -1403,6 +1413,11 @@ namespace NMib::NMemory
 		static inline_small bool f_CanProtect()
 		{
 			return false;
+		}
+
+		static inline_small bool f_DeterministicSize()
+		{
+			return true;
 		}
 
 		static inline_small void f_Protect(void *_pMem, mint _Size, uaint _Protect)

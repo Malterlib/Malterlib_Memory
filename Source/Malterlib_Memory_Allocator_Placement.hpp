@@ -66,6 +66,11 @@ namespace NMib::NMemory
 		return false;
 	}
 
+	inline_small bool CAllocator_Placement::f_DeterministicSize()
+	{
+		return true;
+	}
+
 	only_parameters_aliased inline_small void CAllocator_Placement::f_Protect(void *_pMem, mint _Size, uaint _Protect)
 	{
 

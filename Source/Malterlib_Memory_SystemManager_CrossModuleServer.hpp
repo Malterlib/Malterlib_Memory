@@ -139,9 +139,14 @@ namespace NMib::NMemory
 		return CCrossModuleImplementationExtra::fs_AllocAligned(&g_CrossModule, _Size, _Alignment);
 	}
 
-	DMibMemory_MemoryManagerExport void  fg_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
+	DMibMemory_MemoryManagerExport void fg_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 	{
 		return CCrossModuleImplementationExtra::fs_AllocBatchInternal(&g_CrossModule, _Size, _Alignment, _Functor);
+	}
+
+	bool fg_AllocHasDeterministicSize()
+	{
+		return CCrossModuleImplementationExtra::fs_AllocHasDeterministicSize(&g_CrossModule);
 	}
 
 #	if DMibConfig_MalterlibMemoryManager_Debug
@@ -567,6 +572,8 @@ namespace NMib
 			_pModule->m_fFree = NMemory::g_CrossModule.m_fFree;
 			_pModule->m_fNonTracked_Free = NMemory::g_CrossModule.m_fNonTracked_Free;
 		}
+		if (_Version >= 0x104)
+			_pModule->m_fAllocHasDeterministicSize = NMemory::g_CrossModule.m_fAllocHasDeterministicSize;
 	}
 	
 	void CMemoryManagerCrossModuleInterfaceServer::f_Unregister(NMemory::CMemoryManagerCrossModule *_pModule)

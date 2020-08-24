@@ -47,6 +47,11 @@ namespace NMib::NMemory
 		return NSys::fg_Mem_VirtualCanProtect();
 	}
 
+	inline_small bool CAllocator_Virtual::f_DeterministicSize()
+	{
+		return true;
+	}
+
 	inline_small void CAllocator_Virtual::f_Protect(void *_pMem, mint _Size, uaint _Protect)
 	{
 		DMibMemoryGoingToReportScope(ms_HeapName, true);
@@ -303,6 +308,11 @@ namespace NMib::NMemory
 	inline_small bool CAllocator_VirtualNoTracking::f_CanProtect()
 	{
 		return NSys::fg_Mem_VirtualCanProtect();
+	}
+
+	inline_small bool CAllocator_VirtualNoTracking::f_DeterministicSize()
+	{
+		return true;
 	}
 
 	inline_small void CAllocator_VirtualNoTracking::f_Protect(void *_pMem, mint _Size, uaint _Protect)

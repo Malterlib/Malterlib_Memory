@@ -414,6 +414,11 @@ namespace NMib::NMemory
 			return DNonTrackedHeap->f_Free(_pBlock, _Size);
 		}
 
+		inline_always static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule)
+		{
+			return true;
+		}
+
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pBlock)
 		{
 			return DNonTrackedHeap->f_FreeNoSize(_pBlock);

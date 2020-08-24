@@ -9,7 +9,7 @@ namespace NMib::NMemory
 {
 	enum
 	{
-		EMemoryManagerCrossModule_Version = 0x103
+		EMemoryManagerCrossModule_Version = 0x104
 	};
 
 	struct CMemoryManagerCrossModule;
@@ -75,6 +75,8 @@ namespace NMib::NMemory
 
 		static void * DMibCrossmoduleAPI fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size);
 		static void * DMibCrossmoduleAPI fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment);
+
+		static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule);
 	};
 
 	struct CCrossModuleImplementation : public CCrossModuleImplementationDefaults
@@ -174,6 +176,8 @@ namespace NMib::NMemory
 
 		void (DMibCrossmoduleAPI * m_fFree)(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size);
 		void (DMibCrossmoduleAPI * m_fNonTracked_Free)(CMemoryManagerCrossModule *_pModule, void *_pBlock, mint _Size);
+
+		bool (DMibCrossmoduleAPI * m_fAllocHasDeterministicSize)(CMemoryManagerCrossModule *_pModule);
 	};
 
 	struct ICMemoryManagerCrossModule
