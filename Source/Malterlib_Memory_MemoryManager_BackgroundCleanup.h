@@ -25,6 +25,9 @@ namespace NMib::NMemory
 		void f_ForkedParent();
 		void f_ForceStartThread();
 
+		void f_Lock();
+		void f_Unlock();
+
 	private:
 
 		void fp_StartupThread();
@@ -35,6 +38,7 @@ namespace NMib::NMemory
 		NTime::CCyclesClock mp_Clock;
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bStarted;
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bWaiting;
+		NMib::NThread::CMutual mp_GarbageCollectLock;
 
 		NStorage::TCUniquePointer<NThread::CThreadObjectNonTracked, NMemory::CAllocator_NonTrackedHeap> mp_pThread;
 	};

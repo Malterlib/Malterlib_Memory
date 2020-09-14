@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -21,78 +21,118 @@ namespace NMib::NMemory
 		if (_pOldSlab)
 		{
 			DMibFastCheck(_pOldSlab->f_IsFullyFree());
-			NContainer::TCBitArrayHierarchical<t_CParams::mc_NumSubSlabs> OldCommitted;
+			NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> OldCommitted;
 			_pOldSlab->f_GetCommitted(OldCommitted);
+			mint nCommittedHeaderSubSlabs = _pOldSlab->m_nCommittedHeaderSubSlabs;
 
-			if (nSubSlabs > _pOldSlab->m_nCommittedHeaderSlabs)
-				m_pMemoryManager->m_Allocator.f_Commit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, (nSubSlabs - _pOldSlab->m_nCommittedHeaderSlabs) * t_CParams::mc_SubSlabSize);
-			else if (nSubSlabs < _pOldSlab->m_nCommittedHeaderSlabs)
+			DMibFastCheck(nSubSlabs < 256);
+
+			if (nSubSlabs > nCommittedHeaderSubSlabs)
 			{
-				mint nToDecommit = _pOldSlab->m_nCommittedHeaderSlabs - nSubSlabs;
-				m_pMemoryManager->m_Allocator.f_Decommit(pMemory + (iSubSlab - nToDecommit) * t_CParams::mc_SubSlabSize, nToDecommit * t_CParams::mc_SubSlabSize);
+				mint nToCommit = nSubSlabs - nCommittedHeaderSubSlabs;
+				if constexpr (mc_EnableCallbacks)
+					m_pMemoryManager->f_OnCommit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nToCommit * t_CParams::mc_SubSlabSize);
+				OldCommitted.f_EnumFreeBitRanges
+					(
+						[&](mint _iSubSlab, mint _nSubSlabs)
+						{
+							m_pMemoryManager->m_Allocator.f_Commit(pMemory + _iSubSlab * t_CParams::mc_SubSlabSize, _nSubSlabs * t_CParams::mc_SubSlabSize);
+							return true;
+						}
+						, iSubSlab
+						, iSubSlab + nToCommit
+					)
+				;
+				OldCommitted.template f_SetBitRange<false>(iSubSlab, nToCommit);
 			}
-			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, t_SlabType>(m_Magic, this);
+			else if (nSubSlabs < nCommittedHeaderSubSlabs)
+			{
+				mint nAlreadyCommitted = nCommittedHeaderSubSlabs - nSubSlabs;
+				OldCommitted.template f_SetBitRange<true>(iSubSlab - nAlreadyCommitted, nAlreadyCommitted);
+			}
+			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, t_SlabType>(m_Magic, this, nSubSlabs);
 			pSlab->f_SetCommitted(OldCommitted);
 		}
 		else
 		{
 			m_pMemoryManager->m_Allocator.f_Commit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nSubSlabs * t_CParams::mc_SubSlabSize);
-			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, t_SlabType>(m_Magic, this);
+			if constexpr (mc_EnableCallbacks)
+				m_pMemoryManager->f_OnCommit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nSubSlabs * t_CParams::mc_SubSlabSize);
+			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, t_SlabType>(m_Magic, this, nSubSlabs);
 		}
 
-		pSlab->m_nCommittedHeaderSlabs = nSubSlabs;
 		return pSlab;
 	}
 
 	template <typename t_CParams>
-	template <mint tf_nSlabSizes>
-	typename TCEnableIf<tf_nSlabSizes == 8, TCMemoryManagerSlabShared<t_CParams> *>::CType TCMemoryManagerArena<t_CParams>::fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab)
+	TCMemoryManagerSlabShared<t_CParams> * TCMemoryManagerArena<t_CParams>::fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab)
 	{
-		switch(_SlabType & 7)
+		if constexpr (t_CParams::mc_NumSizesPerLevel == 16)
 		{
-		case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
-		case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
-		case 2: return fp_CreateSlab<2>(_pMemory, _pOldSlab);
-		case 3: return fp_CreateSlab<3>(_pMemory, _pOldSlab);
-		case 4: return fp_CreateSlab<4>(_pMemory, _pOldSlab);
-		case 5: return fp_CreateSlab<5>(_pMemory, _pOldSlab);
-		case 6: return fp_CreateSlab<6>(_pMemory, _pOldSlab);
-		case 7: return fp_CreateSlab<7>(_pMemory, _pOldSlab);
+			switch(_SlabType & 15)
+			{
+			case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
+			case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
+			case 2: return fp_CreateSlab<2>(_pMemory, _pOldSlab);
+			case 3: return fp_CreateSlab<3>(_pMemory, _pOldSlab);
+			case 4: return fp_CreateSlab<4>(_pMemory, _pOldSlab);
+			case 5: return fp_CreateSlab<5>(_pMemory, _pOldSlab);
+			case 6: return fp_CreateSlab<6>(_pMemory, _pOldSlab);
+			case 7: return fp_CreateSlab<7>(_pMemory, _pOldSlab);
+			case 8: return fp_CreateSlab<8>(_pMemory, _pOldSlab);
+			case 9: return fp_CreateSlab<9>(_pMemory, _pOldSlab);
+			case 10: return fp_CreateSlab<10>(_pMemory, _pOldSlab);
+			case 11: return fp_CreateSlab<11>(_pMemory, _pOldSlab);
+			case 12: return fp_CreateSlab<12>(_pMemory, _pOldSlab);
+			case 13: return fp_CreateSlab<13>(_pMemory, _pOldSlab);
+			case 14: return fp_CreateSlab<14>(_pMemory, _pOldSlab);
+			case 15: return fp_CreateSlab<15>(_pMemory, _pOldSlab);
+			}
+			return nullptr;
 		}
-		return nullptr;
-	}
-
-	template <typename t_CParams>
-	template <mint tf_nSlabSizes>
-	typename TCEnableIf<tf_nSlabSizes == 4, TCMemoryManagerSlabShared<t_CParams> *>::CType TCMemoryManagerArena<t_CParams>::fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab)
-	{
-		switch(_SlabType & 3)
+		else if constexpr (t_CParams::mc_NumSizesPerLevel == 8)
 		{
-		case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
-		case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
-		case 2: return fp_CreateSlab<2>(_pMemory, _pOldSlab);
-		case 3: return fp_CreateSlab<3>(_pMemory, _pOldSlab);
+			switch(_SlabType & 7)
+			{
+			case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
+			case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
+			case 2: return fp_CreateSlab<2>(_pMemory, _pOldSlab);
+			case 3: return fp_CreateSlab<3>(_pMemory, _pOldSlab);
+			case 4: return fp_CreateSlab<4>(_pMemory, _pOldSlab);
+			case 5: return fp_CreateSlab<5>(_pMemory, _pOldSlab);
+			case 6: return fp_CreateSlab<6>(_pMemory, _pOldSlab);
+			case 7: return fp_CreateSlab<7>(_pMemory, _pOldSlab);
+			}
+			return nullptr;
 		}
-		return nullptr;
-	}
-
-	template <typename t_CParams>
-	template <mint tf_nSlabSizes>
-	typename TCEnableIf<tf_nSlabSizes == 2, TCMemoryManagerSlabShared<t_CParams> *>::CType TCMemoryManagerArena<t_CParams>::fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab)
-	{
-		switch(_SlabType & 1)
+		else if constexpr (t_CParams::mc_NumSizesPerLevel == 4)
 		{
-		case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
-		case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
+			switch(_SlabType & 3)
+			{
+			case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
+			case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
+			case 2: return fp_CreateSlab<2>(_pMemory, _pOldSlab);
+			case 3: return fp_CreateSlab<3>(_pMemory, _pOldSlab);
+			}
+			return nullptr;
 		}
-		return nullptr;
-	}
-
-	template <typename t_CParams>
-	template <mint tf_nSlabSizes>
-	typename TCEnableIf<tf_nSlabSizes == 1, TCMemoryManagerSlabShared<t_CParams> *>::CType TCMemoryManagerArena<t_CParams>::fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab)
-	{
-		return fp_CreateSlab<0>(_pMemory, _pOldSlab);
+		else if constexpr (t_CParams::mc_NumSizesPerLevel == 2)
+		{
+			switch(_SlabType & 1)
+			{
+			case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
+			case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
+			}
+			return nullptr;
+		}
+		else if constexpr (t_CParams::mc_NumSizesPerLevel == 1)
+		{
+			return fp_CreateSlab<0>(_pMemory, _pOldSlab);
+		}
+		else
+		{
+			static_assert(t_CParams::mc_NumSizesPerLevel == 0, "Unsupported sizes per level");
+		}
 	}
 
 	template <typename t_CParams>
@@ -117,7 +157,7 @@ namespace NMib::NMemory
 
 		if (iFree >= 0)
 		{
-			DMibFastCheck(iFree <= mc_NumSubSlabSizeLevels);
+			DMibFastCheck(iFree <= t_CParams::mc_NumSubSlabSizeLevels);
 			pSlab = m_PartiallyFreeSlabs[_SlabType][iFree].f_GetFirst();
 			DMibFastCheck(pSlab);
 			DMibFastCheck(pSlab->f_HasFreeBit(_SizeType));
@@ -132,16 +172,20 @@ namespace NMib::NMemory
 			DMibLock(m_pNumaArena->m_FreeSlabsLock);
 			pFreeSlab = m_pNumaArena->m_FreeSlabs.f_Pop();
 			if (pFreeSlab)
-				pFreeSlab->m_Link2.f_Unlink();
+			{
+				pFreeSlab->m_LinkNeedDecommit.f_Unlink();
+				DMibFastCheck(!pFreeSlab->m_LinkToGarbageCollect.f_IsInList());
+			}
 		}
 		else
-			pFreeSlab->m_Link2.f_Unlink();
+		{
+			pFreeSlab->m_LinkNeedDecommit.f_Unlink();
+			DMibFastCheck(!pFreeSlab->m_LinkToGarbageCollect.f_IsInList());
+		}
 
 		void *pMemory;
 		if (pFreeSlab)
-		{
 			pMemory = fg_AlignDown((uint8 *)pFreeSlab, t_CParams::mc_SlabSize);
-		}
 		else
 		{
 			pMemory = m_pMemoryManager->m_Allocator.f_AllocAligned
@@ -152,9 +196,12 @@ namespace NMib::NMemory
 					, m_NumaNode
 				)
 			;
+
+			if constexpr (mc_EnableCallbacks)
+				m_pMemoryManager->f_OnDecommit((uint8 *)pMemory, t_CParams::mc_SlabSize);
 		}
 
-		pSlab = fp_CreateSlabDynamic<t_CParams::mc_NumSizesPerLevel>(_SlabType, pMemory, pFreeSlab);
+		pSlab = fp_CreateSlabDynamic(_SlabType, pMemory, pFreeSlab);
 
 		m_FreeSlabs.f_InsertFirst(pSlab);
 

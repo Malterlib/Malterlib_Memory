@@ -7,13 +7,13 @@
 
 namespace NMib::NMemory
 {
-#ifdef DMibPOverrideOperatorNew
 	struct CCapturedDelete
 	{
 		void *m_pMemory = nullptr;
 		mint m_Size = 0;
 	};
 
+#ifdef DMibPOverrideOperatorNew
 	struct CCaptureDefaultDelete
 	{
 		CCaptureDefaultDelete();

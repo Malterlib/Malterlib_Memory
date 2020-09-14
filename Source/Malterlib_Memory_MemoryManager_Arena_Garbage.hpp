@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -31,8 +31,11 @@ namespace NMib::NMemory
 			DMibLock(pNumaArena->m_FreeSlabsLock);
 
 			bool bWasEmpty = pNumaArena->m_FreeSlabs.f_IsEmpty();
+			pFreeSlab->m_pArena = nullptr;
+			if constexpr (t_CParams::mc_bBackgroundCleanup)
+				DMibFastCheck(pFreeSlab->m_FreeTimestamp != 0);
 			pNumaArena->m_FreeSlabs.f_Insert(pFreeSlab);
-			if (pFreeSlab->m_Link2.f_IsInList())
+			if (pFreeSlab->m_LinkNeedDecommit.f_IsInList())
 				pNumaArena->m_FreeSlabsNeedingDecommit.f_Insert(pFreeSlab);
 			if (!bWasEmpty)
 				_oCleanup |= ENumaArenaCleanup_FreeSlabs;
@@ -68,18 +71,27 @@ namespace NMib::NMemory
 	{
 		DMibFastCheck(_SlabType < t_CParams::mc_NumSizesPerLevel);
 
-		if (auto pSlab = m_SlabsToGarbageCollect[_SlabType].f_GetFirst())
+		while (auto pSlab = m_SlabsToGarbageCollect[_SlabType].f_GetFirst())
 		{
+			bool bAborted = false;
 			pSlab->f_EnumPendingBits
 				(
 					[&](mint _Bit) -> bool
 					{
-						fp_FreeSubSlab(pSlab, _Bit);
+						if (fp_FreeSubSlab(pSlab, _Bit))
+						{
+							bAborted = true;
+							return false;
+						}
+
 						fp_SubSlabNoLongerPending(pSlab, _Bit);
 						return true;
 					}
 				)
 			;
+
+			if (bAborted)
+				continue;
 
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 			{
@@ -114,24 +126,36 @@ namespace NMib::NMemory
 				continue;
 			}
 
+			bool bAborted = false;
 			pSlab->f_EnumPendingBits
 				(
 					[&](mint _Bit) -> bool
 					{
-						fp_FreeSubSlab(pSlab, _Bit);
+						if (fp_FreeSubSlab(pSlab, _Bit))
+						{
+							bAborted = true;
+							return false;
+						}
+
 						fp_SubSlabNoLongerPending(pSlab, _Bit);
 						return true;
 					}
 				)
 			;
 
+			if (bAborted)
+				continue;
+
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 			{
-				if (pSlab->m_Link1.f_IsInList())
-					fp_FreeSmallSubSlabs(pSlab);
+				if (pSlab->m_LinkToGarbageCollect.f_IsInList())
+				{
+					if (fp_FreeSmallSubSlabs(pSlab))
+						continue;
+				}
 			}
 
-			DMibFastCheck(!pSlab->m_Link1.f_IsInList());
+			DMibFastCheck(!pSlab->m_LinkToGarbageCollect.f_IsInList());
 		}
 
 		return NextTimestamp;
@@ -148,24 +172,36 @@ namespace NMib::NMemory
 				auto pSlab = &*iSlab;
 				++iSlab;
 
+				bool bAborted = false;
 				pSlab->f_EnumPendingBits
 					(
 						[&](mint _Bit) -> bool
 						{
-							fp_FreeSubSlab(pSlab, _Bit);
+							if (fp_FreeSubSlab(pSlab, _Bit))
+							{
+								bAborted = true;
+								return false;
+							}
+
 							fp_SubSlabNoLongerPending(pSlab, _Bit);
 							return true;
 						}
 					)
 				;
 
+				if (bAborted)
+					continue;
+
 				if constexpr (t_CParams::mc_bUseSmallSizes)
 				{
-					if (pSlab->m_Link1.f_IsInList())
-						fp_FreeSmallSubSlabs(pSlab);
+					if (pSlab->m_LinkToGarbageCollect.f_IsInList())
+					{
+						if (fp_FreeSmallSubSlabs(pSlab))
+							continue;
+					}
 				}
 
-				DMibFastCheck(!pSlab->m_Link1.f_IsInList());
+				DMibFastCheck(!pSlab->m_LinkToGarbageCollect.f_IsInList());
 			}
 		}
 	}
@@ -202,7 +238,7 @@ namespace NMib::NMemory
 	inline_always void TCMemoryManagerArena<t_CParams>::fp_CheckSlabNoLongerGarbage(TCMemoryManagerSlabShared<t_CParams> *_pSlab)
 	{
 		if (_pSlab->m_nPendingSubSlabs + _pSlab->m_nFreeSubSlabs <= 1)
-			_pSlab->m_Link1.f_Unlink();
+			_pSlab->m_LinkToGarbageCollect.f_Unlink();
 	}
 
 	template <typename t_CParams>

@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include "Malterlib_Memory_MemoryManager.hpp"
@@ -18,11 +18,26 @@
 
 namespace NMib
 {
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+	struct CMemoryManagerParamsSmallOverrides : public NMemory::CDefaultMemoryManagerParams
+	{
+		static constexpr mint mc_SubSlabSize = 4096;
+		typedef CMainHeapVirtualAllocator CAllocator;
+		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
+	};
 
-	struct CMemoryManagerParams : public NMemory::CDefaultMemoryManagerParams
+	struct CMemoryManagerParamsSmall : public NMemory::TCMemoryManagerParams<CMemoryManagerParamsSmallOverrides>
+	{
+	};
+#endif
+	struct CMemoryManagerParamsMaxOverrides : public NMemory::CDefaultMemoryManagerParams
 	{
 		typedef CMainHeapVirtualAllocator CAllocator;
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
+	};
+
+	struct CMemoryManagerParamsMax : public NMemory::TCMemoryManagerParams<CMemoryManagerParamsMaxOverrides>
+	{
 	};
 
 #	if DEnableDebugMemoryManager
@@ -55,9 +70,15 @@ namespace NMib
 	#endif
 			};
 		};
-		typedef NMemory::TCMemoryManagerDebug<CMemoryManagerParams, false, CMemoryManagerDebugOptions> CMemoryManagerWithDebug;
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+		typedef NMemory::TCMemoryManagerDebug<CMemoryManagerParamsSmall, false, CMemoryManagerDebugOptions> CMemoryManagerWithDebugSmall;
+#endif
+		typedef NMemory::TCMemoryManagerDebug<CMemoryManagerParamsMax, false, CMemoryManagerDebugOptions> CMemoryManagerWithDebugMax;
 #	else
-		typedef NMemory::TCMemoryManager<CMemoryManagerParams> CMemoryManagerWithDebug;
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+		typedef NMemory::TCMemoryManager<CMemoryManagerParamsSmall> CMemoryManagerWithDebugSmall;
+#endif
+		typedef NMemory::TCMemoryManager<CMemoryManagerParamsMax> CMemoryManagerWithDebugMax;
 #	endif
 
 #if !DMibConfig_MemoryManager_Stats_EnableCategories
@@ -66,12 +87,19 @@ namespace NMib
 		typedef void CTrackedAllocationInfo;
 	}
 #endif
-	
-	typedef NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebug, NMemory::CTrackedAllocationInfo> CMemoryManager;
-	
-	extern NMib::NStorage::TCAggregateSimple<CMemoryManager> g_MainHeap;
-	
-	struct CMemoryManagerNonTrackedParams : public CMemoryManagerParams
+
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+	typedef NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebugSmall, NMemory::CTrackedAllocationInfo> CMemoryManagerSmall;
+#endif
+	typedef NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebugMax, NMemory::CTrackedAllocationInfo> CMemoryManagerMax;
+
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+	extern bool g_bMainHeapIsSmall;
+	extern NMib::NStorage::TCAggregateSimple<CMemoryManagerSmall> g_MainHeapSmall;
+#endif
+	extern NMib::NStorage::TCAggregateSimple<CMemoryManagerMax> g_MainHeapMax;
+
+	struct CMemoryManagerNonTrackedParams : public CMemoryManagerParamsMax
 	{
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_NonTrackedMainHeap;
 		typedef NMemory::CAllocator_VirtualNoTracking CAllocator;
@@ -84,12 +112,15 @@ namespace NMib
 		enum
 		{
 			mc_bCanAllocateNonTracked = false // Threading potentially recursive allocations
+#ifdef DPlatformFamily_Linux
+			, mc_StackTraceDepth = 0
+#endif
 		};
 	};
 	typedef NMemory::TCMemoryManagerDebug<CMemoryManagerNonTrackedParams, false, CMemoryManagerNonTrackedDebugOptions> CMemoryManagerNonTracked;
 #else
 	typedef NMemory::TCMemoryManager<CMemoryManagerNonTrackedParams> CMemoryManagerNonTracked;
 #endif
-	
+
 	extern NMib::NStorage::TCAggregateSimple<CMemoryManagerNonTracked> g_NonTrackedHeap;
 }

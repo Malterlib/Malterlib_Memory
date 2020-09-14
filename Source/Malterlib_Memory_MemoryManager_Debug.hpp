@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -83,14 +83,22 @@ namespace NMib::NMemory
 		: CSuper(fg_Forward<tfp_CAllocator>(_Params)...)
 		, m_bReportingLeaks
 		(
-			[this] (zbool *_pParent, bool _bMove) -> zbool *
+			[this]() -> NThread::CThreadLocalInterface::CSafeAllocMemory
+			{
+				return {m_ReportingLeaksPool.f_GetBlock(), sizeof(zbool)};
+			}
+			, [this](NThread::CThreadLocalInterface::CSafeAllocMemory const &_Memory) -> void
+			{
+				return m_ReportingLeaksPool.f_ReturnBlock(_Memory.m_pMemory);
+			}
+			, [](zbool *_pParent, void *_pMemory, bool _bMove) -> zbool *
 			{
 				if (_pParent)
-					return m_ReportingLeaksPool.f_New(*_pParent);
+					return new (_pMemory) zbool(*_pParent);
 				else
-					return m_ReportingLeaksPool.f_New();
+					return new (_pMemory) zbool();
 			}
-			, [this] (zbool *_pParent)
+			, [this](zbool *_pParent)
 			{
 				m_ReportingLeaksPool.f_Delete(_pParent);
 			}
@@ -170,7 +178,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
-	bool TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_CheckAll(bool _bBreak)
+	bool TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_CheckAll(EMemoryManagerCheckFlag _Flags)
 	{
 		bool bError = false;
 		fp_EnumAllocations
@@ -178,13 +186,13 @@ namespace NMib::NMemory
 				[&](uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, CPreBlock *_pPreBlock)
 				{
 					auto pAddress = (uint8 *)(_pPreBlock + 1);
-					if (fsp_CheckGuard((uint8 *)pAddress, _bBreak))
+					if (fsp_CheckGuard((uint8 *)pAddress, _Flags))
 						bError = true;
 				}
 			)
 		;
 
-		if (this->f_CheckFree(_bBreak))
+		if (this->f_CheckFree(_Flags))
 			bError = true;
 
 		return !bError;
@@ -280,11 +288,10 @@ namespace NMib::NMemory
 		{
 			mint PreBytes = sizeof(CPreBlock);
 			mint PostBytes = t_COptions::mc_nPostGuardBytes;
-			mint Size = _Size + PreBytes + PostBytes;
-			uint8 * pMemory = (uint8 *)CSuper::f_AllocWithSize(Size);
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, NTraits::TCAlignmentOf<CPreBlock>::mc_Value);
+			uint8 * pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, NTraits::TCAlignmentOf<CPreBlock>::mc_Value);
 
 			mint RequestedSize = _Size;
-			_Size = Size - (PreBytes + PostBytes);
 
 			CPreBlock *pPreBlock = (CPreBlock *)(pMemory + PreBytes - sizeof(CPreBlock));
 
@@ -358,17 +365,18 @@ namespace NMib::NMemory
 			};
 
 			CFunctorOptions Options;
+			_Alignment = fg_Max(_Alignment, NTraits::TCAlignmentOf<CPreBlock>::mc_Value);
 
 			Options.m_pFile = _pFile;
 			Options.m_Line = _Line;
 			Options.m_Flags = _Flags;
 			Options.m_pFunctor = &_Functor;
 			Options.m_Alignment = _Alignment;
-			Options.m_RequestedSize = fg_AlignUp(_Size, _Alignment);
+			Options.m_RequestedSize = _Size;
 
 			mint PreBytes = fg_AlignUp(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), _Alignment);
 			mint PostBytes = fg_AlignUp(t_COptions::mc_nPostGuardBytes, _Alignment);
-			mint Size = _Size + PreBytes + PostBytes;
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, _Alignment);
 
 			CSuper::f_AllocBatch
 				(
@@ -380,14 +388,14 @@ namespace NMib::NMemory
 						mint PostBytes = fg_AlignUp(t_COptions::mc_nPostGuardBytes, Options.m_Alignment);
 						uint8 * pMemory = (uint8 *)_pAlloc;
 
-						mint RetSize = _Size - (PreBytes + PostBytes);
+						mint RetSize = Options.m_RequestedSize;
 
 						CPreBlock *pPreBlock = (CPreBlock *)(pMemory + PreBytes - sizeof(CPreBlock));
 
 						pPreBlock->m_PreCheck = PreBytes;
 						pPreBlock->m_PostCheck = PostBytes;
 						pPreBlock->m_RequestedSize = Options.m_RequestedSize;
-						pPreBlock->m_Size = RetSize;
+						pPreBlock->m_Size = Options.m_RequestedSize;
 						pPreBlock->m_Offset = PreBytes - sizeof(CPreBlock);
 						pPreBlock->m_pFile = Options.m_pFile;
 						pPreBlock->m_Line = Options.m_Line;
@@ -442,20 +450,19 @@ namespace NMib::NMemory
 		return CSuper::f_AllocBatch(_Size, _Alignment, _Functor);
 	}
 
-
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	inline_never void *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_AllocAlignedWithSizeDebug(mint &_Size, mint _Alignment, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
 	{
 		DMibFastCheck(!f_ReportingLeaks());
 		if constexpr ((t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes) != 0)
 		{
-			mint PreBytes = fg_AlignUp(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), _Alignment);
-			mint PostBytes = fg_AlignUp(t_COptions::mc_nPostGuardBytes, _Alignment);
-			mint Size = _Size + PreBytes + PostBytes;
-			uint8 * pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, _Alignment);
+			mint Alignment = fg_Max(_Alignment, NTraits::TCAlignmentOf<CPreBlock>::mc_Value);
+			mint PreBytes = fg_AlignUp(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), Alignment);
+			mint PostBytes = fg_AlignUp(t_COptions::mc_nPostGuardBytes, Alignment);
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, NTraits::TCAlignmentOf<CPreBlock>::mc_Value);
+			uint8 * pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, Alignment);
 
 			mint RequestedSize = fg_AlignUp(_Size, _Alignment);
-			_Size = Size - (PreBytes + PostBytes);
 
 			CPreBlock *pPreBlock = (CPreBlock *)(pMemory + PreBytes - sizeof(CPreBlock));
 
@@ -489,21 +496,28 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
-	bool TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::fsp_CheckGuard(uint8 *_pMemory, bool _bBreak)
+	bool TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::fsp_CheckGuard(uint8 *_pMemory, EMemoryManagerCheckFlag _Flags)
 	{
 		CPreBlock *pPreBlock = ((CPreBlock *)_pMemory) - 1;
 
 		bool bError = false;
+		bool bBreak = _Flags & EMemoryManagerCheckFlag_Break;
 
 		if constexpr (t_COptions::mc_nPreGuardBytes != 0)
 		{
-			if (CParams::fs_CheckGuard("Memory overwritten before allocated block", pPreBlock->f_GetPreGuard(), t_COptions::mc_nPreGuardBytes, _bBreak))
+			if ((_Flags & EMemoryManagerCheckFlag_Unprotect) && t_COptions::mc_bAsanPoisioning)
+				DMibSanitizerAnnotate_UnpoisonMemoryRegion(pPreBlock->f_GetPreGuard(), t_COptions::mc_nPreGuardBytes);
+
+			if (CParams::fs_CheckGuard("Memory overwritten before allocated block", pPreBlock->f_GetPreGuard(), t_COptions::mc_nPreGuardBytes, bBreak))
 				bError = true;
 
 		}
 		if constexpr (t_COptions::mc_nPostGuardBytes != 0)
 		{
-			if (CParams::fs_CheckGuard("Memory overwritten after allocated block", _pMemory + pPreBlock->m_Size, t_COptions::mc_nPostGuardBytes, _bBreak))
+			if ((_Flags & EMemoryManagerCheckFlag_Unprotect) && t_COptions::mc_bAsanPoisioning)
+				DMibSanitizerAnnotate_UnpoisonMemoryRegion(_pMemory + pPreBlock->m_Size, t_COptions::mc_nPostGuardBytes);
+
+			if (CParams::fs_CheckGuard("Memory overwritten after allocated block", _pMemory + pPreBlock->m_Size, t_COptions::mc_nPostGuardBytes, bBreak))
 				bError = true;
 		}
 		return bError;
@@ -543,29 +557,25 @@ namespace NMib::NMemory
 		DMibFastCheck(!f_ReportingLeaks());
 		if constexpr ((t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes) != 0)
 		{
-			fsp_CheckGuard((uint8 *)_pMemory, true);
+			fsp_CheckGuard((uint8 *)_pMemory, EMemoryManagerCheckFlag_Default);
 
 			CPreBlock *pOldPreBlock = ((CPreBlock *)_pMemory) - 1;
 			uint8 * pOldMemory = (uint8 *)_pMemory - pOldPreBlock->m_PreCheck;
 
-			mint PreBytes = sizeof(CPreBlock);
+			mint PreBytes = pOldPreBlock->m_PreCheck;
 			mint PostBytes = t_COptions::mc_nPostGuardBytes;
-			mint Size = _Size + PreBytes + PostBytes;
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, NTraits::TCAlignmentOf<CPreBlock>::mc_Value);
 
 			mint OldPaddedSize = 0;
 			if (_OldSize)
 			{
 				DMibFastCheck(_OldSize == pOldPreBlock->m_Size || _OldSize == pOldPreBlock->m_RequestedSize);
-				OldPaddedSize = _OldSize + PreBytes + PostBytes;
+				OldPaddedSize = fg_AlignUp(_OldSize + PreBytes + PostBytes, NTraits::TCAlignmentOf<CPreBlock>::mc_Value);
 			}
 
 			uint8 * pMemory = (uint8 *)CSuper::f_Realloc(pOldMemory, Size, OldPaddedSize);
 
-			if (pMemory == pOldMemory)
-				return _pMemory;
-
 			mint RequestedSize = _Size;
-			_Size = Size - (PreBytes + PostBytes);
 
 			CPreBlock *pPreBlock = (CPreBlock *)(pMemory + PreBytes - sizeof(CPreBlock));
 
@@ -619,7 +629,7 @@ namespace NMib::NMemory
 		DMibFastCheck(!f_ReportingLeaks());
 		if constexpr ((t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes) != 0)
 		{
-			fsp_CheckGuard((uint8 *)_pMemory, true);
+			fsp_CheckGuard((uint8 *)_pMemory, EMemoryManagerCheckFlag_Default);
 
 			CPreBlock *pOldPreBlock = ((CPreBlock *)_pMemory) - 1;
 			mint OldSize = pOldPreBlock->m_Size;
@@ -627,22 +637,18 @@ namespace NMib::NMemory
 
 			mint PreBytes = pOldPreBlock->m_PreCheck;
 			mint PostBytes = t_COptions::mc_nPostGuardBytes;
-			mint Size = _Size + PreBytes + PostBytes;
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, NTraits::TCAlignmentOf<CPreBlock>::mc_Value);
 
 			mint OldPaddedSize = 0;
 			if (_OldSize)
 			{
 				DMibFastCheck(_OldSize == pOldPreBlock->m_Size || _OldSize == pOldPreBlock->m_RequestedSize);
-				OldPaddedSize = _OldSize + PreBytes + PostBytes;
+				OldPaddedSize = fg_AlignUp(_OldSize + PreBytes + PostBytes, NTraits::TCAlignmentOf<CPreBlock>::mc_Value);
 			}
 
 			uint8 * pMemory = (uint8 *)CSuper::f_Resize(pOldMemory, Size, OldPaddedSize);
 
-			if (pMemory == pOldMemory)
-				return _pMemory;
-
 			mint RequestedSize = _Size;
-			_Size = Size - (PreBytes + PostBytes);
 
 			CPreBlock *pPreBlock = (CPreBlock *)(pMemory + PreBytes - sizeof(CPreBlock));
 
@@ -770,21 +776,29 @@ namespace NMib::NMemory
 	{
 		if (!_pMemory)
 			return;
+
+		TCMemoryManagerCheckout<CParams> MemoryManagerCheckout;
+		if (!CSuper::f_IsCheckedOut())
+			MemoryManagerCheckout = CSuper::f_Checkout();
+
 		DMibFastCheck(_Size != 0);
 		DMibFastCheck(!f_ReportingLeaks());
-		fsp_CheckGuard((uint8 *)_pMemory, true);
+		fsp_CheckGuard((uint8 *)_pMemory, EMemoryManagerCheckFlag_Default);
 
 		if constexpr ((t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes) != 0)
 		{
 			CPreBlock *pPreBlock = ((CPreBlock *)_pMemory) - 1;
 			uint8 * pOldMemory = (uint8 *)_pMemory - pPreBlock->m_PreCheck;
 
-			mint PreBytes = sizeof(CPreBlock);
+			mint PreBytes = pPreBlock->m_PreCheck;
 			mint PostBytes = t_COptions::mc_nPostGuardBytes;
-			mint Size = _Size + PreBytes + PostBytes;
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, NTraits::TCAlignmentOf<CPreBlock>::mc_Value);
 
 			DMibFastCheck(_Size == pPreBlock->m_Size || _Size == pPreBlock->m_RequestedSize);
-			return CSuper::f_Free(pOldMemory, Size);
+			CSuper::f_Free(pOldMemory, Size);
+
+			if (MemoryManagerCheckout.f_IsValid() && t_COptions::mc_bAsanPoisioning)
+				CSuper::f_GarbageCollectLocalArena(false);
 		}
 		else
 		{
@@ -798,11 +812,20 @@ namespace NMib::NMemory
 	{
 		if (!_pMemory)
 			return;
+
+		TCMemoryManagerCheckout<CParams> MemoryManagerCheckout;
+		if (!CSuper::f_IsCheckedOut())
+			MemoryManagerCheckout = CSuper::f_Checkout();
+
 		DMibFastCheck(!f_ReportingLeaks());
-		fsp_CheckGuard((uint8 *)_pMemory, true);
+		fsp_CheckGuard((uint8 *)_pMemory, EMemoryManagerCheckFlag_Default);
 
 		uint8 * pOldMemory = fsp_GetRealMemory((uint8 *)_pMemory);
-		return CSuper::f_FreeNoSize(pOldMemory);
+		CSuper::f_FreeNoSize(pOldMemory);
+
+		if (MemoryManagerCheckout.f_IsValid() && t_COptions::mc_bAsanPoisioning)
+			CSuper::f_GarbageCollectLocalArena(false);
+
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -852,6 +875,8 @@ namespace NMib::NMemory
 	void TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::fs_FillGuard(uint8 *_pMemory, mint _nBytes)
 	{
 		fg_ObjectSet(_pMemory, t_COptions::mc_Fill_Guard, _nBytes);
+		if constexpr (t_COptions::mc_bAsanPoisioning)
+			DMibSanitizerAnnotate_PoisonMemoryRegion(_pMemory, _nBytes);
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -960,6 +985,7 @@ namespace NMib::NMemory
 			return;
 
 		DMibLock(m_Lock);
+
 		auto Mapped = m_Allocations(_pMemory);
 
 		if (!Mapped.f_WasCreated())
@@ -1004,6 +1030,20 @@ namespace NMib::NMemory
 		}
 	}
 
+	template <typename t_CParams, bool t_bException, typename t_COptions>
+	void TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CGlobal::f_OnCommit(uint8 *_pMemory, mint _nBytes)
+	{
+		if constexpr (t_COptions::mc_bAsanPoisioning)
+			DMibSanitizerAnnotate_UnpoisonMemoryRegion(_pMemory, _nBytes);
+	}
+
+	template <typename t_CParams, bool t_bException, typename t_COptions>
+	void TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CGlobal::f_OnDecommit(uint8 *_pMemory, mint _nBytes)
+	{
+		if constexpr (t_COptions::mc_bAsanPoisioning)
+			DMibSanitizerAnnotate_PoisonMemoryRegion(_pMemory, _nBytes);
+	}
+
 	///
 	/// Arena
 	/// =====
@@ -1016,6 +1056,9 @@ namespace NMib::NMemory
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	inline_never void TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CArena::f_OnAlloc(uint8 *_pMemory, mint _nBytes)
 	{
+		if constexpr (t_COptions::mc_bAsanPoisioning)
+			DMibSanitizerAnnotate_UnpoisonMemoryRegion(_pMemory, _nBytes);
+
 		if constexpr (!t_COptions::mc_bFreeValidation && !t_COptions::mc_bEnumeration && t_COptions::mc_StackTraceDepth == 0)
 			return;
 
@@ -1061,19 +1104,30 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
-	inline_never void TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CArena::f_OnFillFree(uint8 *_pMemory, mint _nBytes)
+	inline_never void TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CArena::f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags)
 	{
 		if constexpr (t_COptions::mc_bCheckModifyAfterFree)
 			fs_FillFree(_pMemory, _nBytes);
+
+		if ((_Flags & EMemoryManagerCheckFlag_Protect) && t_COptions::mc_bAsanPoisioning)
+			DMibSanitizerAnnotate_PoisonMemoryRegion(_pMemory, _nBytes);
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
-	inline_never bool TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CArena::f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, bool _bBreak)
+	inline_never bool TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CArena::f_OnCheckFree
+		(
+			uint8 *_pUntouchedMemory
+			, mint _nUntouchedBytes
+			, EMemoryManagerCheckFlag _Flags
+		)
 	{
+		if ((_Flags & EMemoryManagerCheckFlag_Unprotect) && t_COptions::mc_bAsanPoisioning)
+			DMibSanitizerAnnotate_UnpoisonMemoryRegion(_pUntouchedMemory, _nUntouchedBytes);
+
 		bool bError = false;
 		if constexpr (t_COptions::mc_bCheckModifyAfterFree)
 		{
-			if (fs_CheckFree(_pUntouchedMemory, _nUntouchedBytes, _bBreak))
+			if (fs_CheckFree(_pUntouchedMemory, _nUntouchedBytes, _Flags & EMemoryManagerCheckFlag_Break))
 				bError = true;
 		}
 
@@ -1137,19 +1191,30 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
-	inline_never void TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CHeap::f_OnFillFree(uint8 *_pMemory, mint _nBytes)
+	inline_never void TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CHeap::f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags)
 	{
 		if constexpr (t_COptions::mc_bCheckModifyAfterFree)
 			fs_FillFree(_pMemory, _nBytes);
+
+		if ((_Flags & EMemoryManagerCheckFlag_Protect) && t_COptions::mc_bAsanPoisioning)
+			DMibSanitizerAnnotate_PoisonMemoryRegion(_pMemory, _nBytes);
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
-	inline_never bool TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CHeap::f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, bool _bBreak)
+	inline_never bool TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CHeap::f_OnCheckFree
+		(
+			uint8 *_pUntouchedMemory
+			, mint _nUntouchedBytes
+			, EMemoryManagerCheckFlag _Flags
+		)
 	{
+		if ((_Flags & EMemoryManagerCheckFlag_Unprotect) && t_COptions::mc_bAsanPoisioning)
+			DMibSanitizerAnnotate_UnpoisonMemoryRegion(_pUntouchedMemory, _nUntouchedBytes);
+
 		bool bError = false;
 		if constexpr (t_COptions::mc_bCheckModifyAfterFree)
 		{
-			if (fs_CheckFree(_pUntouchedMemory, _nUntouchedBytes, _bBreak))
+			if (fs_CheckFree(_pUntouchedMemory, _nUntouchedBytes, _Flags & EMemoryManagerCheckFlag_Break))
 				bError = true;
 		}
 		return bError;

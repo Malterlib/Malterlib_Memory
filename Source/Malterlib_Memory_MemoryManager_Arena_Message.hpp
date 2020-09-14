@@ -51,7 +51,7 @@ namespace NMib::NMemory
 					uint8 *pEndOfSlab = fg_AlignUp((uint8 *)pBlock + 1, t_CParams::mc_SlabSize);
 					CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-					DMibFastCheck(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+					DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
 					TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 					fp_Free(pBlock, pSlab);
 				}
@@ -62,7 +62,7 @@ namespace NMib::NMemory
 					uint8 *pEndOfSlab = fg_AlignUp((uint8 *)pBlock->m_pBlock + 1, t_CParams::mc_SlabSize);
 					CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-					DMibFastCheck(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+					DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
 					TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 					fp_Free(pBlock->m_pBlock, pSlab);
 					m_pMemoryManager->f_Free(pBlock, sizeof(CMessage_FreeSmallBlock));
@@ -74,7 +74,7 @@ namespace NMib::NMemory
 				uint8 *pEndOfSlab = fg_AlignUp((uint8 *)pBlock + 1, t_CParams::mc_SlabSize);
 				CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-				DMibFastCheck(pHeader->m_Magic == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+				DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
 				TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 				fp_Free(pBlock, pSlab);
 			}
@@ -156,10 +156,9 @@ namespace NMib::NMemory
 			m_bWantCleanup = false;
 			if (!m_bRequestedCleanup)
 			{
-				m_bRequestedCleanup = true;
-
 				{
-					DMibLock(m_pNumaArena->m_ArenasLock);
+					DMibLock(m_pNumaArena->m_ArenasNeedCleanupLock);
+					m_bRequestedCleanup = true;
 					m_pNumaArena->m_ArenasNeedCleanup.f_InsertFirst(this);
 				}
 				bNeedCleanup = true;

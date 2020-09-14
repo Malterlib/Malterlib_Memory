@@ -6,7 +6,7 @@
 namespace NMib::NMemory
 {
 	template <typename t_CParams>
-	class TCAllocator_MemoryManager
+	class TCAllocator_MemoryManager : public CAllocator_Base
 	{
 		TCMemoryManager<t_CParams> *m_pMemoryManager;
 	public:

@@ -51,7 +51,7 @@ namespace NMib::NMemory
 		void *f_AllocWithSize(mint &_Size);
 		void f_AllocBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
 
-		bool f_CheckFree(bool _bBreak);
+		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 
 		mint f_GetNumUsedSlabs();
 		mint f_GetNumFreeSlabs();
@@ -103,14 +103,7 @@ namespace NMib::NMemory
 		template <uint32 t_SlabType>
 		TCMemoryManagerSlabShared<t_CParams> *fp_CreateSlab(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
 
-		template <mint tf_nSlabSizes>
-		typename TCEnableIf<tf_nSlabSizes == 8, TCMemoryManagerSlabShared<t_CParams> *>::CType fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
-		template <mint tf_nSlabSizes>
-		typename TCEnableIf<tf_nSlabSizes == 4, TCMemoryManagerSlabShared<t_CParams> *>::CType fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
-		template <mint tf_nSlabSizes>
-		typename TCEnableIf<tf_nSlabSizes == 2, TCMemoryManagerSlabShared<t_CParams> *>::CType fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
-		template <mint tf_nSlabSizes>
-		typename TCEnableIf<tf_nSlabSizes == 1, TCMemoryManagerSlabShared<t_CParams> *>::CType fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
+		TCMemoryManagerSlabShared<t_CParams> *fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
 
 		TCMemoryManagerSlabShared<t_CParams> *fp_NewSlab(uint32 _SlabType, uint32 _SizeType);
 
@@ -124,9 +117,9 @@ namespace NMib::NMemory
 		static void *fsp_AllocSmallShared(TCMemoryManagerArena *_pThis, mint _Index);
 
 		template <mint tf_Size>
-		bool fp_CheckFreeSmall(bool _bBreak);
+		bool fp_CheckFreeSmall(EMemoryManagerCheckFlag _Flags);
 
-		void fp_FreeSmallSubSlabs(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
+		bool fp_FreeSmallSubSlabs(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 
 		void fp_FreeSmallShared(TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *_pSubSlab, TCMemoryManagerSlab<t_CParams, 0> *_pSlab, mint _Index, ESmallState _SmallState);
 
@@ -153,7 +146,7 @@ namespace NMib::NMemory
 
 		static mint fs_GetAllocSize(mint _Size);
 
-		void fp_FreeSubSlab(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab);
+		[[nodiscard]] bool fp_FreeSubSlab(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab);
 
 		void fp_FreeSmall(void *_pMemory, TCMemoryManagerSlab<t_CParams, 0> *_pSlab, mint _SlabType);
 		mint fp_SizeSmall(void const *_pMemory, TCMemoryManagerSlab<t_CParams, 0> const *_pSlab, mint _SlabType) const;
@@ -162,7 +155,7 @@ namespace NMib::NMemory
 		void fp_Free(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 		void fp_FreeInline(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 
-		bool fp_CheckFree(CMemoryManagerSubSlab_NormalLink *_pLink, bool _bBreak);
+		bool fp_CheckFree(CMemoryManagerSubSlab_NormalLink *_pLink, EMemoryManagerCheckFlag _Flags);
 
 		bool fp_ProcessMessages(CMemoryManagerSubSlab_NormalFreeList *_pFreeList);
 		bool fp_ProcessMessageList(CMemoryManagerSubSlab_NormalFreeList *_pFreeList, mint &o_MessageList);
@@ -186,18 +179,13 @@ namespace NMib::NMemory
 		static constexpr bool mc_bUseFreeBlockCounting = t_CParams::mc_bUseFreeBlockCounting;
 		static constexpr bool mc_bSpecialCaseSlabType0 = t_CParams::mc_bSpecialCaseSlabType0;
 		static constexpr bool mc_bUseSmallSizes = t_CParams::mc_bUseSmallSizes;
-		static constexpr mint mc_MinNormalAllocSize = mc_bUseFreeBlockCounting ? (sizeof(void *) * 2 + 4) : sizeof(void *) * 2;
-		static constexpr mint mc_MinAllocSize = mc_bUseSmallSizes ? 1 : mc_MinNormalAllocSize;
+		static constexpr mint mc_MinAllocSize = mc_bUseSmallSizes ? 1 : t_CParams::mc_MinNormalAllocSize;
 		static constexpr mint mc_MinAlignment = 4; // Can be 4 or 8
 		static constexpr mint mc_nSmallSizeSlabsAligned = NMib::TCHighestBitSetCorrect<mint, mc_MinAlignment>::mc_Value + 1;
 		static constexpr mint mc_nSmallSizeSlabs = mc_bUseSmallSizes ? (mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment*2) / mc_MinAlignment) : mc_MinArraySize;
-		static constexpr mint mc_MinAlignmentCalc = 16 / t_CParams::mc_NumSizesPerLevel;
-		static constexpr mint mc_MinNormalSizeAlignment = mc_MinAlignmentCalc < 4 ? 4 : mc_MinAlignmentCalc;
-		static constexpr mint mc_nLevel0Lists = mc_bUseSmallSizes ? (32 - sizeof(void *) * 2) / mc_MinNormalSizeAlignment : mc_MinArraySize;
+		static constexpr mint mc_nLevel0Lists = mc_bUseSmallSizes ? (32 - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment : mc_MinArraySize;
 		static constexpr mint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels-1 : t_CParams::mc_NumNormalSizeLevels;
-		static constexpr mint mc_Level0SmallestSize = 32 - mc_MinNormalSizeAlignment;
-		static constexpr mint mc_SmallSizeSlabsLargestSize = mc_bUseSmallSizes ? (mc_bUseFreeBlockCounting ? 16 : 12) : 0;
-		static constexpr mint mc_NumSubSlabSizeLevels = t_CParams::mc_NumSizeLevels - TCHighestBitSetCorrect<mint, t_CParams::mc_SubSlabSize>::mc_Value;
+		static constexpr mint mc_Level0SmallestSize = 32 - t_CParams::mc_MinNormalSizeAlignment;
 		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CArena::mc_EnableCallbacks;
 
 		static_assert(mc_bUseSmallSizes || sizeof(void *) > 4, "Not supported on 32 bit");
@@ -246,28 +234,28 @@ namespace NMib::NMemory
 			()
 		;
 
-		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_FreeSlabs;
+		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) m_FreeSlabs;
 #ifndef DDocumentation_Doxygen
-		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_PartiallyFreeSlabs[t_CParams::mc_NumSizesPerLevel][mc_NumSubSlabSizeLevels];
+		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) m_PartiallyFreeSlabs[t_CParams::mc_NumSizesPerLevel][t_CParams::mc_NumSubSlabSizeLevels];
 #endif
-		NContainer::TCBitArray<mc_NumSubSlabSizeLevels> m_PartiallyFreeSlabsAvailable[t_CParams::mc_NumSizesPerLevel];
+		NContainer::TCBitArray<t_CParams::mc_NumSubSlabSizeLevels> m_PartiallyFreeSlabsAvailable[t_CParams::mc_NumSizesPerLevel];
 
-		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_FullSlabs;
+		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) m_FullSlabs;
 
 #ifndef DDocumentation_Doxygen
-		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link1) m_SlabsToGarbageCollect[t_CParams::mc_NumSizesPerLevel];
+		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkToGarbageCollect) m_SlabsToGarbageCollect[t_CParams::mc_NumSizesPerLevel];
 #endif
-		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link2) m_SlabsNeedingDecommit;
+		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkNeedDecommit) m_SlabsNeedingDecommit;
 
 
-		align_cacheline NAtomic::TCAtomic<mint> m_pNextArena;
-		align_cacheline NAtomic::TCAtomic<mint> m_Locked;
-		align_cacheline NAtomic::TCAtomic<mint> m_Messages;
+		align_cacheline NAtomic::TCAtomic<mint> m_pNextArena = 0;
+		align_cacheline NAtomic::TCAtomic<mint> m_Locked = EArenaLockFlag_None;
+		align_cacheline NAtomic::TCAtomic<mint> m_Messages = 0;
 		mint m_DeferredMessages = 0;
 
-		uint64 m_Magic;
+		uint64 m_Magic = 0;
 
-		mint m_CheckoutCount;
+		NAtomic::TCAtomic<mint> m_CheckoutCount = 0;
 
 		DMibMemoryManagerList(CMemoryManagerSubSlab_SmallSizeLink, m_Link) m_SmallSizeSlabsFull;
 		DMibMemoryManagerList(CMemoryManagerSubSlab_SmallSizeLink, m_Link) m_SmallSizeSlabs[mc_nSmallSizeSlabs];
@@ -280,8 +268,8 @@ namespace NMib::NMemory
 		TCMemoryManagerThreadLocal<t_CParams> *m_pOwningThreadLocal = nullptr;
 		ENumaNode m_NumaNode;
 
-		bool m_bWantCleanup;
-		bool m_bRequestedCleanup;
-		bool m_bWantNumaFreeSlabsCleanup;
+		bool m_bWantCleanup = false;
+		bool m_bRequestedCleanup = false;
+		bool m_bWantNumaFreeSlabsCleanup = false;
 	};
 }

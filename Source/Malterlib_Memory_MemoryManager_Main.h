@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -28,16 +28,19 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	class TCMemoryManagerCheckout
 	{
-		TCMemoryManager<t_CParams> *m_pMemoryManager;
+		TCMemoryManager<t_CParams> *m_pMemoryManager = nullptr;
 
 		TCMemoryManagerCheckout(TCMemoryManagerCheckout const &) = delete;
 		TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout const &) = delete;
 
 	public:
+		TCMemoryManagerCheckout() = default;
 		TCMemoryManagerCheckout(TCMemoryManagerCheckout &&_Other);
 		TCMemoryManagerCheckout(TCMemoryManager<t_CParams> *_pMemoryManager);
 		TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout<t_CParams> &&_Other);
 		~TCMemoryManagerCheckout();
+
+		bool f_IsValid() const;
 	};
 
 	template <typename t_CParams>
@@ -76,7 +79,7 @@ namespace NMib::NMemory
 #elif DMibPPtrBits == 32
 		mint m_nMaxArenas = 8;
 #else
-#	error "Decide max arenas"			
+#	error "Decide max arenas"
 #endif
 		uint64 m_Magic = NMisc::fg_GetHighEntropyRandomInteger<uint64>();
 	};
@@ -84,7 +87,8 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct TCMemoryManager : public t_CParams::CNotifier::CGlobal, ICMemoryManagerReturnCheckout
 	{
-	public:
+		using CParams = t_CParams;
+
 		template <typename... tfp_CAllocator>
 		TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator &&..._Params);
 
@@ -95,6 +99,7 @@ namespace NMib::NMemory
 		void f_CheckoutManual();
 		void f_CheckinManual();
 		void f_CheckinManualLight();
+		bool f_IsCheckedOut();
 
 		void f_LazyReturnCheckout();
 		void f_CanDoLazyCheckout();
@@ -148,7 +153,7 @@ namespace NMib::NMemory
 		mint f_GetNumUsedSlabs();
 		mint f_GetNumFreeSlabs();
 
-		bool f_CheckFree(bool _bBreak);
+		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 
 		void f_DestroyThreadLocals();
 
@@ -202,6 +207,8 @@ namespace NMib::NMemory
 		void f_TemporaryGetBack() override;
 		void f_TakeOwnership() override;
 		void f_RelinquishOwnership() override;
+		
+	protected:
 		void f_GarbageCollectLocalArena(bool _bDecommit) override;
 
 	private:
@@ -230,7 +237,7 @@ namespace NMib::NMemory
 		static_assert(TCIsPowerOfTwo<t_CParams::mc_SlabSize>::mc_Value, "Must be aligned to power of two");
 
 		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CGlobal::mc_EnableCallbacks;
-		
+
 		typename t_CParams::CAllocator m_Allocator;
 
 		mutable align_cacheline NThread::CMutual m_NumaArenasLock;
@@ -238,7 +245,7 @@ namespace NMib::NMemory
 
 		align_cacheline NMib::NThread::CMutual m_nArenasLock;
 		mint m_nMaxArenas;
-		mint m_nArenas;
+		NAtomic::TCAtomic<mint> m_nArenas;
 
 		uint64 m_Magic;
 
@@ -254,7 +261,7 @@ namespace NMib::NMemory
 		NThread::TCThreadLocalDynamic
 			<
 				TCMemoryManagerThreadLocal<t_CParams>
-				, NThread::EThreadLocalFlag(int(NThread::EThreadLocalFlag_AlwaysCreated) | int(NThread::EThreadLocalFlag_FastThreadLocal))
+				, NThread::EThreadLocalFlag_AlwaysCreated | NThread::EThreadLocalFlag_FastThreadLocal | NThread::EThreadLocalFlag_Inherit
 			> m_LocalArena
 		;
 

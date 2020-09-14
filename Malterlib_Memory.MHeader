@@ -342,7 +342,7 @@ Property
 		MalterlibWindowsNtVersion "_WIN32_WINNT_VISTA"
 		MalterlibWindowsVersion "NTDDI_VISTA"
 
-		MemoryManagerTestEnable_MalterlibNew true
+		MemoryManagerTestEnable_Malterlib true
 		MemoryManagerTestEnable_OSX true
 		{
 			!!PlatformFamily "OSX"
@@ -363,10 +363,8 @@ Property
 			&
 			{
 				MalterlibEnableThirdPartyComparisonTests true
-				!
-				{
-					Architecture "x86"
-				}
+				Architecture "x64"
+				!MalterlibSupportSanitizers true
 			}
 		}
 		MemoryManagerTestEnable_MiMalloc true
@@ -418,9 +416,9 @@ Property
 		{
 			!!MemoryManagerTestEnable_OSX true
 		}
-		PreprocessorDefines "DMemoryManagerTestEnable_MalterlibNew;@(Compile.PreprocessorDefines)"
+		PreprocessorDefines "DMemoryManagerTestEnable_Malterlib;@(Compile.PreprocessorDefines)"
 		{
-			!!MemoryManagerTestEnable_MalterlibNew true
+			!!MemoryManagerTestEnable_Malterlib true
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_StdLib;@(Compile.PreprocessorDefines)"
 		{
@@ -444,11 +442,7 @@ Property
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_TcMalloc;@(Compile.PreprocessorDefines)"
 		{
-			&
-			{
-				MemoryManagerTestEnable_TcMalloc true
-				!Architecture "x86"
-			}
+			!!MemoryManagerTestEnable_TcMalloc true
 		}
 		PreprocessorDefines "DMemoryManagerTestEnable_MiMalloc;@(Compile.PreprocessorDefines)"
 		{

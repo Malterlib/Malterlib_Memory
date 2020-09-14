@@ -41,13 +41,19 @@
 	{
 		MalterlibEnableInternalWorkspaces true
 	}
-	Property.MalterlibMemoryManager_OverrideDll true
+
+	Property
+	{
+		MalterlibMemoryManager_OverrideDll true
+		MalterlibLog_Severities "None"
+	}
+
 	Compile
 	{
 		!!CompileDialect "C"
 		PreprocessorDefines "DMibMemoryOverrideDll;@(Compile.PreprocessorDefines)"
 	}
-	
+
 	%Target "Malterlib_Memory_MalterlibMalloc"
 }
 
@@ -57,7 +63,7 @@
 	{
 		MalterlibEnableInternalWorkspaces true
 	}
-	
+
 	%Target "Malterlib_Memory_MalterlibMalloc"
 	{
 		Property.MalterlibPostCopyProject "MalterlibMallocDummy"

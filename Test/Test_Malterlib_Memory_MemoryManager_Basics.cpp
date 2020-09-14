@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Test/Memory>
@@ -11,6 +11,9 @@ namespace
 {
 	using namespace NMib::NTest;
 	using namespace NMib::NMemory;
+
+	constexpr mint gc_TestPageSize = gc_OsMaxPageSize;
+
 	class CBasics_Tests : public CTest
 	{
 	public:
@@ -24,13 +27,13 @@ namespace
 			void *m_pAlloc;
 			mint m_Size;
 		};
-		
+
 		void f_NonFinished()
 		{
 #if 0
 			TCMemoryManagerSlab<CParamsNoCleanup, 0> *pSlab = nullptr;
 
-			
+
 			{
 				TCMemoryManager<CParamsNoCleanup> MemoryManager;
 				mint LastSlab = 0xFFFFFFFF;
@@ -137,10 +140,10 @@ namespace
 				ThreadStopEvent.f_SetSignaled();
 				pThread.f_Clear();
 			}
-#endif			
+#endif
 		}
 
-		
+
 		void f_Dummy()
 		{
 		}
@@ -154,34 +157,103 @@ namespace
 		template <typename tf_CParams>
 		struct TCParamsBackgroundTest : public tf_CParams
 		{
-			static constexpr uint32 mc_BackgroundCleanupLifetime = 10;
+			static constexpr uint32 mc_BackgroundCleanupLifetime = 1;
+			static constexpr uint32 mc_BackgroundCleanupLifetimeDecommit = 1;
 		};
 
-		template <typename tf_CParams>
+		template <mint t_PageSize, mint t_nSizesPerLevel>
+		struct TCParams : public CDefaultMemoryManagerParams
+		{
+			static constexpr mint mc_NumSizesPerLevel = t_nSizesPerLevel;
+			static constexpr mint mc_SubSlabSize = t_PageSize;
+		};
+
+		template <typename tf_CParams, mint t_PageSize>
 		void f_TestMemory()
 		{
-			using CParamsNoCleanup = TCParamsNoCleanup<tf_CParams>;
-			using CParamsBackgroundTest = TCParamsBackgroundTest<tf_CParams>;
+			using CParams = TCMemoryManagerParams<tf_CParams>;
+			using CParamsNoCleanup = TCMemoryManagerParams<TCParamsNoCleanup<tf_CParams>>;
+			using CParamsBackgroundTest = TCMemoryManagerParams<TCParamsBackgroundTest<tf_CParams>>;
 
 			DMibTestSuite("Internals")
 			{
 				// Just run for checking the asserts
-				for (int i = 0; i < TCDefaultMemoryManagerParams<8>::mc_SlabSize / TCDefaultMemoryManagerParams<8>::mc_SubSlabSize; ++i)
+				auto fCheckParams = [=]<mint tf_nSizesPerLevel>(mint _nSizesPerLevel)
+					{
+						using CParams = TCMemoryManagerParams<TCParams<t_PageSize, tf_nSizesPerLevel>>;
+						// Just run for checking the asserts
+						for (int i = 0; i < CParams::mc_SlabSize / CParams::mc_SubSlabSize; ++i)
+						{
+							for (mint iSize = 0; iSize < _nSizesPerLevel; ++iSize)
+								CParams::fs_DivideBySlabMultiplier(i, iSize);
+						}
+
+					}
+				;
+				fCheckParams.template operator ()<16>(16);
+				fCheckParams.template operator ()<8>(8);
+				fCheckParams.template operator ()<4>(4);
+				fCheckParams.template operator ()<2>(2);
+				fCheckParams.template operator ()<1>(1);
+
 				{
-					uint32 Test = TCDefaultMemoryManagerParams<8>::fs_DivideBySlabMultiplier(i, 0);
-					Test = TCDefaultMemoryManagerParams<8>::fs_DivideBySlabMultiplier(i, 1);
-					Test = TCDefaultMemoryManagerParams<8>::fs_DivideBySlabMultiplier(i, 2);
-					Test = TCDefaultMemoryManagerParams<8>::fs_DivideBySlabMultiplier(i, 3);
-					Test = TCDefaultMemoryManagerParams<8>::fs_DivideBySlabMultiplier(i, 4);
-					Test = TCDefaultMemoryManagerParams<8>::fs_DivideBySlabMultiplier(i, 5);
-					Test = TCDefaultMemoryManagerParams<8>::fs_DivideBySlabMultiplier(i, 6);
-					Test = TCDefaultMemoryManagerParams<8>::fs_DivideBySlabMultiplier(i, 7);
+					using CParams = TCMemoryManagerParams<TCParams<t_PageSize, 16>>;
+					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[1] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 16);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[2] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[3] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 16);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[4] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 4);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[5] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 16);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[6] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[7] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 16);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[8] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 2);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[9] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 16);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[10] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[11] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 16);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[12] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 4);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[13] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 16);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[14] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[15] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 16);
+				}
+				{
+					using CParams = TCMemoryManagerParams<TCParams<t_PageSize, 8>>;
+					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[1] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[2] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 4);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[3] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[4] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 2);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[5] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[6] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 4);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[7] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
+				}
+				{
+					using CParams = TCMemoryManagerParams<TCParams<t_PageSize, 4>>;
+					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[1] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 4);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[2] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 2);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[3] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 4);
+				}
+				{
+					using CParams = TCMemoryManagerParams<TCParams<t_PageSize, 2>>;
+					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
+					static_assert(CParams::mc_NumAllocsPerSubSlab[1] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 2);
+				}
+				{
+					using CParams = TCMemoryManagerParams<TCParams<t_PageSize, 1>>;
+					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
 				}
 
+				auto fAligned = [](mint _Size)
+					{
+						if constexpr (!tf_CParams::mc_bAllowUnalignedFreeList)
+							return NMib::fg_AlignUp(_Size, sizeof(void *));
+						return _Size;
+					}
+				;
 
 				{
 					DMibTestPath("Sizes 8");
-					TCMemoryManager<tf_CParams> Manager{CMemoryManagerConfig()};
+					TCMemoryManager<CParams> Manager{CMemoryManagerConfig()};
 
 					if constexpr (tf_CParams::mc_bUseSmallSizes)
 					{
@@ -205,66 +277,66 @@ namespace
 					}
 					else
 					{
-						DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(2)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(3)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(4)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(5)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(6)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(7)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(8)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(9)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(10)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(11)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(12)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(13)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(14)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(15)) == DMibExpr(20));
-						DMibTest(DMibExpr(Manager.f_SizePadded(16)) == DMibExpr(20));
+						DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(2)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(3)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(4)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(5)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(6)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(7)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(8)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(9)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(10)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(11)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(12)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(13)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(14)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(15)) == DMibExpr(fAligned(20)));
+						DMibTest(DMibExpr(Manager.f_SizePadded(16)) == DMibExpr(fAligned(20)));
 					}
 
-					DMibTest(DMibExpr(Manager.f_SizePadded(20)) == DMibExpr(20));
-					DMibTest(DMibExpr(Manager.f_SizePadded(24)) == DMibExpr(24));
-					DMibTest(DMibExpr(Manager.f_SizePadded(28)) == DMibExpr(28));
-					DMibTest(DMibExpr(Manager.f_SizePadded(29)) == DMibExpr(32));
-					DMibTest(DMibExpr(Manager.f_SizePadded(32)) == DMibExpr(32));
-					DMibTest(DMibExpr(Manager.f_SizePadded(33)) == DMibExpr(36));
-					DMibTest(DMibExpr(Manager.f_SizePadded(36)) == DMibExpr(36));
-					DMibTest(DMibExpr(Manager.f_SizePadded(37)) == DMibExpr(40));
-					DMibTest(DMibExpr(Manager.f_SizePadded(40)) == DMibExpr(40));
-					DMibTest(DMibExpr(Manager.f_SizePadded(41)) == DMibExpr(44));
-					DMibTest(DMibExpr(Manager.f_SizePadded(44)) == DMibExpr(44));
-					DMibTest(DMibExpr(Manager.f_SizePadded(45)) == DMibExpr(48));
-					DMibTest(DMibExpr(Manager.f_SizePadded(48)) == DMibExpr(48));
-					DMibTest(DMibExpr(Manager.f_SizePadded(49)) == DMibExpr(52));
-					DMibTest(DMibExpr(Manager.f_SizePadded(52)) == DMibExpr(52));
-					DMibTest(DMibExpr(Manager.f_SizePadded(53)) == DMibExpr(56));
-					DMibTest(DMibExpr(Manager.f_SizePadded(56)) == DMibExpr(56));
-					DMibTest(DMibExpr(Manager.f_SizePadded(57)) == DMibExpr(60));
-					DMibTest(DMibExpr(Manager.f_SizePadded(60)) == DMibExpr(60));
-					DMibTest(DMibExpr(Manager.f_SizePadded(61)) == DMibExpr(64));
-					DMibTest(DMibExpr(Manager.f_SizePadded(64)) == DMibExpr(64));
-					DMibTest(DMibExpr(Manager.f_SizePadded(65)) == DMibExpr(72));
-					DMibTest(DMibExpr(Manager.f_SizePadded(72)) == DMibExpr(72));
-					DMibTest(DMibExpr(Manager.f_SizePadded(73)) == DMibExpr(80));
-					DMibTest(DMibExpr(Manager.f_SizePadded(80)) == DMibExpr(80));
-					DMibTest(DMibExpr(Manager.f_SizePadded(81)) == DMibExpr(88));
-					DMibTest(DMibExpr(Manager.f_SizePadded(88)) == DMibExpr(88));
-					DMibTest(DMibExpr(Manager.f_SizePadded(89)) == DMibExpr(96));
-					DMibTest(DMibExpr(Manager.f_SizePadded(96)) == DMibExpr(96));
-					DMibTest(DMibExpr(Manager.f_SizePadded(97)) == DMibExpr(104));
-					DMibTest(DMibExpr(Manager.f_SizePadded(104)) == DMibExpr(104));
-					DMibTest(DMibExpr(Manager.f_SizePadded(105)) == DMibExpr(112));
-					DMibTest(DMibExpr(Manager.f_SizePadded(112)) == DMibExpr(112));
-					DMibTest(DMibExpr(Manager.f_SizePadded(113)) == DMibExpr(120));
-					DMibTest(DMibExpr(Manager.f_SizePadded(120)) == DMibExpr(120));
-					DMibTest(DMibExpr(Manager.f_SizePadded(121)) == DMibExpr(128));
-					DMibTest(DMibExpr(Manager.f_SizePadded(128)) == DMibExpr(128));
+					DMibTest(DMibExpr(Manager.f_SizePadded(20)) == DMibExpr(fAligned(20)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(24)) == DMibExpr(fAligned(24)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(28)) == DMibExpr(fAligned(28)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(29)) == DMibExpr(fAligned(32)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(32)) == DMibExpr(fAligned(32)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(33)) == DMibExpr(fAligned(36)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(36)) == DMibExpr(fAligned(36)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(37)) == DMibExpr(fAligned(40)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(40)) == DMibExpr(fAligned(40)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(41)) == DMibExpr(fAligned(44)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(44)) == DMibExpr(fAligned(44)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(45)) == DMibExpr(fAligned(48)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(48)) == DMibExpr(fAligned(48)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(49)) == DMibExpr(fAligned(52)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(52)) == DMibExpr(fAligned(52)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(53)) == DMibExpr(fAligned(56)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(56)) == DMibExpr(fAligned(56)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(57)) == DMibExpr(fAligned(60)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(60)) == DMibExpr(fAligned(60)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(61)) == DMibExpr(fAligned(64)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(64)) == DMibExpr(fAligned(64)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(65)) == DMibExpr(fAligned(72)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(72)) == DMibExpr(fAligned(72)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(73)) == DMibExpr(fAligned(80)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(80)) == DMibExpr(fAligned(80)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(81)) == DMibExpr(fAligned(88)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(88)) == DMibExpr(fAligned(88)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(89)) == DMibExpr(fAligned(96)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(96)) == DMibExpr(fAligned(96)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(97)) == DMibExpr(fAligned(104)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(104)) == DMibExpr(fAligned(104)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(105)) == DMibExpr(fAligned(112)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(112)) == DMibExpr(fAligned(112)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(113)) == DMibExpr(fAligned(120)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(120)) == DMibExpr(fAligned(120)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(121)) == DMibExpr(fAligned(128)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(128)) == DMibExpr(fAligned(128)));
 				}
 				{
 					DMibTestPath("Sizes 4");
-					TCMemoryManager<TCDefaultMemoryManagerParams<4>> Manager{CMemoryManagerConfig()};
+					TCMemoryManager<TCMemoryManagerParams<TCParams<t_PageSize, 4>>> Manager{CMemoryManagerConfig()};
 
 					DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(1));
 					DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(1));
@@ -283,29 +355,29 @@ namespace
 					DMibTest(DMibExpr(Manager.f_SizePadded(14)) == DMibExpr(16));
 					DMibTest(DMibExpr(Manager.f_SizePadded(15)) == DMibExpr(16));
 					DMibTest(DMibExpr(Manager.f_SizePadded(16)) == DMibExpr(16));
-					DMibTest(DMibExpr(Manager.f_SizePadded(20)) == DMibExpr(20));
-					DMibTest(DMibExpr(Manager.f_SizePadded(24)) == DMibExpr(24));
-					DMibTest(DMibExpr(Manager.f_SizePadded(32)) == DMibExpr(32));
-					DMibTest(DMibExpr(Manager.f_SizePadded(33)) == DMibExpr(40));
-					DMibTest(DMibExpr(Manager.f_SizePadded(40)) == DMibExpr(40));
-					DMibTest(DMibExpr(Manager.f_SizePadded(41)) == DMibExpr(48));
-					DMibTest(DMibExpr(Manager.f_SizePadded(48)) == DMibExpr(48));
-					DMibTest(DMibExpr(Manager.f_SizePadded(49)) == DMibExpr(56));
-					DMibTest(DMibExpr(Manager.f_SizePadded(56)) == DMibExpr(56));
-					DMibTest(DMibExpr(Manager.f_SizePadded(57)) == DMibExpr(64));
-					DMibTest(DMibExpr(Manager.f_SizePadded(64)) == DMibExpr(64));
-					DMibTest(DMibExpr(Manager.f_SizePadded(65)) == DMibExpr(80));
-					DMibTest(DMibExpr(Manager.f_SizePadded(80)) == DMibExpr(80));
-					DMibTest(DMibExpr(Manager.f_SizePadded(81)) == DMibExpr(96));
-					DMibTest(DMibExpr(Manager.f_SizePadded(96)) == DMibExpr(96));
-					DMibTest(DMibExpr(Manager.f_SizePadded(97)) == DMibExpr(112));
-					DMibTest(DMibExpr(Manager.f_SizePadded(112)) == DMibExpr(112));
-					DMibTest(DMibExpr(Manager.f_SizePadded(113)) == DMibExpr(128));
-					DMibTest(DMibExpr(Manager.f_SizePadded(128)) == DMibExpr(128));
+					DMibTest(DMibExpr(Manager.f_SizePadded(20)) == DMibExpr(fAligned(20)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(24)) == DMibExpr(fAligned(24)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(32)) == DMibExpr(fAligned(32)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(33)) == DMibExpr(fAligned(40)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(40)) == DMibExpr(fAligned(40)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(41)) == DMibExpr(fAligned(48)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(48)) == DMibExpr(fAligned(48)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(49)) == DMibExpr(fAligned(56)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(56)) == DMibExpr(fAligned(56)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(57)) == DMibExpr(fAligned(64)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(64)) == DMibExpr(fAligned(64)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(65)) == DMibExpr(fAligned(80)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(80)) == DMibExpr(fAligned(80)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(81)) == DMibExpr(fAligned(96)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(96)) == DMibExpr(fAligned(96)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(97)) == DMibExpr(fAligned(112)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(112)) == DMibExpr(fAligned(112)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(113)) == DMibExpr(fAligned(128)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(128)) == DMibExpr(fAligned(128)));
 				}
 				{
 					DMibTestPath("Sizes 2");
-					TCMemoryManager<TCDefaultMemoryManagerParams<2>> Manager{CMemoryManagerConfig()};
+					TCMemoryManager<TCMemoryManagerParams<TCParams<t_PageSize, 2>>> Manager{CMemoryManagerConfig()};
 
 					DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(1));
 					DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(1));
@@ -324,21 +396,21 @@ namespace
 					DMibTest(DMibExpr(Manager.f_SizePadded(14)) == DMibExpr(16));
 					DMibTest(DMibExpr(Manager.f_SizePadded(15)) == DMibExpr(16));
 					DMibTest(DMibExpr(Manager.f_SizePadded(16)) == DMibExpr(16));
-					DMibTest(DMibExpr(Manager.f_SizePadded(20)) == DMibExpr(24));
-					DMibTest(DMibExpr(Manager.f_SizePadded(24)) == DMibExpr(24));
-					DMibTest(DMibExpr(Manager.f_SizePadded(32)) == DMibExpr(32));
-					DMibTest(DMibExpr(Manager.f_SizePadded(33)) == DMibExpr(48));
-					DMibTest(DMibExpr(Manager.f_SizePadded(48)) == DMibExpr(48));
-					DMibTest(DMibExpr(Manager.f_SizePadded(49)) == DMibExpr(64));
-					DMibTest(DMibExpr(Manager.f_SizePadded(64)) == DMibExpr(64));
-					DMibTest(DMibExpr(Manager.f_SizePadded(65)) == DMibExpr(96));
-					DMibTest(DMibExpr(Manager.f_SizePadded(96)) == DMibExpr(96));
-					DMibTest(DMibExpr(Manager.f_SizePadded(97)) == DMibExpr(128));
-					DMibTest(DMibExpr(Manager.f_SizePadded(128)) == DMibExpr(128));
+					DMibTest(DMibExpr(Manager.f_SizePadded(20)) == DMibExpr(fAligned(24)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(24)) == DMibExpr(fAligned(24)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(32)) == DMibExpr(fAligned(32)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(33)) == DMibExpr(fAligned(48)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(48)) == DMibExpr(fAligned(48)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(49)) == DMibExpr(fAligned(64)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(64)) == DMibExpr(fAligned(64)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(65)) == DMibExpr(fAligned(96)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(96)) == DMibExpr(fAligned(96)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(97)) == DMibExpr(fAligned(128)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(128)) == DMibExpr(fAligned(128)));
 				}
 				{
 					DMibTestPath("Sizes 1");
-					TCMemoryManager<TCDefaultMemoryManagerParams<1>> Manager{CMemoryManagerConfig()};
+					TCMemoryManager<TCMemoryManagerParams<TCParams<t_PageSize, 1>>> Manager{CMemoryManagerConfig()};
 
 					DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(1));
 					DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(1));
@@ -357,13 +429,13 @@ namespace
 					DMibTest(DMibExpr(Manager.f_SizePadded(14)) == DMibExpr(16));
 					DMibTest(DMibExpr(Manager.f_SizePadded(15)) == DMibExpr(16));
 					DMibTest(DMibExpr(Manager.f_SizePadded(16)) == DMibExpr(16));
-					DMibTest(DMibExpr(Manager.f_SizePadded(20)) == DMibExpr(32));
-					DMibTest(DMibExpr(Manager.f_SizePadded(24)) == DMibExpr(32));
-					DMibTest(DMibExpr(Manager.f_SizePadded(32)) == DMibExpr(32));
-					DMibTest(DMibExpr(Manager.f_SizePadded(33)) == DMibExpr(64));
-					DMibTest(DMibExpr(Manager.f_SizePadded(64)) == DMibExpr(64));
-					DMibTest(DMibExpr(Manager.f_SizePadded(65)) == DMibExpr(128));
-					DMibTest(DMibExpr(Manager.f_SizePadded(128)) == DMibExpr(128));
+					DMibTest(DMibExpr(Manager.f_SizePadded(20)) == DMibExpr(fAligned(32)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(24)) == DMibExpr(fAligned(32)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(32)) == DMibExpr(fAligned(32)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(33)) == DMibExpr(fAligned(64)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(64)) == DMibExpr(fAligned(64)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(65)) == DMibExpr(fAligned(128)));
+					DMibTest(DMibExpr(Manager.f_SizePadded(128)) == DMibExpr(fAligned(128)));
 				}
 			};
 
@@ -504,9 +576,43 @@ namespace
 				}
 			};
 
+			DMibTestSuite("Multiple sub slabs")
+			{
+				TCMemoryManager<CParamsNoCleanup> MemoryManagerTest{CMemoryManagerConfig()};
+				mint LastAlloc = 0;
+
+				for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
+				{
+					mint AllocSize = MemoryManagerTest.f_SizePadded(MemorySize);
+					if (AllocSize != LastAlloc)
+					{
+						LastAlloc = AllocSize;
+						DMibTestPath(NMib::NStr::CStr::CFormat("{}") << AllocSize);
+
+						mint nAlloc = (CParamsNoCleanup::mc_MaxSubSlabMultipliedSize * 3) / AllocSize;
+
+						TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
+						auto Checkout = MemoryManager.f_Checkout();
+						NMib::NContainer::TCVector<void *> Allocs;
+						Allocs.f_SetLen(nAlloc);
+						for (mint i = 0; i < nAlloc; ++i)
+						{
+							mint Size = AllocSize;
+							Allocs[i] = MemoryManager.f_AllocWithSize(Size);
+						}
+						for (mint i = 0; i < nAlloc; ++i)
+						{
+							MemoryManager.f_Free(Allocs[i], AllocSize);
+						}
+						DMibTest(DMibExpr(true));
+					}
+				}
+			};
+
 			DMibTestSuite("Multiple slabs")
 			{
 				TCMemoryManager<CParamsNoCleanup> MemoryManagerTest{CMemoryManagerConfig()};
+
 				mint LastAlloc = 0;
 				for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 				{
@@ -570,11 +676,12 @@ namespace
 			{
 				[[maybe_unused]] mint LastAlloc = 0;
 				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
+				mint SlabSize = CParamsNoCleanup::mc_SlabSize;
 
 				{
 					DMibTestPath("Alloc1");
 					auto Checkout = MemoryManager.f_Checkout();
-					mint nAllocs = (8*1024*1024) / 256;
+					mint nAllocs = (SlabSize / 2) / 256;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
 
 					Allocs.f_SetLen(nAllocs);
@@ -590,9 +697,7 @@ namespace
 					}
 
 					for (mint i = 0; i < nAllocs; ++i)
-					{
 						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
-					}
 
 					MeasureMemory.f_Stop(1);
 
@@ -600,14 +705,17 @@ namespace
 					MeasureMemory.f_GetResults(Results);
 
 #	if DMibConfig_Memory_Shims_Enable
-					DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesCommit.m_Average) == DMibExpr(8*1024*1024 + 3*4096));
+					mint MetaCommit = CParamsNoCleanup::fs_GetSlabTypeMetaSize(0);
+					DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesCommit.m_Average) == DMibExpr(SlabSize / 2 + MetaCommit));
 #	endif
 				}
+				mint MaxCommittedSubSlabs = 0;
 				MemoryManager.f_GarbageCollect(false);
+				mint PreviousWaste;
 				{
 					DMibTestPath("Alloc2");
 					auto Checkout = MemoryManager.f_Checkout();
-					mint nAllocs = (8*1024*1024) / 384;
+					mint nAllocs = (SlabSize / 2) / 384;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
 
 					Allocs.f_SetLen(nAllocs);
@@ -623,9 +731,7 @@ namespace
 					}
 
 					for (mint i = 0; i < nAllocs; ++i)
-					{
 						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
-					}
 
 					MeasureMemory.f_Stop(1);
 
@@ -633,15 +739,24 @@ namespace
 					MeasureMemory.f_GetResults(Results);
 
 #	if DMibConfig_Memory_Shims_Enable
-					DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesDecommit.m_Average) == DMibExpr(4096*2));
-					DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesCommit.m_Average) == DMibExpr(3*4096));
+					mint PreviousMetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(0) / CParamsNoCleanup::mc_SubSlabSize;
+					mint MetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(4) / CParamsNoCleanup::mc_SubSlabSize;
+					mint Multiplier = CParamsNoCleanup::mc_SlabTypeInfo[4].m_SubSlabMutiplier;
+					mint SubSlabSize = Multiplier * CParamsNoCleanup::mc_SubSlabSize;
+					mint PreviousCommittedSubSlabs = (SlabSize / 2) / CParamsNoCleanup::mc_SubSlabSize;
+					mint CommittedSubSlabs = ((PreviousCommittedSubSlabs + Multiplier - 1) / Multiplier) * Multiplier;
+					MaxCommittedSubSlabs = NMib::fg_Max(CommittedSubSlabs, MaxCommittedSubSlabs, PreviousCommittedSubSlabs);
+					mint Waste = CParamsNoCleanup::mc_SlabSize - MetaSubSlabs * CParamsNoCleanup::mc_SubSlabSize - CParamsNoCleanup::mc_NumSubSlabs[4] * SubSlabSize;
+					PreviousWaste = Waste;
+					DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, Waste);
+					DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, ==, (CommittedSubSlabs - PreviousCommittedSubSlabs) * CParamsNoCleanup::mc_SubSlabSize);
 #	endif
 				}
 				MemoryManager.f_GarbageCollect(false);
 				{
 					DMibTestPath("Alloc3");
 					auto Checkout = MemoryManager.f_Checkout();
-					mint nAllocs = (8*1024*1024) / 256;
+					mint nAllocs = (SlabSize / 2) / 256;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
 
 					Allocs.f_SetLen(nAllocs);
@@ -657,9 +772,43 @@ namespace
 					}
 
 					for (mint i = 0; i < nAllocs; ++i)
-					{
 						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
+
+					MeasureMemory.f_Stop(1);
+
+					NMib::NTest::CTestMemoryResult Results;
+					MeasureMemory.f_GetResults(Results);
+
+					MaxCommittedSubSlabs = (SlabSize / 2) / CParamsNoCleanup::mc_SubSlabSize;
+
+#	if DMibConfig_Memory_Shims_Enable
+					DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, 0);
+					DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, ==, PreviousWaste);
+#	endif
+				}
+				MemoryManager.f_GarbageCollect(false);
+				{
+					DMibTestPath("Alloc4");
+					auto Checkout = MemoryManager.f_Checkout();
+					mint AllocSize = 256 + (258/8)*3;
+					mint nAllocs = (SlabSize / 2) / AllocSize;
+					mint nAllocBytes = nAllocs * AllocSize;
+					NMib::NContainer::TCVector<CAlloc> Allocs;
+
+					Allocs.f_SetLen(nAllocs);
+
+					CTestMemoryMeasure MeasureMemory("Alloc");
+
+					MeasureMemory.f_Start();
+
+					for (mint i = 0; i < nAllocs; ++i)
+					{
+						mint Size = AllocSize;
+						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
+
+					for (mint i = 0; i < nAllocs; ++i)
+						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
 
 					MeasureMemory.f_Stop(1);
 
@@ -667,11 +816,15 @@ namespace
 					MeasureMemory.f_GetResults(Results);
 
 #	if DMibConfig_Memory_Shims_Enable
-					DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesDecommit.m_Average) == DMibExpr(0));
-					DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesCommit.m_Average) == DMibExpr(3*4096));
+					// TODO: Calculate actual start and end to get correct sizes
+					mint MetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(3) / CParamsNoCleanup::mc_SubSlabSize;
+					mint Multiplier = CParamsNoCleanup::mc_SlabTypeInfo[3].m_SubSlabMutiplier;
+					mint SubSlabSize = Multiplier * CParamsNoCleanup::mc_SubSlabSize;
+					mint Waste = CParamsNoCleanup::mc_SlabSize - MetaSubSlabs * CParamsNoCleanup::mc_SubSlabSize - CParamsNoCleanup::mc_NumSubSlabs[3] * SubSlabSize;
+					DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, Waste);
+					DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, >=, CParamsNoCleanup::mc_SubSlabSize);
 #	endif
 				}
-
 			};
 
 			DMibTestCategory("Garbage collection")
@@ -921,6 +1074,7 @@ namespace
 				}
 
 				StartedThreads.f_Clear();
+				NMib::NSys::fg_Thread_Sleep(fp64(0.002));
 				MemoryManager.f_WaitForBackgroundCleanup();
 				{
 					{
@@ -947,23 +1101,48 @@ namespace
 			};
 		}
 
-		struct CTestParamsNoSmallSize : public TCDefaultMemoryManagerParams<8>
+		template <mint t_PageSize>
+		struct TCTestParamsNoSmallSize : public TCParams<t_PageSize, 8>
 		{
 			static constexpr bool mc_bUseSmallSizes = false;
 		};
-		
+
 		void f_DoTests()
 		{
 			DMibTestCategory("Default")
 			{
-				f_TestMemory<TCDefaultMemoryManagerParams<8>>();
+				if constexpr (gc_OsMaxPageSize != 4096)
+				{
+					DMibTestCategory("OsMaxPageSize")
+					{
+						f_TestMemory<TCParams<gc_TestPageSize, 8>, gc_TestPageSize>();
+					};
+				}
+
+				DMibTestCategory("4096")
+				{
+					f_TestMemory<TCParams<4096, 8>, 4096>();
+				};
 			};
 #if DMibPPtrBits >= 64
 			DMibTestCategory("NoSmallSize")
 			{
-				f_TestMemory<CTestParamsNoSmallSize>();
+				if constexpr (gc_OsMaxPageSize != 4096)
+				{
+					DMibTestCategory("OsMaxPageSize")
+					{
+						f_TestMemory<TCTestParamsNoSmallSize<gc_OsMaxPageSize>, gc_OsMaxPageSize>();
+					};
+				}
+
+				DMibTestCategory("4096")
+				{
+					f_TestMemory<TCTestParamsNoSmallSize<4096>, 4096>();
+				};
 			};
 #endif
+#ifndef DMibSanitizerEnabled_Thread
+			// tsan does not currently support unloading dlls
 			DMibTestSuite("Dll")
 			{
 				NMib::NStr::CStr DllPath = NMib::NStr::CStr("Test_Malterlib_Helper_Memory") + NMib::NFile::CFile::fs_GetDllExtension();
@@ -975,14 +1154,15 @@ namespace
 				DMibTest(DMibExpr(pDll))(ETest_FailAndStop);
 
 				void (calling_convention_c *pTestFunc)() = nullptr;
-				
+
 				(void * &)pTestFunc = NMib::NSys::fg_GetLibrarySymbol(pDll, "fg_TestMemory");
 				DMibTest(DMibExpr(pTestFunc))(ETest_FailAndStop);
-				
+
 				pTestFunc();
-				
+
 				NMib::NSys::fg_FreeLibrary(pDll);
 			};
+#endif
 		}
 	};
 

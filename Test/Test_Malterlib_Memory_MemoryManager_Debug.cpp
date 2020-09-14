@@ -23,7 +23,8 @@ namespace
 		{
 			enum
 			{
-				mc_StackTraceDepth 	= 0
+				mc_bAsanPoisioning = false
+				, mc_StackTraceDepth 	= 0
 			};
 		};
 
@@ -31,7 +32,8 @@ namespace
 		{
 			enum
 			{
-				mc_nPreGuardBytes		= 0
+				mc_bAsanPoisioning = false
+				, mc_nPreGuardBytes		= 0
 				, mc_nPostGuardBytes	= 0
 				, mc_StackTraceDepth 	= 0
 			};
@@ -63,10 +65,10 @@ namespace
 				MeasureMemory.f_Start();
 				
 				{
-					TCMemoryManagerTracked<TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions>> MemoryManager{"Test", CMemoryManagerConfig()};
+					TCMemoryManagerTracked<TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions>> MemoryManager{"Test", CMemoryManagerConfig()};
 					mint LastAlloc = 0;
 					auto Checkout = MemoryManager.f_Checkout();
-					for (mint MemorySize = 1; MemorySize <= CDefaultMemoryManagerParams_Tests::mc_MaxSlabAllocSize; ++MemorySize)
+					for (mint MemorySize = 1; MemorySize <= TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>::mc_MaxSlabAllocSize; ++MemorySize)
 					{
 						mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 						if (AllocSize != LastAlloc || MemorySize < 1024)
@@ -120,7 +122,7 @@ namespace
 			};
 			DMibTestSuite("Leaks")
 			{
-				TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+				TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 				
 				uint8 *pAlloc = nullptr;
 				bool bFoundAlloc = false;
@@ -164,7 +166,7 @@ namespace
 			
 			DMibTestSuite("Double free")
 			{
-				TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptionsWithoutGuard> MemoryManager{CMemoryManagerConfig()};
+				TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptionsWithoutGuard> MemoryManager{CMemoryManagerConfig()};
 				auto Checkout = MemoryManager.f_Checkout();
 				
 				auto DoubleFreeException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Double free");
@@ -228,7 +230,7 @@ namespace
 			{
 				DMibTestSuite("Freed")
 				{
-					TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptionsWithoutGuard> MemoryManager{CMemoryManagerConfig()};
+					TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptionsWithoutGuard> MemoryManager{CMemoryManagerConfig()};
 					auto Checkout = MemoryManager.f_Checkout();
 					
 					auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after being freed");
@@ -236,18 +238,18 @@ namespace
 					uint8 *pMemory0 = (uint8 *)MemoryManager.f_AllocWithSize(Size);
 					uint8 *pMemory = (uint8 *)MemoryManager.f_AllocWithSize(Size);
 					MemoryManager.f_Free(pMemory, Size);
-					
+
 					uint8 OldValue = pMemory[3];
 					pMemory[3] = 0;
 					
 					Size = 4;
 
-					DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+					DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 					
 					DMibTest
 						(
 							DMibExpr(fg_ThrowsException(OverwriteException))
-							== DMibLExpr(MemoryManager.f_CheckAll(true))
+							== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 						)
 					;
 					
@@ -275,25 +277,25 @@ namespace
 							DMibTestSuite("Freed")
 							{
 								f_Dummy();
-								TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+								TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 								auto Checkout = MemoryManager.f_Checkout();
 								
 								auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after being freed");
 								mint Size = _Size;
 								uint8 *pMemory = (uint8 *)MemoryManager.f_AllocWithSize(Size);
 								MemoryManager.f_Free(pMemory, Size);
-								
+
 								uint8 OldValue = pMemory[0];
 								pMemory[0] = 0;
 								
 								Size = _Size;
 
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -310,22 +312,22 @@ namespace
 						
 						DMibTestSuite("Pre block")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocWithSize(Size);
-							
+
 							uint8 OldValue = pMemory[-1];
 							pMemory[-1] = 0;
 						
-							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 							
 							DMibTest
 								(
 									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_CheckAll(true))
+									== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 								)
 							;
 							
@@ -343,21 +345,21 @@ namespace
 						
 						DMibTestSuite("Post block")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocWithSize(Size);
-							
+
 							uint8 OldValue = pMemory[Size];
 							pMemory[Size] = 0;
 						
-							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 							
 							DMibTest
 								(
 									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_CheckAll(true))
+									== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 								)
 							;
 							
@@ -374,24 +376,23 @@ namespace
 
 						DMibTestSuite("Pre block aligned")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
-							
-						
+
 							DMibTest(DMibExpr(NMib::fg_AlignUp(pMemory, _Size * 4)) == DMibExpr(pMemory));
 							
 							uint8 OldValue = pMemory[-1];
 							pMemory[-1] = 0;
 							
-							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 							
 							DMibTest
 								(
 									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_CheckAll(true))
+									== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 								)
 							;
 							
@@ -408,24 +409,23 @@ namespace
 						
 						DMibTestSuite("Post block alligned")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
 
 							DMibTest(DMibExpr(NMib::fg_AlignUp(pMemory, _Size * 4)) == DMibExpr(pMemory));
-							
+
 							uint8 OldValue = pMemory[Size];
 							pMemory[Size] = 0;
-							
-						
-							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+
+							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 							
 							DMibTest
 								(
 									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_CheckAll(true))
+									== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 								)
 							;
 							
@@ -442,7 +442,7 @@ namespace
 
 						DMibTestSuite("Pre block realloc")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
@@ -450,17 +450,18 @@ namespace
 
 							{
 								DMibTestPath("Bigger");
+
 								uint8 OldValue = pMemory[-1];
 								pMemory[-1] = 0;
 								
 								mint NewSizeBigger = _Size * 8;
 						
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -479,17 +480,18 @@ namespace
 
 							{
 								DMibTestPath("Smaller");
+
 								uint8 OldValue = pMemory[-1];
 								pMemory[-1] = 0;
 								
 								mint NewSizeSmaller = _Size;
 						
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -510,12 +512,12 @@ namespace
 								uint8 OldValue = pMemory[-1];
 								pMemory[-1] = 0;
 								
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 							
@@ -533,7 +535,7 @@ namespace
 						
 						DMibTestSuite("Post block realloc")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
@@ -541,17 +543,18 @@ namespace
 
 							{
 								DMibTestPath("Bigger");
+
 								uint8 OldValue = pMemory[Size];
 								pMemory[Size] = 0;
 								
 								mint NewSizeBigger = _Size * 8;
 						
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -571,17 +574,18 @@ namespace
 
 							{
 								DMibTestPath("Smaller");
+
 								uint8 OldValue = pMemory[Size];
 								pMemory[Size] = 0;
 								
 								mint NewSizeSmaller = _Size;
 							
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -603,12 +607,12 @@ namespace
 								uint8 OldValue = pMemory[Size];
 								pMemory[Size] = 0;
 								
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -626,7 +630,7 @@ namespace
 						
 						DMibTestSuite("Pre block resize")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
@@ -634,17 +638,18 @@ namespace
 
 							{
 								DMibTestPath("Bigger");
+
 								uint8 OldValue = pMemory[-1];
 								pMemory[-1] = 0;
 								
 								mint NewSizeBigger = _Size * 8;
 						
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -663,16 +668,17 @@ namespace
 
 							{
 								DMibTestPath("Smaller");
+
 								uint8 OldValue = pMemory[-1];
 								pMemory[-1] = 0;
 								
 								mint NewSizeSmaller = _Size;
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -693,12 +699,12 @@ namespace
 								uint8 OldValue = pMemory[-1];
 								pMemory[-1] = 0;
 								
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -716,7 +722,7 @@ namespace
 						
 						DMibTestSuite("Post block resize")
 						{
-							TCMemoryManagerDebug<CDefaultMemoryManagerParams_Tests, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_Checkout();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
@@ -724,16 +730,17 @@ namespace
 
 							{
 								DMibTestPath("Bigger");
+
 								uint8 OldValue = pMemory[Size];
 								pMemory[Size] = 0;
 								
 								mint NewSizeBigger = _Size * 8;
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -753,16 +760,17 @@ namespace
 
 							{
 								DMibTestPath("Smaller");
+
 								uint8 OldValue = pMemory[Size];
 								pMemory[Size] = 0;
 								
 								mint NewSizeSmaller = _Size;
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -784,12 +792,12 @@ namespace
 								uint8 OldValue = pMemory[Size];
 								pMemory[Size] = 0;
 								
-								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(false)));
+								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
 								
 								DMibTest
 									(
 										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(true))
+										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
 									)
 								;
 								
@@ -809,7 +817,9 @@ namespace
 				
 				fl_TestOverwite(64, "Normal");
 				fl_TestOverwite(512*1024, "Big");
+#if DMibPPtrBits > 32
 				fl_TestOverwite(32*1024*1024, "Huge");
+#endif
 			};
 		}
 	};

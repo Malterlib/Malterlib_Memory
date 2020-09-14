@@ -205,8 +205,17 @@ namespace NMib::NMemory
 
 	struct CMemoryReportThreadInfo
 	{
-		TCAutoClear<CReportMemory *> m_pReportTo;
-		TCAutoClearInt<mint> m_ReportDepth;
+		CMemoryReportThreadInfo() = default;
+		CMemoryReportThreadInfo(CMemoryReportThreadInfo const &_Other)
+		{
+			DMibLock(_Other.m_Lock);
+			m_pReportTo = _Other.m_pReportTo;
+			m_ReportDepth = _Other.m_ReportDepth;
+		}
+
+		mutable NThread::CMutual m_Lock;
+		CReportMemory *m_pReportTo = nullptr;
+		mint m_ReportDepth = 0;
 	};
 
 	constinit NStorage::TCAggregate
@@ -226,8 +235,11 @@ namespace NMib::NMemory
 #	if DMibConfig_Memory_Shims_EnableLocal
 		if (g_MemoryReporter.f_WasDestructed())
 			return nullptr;
-		CReportMemory *pOld = (*g_MemoryReporter)->m_pReportTo;
-		(*g_MemoryReporter)->m_pReportTo = _pMemoryReporter;
+		auto &Reporter = **g_MemoryReporter;
+		CReportMemory *pOld = Reporter.m_pReportTo;
+
+		DMibLock(Reporter.m_Lock);
+		Reporter.m_pReportTo = _pMemoryReporter;
 		return pOld;
 #else
 		return nullptr;
@@ -546,6 +558,7 @@ namespace NMib::NMemory
 			return;
 		CMemoryReportThreadInfo &Info = **g_MemoryReporter;
 
+		DMibLock(Info.m_Lock);
 		++Info.m_ReportDepth;
 #endif
 	}
@@ -556,6 +569,7 @@ namespace NMib::NMemory
 		if (!g_MemoryReporter.f_WasDestructed() && g_MemoryReporter.f_IsConstructed() && !fg_GetSys()->f_ThreadDestroyed())
 		{
 			CMemoryReportThreadInfo &Info = **g_MemoryReporter;
+			DMibLock(Info.m_Lock);
 			--Info.m_ReportDepth;
 		}
 #		endif

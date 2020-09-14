@@ -190,7 +190,7 @@ namespace NMib::NMemory
 		// Thread related
 
 		NStorage::TCUniquePointer<NThread::CThreadObjectNonTracked, NMemory::CAllocator_NonTrackedHeap> mp_pThread;
-		NThread::CSpinLock mp_ThreadLock;
+		NThread::CLowLevelLock mp_ThreadLock;
 
 		struct CCallstack
 		{

@@ -12,7 +12,7 @@
 	#define DMibMemoryAssumeAlignment 8
 #endif
 
-//#define DMibMemoryCorrectAlignment
+#define DMibMemoryCorrectAlignment
 #define DMibMemoryCorectSize
 
 namespace NMib
@@ -53,8 +53,89 @@ namespace NMib::NMemory
 
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
 	{
-		static constexpr bool mc_SupportsNonTracked = false;
+		static constexpr bool mc_SupportsNonTracked = true;
 		static constexpr bool mc_SupportsDebug = false;
+
+		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
+		{
+			void *pRet = malloc(_Size);
+			DMibFastCheck(fg_AlignUp((uint8 *)pRet, DMibMemoryAssumeAlignment) == (uint8 *)pRet);
+#ifdef DMibMemoryCorectSize
+			_Size = malloc_usable_size(pRet);
+#endif
+			return pRet;
+		}
+		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
+		{
+			if (_Alignment <= DMibMemoryAssumeAlignment)
+				return fs_NonTracked_AllocWithSize(_pModule, _Size);
+
+			void *pRet = memalign(_Alignment, _Size);
+			DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
+#ifdef DMibMemoryCorectSize
+			_Size = malloc_usable_size(pRet);
+#endif
+			return pRet;
+		}
+
+		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
+		{
+			void *pRet = malloc(_Size);
+			DMibFastCheck(fg_AlignUp((uint8 *)pRet, DMibMemoryAssumeAlignment) == (uint8 *)pRet);
+			return pRet;
+		}
+		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment)
+		{
+			if (_Alignment <= DMibMemoryAssumeAlignment)
+				return fs_NonTracked_Alloc(_pModule, _Size);
+
+			void *pRet = memalign(_Alignment, _Size);
+			DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
+			return pRet;
+		}
+		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
+		{
+			void *pRet = realloc(_pMemory, _Size);
+			DMibFastCheck(fg_AlignUp((uint8 *)pRet, DMibMemoryAssumeAlignment) == (uint8 *)pRet);
+#ifdef DMibMemoryCorectSize
+			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+				_Size = malloc_usable_size(pRet);
+#endif
+			return pRet;
+		}
+
+		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
+		{
+			void *pRet = realloc(_pMemory, _Size);
+			DMibFastCheck(fg_AlignUp((uint8 *)pRet, DMibMemoryAssumeAlignment) == (uint8 *)pRet);
+#ifdef DMibMemoryCorectSize
+			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+				_Size = malloc_usable_size(pRet);
+#endif
+			return pRet;
+		}
+
+		inline_always static void DMibCrossmoduleAPI fs_NonTracked_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
+		{
+			free(_pMemory);
+		}
+
+		inline_always static void DMibCrossmoduleAPI fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+		{
+			free(_pMemory);
+		}
+
+		inline_always static mint DMibCrossmoduleAPI fs_NonTracked_Size(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+		{
+			return malloc_usable_size((void *)_pMemory);
+		}
+
+		inline_always static mint DMibCrossmoduleAPI fs_NonTracked_TrySize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
+		{
+			DMibPDebugBreak; // Not supported
+			return 0;
+		}
+
 		inline_always static void DMibCrossmoduleAPI fs_CreateMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
 			DMibMemoryReportAllocatorName(g_pMemoryManagerName, g_pMemoryManagerName);
@@ -106,6 +187,7 @@ namespace NMib::NMemory
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 		void *pRet = malloc(_Size);
+		DMibFastCheck(fg_AlignUp((uint8 *)pRet, DMibMemoryAssumeAlignment) == (uint8 *)pRet);
 #ifdef DMibMemoryCorectSize
 		_Size = malloc_usable_size(pRet);
 #endif
@@ -145,6 +227,7 @@ namespace NMib::NMemory
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 		DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
 		void *pRet = realloc(_pMemory, _Size);
+		DMibFastCheck(fg_AlignUp((uint8 *)pRet, DMibMemoryAssumeAlignment) == (uint8 *)pRet);
 #ifdef DMibMemoryCorectSize
 		if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
 			_Size = malloc_usable_size(pRet);
@@ -159,6 +242,7 @@ namespace NMib::NMemory
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 		DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
 		void *pRet = realloc(_pMemory, _Size);
+		DMibFastCheck(fg_AlignUp((uint8 *)pRet, DMibMemoryAssumeAlignment) == (uint8 *)pRet);
 #ifdef DMibMemoryCorectSize
 		if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
 			_Size = malloc_usable_size(pRet);

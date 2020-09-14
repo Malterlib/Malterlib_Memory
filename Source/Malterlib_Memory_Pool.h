@@ -78,7 +78,9 @@ namespace NMib::NMemory
 			{
 			}
 #endif
-			typedef TCChunk<t_CAllocator, t_DataSize, t_Alignment> CChunk;
+			using CBlock = TCBlock<t_CAllocator>;
+
+			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, NTraits::TCAlignmentOf<CBlock>::mc_Value)> CChunk;
 
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
@@ -255,7 +257,9 @@ namespace NMib::NMemory
 			{
 			}
 #endif
-			typedef TCChunk<t_CAllocator, t_DataSize, t_Alignment> CChunk;
+			using CBlock = TCBlock<t_CAllocator>;
+
+			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, NTraits::TCAlignmentOf<CBlock>::mc_Value)> CChunk;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
@@ -489,7 +493,8 @@ namespace NMib::NMemory
 			{
 			}
 #endif
-			typedef TCChunk<t_CAllocator, t_DataSize, t_Alignment> CChunk;
+			using CBlock = TCBlock<t_CAllocator>;
+			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, NTraits::TCAlignmentOf<CBlock>::mc_Value)> CChunk;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
@@ -913,7 +918,7 @@ namespace NMib::NMemory
 		, typename t_CPoolType = NMib::NMemory::CPoolType_FreeableSmall
 		, typename t_CLockType = typename NMib::NThread::CMutual
 	>
-	class TCStaticPoolAllocator
+	class TCStaticPoolAllocator : public CAllocator_Base
 	{
 	public:
 
@@ -1349,7 +1354,7 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CPoolType>
-	class TCPoolReferenceAllocator
+	class TCPoolReferenceAllocator : public CAllocator_Base
 	{
 	public:
 		enum

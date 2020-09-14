@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -243,7 +243,7 @@ namespace NMib::NMemory
 		void *pAlloc = pSlab->f_Alloc(bFull);
 		if constexpr (mc_EnableCallbacks)
 		{
-			pSlab->f_OnCheckFree(*_pThis, pAlloc, true);
+			pSlab->f_OnCheckFree(*_pThis, pAlloc, EMemoryManagerCheckFlag_Default);
 			pSlab->f_OnAlloc(*_pThis, pAlloc);
 		}
 
@@ -271,7 +271,7 @@ namespace NMib::NMemory
 		void *pAlloc = pSlab->f_Alloc(bFull);
 		if constexpr (mc_EnableCallbacks)
 		{
-			pSlab->f_OnCheckFree(*_pThis, pAlloc, true);
+			pSlab->f_OnCheckFree(*_pThis, pAlloc, EMemoryManagerCheckFlag_Default);
 			pSlab->f_OnAlloc(*_pThis, pAlloc);
 		}
 
@@ -317,8 +317,10 @@ namespace NMib::NMemory
 		++pFreeSlab->m_nAllocatedSubSlabs;
 
 		mint SlabIndex = CSubSlab::mc_SmallSlabIndex;
-		pFreeSlab->m_SubSlabData[iAlloc].m_Allocated.m_Type = SlabIndex;
-		//DMibDTrace("Small: {}" DMibNewLine, pFreeSlab->m_SubSlabData[iAlloc].m_Allocated.m_Type);
+		static_assert(CSubSlab::mc_SmallSlabIndex <= TCMemoryManagerSubSlabDataType<t_CParams>::mc_MaxType);
+
+		pFreeSlab->m_SubSlabDataType[iAlloc].m_Type = SlabIndex;
+		//DMibDTrace("Small: {}" DMibNewLine, pFreeSlab->m_SubSlabDataType[iAlloc]m_Type);
 
 		CSubSlab *pSlab = new(pSlabAddress) CSubSlab();
 
@@ -351,7 +353,10 @@ namespace NMib::NMemory
 			if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_OneSizeBlocks) || !t_CParams::mc_bUseSmallSizes)
 				fp_SlabHasGarbageInline(_pSlab);
 			else
-				fp_FreeSmallSubSlabs(_pSlab);
+			{
+				if (fp_FreeSmallSubSlabs(_pSlab))
+					return;
+			}
 			++_pSlab->m_nFreeSubSlabs;
 			--_pSlab->m_nAllocatedSubSlabs;
 		}
@@ -366,7 +371,7 @@ namespace NMib::NMemory
 
 	template <typename t_CParams>
 	template <mint tf_Size>
-	bool TCMemoryManagerArena<t_CParams>::fp_CheckFreeSmall(bool _bBreak)
+	bool TCMemoryManagerArena<t_CParams>::fp_CheckFreeSmall(EMemoryManagerCheckFlag _Flags)
 	{
 		bool bError = false;
 
@@ -376,7 +381,7 @@ namespace NMib::NMemory
 		for (auto iSlab = Slabs.f_GetIterator(); iSlab; ++iSlab)
 		{
 			CSubSlab * pSlab = (CSubSlab *)&*iSlab;
-			if (pSlab->f_CheckFree(*this, _bBreak))
+			if (pSlab->f_CheckFree(*this, _Flags))
 				bError = true;
 		}
 

@@ -19,10 +19,26 @@
 
 namespace NMib
 {
-	struct CMemoryManagerParams : public NMemory::CDefaultMemoryManagerParams
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+	struct CMemoryManagerParamsSmallOverrides : NMemory::CDefaultMemoryManagerParams
+	{
+		static constexpr mint mc_SubSlabSize = 4096;
+		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
+		typedef CMainHeapVirtualAllocator CAllocator;
+	};
+
+	struct CMemoryManagerParamsSmall : public NMemory::TCMemoryManagerParams<CMemoryManagerParamsSmallOverrides>
+	{
+	};
+#endif
+	struct CMemoryManagerParamsMaxOverrides : public NMemory::CDefaultMemoryManagerParams
 	{
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 		typedef CMainHeapVirtualAllocator CAllocator;
+	};
+
+	struct CMemoryManagerParamsMax : public NMemory::TCMemoryManagerParams<CMemoryManagerParamsMaxOverrides>
+	{
 	};
 
 #if DEnableDebugMemoryManager
@@ -56,11 +72,21 @@ namespace NMib
 	#endif
 			};
 		};
-		using CMemoryManager = NMemory::TCMemoryManagerDebug<CMemoryManagerParams, false, CMemoryManagerDebugOptions>;
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+		using CMemoryManagerSmall = NMemory::TCMemoryManagerDebug<CMemoryManagerParamsSmall, false, CMemoryManagerDebugOptions>;
+#endif
+		using CMemoryManagerMax = NMemory::TCMemoryManagerDebug<CMemoryManagerParamsMax, false, CMemoryManagerDebugOptions>;
 #	else
-		using CMemoryManager = NMemory::TCMemoryManager<CMemoryManagerParams>;
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+		using CMemoryManagerSmall = NMemory::TCMemoryManager<CMemoryManagerParamsSmall>;
+#endif
+		using CMemoryManagerMax = NMemory::TCMemoryManager<CMemoryManagerParamsMax>;
 #	endif
-	extern NMib::NStorage::TCAggregateSimple<CMemoryManager> g_MainHeap;
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+	extern bool g_bMainHeapIsSmall;
+	extern NMib::NStorage::TCAggregateSimple<CMemoryManagerSmall> g_MainHeapSmall;
+#endif
+	extern NMib::NStorage::TCAggregateSimple<CMemoryManagerMax> g_MainHeapMax;
 }
 
 #endif

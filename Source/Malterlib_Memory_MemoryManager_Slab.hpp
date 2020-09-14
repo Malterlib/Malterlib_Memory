@@ -1,6 +1,6 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
- 
+
 #pragma once
 
 namespace NMib::NMemory
@@ -13,15 +13,18 @@ namespace NMib::NMemory
 		(
 			uint32 _SlabType
 			, TCMemoryManagerArena<t_CParams> *_pArena
+			, uint8 _nCommittedHeaderSubSlabs
 		)
 		: m_pArena(_pArena)
 		, m_pMemoryManager(_pArena->m_pMemoryManager)
 		, m_nAllocatedSubSlabs(0)
 		, m_nFreeSubSlabs(0)
 		, m_nPendingSubSlabs(0)
-		, m_FullySetLevel(TCMemoryManagerArena<t_CParams>::mc_NumSubSlabSizeLevels)
+		, m_FullySetLevel(t_CParams::mc_NumSubSlabSizeLevels)
 		, m_SlabType(_SlabType)
+		, m_nCommittedHeaderSubSlabs(_nCommittedHeaderSubSlabs)
 	{
+		static_assert(t_CParams::mc_NumSubSlabSizeLevels < 128);
 	}
 
 	template <typename t_CParams>
@@ -32,13 +35,13 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	mint TCMemoryManagerSlabShared<t_CParams>::f_GetNumSubSlabs() const
 	{
-		return t_CParams::ms_NumSubSlabs[m_SlabType];
+		return t_CParams::mc_NumSubSlabs[m_SlabType];
 	}
 
 	template <typename t_CParams>
 	mint TCMemoryManagerSlabShared<t_CParams>::f_GetSubSlabMultiplier() const
 	{
-		return t_CParams::ms_SlabTypeInfo[m_SlabType].m_SubSlabMultiplier;
+		return t_CParams::mc_SlabTypeInfo[m_SlabType].m_SubSlabMultiplier;
 	}
 
 	template <typename t_CParams>
@@ -48,21 +51,33 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_always CMemoryManagerSubSlabData *TCMemoryManagerSlabShared<t_CParams>::f_GetSubSlabData()
+	inline_always TCMemoryManagerSubSlabDataType<t_CParams> *TCMemoryManagerSlabShared<t_CParams>::f_GetSubSlabDataType()
 	{
-		return (CMemoryManagerSubSlabData *)((uint8 *)(this + 1));
+		return (TCMemoryManagerSubSlabDataType<t_CParams> *)((uint8 *)(this + 1));
+	}
+
+	template <typename t_CParams>
+	inline_always TCMemoryManagerSubSlabDataType<t_CParams> const *TCMemoryManagerSlabShared<t_CParams>::f_GetSubSlabDataType() const
+	{
+		return (TCMemoryManagerSubSlabDataType<t_CParams> const *)((uint8 const *)(this + 1));
+	}
+
+	template <typename t_CParams>
+	inline_always TCMemoryManagerSubSlabDataAlloc<t_CParams> *TCMemoryManagerSlabShared<t_CParams>::f_GetSubSlabDataAlloc()
+	{
+		return m_pSubSlabDataAlloc;
+	}
+
+	template <typename t_CParams>
+	inline_always TCMemoryManagerSubSlabDataAlloc<t_CParams> const *TCMemoryManagerSlabShared<t_CParams>::f_GetSubSlabDataAlloc() const
+	{
+		return m_pSubSlabDataAlloc;
 	}
 
 	template <typename t_CParams>
 	inline_always uint8 const *TCMemoryManagerSlabShared<t_CParams>::f_GetSlabStart() const
 	{
 		return fg_AlignDown(((uint8 const *)this), t_CParams::mc_SlabSize);
-	}
-
-	template <typename t_CParams>
-	inline_always CMemoryManagerSubSlabData const *TCMemoryManagerSlabShared<t_CParams>::f_GetSubSlabData() const
-	{
-		return (CMemoryManagerSubSlabData const *)((uint8 const *)(this + 1));
 	}
 
 	/////////////////////////////////
@@ -73,25 +88,24 @@ namespace NMib::NMemory
 		(
 			uint64 _Magic
 			, TCMemoryManagerArena<t_CParams> *_pArena
+			, uint8 _nCommittedHeaderSubSlabs
 		)
-		: TCMemoryManagerSlabShared<t_CParams>(t_SlabType, _pArena)
+		: TCMemoryManagerSlabShared<t_CParams>(t_SlabType, _pArena, _nCommittedHeaderSubSlabs)
 	{
 		DMibFastCheck(m_Allocated.f_IsFullyFree());
 
 		static_assert
 			(
-				(mc_SubSlabs * t_CParams::mc_SubSlabSize * t_CParams::template TCGetSlabInfo<t_SlabType>::mc_Multiplier + sizeof(TCMemoryManagerSlab)) <= t_CParams::mc_SlabSize
+				(mc_nSubSlabs * t_CParams::mc_SubSlabSize * t_CParams::mc_SlabTypeInfo[t_SlabType].m_SubSlabMutiplier + sizeof(TCMemoryManagerSlab)) <= t_CParams::mc_SlabSize
 				, "Too many sub slabs"
 			)
 		;
 		static_assert
 			(
-				((mc_SubSlabs + 1) * t_CParams::mc_SubSlabSize * t_CParams::template TCGetSlabInfo<t_SlabType>::mc_Multiplier + sizeof(TCMemoryManagerSlab)) > t_CParams::mc_SlabSize
+				((mc_nSubSlabs + 1) * t_CParams::mc_SubSlabSize * t_CParams::mc_SlabTypeInfo[t_SlabType].m_SubSlabMutiplier + sizeof(TCMemoryManagerSlab)) > t_CParams::mc_SlabSize
 				, "Too few sub slabs"
 			)
 		;
-
-		DMibFastCheck(this->f_GetSubSlabData() == m_SubSlabData);
 
 		uint8 *pEndOfSlab =  fg_AlignUp((uint8 *)this, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
@@ -99,10 +113,17 @@ namespace NMib::NMemory
 		pHeader->m_Magic = NPrivate::fg_CalcMagic(pEndOfSlab, _Magic);
 		pHeader->m_SlabStartOffset = pEndOfSlab - (uint8 *)this;
 
-		DMibFastCheck(this->f_GetNumSubSlabs() == mc_SubSlabs);
+		DMibFastCheck(this->f_GetNumSubSlabs() == mc_nSubSlabs);
 
-		for (mint i = 0; i < mc_SubSlabs; ++i)
-			m_SubSlabData[i].m_Allocated = CMemoryManagerAllocatedData::fs_Create(0, 0);
+		for (mint i = 0; i < mc_nSubSlabs; ++i)
+			m_SubSlabDataType[i].m_Type = 0;
+		for (mint i = 0; i < mc_nSubSlabs; ++i)
+			m_SubSlabDataAlloc[i].m_nAllocs = 0;
+		this->m_pSubSlabDataAlloc = m_SubSlabDataAlloc;
+
+		DMibFastCheck(this->f_GetSubSlabDataType() == m_SubSlabDataType);
+		DMibFastCheck(this->f_GetSubSlabDataAlloc() == m_SubSlabDataAlloc);
+
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
@@ -125,7 +146,7 @@ namespace NMib::NMemory
 	mint TCMemoryManagerSlab<t_CParams, t_SlabType>::f_GetNumPendingBits()
 	{
 		mint nBitsSet = 0;
-		for (mint iSlab = 0; iSlab < mc_SubSlabs; ++iSlab)
+		for (mint iSlab = 0; iSlab < mc_nSubSlabs; ++iSlab)
 		{
 			if (m_PendingFree.f_GetBit(iSlab))
 				++nBitsSet;
@@ -162,8 +183,8 @@ namespace NMib::NMemory
 				t_CParams::mc_SlabSize
 				-
 				(
-					mc_SubSlabs
-					* t_CParams::template TCGetSlabInfo<t_SlabType>::mc_Multiplier
+					mc_nSubSlabs
+					* t_CParams::mc_SlabTypeInfo[t_SlabType].m_SubSlabMutiplier
 					* t_CParams::mc_SubSlabSize
 				)
 			)
@@ -173,25 +194,28 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_SetBitFree(mint _Level, mint _Bit)
+	bool TCMemoryManagerSlab<t_CParams, t_SlabType>::f_SetBitFree(mint _Level, mint _Bit)
 	{
 		DMibFastCheck(m_Allocated.f_GetBit(_Level, _Bit));
 		m_Allocated.template f_SetBit<false>(_Level, _Bit);
-		DMibFastCheck(this->m_FullySetLevel < TCMemoryManagerArena<t_CParams>::mc_NumSubSlabSizeLevels);
+		DMibFastCheck(this->m_FullySetLevel < t_CParams::mc_NumSubSlabSizeLevels);
 
 		auto pArena = this->m_pArena;
 
 		if (m_Allocated.f_IsFullyFree())
 		{
 			// Unlink from any linked lists
-			this->m_Link0.f_Unlink();
-			this->m_Link1.f_Unlink();
+			this->m_Link.f_Unlink();
+			this->m_LinkToGarbageCollect.f_Unlink();
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 				this->m_FreeSubSlabs.f_Clear();
 			auto pNumaArena = pArena->m_pNumaArena;
-			this->m_FreeTimestamp = pNumaArena->f_GetTimestamp();
+			if constexpr (t_CParams::mc_bBackgroundCleanup)
+				this->m_FreeTimestamp = pNumaArena->f_GetTimestamp();
 			auto FullySetLevel = this->m_FullySetLevel;
-			this->m_FullySetLevel = TCMemoryManagerArena<t_CParams>::mc_NumSubSlabSizeLevels;
+			this->m_FullySetLevel = t_CParams::mc_NumSubSlabSizeLevels;
+
+			bool bReturn = false;
 
 			if (pArena->m_FreeSlabs.f_IsEmpty())
 			{
@@ -203,25 +227,33 @@ namespace NMib::NMemory
 				DMibLock(pNumaArena->m_FreeSlabsLock);
 				this->m_pArena = nullptr;
 				bool bWasEmpty = pNumaArena->m_FreeSlabs.f_IsEmpty();
+
+				this->m_LinkToGarbageCollect.f_Unlink();
+
+				if constexpr (t_CParams::mc_bBackgroundCleanup)
+					DMibFastCheck(this->m_FreeTimestamp != 0);
+
 				pNumaArena->m_FreeSlabs.f_InsertFirst(this);
-				bool bPendingDecommit = this->m_Link2.f_IsInList();
+				bool bPendingDecommit = this->m_LinkNeedDecommit.f_IsInList();
 				if (bPendingDecommit)
 					pNumaArena->m_FreeSlabsNeedingDecommit.f_InsertFirst(this);
 
 				if (bPendingDecommit || !bWasEmpty)
 					pArena->m_bWantNumaFreeSlabsCleanup = true;
+
+				bReturn = true;
 			}
 
 			if (pArena->m_PartiallyFreeSlabs[t_SlabType][FullySetLevel].f_IsEmpty())
 				pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<false>(FullySetLevel);
 
-			return;
+			return bReturn;
 		}
-		else if (this->m_FullySetLevel == TCMemoryManagerArena<t_CParams>::mc_NumSubSlabSizeLevels - 1)
-			return;
+		else if (this->m_FullySetLevel == t_CParams::mc_NumSubSlabSizeLevels - 1)
+			return false;
 
 		mint iNewLevel = this->m_FullySetLevel;
-		while (iNewLevel < TCMemoryManagerArena<t_CParams>::mc_NumSubSlabSizeLevels - 1 && !m_Allocated.f_IsFullySet(iNewLevel + 1))
+		while (iNewLevel < t_CParams::mc_NumSubSlabSizeLevels - 1 && !m_Allocated.f_IsFullySet(iNewLevel + 1))
 			++iNewLevel;
 
 		if (iNewLevel != this->m_FullySetLevel)
@@ -233,8 +265,11 @@ namespace NMib::NMemory
 			if (pArena->m_PartiallyFreeSlabs[t_SlabType][this->m_FullySetLevel].f_IsEmpty())
 				pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<false>(this->m_FullySetLevel);
 
+			DMibFastCheck(iNewLevel < 128);
 			this->m_FullySetLevel = iNewLevel;
 		}
+
+		return false;
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
@@ -247,7 +282,7 @@ namespace NMib::NMemory
 	mint TCMemoryManagerSlab<t_CParams, t_SlabType>::f_GetNumSetBits(mint _Level)
 	{
 		mint nBitsSet = 0;
-		for (mint iSlab = 0; iSlab < mc_SubSlabs; ++iSlab)
+		for (mint iSlab = 0; iSlab < mc_nSubSlabs; ++iSlab)
 		{
 			if (m_Allocated.f_GetBit(_Level, iSlab))
 				++nBitsSet;
@@ -269,11 +304,11 @@ namespace NMib::NMemory
 
 		auto pArena = this->m_pArena;
 
-		if (this->m_FullySetLevel == TCMemoryManagerArena<t_CParams>::mc_NumSubSlabSizeLevels)
+		if (this->m_FullySetLevel == t_CParams::mc_NumSubSlabSizeLevels)
 		{
-			pArena->m_PartiallyFreeSlabs[t_SlabType][TCMemoryManagerArena<t_CParams>::mc_NumSubSlabSizeLevels - 1].f_Insert(this);
-			pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<true>(TCMemoryManagerArena<t_CParams>::mc_NumSubSlabSizeLevels - 1);
-			this->m_FullySetLevel = TCMemoryManagerArena<t_CParams>::mc_NumSubSlabSizeLevels - 1;
+			pArena->m_PartiallyFreeSlabs[t_SlabType][t_CParams::mc_NumSubSlabSizeLevels - 1].f_Insert(this);
+			pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<true>(t_CParams::mc_NumSubSlabSizeLevels - 1);
+			this->m_FullySetLevel = t_CParams::mc_NumSubSlabSizeLevels - 1;
 			return Ret;
 		}
 
@@ -295,6 +330,8 @@ namespace NMib::NMemory
 
 			if (pArena->m_PartiallyFreeSlabs[t_SlabType][iOldLevel].f_IsEmpty())
 				pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<false>(iOldLevel);
+
+			DMibFastCheck(iNewLevel < 128);
 			this->m_FullySetLevel = fg_Max(iNewLevel, 0);
 		}
 

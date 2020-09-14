@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -13,7 +13,7 @@ namespace NMib
 		void f_Register(NMemory::CMemoryManagerCrossModule *_pModule, uint32 _Version) override;
 		void f_Unregister(NMemory::CMemoryManagerCrossModule *_pModule) override;
 	};
-	
+
 	constinit NStorage::TCAggregateSimple<CMemoryManagerCrossModuleInterfaceServer> g_CrossModuleInterfaceServer = {DAggregateInit};
 
 	void CSystem::fp_CreateNonTrackedMemoryManager()
@@ -25,17 +25,17 @@ namespace NMib
 #endif
 		NMemory::CCrossModuleImplementationExtra::fs_CreateNonTrackedMemoryManager(&NMemory::g_CrossModule);
 	}
-	
+
 	void CSystem::fp_DestroyNonTrackedMemoryManager()
 	{
 		NMemory::CCrossModuleImplementationExtra::fs_DestroyNonTrackedMemoryManager(&NMemory::g_CrossModule);
 	}
-	
+
 	void CSystem::f_MemoryManager_GarbageCollect()
 	{
 		NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_GarbageCollect(&NMemory::g_CrossModule);
 	}
-	
+
 	void CSystem::fp_CreateMemoryManager()
 	{
 		NMemory::CCrossModuleImplementationExtra::fs_CreateMemoryManager(&NMemory::g_CrossModule);
@@ -48,14 +48,14 @@ namespace NMib
 	NMemory::CMemoryManagerCheckout CSystem::f_MemoryManager_Checkout()
 	{
 		return NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_Checkout(&NMemory::g_CrossModule);
-	}	
-	
+	}
+
 	void CSystem::fp_DestroyMemoryManager()
 	{
 		NSys::fg_PreDestroyHeap();
 		return NMemory::CCrossModuleImplementationExtra::fs_DestroyMemoryManager(&NMemory::g_CrossModule);
 	}
-	
+
 	bool CSystem::f_MemoryManager_Check(bool _bBreak)
 	{
 		return NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_Check(&NMemory::g_CrossModule, _bBreak);
@@ -71,30 +71,30 @@ namespace NMib
 		NSys::fg_Mem_PrepareFork();
 		NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_PrepareFork(&NMemory::g_CrossModule);
 	}
-	
+
 	void CSystem::f_MemoryManager_ForkedParent()
 	{
 		NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_ForkedParent(&NMemory::g_CrossModule);
 		NSys::fg_Mem_ForkedParent();
 	}
-	
+
 	void CSystem::f_MemoryManager_ForkedChild()
 	{
 		NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_ForkedChild(&NMemory::g_CrossModule);
 		NSys::fg_Mem_ForkedChild();
 	}
-	
+
 	void CSystem::f_MemoryManager_DestroyThreads()
 	{
 		return NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_DestroyThreads(&NMemory::g_CrossModule);
 	}
-	
+
 	void CSystem::f_MemoryManager_CanStartThreads()
 	{
 		return NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_CanStrartThreads(&NMemory::g_CrossModule);
 	}
-	
-	
+
+
 
 	void CSystem::f_MemoryManager_SetNumaNode(ENumaNode _NumaNode)
 	{
@@ -106,7 +106,7 @@ namespace NMib
 		return NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_OnThreadCreated(&NMemory::g_CrossModule, _ThreadID, _ParentID);
 	}
 }
-	
+
 namespace NMib::NMemory
 {
 	DMibMemory_MemoryManagerExport void * fg_AllocWithSize(mint &_Size)
@@ -235,7 +235,7 @@ namespace NMib::NMemory
 		return CCrossModuleImplementationExtra::fs_DemandProtection(&g_CrossModule);
 	}
 }
-	
+
 ///
 /// Nontracked heap
 /// ===============
@@ -489,7 +489,7 @@ namespace NMib::NMemory::NCrossModuleServer
 		fg_GetSys()->f_ThreadLocalCreateThread(_ThreadID, _ParentID);
 	}
 }
-	
+
 namespace NMib
 {
 	void CMemoryManagerCrossModuleInterfaceServer::f_Register(NMemory::CMemoryManagerCrossModule *_pModule, uint32 _Version)
@@ -511,7 +511,7 @@ namespace NMib
 		_pModule->m_fMemoryManager_SetNumaNode = NMemory::g_CrossModule.m_fMemoryManager_SetNumaNode;
 		_pModule->m_fMemoryManager_OnThreadCreated = &NCrossModuleServer::fg_MemoryManager_OnThreadCreated;
 		_pModule->m_fDemandProtection = NMemory::g_CrossModule.m_fDemandProtection;
-		
+
 		_pModule->m_fAllocWithSize = NMemory::g_CrossModule.m_fAllocWithSize;
 		_pModule->m_fAllocInitZeroWithSize = NMemory::g_CrossModule.m_fAllocInitZeroWithSize;
 		_pModule->m_fAllocAlignedWithSize = NMemory::g_CrossModule.m_fAllocAlignedWithSize;
@@ -529,7 +529,7 @@ namespace NMib
 		_pModule->m_fSizePadded = NMemory::g_CrossModule.m_fSizePadded;
 		_pModule->m_fOverhead = NMemory::g_CrossModule.m_fOverhead;
 		_pModule->m_fGranularity = NMemory::g_CrossModule.m_fGranularity;
-		
+
 		_pModule->m_fNonTracked_Granularity = NMemory::g_CrossModule.m_fNonTracked_Granularity;
 		_pModule->m_fNonTracked_Size = NMemory::g_CrossModule.m_fNonTracked_Size;
 		_pModule->m_fNonTracked_TrySize = NMemory::g_CrossModule.m_fNonTracked_TrySize;
@@ -546,7 +546,7 @@ namespace NMib
 		_pModule->m_fNonTracked_AllocAlignedWithSizeDebug = &NCrossModuleServer::fg_NonTracked_AllocAlignedDebug;
 		_pModule->m_fNonTracked_ReallocNoOldDebug = &NCrossModuleServer::fg_NonTracked_ReallocNoOldDebug;
 		_pModule->m_fNonTracked_ResizeNoOldDebug = &NCrossModuleServer::fg_NonTracked_ResizeNoOldDebug;
-		
+
 		if (_Version >= 0x102)
 			_pModule->m_fReportingLeaks = NMemory::g_CrossModule.m_fReportingLeaks;
 
@@ -575,8 +575,8 @@ namespace NMib
 		if (_Version >= 0x104)
 			_pModule->m_fAllocHasDeterministicSize = NMemory::g_CrossModule.m_fAllocHasDeterministicSize;
 	}
-	
+
 	void CMemoryManagerCrossModuleInterfaceServer::f_Unregister(NMemory::CMemoryManagerCrossModule *_pModule)
 	{
-	}	
+	}
 }

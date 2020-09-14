@@ -473,7 +473,7 @@ namespace NMib::NMemory
 		pCurrentCategory->m_nBytes += _Size;
 		++pCurrentCategory->m_nAllocations;
 #if 0
-		if (g_bCanStartThreads && NTime::CSystem_Time::fs_TimeInitDone())
+		if (g_bCanStartThreads.f_Load(NAtomic::EMemoryOrder_Relaxed) && NTime::CSystem_Time::fs_TimeInitDone())
 		{
 			int64 Cycles = NTime::NPlatform::fg_Timer_CyclesFast();
 			int64 CurrentValue = g_CyclesTimer.f_Load();

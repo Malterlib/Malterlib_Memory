@@ -12,6 +12,7 @@ namespace NMib::NMemory
 		enum
 		{
 			mc_bCheckModifyAfterFree	= true
+			, mc_bAsanPoisioning		= true
 			, mc_bFillAllocated			= true
 			, mc_StackTraceDepth		= 64
 			, mc_nPreGuardBytes			= sizeof(mint) * 2
@@ -65,8 +66,8 @@ namespace NMib::NMemory
 				void f_OnFree(uint8 *_pMemory);
 				void f_OnAlloc(uint8 *_pMemory, mint _nBytes);
 
-				void f_OnFillFree(uint8 *_pMemory, mint _nBytes);
-				bool f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, bool _bBreak);
+				void f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
+				bool f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
 
 				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2*1024*1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
 					m_Allocations
@@ -85,8 +86,8 @@ namespace NMib::NMemory
 				void f_OnFree(uint8 *_pMemory);
 				void f_OnAlloc(uint8 *_pMemory, mint _nBytes);
 
-				void f_OnFillFree(uint8 *_pMemory, mint _nBytes);
-				bool f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, bool _bBreak);
+				void f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
+				bool f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
 
 				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2*1024*1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
 					m_Allocations
@@ -104,6 +105,9 @@ namespace NMib::NMemory
 
 				void f_OnAlloc(uint8 *_pMemory, mint _nBytes);
 				void f_OnFree(uint8 *_pMemory);
+
+				void f_OnCommit(uint8 *_pMemory, mint _nBytes);
+				void f_OnDecommit(uint8 *_pMemory, mint _nBytes);
 
 				TCMemoryManagerDebug<t_CParams, t_bException, t_COptions> & m_MemoryManager;
 				align_cacheline NThread::CMutual m_Lock;
@@ -162,7 +166,7 @@ namespace NMib::NMemory
 
 		void f_DestroyThreadLocals();
 
-		bool f_CheckAll(bool _bBreak);
+		bool f_CheckAll(EMemoryManagerCheckFlag _Flags);
 
 		mint f_SizePadded(mint _Size);
 
@@ -208,7 +212,7 @@ namespace NMib::NMemory
 
 	private:
 
-		static bool fsp_CheckGuard(uint8 *_pMemory, bool _bBreak);
+		static bool fsp_CheckGuard(uint8 *_pMemory, EMemoryManagerCheckFlag _Flags);
 		static uint8 *fsp_GetRealMemory(uint8 *_pMemory);
 
 		void fp_EnumAllocations

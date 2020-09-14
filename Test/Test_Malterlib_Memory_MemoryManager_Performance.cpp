@@ -21,45 +21,121 @@ namespace
 #if 0
 	struct CDisplayStats
 	{
+		template <typename t_CParams, mint t_Index>
+		struct TCGetWaste
+		{
+			static constexpr mint mc_Waste =
+				t_CParams::mc_SlabSize
+				-
+				(
+					TCMemoryManagerSlab<t_CParams, t_Index>::mc_nSubSlabs * t_CParams::mc_SlabTypeInfo[t_Index].m_SubSlabMutiplier * t_CParams::mc_SubSlabSize
+					+ NMib::fg_AlignUpConstExpr(sizeof(TCMemoryManagerSlab<t_CParams, t_Index>), t_CParams::mc_SubSlabSize)
+				)
+			;
+			static constexpr double mc_WastePercent = (double(mc_Waste) / double(t_CParams::mc_SlabSize)) * 100.0;
+		};
+
+		template <typename t_CParams, mint t_Index>
+		struct TCGetOverhead
+		{
+			static constexpr mint mc_Overhead =
+				t_CParams::mc_SlabSize - TCMemoryManagerSlab<t_CParams, t_Index>::mc_nSubSlabs * t_CParams::mc_SlabTypeInfo[t_Index].m_SubSlabMutiplier * t_CParams::mc_SubSlabSize
+			;
+			static constexpr double mc_OverheadPercent = (double(mc_Overhead) / double(t_CParams::mc_SlabSize)) * 100.0;
+		};
+		
+		struct CPageSize4096 : public CDefaultMemoryManagerParams
+		{
+			static constexpr mint mc_SubSlabSize = 4096;
+		};
+
 		CDisplayStats()
 		{
-			// Stats
-			mint SlabSize = CDefaultMemoryManagerParams::mc_SlabSize;
-			DMibConOut("CDefaultMemoryManagerParams::mc_SlabSize = {}\r\n", SlabSize);
+			auto fDisplayParams = []<typename tf_CParams>
+				{
+					using CParams = tf_CParams;
+					NMib::NStr::CStr Type = NMib::fg_GetTypeName<tf_CParams>();
 
-			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 0>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 0>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 0>), 4096));
-			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 1>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 1>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 1>), 4096));
-			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 2>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 2>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 2>), 4096));
-			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 3>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 3>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 3>), 4096));
-			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 4>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 4>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 4>), 4096));
-			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 5>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 5>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 5>), 4096));
-			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 6>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 6>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 6>), 4096));
-			DMibConOut("sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 7>) = {} {}\r\n", sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 7>) << NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 7>), 4096));
-			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 0>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 0>::mc_SubSlabs));
-			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 1>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 1>::mc_SubSlabs));
-			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 2>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 2>::mc_SubSlabs));
-			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 3>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 3>::mc_SubSlabs));
-			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 4>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 4>::mc_SubSlabs));
-			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 5>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 5>::mc_SubSlabs));
-			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 6>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 6>::mc_SubSlabs));
-			DMibConOut("TCMemoryManagerSlab<CDefaultMemoryManagerParams, 7>::mc_SubSlabs = {}\r\n", mint(TCMemoryManagerSlab<CDefaultMemoryManagerParams, 7>::mc_SubSlabs));
-			DMibConOut("sizeof(CMemoryManagerSubSlabData) = {}\r\n", sizeof(CMemoryManagerSubSlabData));
-			DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,1>) = {}\r\n", sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,1>));
-			DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,2>) = {}\r\n", sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,2>));
-			DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,4>) = {}\r\n", sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,4>));
-			DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,8>) = {}\r\n", sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,8>));
-			DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,12>) = {}\r\n", sizeof(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,12>));
-			DMibConOut("TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,1>::mc_NumAllocs = {}\r\n", mint(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,1>::mc_NumAllocs));
-			DMibConOut("TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,2>::mc_NumAllocs = {}\r\n", mint(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,2>::mc_NumAllocs));
-			DMibConOut("TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,4>::mc_NumAllocs = {}\r\n", mint(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,4>::mc_NumAllocs));
-			DMibConOut("TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,8>::mc_NumAllocs = {}\r\n", mint(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,8>::mc_NumAllocs));
-			DMibConOut("TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,12>::mc_NumAllocs = {}\r\n",mint(TCMemoryManagerSubSlab_SmallSize<CDefaultMemoryManagerParams,12>::mc_NumAllocs));
-			DMibConOut("sizeof(TCMemoryManagerArena<CDefaultMemoryManagerParams>) = {}\r\n", sizeof(TCMemoryManagerArena<CDefaultMemoryManagerParams>));
-			DMibConOut("sizeof(TCMemoryManagerNumaArena<CDefaultMemoryManagerParams>) = {}\r\n", sizeof(TCMemoryManagerNumaArena<CDefaultMemoryManagerParams>));
-			DMibConOut("sizeof(TCMemoryManager<CDefaultMemoryManagerParams>) = {}\r\n", sizeof(TCMemoryManager<CDefaultMemoryManagerParams>));
-			DMibConOut("sizeof(TCMemoryManagerArenaHeap<CDefaultMemoryManagerParams>) = {}\r\n", sizeof(TCMemoryManagerArenaHeap<CDefaultMemoryManagerParams>));
-			DMibConOut("sizeof(TCMemoryManagerArenaHeapChunk<CDefaultMemoryManagerParams>) = {}\r\n", sizeof(TCMemoryManagerArenaHeapChunk<CDefaultMemoryManagerParams>));
+					// Stats
+					DMibConOut2("{}::mc_SlabSize = {}\r\n", Type, CParams::mc_SlabSize);
+					DMibConOut2("{}::mc_MaxSlabAllocSize = {}\r\n", Type, CParams::mc_MaxSlabAllocSize);
+					DMibConOut2("{}::mc_NumSizeLevels = {}\r\n", Type, CParams::mc_NumSizeLevels);
+					DMibConOut2("{}::mc_NumNormalSizeLevels = {}\r\n", Type, CParams::mc_NumNormalSizeLevels);
+					DMibConOut2("{}::CSubSlabIndex = {}\r\n", Type, NMib::fg_GetTypeName<typename CParams::CSubSlabIndex>());
+					DMibConOut2("{}::CNumAllocsPerSubSlabIndex = {}\r\n", Type, NMib::fg_GetTypeName<typename CParams::CNumAllocsPerSubSlabIndex>());
+					DMibConOut2("{}::fs_GetSlabTypeMetaSize(0) = {}\r\n", Type, CParams::fs_GetSlabTypeMetaSize(0));
+					DMibConOut2("{}::mc_MinNormalSlabBucket = {}\r\n", Type, CParams::mc_MinNormalSlabBucket);
 
+					DMibConOut2("{} Waste 0 = {} {fe2}%\r\n", Type, TCGetWaste<CParams, 0>::mc_Waste, TCGetWaste<CParams, 0>::mc_WastePercent);
+					DMibConOut2("{} Waste 1 = {} {fe2}%\r\n", Type, TCGetWaste<CParams, 1>::mc_Waste, TCGetWaste<CParams, 1>::mc_WastePercent);
+					DMibConOut2("{} Waste 2 = {} {fe2}%\r\n", Type, TCGetWaste<CParams, 2>::mc_Waste, TCGetWaste<CParams, 2>::mc_WastePercent);
+					DMibConOut2("{} Waste 3 = {} {fe2}%\r\n", Type, TCGetWaste<CParams, 3>::mc_Waste, TCGetWaste<CParams, 3>::mc_WastePercent);
+					DMibConOut2("{} Waste 4 = {} {fe2}%\r\n", Type, TCGetWaste<CParams, 4>::mc_Waste, TCGetWaste<CParams, 4>::mc_WastePercent);
+					DMibConOut2("{} Waste 5 = {} {fe2}%\r\n", Type, TCGetWaste<CParams, 5>::mc_Waste, TCGetWaste<CParams, 5>::mc_WastePercent);
+					DMibConOut2("{} Waste 6 = {} {fe2}%\r\n", Type, TCGetWaste<CParams, 6>::mc_Waste, TCGetWaste<CParams, 6>::mc_WastePercent);
+					DMibConOut2("{} Waste 7 = {} {fe2}%\r\n", Type, TCGetWaste<CParams, 7>::mc_Waste, TCGetWaste<CParams, 7>::mc_WastePercent);
+
+					DMibConOut2("{} Overhead 0 = {} {fe2}%\r\n", Type, TCGetOverhead<CParams, 0>::mc_Overhead, TCGetOverhead<CParams, 0>::mc_OverheadPercent);
+					DMibConOut2("{} Overhead 1 = {} {fe2}%\r\n", Type, TCGetOverhead<CParams, 1>::mc_Overhead, TCGetOverhead<CParams, 1>::mc_OverheadPercent);
+					DMibConOut2("{} Overhead 2 = {} {fe2}%\r\n", Type, TCGetOverhead<CParams, 2>::mc_Overhead, TCGetOverhead<CParams, 2>::mc_OverheadPercent);
+					DMibConOut2("{} Overhead 3 = {} {fe2}%\r\n", Type, TCGetOverhead<CParams, 3>::mc_Overhead, TCGetOverhead<CParams, 3>::mc_OverheadPercent);
+					DMibConOut2("{} Overhead 4 = {} {fe2}%\r\n", Type, TCGetOverhead<CParams, 4>::mc_Overhead, TCGetOverhead<CParams, 4>::mc_OverheadPercent);
+					DMibConOut2("{} Overhead 5 = {} {fe2}%\r\n", Type, TCGetOverhead<CParams, 5>::mc_Overhead, TCGetOverhead<CParams, 5>::mc_OverheadPercent);
+					DMibConOut2("{} Overhead 6 = {} {fe2}%\r\n", Type, TCGetOverhead<CParams, 6>::mc_Overhead, TCGetOverhead<CParams, 6>::mc_OverheadPercent);
+					DMibConOut2("{} Overhead 7 = {} {fe2}%\r\n", Type, TCGetOverhead<CParams, 7>::mc_Overhead, TCGetOverhead<CParams, 7>::mc_OverheadPercent);
+
+					DMibConOut2("{}::mc_NumAllocsPerSubSlab[0] = {}\r\n", Type, CParams::mc_NumAllocsPerSubSlab[0]);
+					DMibConOut2("{}::mc_NumAllocsPerSubSlab[1] = {}\r\n", Type, CParams::mc_NumAllocsPerSubSlab[1]);
+					DMibConOut2("{}::mc_NumAllocsPerSubSlab[2] = {}\r\n", Type, CParams::mc_NumAllocsPerSubSlab[2]);
+					DMibConOut2("{}::mc_NumAllocsPerSubSlab[3] = {}\r\n", Type, CParams::mc_NumAllocsPerSubSlab[3]);
+					DMibConOut2("{}::mc_NumAllocsPerSubSlab[4] = {}\r\n", Type, CParams::mc_NumAllocsPerSubSlab[4]);
+					DMibConOut2("{}::mc_NumAllocsPerSubSlab[5] = {}\r\n", Type, CParams::mc_NumAllocsPerSubSlab[5]);
+					DMibConOut2("{}::mc_NumAllocsPerSubSlab[6] = {}\r\n", Type, CParams::mc_NumAllocsPerSubSlab[6]);
+					DMibConOut2("{}::mc_NumAllocsPerSubSlab[7] = {}\r\n", Type, CParams::mc_NumAllocsPerSubSlab[7]);
+					DMibConOut2("{}::mc_MaxAllocsPerSubSlab = {}\r\n", Type, CParams::mc_MaxAllocsPerSubSlab);
+					DMibConOut2("TCMemoryManagerSubSlabDataAlloc<{}>::mc_MaxAllocs = {}\r\n", Type, TCMemoryManagerSubSlabDataAlloc<CParams>::mc_MaxAllocs);
+					DMibConOut2("TCMemoryManagerSubSlabDataType<{}>::mc_MaxType = {}\r\n", Type, TCMemoryManagerSubSlabDataType<CParams>::mc_MaxType);
+					DMibConOut2("sizeof(TCMemoryManagerSubSlabDataAlloc<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlabDataAlloc<CParams>));
+					DMibConOut2("sizeof(TCMemoryManagerSubSlabDataType<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlabDataType<CParams>));
+
+					DMibConOut2("sizeof(TCMemoryManagerSlab<{}, 0>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 0>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 0>), CParams::mc_SubSlabSize));
+					DMibConOut2("sizeof(TCMemoryManagerSlab<{}, 1>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 1>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 1>), CParams::mc_SubSlabSize));
+					DMibConOut2("sizeof(TCMemoryManagerSlab<{}, 2>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 2>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 2>), CParams::mc_SubSlabSize));
+					DMibConOut2("sizeof(TCMemoryManagerSlab<{}, 3>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 3>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 3>), CParams::mc_SubSlabSize));
+					DMibConOut2("sizeof(TCMemoryManagerSlab<{}, 4>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 4>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 4>), CParams::mc_SubSlabSize));
+					DMibConOut2("sizeof(TCMemoryManagerSlab<{}, 5>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 5>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 5>), CParams::mc_SubSlabSize));
+					DMibConOut2("sizeof(TCMemoryManagerSlab<{}, 6>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 6>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 6>), CParams::mc_SubSlabSize));
+					DMibConOut2("sizeof(TCMemoryManagerSlab<{}, 7>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 7>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 7>), CParams::mc_SubSlabSize));
+					DMibConOut2("TCMemoryManagerSlab<{}, 0>::mc_nSubSlabs = {}\r\n", Type, mint(TCMemoryManagerSlab<CParams, 0>::mc_nSubSlabs));
+					DMibConOut2("TCMemoryManagerSlab<{}, 1>::mc_nSubSlabs = {}\r\n", Type, mint(TCMemoryManagerSlab<CParams, 1>::mc_nSubSlabs));
+					DMibConOut2("TCMemoryManagerSlab<{}, 2>::mc_nSubSlabs = {}\r\n", Type, mint(TCMemoryManagerSlab<CParams, 2>::mc_nSubSlabs));
+					DMibConOut2("TCMemoryManagerSlab<{}, 3>::mc_nSubSlabs = {}\r\n", Type, mint(TCMemoryManagerSlab<CParams, 3>::mc_nSubSlabs));
+					DMibConOut2("TCMemoryManagerSlab<{}, 4>::mc_nSubSlabs = {}\r\n", Type, mint(TCMemoryManagerSlab<CParams, 4>::mc_nSubSlabs));
+					DMibConOut2("TCMemoryManagerSlab<{}, 5>::mc_nSubSlabs = {}\r\n", Type, mint(TCMemoryManagerSlab<CParams, 5>::mc_nSubSlabs));
+					DMibConOut2("TCMemoryManagerSlab<{}, 6>::mc_nSubSlabs = {}\r\n", Type, mint(TCMemoryManagerSlab<CParams, 6>::mc_nSubSlabs));
+					DMibConOut2("TCMemoryManagerSlab<{}, 7>::mc_nSubSlabs = {}\r\n", Type, mint(TCMemoryManagerSlab<CParams, 7>::mc_nSubSlabs));
+
+					DMibConOut2("sizeof(TCMemoryManagerSubSlab_SmallSize<{},1>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams,1>));
+					DMibConOut2("sizeof(TCMemoryManagerSubSlab_SmallSize<{},2>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams,2>));
+					DMibConOut2("sizeof(TCMemoryManagerSubSlab_SmallSize<{},4>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams,4>));
+					DMibConOut2("sizeof(TCMemoryManagerSubSlab_SmallSize<{},8>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams,8>));
+					DMibConOut2("sizeof(TCMemoryManagerSubSlab_SmallSize<{},12>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams,12>));
+					DMibConOut2("TCMemoryManagerSubSlab_SmallSize<{},1>::mc_NumAllocs = {}\r\n", Type, mint(TCMemoryManagerSubSlab_SmallSize<CParams,1>::mc_NumAllocs));
+					DMibConOut2("TCMemoryManagerSubSlab_SmallSize<{},2>::mc_NumAllocs = {}\r\n", Type, mint(TCMemoryManagerSubSlab_SmallSize<CParams,2>::mc_NumAllocs));
+					DMibConOut2("TCMemoryManagerSubSlab_SmallSize<{},4>::mc_NumAllocs = {}\r\n", Type, mint(TCMemoryManagerSubSlab_SmallSize<CParams,4>::mc_NumAllocs));
+					DMibConOut2("TCMemoryManagerSubSlab_SmallSize<{},8>::mc_NumAllocs = {}\r\n", Type, mint(TCMemoryManagerSubSlab_SmallSize<CParams,8>::mc_NumAllocs));
+					DMibConOut2("TCMemoryManagerSubSlab_SmallSize<{},12>::mc_NumAllocs = {}\r\n", Type, mint(TCMemoryManagerSubSlab_SmallSize<CParams,12>::mc_NumAllocs));
+ 					DMibConOut2("sizeof(TCMemoryManagerArena<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerArena<CParams>));
+					DMibConOut2("sizeof(TCMemoryManagerNumaArena<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerNumaArena<CParams>));
+					DMibConOut2("sizeof(TCMemoryManager<{}>) = {}\r\n", Type, sizeof(TCMemoryManager<CParams>));
+					DMibConOut2("sizeof(TCMemoryManagerArenaHeap<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerArenaHeap<CParams>));
+					DMibConOut2("sizeof(TCMemoryManagerArenaHeapChunk<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerArenaHeapChunk<CParams>));
+					DMibConOut2("sizeof(TCMemoryManagerArenaHeapChunk<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerArenaHeapChunk<CParams>));
+					DMibConOut2("NSys::fg_Mem_PageSize() = {}\r\n\r\n", NMib::NSys::fg_Mem_PageSize());
+				}
+			;
+			fDisplayParams.template operator()<TCMemoryManagerParams<>>();
+			fDisplayParams.template operator()<TCMemoryManagerParams<CPageSize4096>>();
 		}
 	};
 
@@ -897,19 +973,19 @@ namespace
 			CTestPerformance PerfTest(0.5, false);
 			CTestMemory MemoryTest(0.5, false);
 			f_DoTest<CMalterlibMemoryDummy, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Baseline, "Baseline", _MaxAllocSize, _nThreads);
-#ifdef DMemoryManagerTestEnable_MalterlibNew
-			f_DoTest<CMalterlibMemoryMalterlibNew, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlibNew_NoCheckout, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib_Checkout", _MaxAllocSize, _nThreads);
+#ifdef DMemoryManagerTestEnable_Malterlib
+			f_DoTest<CMalterlibMemoryMalterlib, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_NoCheckout, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib_Checkout", _MaxAllocSize, _nThreads);
 #if DMibPPtrBits >= 64
-			f_DoTest<CMalterlibMemoryMalterlibNew_LowBranch, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_LowBranch", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_LowBranch, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_LowBranch", _MaxAllocSize, _nThreads);
 #endif
 
-			//f_DoTest<CMalterlibMemoryMalterlibNew_Tracked, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_Tracked", _MaxAllocSize, _nThreads);
-			//f_DoTest<CMalterlibMemoryMalterlibNew_Debug, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_Debug", _MaxAllocSize, _nThreads);
+			//f_DoTest<CMalterlibMemoryMalterlib_Tracked, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_Tracked", _MaxAllocSize, _nThreads);
+			//f_DoTest<CMalterlibMemoryMalterlib_Debug, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_Debug", _MaxAllocSize, _nThreads);
 			/*
-			f_DoTest<CMalterlibMemoryMalterlibNew_NoCommit, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_NoCommit", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlibNew_NoDeferCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_DirectCleanup", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlibNew_NoCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_NoCleanup", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_NoCommit, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_NoCommit", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_NoDeferCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_DirectCleanup", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_NoCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_NoCleanup", _MaxAllocSize, _nThreads);
 			 */
 #endif
 

@@ -28,11 +28,9 @@ namespace NMib::NMemory
 	template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
 	void CPoolType_Growing::TCPool<t_CAllocator, t_DataSize, t_Alignment>::f_Destruct(ch8 const *_pTypeName)
 	{
-#ifdef DMibDebug
+#if defined(DMibDebug) && !defined(DMibSanitizerEnabled_Thread)
 		if (m_NumUsed != 0)
-		{
 			DMibDTraceSafe("Memory leak in pool: {}" DMibNewLine, _pTypeName);
-		}
 #endif
 		// Make Freeblocks delete faster
 		m_FreeBlocks.f_ClearFast();
@@ -51,11 +49,9 @@ namespace NMib::NMemory
 	template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
 	void CPoolType_Freeable::TCPool<t_CAllocator, t_DataSize, t_Alignment>::f_Destruct(ch8 const *_pTypeName)
 	{
-#ifdef DMibDebug
+#if defined(DMibDebug) && !defined(DMibSanitizerEnabled_Thread)
 		if (!m_Chunks.f_IsEmpty() || !m_FreeChunks.f_IsEmpty())
-		{
 			DMibDTraceSafe("Memory leak in pool: {}" DMibNewLine, _pTypeName);
-		}
 #endif
 
 		CChunk *pChunkToDelete = m_Chunks.f_Pop();
@@ -87,11 +83,9 @@ namespace NMib::NMemory
 	template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
 	void CPoolType_FreeableSmall::TCPool<t_CAllocator, t_DataSize, t_Alignment>::f_Destruct(ch8 const *_pTypeName)
 	{
-#ifdef DMibDebug
+#if defined(DMibDebug) && !defined(DMibSanitizerEnabled_Thread)
 		if (!m_Chunks.f_IsEmpty() || !m_FreeChunks.f_IsEmpty())
-		{
 			DMibDTraceSafe("Memory leak in pool: {}" DMibNewLine, _pTypeName);
-		}
 #endif
 
 		CChunk *pChunkToDelete = m_Chunks.f_Pop();

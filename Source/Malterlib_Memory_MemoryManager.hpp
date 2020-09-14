@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -20,17 +20,6 @@ namespace NMib::NMemory
 	struct TCMemoryManagerNumaArena;
 }
 
-#if 1
-#	define DMibMemoryManagerLink DMibListLinkDS_Link
-#	define DMibMemoryManagerList DMibListLinkDS_List
-#	define DMibMemoryManagerList_FromTemplate DMibListLinkDS_List_FromTemplate
-#else
-#	define DMibMemoryManagerLink DMibListLinkD_Link
-#	define DMibMemoryManagerList DMibListLinkD_List
-#	define DMibMemoryManagerList_FromTemplate DMibListLinkD_List_FromTemplate
-#endif
-
-
 #include "Malterlib_Memory_MemoryManager_Config.h"
 #include "Malterlib_Memory_MemoryManager_Allocator.h"
 #include "Malterlib_Memory_MemoryManager_Heap.h"
@@ -51,8 +40,3 @@ namespace NMib::NMemory
 #include "Malterlib_Memory_MemoryManager_Slab.hpp"
 #include "Malterlib_Memory_MemoryManager_SmallSubSlab.hpp"
 #include "Malterlib_Memory_MemoryManager_Heap.hpp"
-
-
-#undef DMibMemoryManagerLink
-#undef DMibMemoryManagerList
-#undef DMibMemoryManagerList_FromTemplate

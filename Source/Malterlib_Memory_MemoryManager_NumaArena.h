@@ -29,6 +29,9 @@ namespace NMib::NMemory
 		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
 		bool m_bLazyCheckout = false;
 		bool m_bOwnArena = false;
+#if DMibEnableSafeCheck > 0
+		bool m_bInLightCheckout = false;
+#endif
 #if DMibConfig_Memory_Shims_Lightweight
 		CReportMemoryLightweight *m_pLightweightReporter = nullptr;
 		EMemoryReportLightweightScopeFlag m_LightweightScopeFlags = EMemoryReportLightweightScopeFlag_None;
@@ -102,18 +105,16 @@ namespace NMib::NMemory
 		void f_RequestCleanup(ENumaArenaCleanup _Cleanup);
 		void f_RequestCleanupWeak(ENumaArenaCleanup _Cleanup);
 
-		int64 f_GarbageCollect(CMemoryManagerGarbageOptions const &_GarbageOptions, bool _bDecommit, bool _bHasNumaArenasLock, bool _bForceCleanup);
+		int64 f_GarbageCollect(CMemoryManagerGarbageOptions const &_GarbageOptions, bool _bDecommit, bool _bForceCleanup);
 
-		bool f_ProcessArenaMessages(bool _bIncremental, bool & _oDeferred, bool _bHasNumaArenasLock);
+		bool f_ProcessArenaMessages(bool _bIncremental, bool & _oDeferred);
 
 		void f_ArenaAvailable(TCMemoryManagerArena<t_CParams> * _pArena);
 
 		void f_CanStartThreads();
 		void f_ForceStartCleanupThread();
 
-
 	private:
-
 		template <typename t_CParams2>
 		friend struct TCMemoryManager;
 
@@ -133,8 +134,6 @@ namespace NMib::NMemory
 		friend struct TCMemoryManagerThreadLocal;
 
 	private:
-
-
 		TCPool<TCMemoryManagerArena<t_CParams>, 16, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_Pool;
 		TCPool<TCMemoryManagerThreadLocal<t_CParams>, 128, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_PoolThreadLocal;
 		TCMemoryManager<t_CParams> *m_pMemoryManager;
@@ -145,6 +144,7 @@ namespace NMib::NMemory
 		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArena<t_CParams>, m_NumaArenaLink) m_Arenas;
 		mint m_nArenas;
 
+		align_cacheline NMib::NThread::CMutual m_ArenasNeedCleanupLock;
 		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArena<t_CParams>, m_CleanupLink) m_ArenasNeedCleanup;
 
 		align_cacheline NAtomic::TCAtomic<TCMemoryManagerArena<t_CParams> *> m_pFirstArena;
@@ -152,11 +152,10 @@ namespace NMib::NMemory
 		NThread::CEventAutoReset m_ArenaAvailableEvent;
 
 		align_cacheline NMib::NThread::CMutual m_FreeSlabsLock;
-		DMibListLinkDS_List_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link0) m_FreeSlabs;
-		DMibListLinkDS_List_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link2) m_FreeSlabsNeedingDecommit;
+		DMibListLinkDS_List_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) m_FreeSlabs;
+		DMibListLinkDS_List_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkNeedDecommit) m_FreeSlabsNeedingDecommit;
 
 		TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams> m_BackgroundCleanup;
-
 
 		uint64 m_Magic;
 		ENumaNode m_NumaNode;

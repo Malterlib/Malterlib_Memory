@@ -14,7 +14,7 @@
 #include <Mib/Core/Core>
 #endif
 
-#ifdef DMemoryManagerTestEnable_MalterlibNew
+#ifdef DMemoryManagerTestEnable_Malterlib
 #include <Mib/Memory/MemoryManager>
 #include <Mib/Memory/MemoryManagerDebug>
 #include <Mib/Memory/MemoryManagerTracked>
@@ -113,12 +113,16 @@ namespace
 		}
 	};
 
-#ifdef DMemoryManagerTestEnable_MalterlibNew
-	class CMalterlibMemoryMalterlibNew
+#ifdef DMemoryManagerTestEnable_Malterlib
+	class CMalterlibMemoryMalterlib
 	{
-		NMib::NMemory::TCMemoryManager<NMib::NMemory::CDefaultMemoryManagerParams> m_MemoryManager;
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
+		{
+		};
+
+		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
-		CMalterlibMemoryMalterlibNew()
+		CMalterlibMemoryMalterlib()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
@@ -168,18 +172,22 @@ namespace
 	};
 
 #if DMibPPtrBits >= 64
-	class CMalterlibMemoryMalterlibNew_LowBranch
+	class CMalterlibMemoryMalterlib_LowBranch
 	{
-		struct CParams : public NMib::NMemory::CDefaultMemoryManagerParams
+		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr bool mc_bUseSmallSizes = false;
 			static constexpr bool mc_bSpecialCaseSlabType0 = false;
 			static constexpr bool mc_bUseFreeBlockCounting = false;
 		};
 
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<CParamsOverrides>
+		{
+		};
+
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
-		CMalterlibMemoryMalterlibNew_LowBranch()
+		CMalterlibMemoryMalterlib_LowBranch()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
@@ -229,11 +237,14 @@ namespace
 	};
 #endif
 
-	class CMalterlibMemoryMalterlibNew_Debug
+	class CMalterlibMemoryMalterlib_Debug
 	{
-		NMib::NMemory::TCMemoryManagerDebug<NMib::NMemory::CDefaultMemoryManagerParams, false> m_MemoryManager;
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
+		{
+		};
+		NMib::NMemory::TCMemoryManagerDebug<CParams, false> m_MemoryManager;
 	public:
-		CMalterlibMemoryMalterlibNew_Debug()
+		CMalterlibMemoryMalterlib_Debug()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
@@ -284,11 +295,14 @@ namespace
 	};
 
 
-	class CMalterlibMemoryMalterlibNew_Tracked
+	class CMalterlibMemoryMalterlib_Tracked
 	{
-		NMib::NMemory::TCMemoryManagerTracked<NMib::NMemory::TCMemoryManager<NMib::NMemory::CDefaultMemoryManagerParams>> m_MemoryManager;
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
+		{
+		};
+		NMib::NMemory::TCMemoryManagerTracked<NMib::NMemory::TCMemoryManager<CParams>> m_MemoryManager;
 	public:
-		CMalterlibMemoryMalterlibNew_Tracked()
+		CMalterlibMemoryMalterlib_Tracked()
 			: m_MemoryManager("Test tracked manager", NMib::NMemory::CMemoryManagerConfig())
 		{
 		}
@@ -338,9 +352,9 @@ namespace
 		}
 	};
 
-	class CMalterlibMemoryMalterlibNew_NoCleanup
+	class CMalterlibMemoryMalterlib_NoCleanup
 	{
-		struct CParams : public NMib::NMemory::CDefaultMemoryManagerParams
+		struct CLocalParams : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup
 				= NMib::NMemory::EDeferCleanup
@@ -353,9 +367,13 @@ namespace
 			;
 		};
 
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<CLocalParams>
+		{
+		};
+
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
-		CMalterlibMemoryMalterlibNew_NoCleanup()
+		CMalterlibMemoryMalterlib_NoCleanup()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
@@ -404,17 +422,21 @@ namespace
 		{
 		}
 	};
-	class CMalterlibMemoryMalterlibNew_NoDeferCleanup
+	class CMalterlibMemoryMalterlib_NoDeferCleanup
 	{
-		struct CParams : public NMib::NMemory::CDefaultMemoryManagerParams
+		struct CLocalParams : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup = NMib::NMemory::EDeferCleanup_None;
+		};
+
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<CLocalParams>
+		{
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
 
-		CMalterlibMemoryMalterlibNew_NoDeferCleanup()
+		CMalterlibMemoryMalterlib_NoDeferCleanup()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
@@ -463,11 +485,15 @@ namespace
 		{
 		}
 	};
-	class CMalterlibMemoryMalterlibNew_NoCheckout
+	class CMalterlibMemoryMalterlib_NoCheckout
 	{
-		NMib::NMemory::TCMemoryManager<NMib::NMemory::CDefaultMemoryManagerParams> m_MemoryManager;
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
+		{
+		};
+
+		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
-		CMalterlibMemoryMalterlibNew_NoCheckout()
+		CMalterlibMemoryMalterlib_NoCheckout()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
@@ -517,11 +543,15 @@ namespace
 		{
 		}
 	};
-	class CMalterlibMemoryMalterlibNew_NoCommit
+	class CMalterlibMemoryMalterlib_NoCommit
 	{
-		NMib::NMemory::TCMemoryManager<NMib::NMemory::CDefaultMemoryManagerParams_NoCommit> m_MemoryManager;
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<NMib::NMemory::CMemoryManagerParams_NoCommit>
+		{
+		};
+		
+		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
-		CMalterlibMemoryMalterlibNew_NoCommit()
+		CMalterlibMemoryMalterlib_NoCommit()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}

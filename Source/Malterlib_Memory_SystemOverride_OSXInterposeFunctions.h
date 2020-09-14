@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #ifdef DMibMemoryInterpose
@@ -31,13 +31,13 @@
 #	define DMibMemoryInterpose5(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4), __VA_ARGS__)
 #endif
 #ifndef DMibMemoryInterpose6
-#	define DMibMemoryInterpose6(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5), __VA_ARGS__) 
+#	define DMibMemoryInterpose6(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5), __VA_ARGS__)
 #endif
 #ifndef DMibMemoryInterpose7
-#	define DMibMemoryInterpose7(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5, _6), __VA_ARGS__) 
+#	define DMibMemoryInterpose7(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5, _6), __VA_ARGS__)
 #endif
 #ifndef DMibMemoryInterpose8
-#	define DMibMemoryInterpose8(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5, _6, _7), __VA_ARGS__) 
+#	define DMibMemoryInterpose8(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5, _6, _7), __VA_ARGS__)
 #endif
 #else
 
@@ -82,7 +82,7 @@
 #endif
 
 #ifndef DMibMemoryInterpose_SomeHooks
-DMibMemoryInterpose0(malloc_zone_t *, malloc_default_zone) 
+DMibMemoryInterpose0(malloc_zone_t *, malloc_default_zone)
 DMibMemoryInterpose2(malloc_zone_t *, malloc_create_zone, vm_size_t _0, unsigned _1)
 DMibMemoryInterpose1(void, malloc_destroy_zone, malloc_zone_t *_0)
 DMibMemoryInterpose2(void *, malloc_zone_malloc, malloc_zone_t *_0, size_t _1)
@@ -131,7 +131,8 @@ DMibMemoryInterpose2(void *, reallocf, void *_0, size_t _1)
 DMibMemoryInterpose1(void, free, void *_0)
 DMibMemoryInterpose1(void, vfree, void *_0)
 DMibMemoryInterpose3(int, posix_memalign, void **_0, size_t _1, size_t _2)
-	
+DMibMemoryInterpose2(void *, aligned_alloc, size_t _0, size_t _1)
+
 DMibMemoryInterpose1(int, malloc_jumpstart, int _0)
 
 #ifndef DMibMemoryInterpose_Hooks

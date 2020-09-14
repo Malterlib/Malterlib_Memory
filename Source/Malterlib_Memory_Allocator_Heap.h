@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -359,7 +359,7 @@ namespace NMib
 ||______________________________________________________________________________________________||
 \************************************************************************************************/
 
-#ifndef DMibDefaultToolset
+#if !defined(DMibDefaultToolset) && defined(DMalterlibUseStaticLibCxx)
 
 // Placement new
 #ifndef __PLACEMENT_NEW_INLINE
@@ -371,7 +371,7 @@ namespace NMib
 	}
 
 	only_parameters_aliased inline_always void operator delete (void *_pToDelete, void * variable_not_aliased _pPlacement) noexcept
-	{	
+	{
 	}
 
 #endif
@@ -385,7 +385,7 @@ namespace NMib
 	}
 
 	only_parameters_aliased inline_always void operator delete [] (void *_pToDelete, void * variable_not_aliased _pPlacement) noexcept
-	{	
+	{
 	}
 
 #endif
@@ -402,14 +402,14 @@ only_parameters_aliased malloc_like inline_always void * operator new (mint _Siz
 
 template <mint t_ArraySize>
 only_parameters_aliased inline_always void operator delete (void *_pToDelete, uint8 _Placement[t_ArraySize]) noexcept
-{	
+{
 }
 
 
 #ifdef DMibPOverrideOperatorNew
 #	include <new>
 	// Default new
-#	if DMibPInlineActive > 0 && !defined(DMibNoInlineNew) && !defined(DCompiler_MSVC)
+#	if DMibPInlineActive > 0 && !defined(DMibNoInlineNew) && !defined(DCompiler_MSVC) && defined(DMalterlibUseStaticLibCxx)
 		inline_always only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size)
 		{
 			return NMib::NMemory::fg_Alloc(_Size);
@@ -521,6 +521,7 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 		}
 
 #	else
+#ifdef DMalterlibUseStaticLibCxx
 		only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size);
 		only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size, std::nothrow_t const &) noexcept;
 		only_parameters_aliased void calling_convention_c operator delete(void *_pMemory) noexcept;
@@ -541,44 +542,28 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 		only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment) noexcept;
 		only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
 		only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::size_t _Size, std::align_val_t) noexcept;
+#endif
 #	endif
 #endif
 
-
-// New with align
-
-	struct CNewAligned
-	{
-		mint m_Alignment;
-		CNewAligned(mint _Alignment)
-			: m_Alignment(_Alignment)
-		{
-		}
-	};
-
-	only_parameters_aliased malloc_like inline_always void * operator new (mint _Size, CNewAligned const& _Alignment)
-	{
-		return NMib::NMemory::fg_AllocAligned(_Size, _Alignment.m_Alignment);
-	}
-
-	only_parameters_aliased inline_always void operator delete (void *_pToDelete, CNewAligned const& _Alignment) noexcept
-	{
-		NMib::NMemory::fg_FreeNoSize(_pToDelete);
-	}
-
-	only_parameters_aliased inline_always void operator delete (void *_pToDelete, size_t _Size, CNewAligned const& _Alignment) noexcept
-	{
-		NMib::NMemory::fg_Free(_pToDelete, _Size);
-	}
-
 #if DMibConfig_MalterlibMemoryManager_Debug
+#if defined(DMibPOverrideOperatorNew) && (defined(DMalterlibUseStaticLibCxx) || defined(DCompiler_MSVC))
+	only_parameters_aliased malloc_like inline_always void * operator new (std::size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
+	{
+		return NMib::NMemory::fg_AllocAlignedDebug(_Size, (mint)_Alignment, _pFile, _Line, _Flags);
+	}
 
-	only_parameters_aliased malloc_like inline_always void * operator new (mint _Size, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
+	only_parameters_aliased malloc_like inline_always void * operator new[] (std::size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
+	{
+		return NMib::NMemory::fg_AllocAlignedDebug(_Size, (mint)_Alignment, _pFile, _Line, _Flags);
+	}
+
+	only_parameters_aliased malloc_like inline_always void * operator new (std::size_t _Size, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
 	{
 		return NMib::NMemory::fg_AllocDebug(_Size, _pFile, _Line, _Flags);
 	}
 
-	only_parameters_aliased malloc_like inline_always void * operator new[] (mint _Size, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
+	only_parameters_aliased malloc_like inline_always void * operator new[] (std::size_t _Size, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
 	{
 		return NMib::NMemory::fg_AllocDebug(_Size, _pFile, _Line, _Flags);
 	}
@@ -593,6 +578,18 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 		NMib::NMemory::fg_Free(_pToDelete, _Size);
 	}
 
+	only_parameters_aliased inline_always void operator delete (void *_pToDelete, size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		NMib::NMemory::fg_Free(_pToDelete, _Size);
+	}
+
+
+	only_parameters_aliased inline_always void operator delete (void *_pToDelete, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		NMib::NMemory::fg_FreeNoSize(_pToDelete);
+	}
+
+
 	only_parameters_aliased inline_always void operator delete[] (void *_pToDelete, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
 	{
 		NMib::NMemory::fg_FreeNoSize(_pToDelete);
@@ -603,20 +600,75 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 		NMib::NMemory::fg_Free(_pToDelete, _Size);
 	}
 
-	only_parameters_aliased malloc_like inline_always void * operator new (mint _Size, CNewAligned const& _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
-	{
-		return NMib::NMemory::fg_AllocAlignedDebug(_Size, _Alignment.m_Alignment, _pFile, _Line, _Flags);
-	}
-
-	only_parameters_aliased inline_always void operator delete (void *_pToDelete, CNewAligned const& _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
-	{
-		NMib::NMemory::fg_FreeNoSize(_pToDelete);
-	}
-
-	only_parameters_aliased inline_always void operator delete (void *_pToDelete, size_t _Size, CNewAligned const& _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	only_parameters_aliased inline_always void operator delete[] (void *_pToDelete, size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
 	{
 		NMib::NMemory::fg_Free(_pToDelete, _Size);
 	}
 
+	only_parameters_aliased inline_always void operator delete[] (void *_pToDelete, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		NMib::NMemory::fg_FreeNoSize(_pToDelete);
+	}
+#else
+	only_parameters_aliased malloc_like inline_always void * operator new (std::size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
+	{
+		return operator new (_Size, _Alignment);
+	}
+
+	only_parameters_aliased malloc_like inline_always void * operator new[] (std::size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
+	{
+		return operator new[] (_Size, _Alignment);
+	}
+
+	only_parameters_aliased malloc_like inline_always void * operator new (std::size_t _Size, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
+	{
+		return operator new (_Size);
+	}
+
+	only_parameters_aliased malloc_like inline_always void * operator new[] (std::size_t _Size, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
+	{
+		return operator new[] (_Size);
+	}
+
+	only_parameters_aliased inline_always void operator delete (void *_pToDelete, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		return operator delete (_pToDelete);
+	}
+
+	only_parameters_aliased inline_always void operator delete (void *_pToDelete, size_t _Size, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		return operator delete (_pToDelete, _Size);
+	}
+
+	only_parameters_aliased inline_always void operator delete (void *_pToDelete, size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		return operator delete (_pToDelete, _Size, _Alignment);
+	}
+
+	only_parameters_aliased inline_always void operator delete (void *_pToDelete, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		return operator delete (_pToDelete, _Alignment);
+	}
+
+	only_parameters_aliased inline_always void operator delete[] (void *_pToDelete, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		return operator delete[] (_pToDelete);
+	}
+
+	only_parameters_aliased inline_always void operator delete[] (void *_pToDelete, size_t _Size, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		return operator delete[] (_pToDelete, _Size);
+	}
+
+	only_parameters_aliased inline_always void operator delete[] (void *_pToDelete, size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		return operator delete[] (_pToDelete, _Size, _Alignment);
+	}
+
+	only_parameters_aliased inline_always void operator delete[] (void *_pToDelete, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags) noexcept
+	{
+		return operator delete[] (_pToDelete, _Alignment);
+	}
+#endif
 #endif
 

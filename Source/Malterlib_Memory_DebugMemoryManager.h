@@ -7,7 +7,7 @@
 
 namespace NMib::NMemory
 {
-	using CDebugMemoryManagerUnderlaying = int32;
+	using CDebugMemoryManagerUnderlying = int32;
 	enum EDebugMemoryManager : int32
 	{
 		EDebugMemoryManager_None = 0,
@@ -15,7 +15,7 @@ namespace NMib::NMemory
 		EDebugMemoryManager_CheckRandom = DMibBit(1),			// Check for overwrites just below each allocation
 		EDebugMemoryManager_ProtectOnDemand = DMibBit(2),		// Do not place any protection on guard pages until f_DemandProtection is called.
 	};
-	template <CDebugMemoryManagerUnderlaying t_Options>
+	template <CDebugMemoryManagerUnderlying t_Options>
 	class TCDebugMemoryManager
 	{
 		class CMemoryBlock
@@ -77,13 +77,17 @@ namespace NMib::NMemory
 //#endif
 		};
 
-		struct CMemoryManagerParams : public NMemory::CDefaultMemoryManagerParams
+		struct CMemoryManagerParamsOverrides : public CDefaultMemoryManagerParams
 		{
 			static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 			typedef NMemory::CAllocator_VirtualNoTracking CAllocator;
 		};
 
-		typedef NMemory::TCMemoryManager<CMemoryManagerParams> CMemoryManager;
+		struct CMemoryManagerParamsOverridesParams : public TCMemoryManagerParams<CMemoryManagerParamsOverrides>
+		{
+		};
+
+		using CMemoryManager = NMemory::TCMemoryManager<CMemoryManagerParamsOverridesParams>;
 
 		CMemoryManager m_Heap;
 
@@ -125,6 +129,25 @@ namespace NMib::NMemory
 #endif
 		}
 
+		~TCDebugMemoryManager()
+		{
+			// Memory leaks
+			//if (!m_Blocks.f_IsEmpty())
+			//	DMibPDebugBreak;
+
+			DMibLock(m_Lock);
+
+			while (!m_FreeBlocks.f_IsEmpty())
+				fp_RemoveFreeBlock();
+
+			m_FreeBlocks.f_Clear();
+		}
+
+		void f_DestroyCleanupThreads()
+		{
+			m_Heap.f_DestroyCleanupThreads();
+		}
+
 		void fp_RemoveFreeBlock()
 		{
 			mint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
@@ -147,20 +170,6 @@ namespace NMib::NMemory
 				DMibUnlock(m_Lock);
 				m_Heap.f_Free(pBlock, Size);
 			}
-		}
-
-		~TCDebugMemoryManager()
-		{
-			// Memory leaks
-			//if (!m_Blocks.f_IsEmpty())
-			//	DMibPDebugBreak;
-
-			DMibLock(m_Lock);
-
-			while (!m_FreeBlocks.f_IsEmpty())
-				fp_RemoveFreeBlock();
-
-			m_FreeBlocks.f_Clear();
 		}
 
 		CReportMemoryLightweight *f_ReportMemoryLightweightTo(CReportMemoryLightweight *_pMemoryReporter)

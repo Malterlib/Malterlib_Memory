@@ -84,6 +84,9 @@ namespace NMib::NMemory
 		mint Size = f_GetSize();
 		uint8 *pAddress = f_GetAddress();
 
+		if constexpr (TCMemoryManagerArena<t_CParams>::mc_EnableCallbacks)
+			m_pHeap->m_pMemoryManager->f_OnCommit(pAddress, Size);
+
 		m_pHeap->m_pMemoryManager->m_Allocator.f_Free(pAddress, Size);
 	}
 
@@ -174,6 +177,8 @@ namespace NMib::NMemory
 			)
 		{
 			m_pMemoryManager->m_Allocator.f_Commit(pAddress, Granularity);
+			if constexpr (mc_EnableCallbacks)
+				m_pMemoryManager->f_OnCommit(pAddress, Granularity);
 		}
 	}
 
@@ -187,11 +192,13 @@ namespace NMib::NMemory
 
 		if constexpr (mc_EnableCallbacks)
 		{
+			m_pMemoryManager->f_OnCommit(pChunkAddress + StartBit * t_CParams::mc_HeapBlockSize, nBits * t_CParams::mc_HeapBlockSize);
+
 			_pChunk->m_Committed.f_EnumSetBitRanges
 				(
 					[&](mint _Bit, mint _nBits) -> bool
 					{
-						this->f_OnCheckFree(pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize, _nBits * t_CParams::mc_HeapBlockSize, true);
+						this->f_OnCheckFree(pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize, _nBits * t_CParams::mc_HeapBlockSize, EMemoryManagerCheckFlag_Default);
 						return true;
 					}
 					, StartBit
@@ -268,7 +275,26 @@ namespace NMib::NMemory
 					(
 						[&](mint _Bit, mint _nBits) -> bool
 						{
-							this->f_OnFillFree(pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize, _nBits * t_CParams::mc_HeapBlockSize);
+							uint8 *pStartAddress = pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize;
+							mint nBytesToDecommit = _nBits * t_CParams::mc_HeapBlockSize;
+							uint8 *pEndAddress = pStartAddress + nBytesToDecommit;
+							for (uint8 *pAddress = pStartAddress; pAddress < pEndAddress; )
+							{
+								uint8 *pMaxEnd = fg_AlignUp(pAddress + 1, t_CParams::mc_SlabSize) - t_CParams::mc_SubSlabSize;
+								if (pMaxEnd == pAddress)
+								{
+									this->f_OnFillFree(pAddress, t_CParams::mc_SubSlabSize, EMemoryManagerCheckFlag_None);
+									pAddress += t_CParams::mc_SubSlabSize;
+									continue;
+								}
+
+								uint8 *pThisEnd = fg_Min(pEndAddress, pMaxEnd);
+
+								this->f_OnFillFree(pAddress, pThisEnd - pAddress);
+
+								pAddress = pThisEnd;
+							}
+
 							return true;
 						}
 						, StartBit
@@ -283,6 +309,8 @@ namespace NMib::NMemory
 			fp_RequestCleanup(_pChunk, ENumaArenaCleanup_HeapCommit);
 			return;
 		}
+		else if constexpr (mc_EnableCallbacks)
+			m_pMemoryManager->f_OnDecommit(pChunkAddress + StartBit * t_CParams::mc_HeapBlockSize, nBits * t_CParams::mc_HeapBlockSize);
 
 		fp_DecommitBlockForReal(_pChunk, _pAddress, _Size);
 	}
@@ -382,7 +410,12 @@ namespace NMib::NMemory
 		m_Chunks.f_Insert(pChunk);
 
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
+		{
+			if constexpr (mc_EnableCallbacks)
+				m_pMemoryManager->f_OnDecommit(pMemory, t_CParams::mc_SlabSize);
+
 			fp_InitBlockCommit(pChunk, pMemory, Size);
+		}
 		else if constexpr (mc_EnableCallbacks)
 			this->f_OnFillFree(pMemory, Size);
 
@@ -442,7 +475,7 @@ namespace NMib::NMemory
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			fp_CommitBlock(pChunk, pRetAddress, Size);
 		else if constexpr (mc_EnableCallbacks)
-			this->f_OnCheckFree(pRetAddress, Size, true);
+			this->f_OnCheckFree(pRetAddress, Size, EMemoryManagerCheckFlag_Default);
 
 		if constexpr (mc_EnableCallbacks)
 			this->f_OnAlloc(pRetAddress, Size);
@@ -551,7 +584,7 @@ namespace NMib::NMemory
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			fp_CommitBlock(pChunk, pRetAddress, Size);
 		else if constexpr (mc_EnableCallbacks)
-			this->f_OnCheckFree(pRetAddress, Size, true);
+			this->f_OnCheckFree(pRetAddress, Size, EMemoryManagerCheckFlag_Default);
 
 		if constexpr (mc_EnableCallbacks)
 			this->f_OnAlloc(pRetAddress, Size);
@@ -687,7 +720,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManagerArenaHeap<t_CParams>::f_CheckFree(bool _bBreak)
+	bool TCMemoryManagerArenaHeap<t_CParams>::f_CheckFree(EMemoryManagerCheckFlag _Flags)
 	{
 		bool bError = false;
 
@@ -717,7 +750,7 @@ namespace NMib::NMemory
 								(
 									[&](mint _Bit, mint _nBits) -> bool
 									{
-										if (this->f_OnCheckFree(pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize, _nBits * t_CParams::mc_HeapBlockSize, _bBreak))
+										if (this->f_OnCheckFree(pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize, _nBits * t_CParams::mc_HeapBlockSize, _Flags))
 											bError = true;
 										return true;
 									}
@@ -729,7 +762,7 @@ namespace NMib::NMemory
 					}
 					else
 					{
-						if (this->f_OnCheckFree(pAddress, Size, _bBreak))
+						if (this->f_OnCheckFree(pAddress, Size, _Flags))
 							bError = true;
 					}
 				}

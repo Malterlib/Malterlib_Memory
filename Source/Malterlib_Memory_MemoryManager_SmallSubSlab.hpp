@@ -42,14 +42,14 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, bool _bBreak)
+	bool TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, EMemoryManagerCheckFlag _Flags)
 	{
 		mint AllocSize = m_Params.m_AllocSize;
-		return _Arena.f_OnCheckFree((uint8 *)_pAlloc + sizeof(uint16), AllocSize - sizeof(uint16), _bBreak);
+		return _Arena.f_OnCheckFree((uint8 *)_pAlloc + sizeof(uint16), AllocSize - sizeof(uint16), _Flags);
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, bool _bBreak)
+	bool TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, EMemoryManagerCheckFlag _Flags)
 	{
 		bool bError = false;
 
@@ -61,7 +61,7 @@ namespace NMib::NMemory
 		{
 			uint16 *pAlloc = (uint16 *)(pArray + iAlloc * m_Params.m_AllocSize);
 
-			if (f_OnCheckFree(_Arena, pAlloc, _bBreak))
+			if (f_OnCheckFree(_Arena, pAlloc, _Flags))
 				bError = true;
 
 			iAlloc = *pAlloc;
@@ -163,13 +163,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>::f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, bool _bBreak)
+	bool TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>::f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, EMemoryManagerCheckFlag _Flags)
 	{
 		return false;
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>::f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, bool _bBreak)
+	bool TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>::f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, EMemoryManagerCheckFlag _Flags)
 	{
 		return false;
 	}

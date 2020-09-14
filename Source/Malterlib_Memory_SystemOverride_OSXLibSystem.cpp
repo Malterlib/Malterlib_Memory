@@ -10,6 +10,8 @@
 #define DMibMalterlibOverrideMallocExport module_export
 #endif
 
+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
+
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -48,7 +50,8 @@ extern "C"
 #ifndef DMibMemoryOverrideDll
 	static
 #endif
-	COriginalFunctions g_OriginalFunctions = 
+
+	constinit COriginalFunctions g_OriginalFunctions =
 		{
 #			include "Malterlib_Memory_SystemOverride_OSXInterposeFunctions.h"
 		}

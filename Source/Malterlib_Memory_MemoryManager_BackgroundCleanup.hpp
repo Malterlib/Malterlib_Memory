@@ -17,7 +17,7 @@ namespace NMib::NMemory
 		, mp_bStarted(false)
 		, mp_pMemoryManager(_pNumaArena->m_pMemoryManager)
 	{
-		mp_Clock.f_Start();
+		mp_Clock.f_Start(1'000'000);
 	}
 
 	template <typename t_CParams>
@@ -28,16 +28,19 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	int64 TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_GetTimestamp() const
 	{
-		return mp_Clock.f_GetCycles();
-	}
+		auto Return = mp_Clock.f_GetCycles();
 
+		DMibFastCheck(Return != 0);;
+
+		return Return;
+	}
 
 	template <typename t_CParams>
 	void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_OnNeedCleanup()
 	{
 		if (!mp_bStarted.f_Load(NAtomic::EMemoryOrder_Relaxed))
 		{
-			if (!g_bCanStartThreads) // Cannot stat thread
+			if (!g_bCanStartThreads.f_Load(NAtomic::EMemoryOrder_Relaxed)) // Cannot stat thread
 			{
 				mp_bStarted.f_FetchOr(3); // Signal
 				return;
@@ -101,7 +104,6 @@ namespace NMib::NMemory
 					int64 LifeTimeDecommit;
 					{
 						int64 MSLifetime = t_CParams::mc_BackgroundCleanupLifetimeDecommit;
-						fp32 WaitTime = fp32(MSLifetime) / fp32(1000.0f);
 						LifeTimeDecommit = MSLifetime * NTime::CSystem_Time::fs_CyclesFrequency() / 1000;
 					}
 					int64 NextCleanup = mp_Clock.f_GetCycles() + LifeTime;
@@ -131,7 +133,11 @@ namespace NMib::NMemory
 							int64 Now = mp_Clock.f_GetCycles();
 							int64 RemoveTime = Now - LifeTime;
 							int64 RemoveTimeDecommit = Now - LifeTimeDecommit;
-							int64 NextUpdate = mp_pNumaArena->f_GarbageCollect({RemoveTime, RemoveTimeDecommit}, true, false, bForceFullGarbageCollection);
+							[[maybe_unused]] auto &ThreadLocal = *mp_pNumaArena->m_pMemoryManager->m_LocalArena; // Precach thread local to prevent deadlock
+
+							DMibLock(mp_GarbageCollectLock);
+							
+							int64 NextUpdate = mp_pNumaArena->f_GarbageCollect({RemoveTime, RemoveTimeDecommit}, true, bForceFullGarbageCollection);
 							bForceFullGarbageCollection = false;
 
 							bNeedUpdate = NextUpdate != TCLimitsInt<int64>::mc_Max;
@@ -188,8 +194,21 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
+	void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_Lock()
+	{
+		mp_GarbageCollectLock.f_Lock();
+	}
+
+	template <typename t_CParams>
+	void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_Unlock()
+	{
+		mp_GarbageCollectLock.f_Unlock();
+	}
+
+	template <typename t_CParams>
 	void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_PrepareFork()
 	{
+		mp_GarbageCollectLock.f_PrepareFork();
 		if (mp_pThread)
 			mp_pThread->f_PrepareFork();
 	}
@@ -203,6 +222,7 @@ namespace NMib::NMemory
 			mp_pThread->f_ForkedChild();
 			mp_pThread.f_Clear();
 		}
+		mp_GarbageCollectLock.f_ForkedChild();
 		mp_bStarted = false;
 	}
 
@@ -211,6 +231,8 @@ namespace NMib::NMemory
 	{
 		if (mp_pThread)
 			mp_pThread->f_ForkedParent();
+
+		mp_GarbageCollectLock.f_ForkedParent();
 
 #if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_OSX)
 		if (mp_bStarted && !mp_pThread)

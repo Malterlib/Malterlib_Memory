@@ -10,34 +10,19 @@ namespace NMib
 	//#warning "Overwrite memory manager not suiteable for 32 bit executables as you are likely to run out of memory"
 #endif
 
-#define DMibGuardRandom
-
-//#define DMibGuardBefore
-
-	/*
-#if	defined(DMibGuardRandom)
-	NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_CheckRandom>> g_DebugMemoryManager = {0};
-#elif defined(DMibGuardBefore)
-	NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_None>> g_DebugMemoryManager = {0};
-#else
-	NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_CheckUpper>> g_DebugMemoryManager = {0};
-#endif
-*/
-//		NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<int(NMib::NMemory::EDebugMemoryManager_CheckUpper) | int(NMib::NMemory::EDebugMemoryManager_ProtectOnDemand)>> g_DebugMemoryManager = {0};
-
-#if 1
-	constinit NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<(NMib::NMemory::EDebugMemoryManager)int(NMib::NMemory::EDebugMemoryManager_CheckUpper)>> g_DebugMemoryManager
+#if 0
+	constinit NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_CheckUpper>> g_DebugMemoryManager
 		= {DAggregateInit}
 	;
 #else
-	constinit NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<(NMib::NMemory::EDebugMemoryManager)int(0)>> g_DebugMemoryManager = {DAggregateInit};
+	constinit NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_None>> g_DebugMemoryManager = {DAggregateInit};
 #endif
 
 	constinit NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
 	constinit mint g_MemoryManagerForkedCount = 0;
 	constinit bool g_MemoryManagerUnforked = false;
 
-	NThread::TMutual<NThread::CEventAutoResetAggregate, true> &fg_GetDebugMemoryManagerLock()
+	NThread::TCMutual<NThread::CEventAutoResetAggregate, true> &fg_GetDebugMemoryManagerLock()
 	{
 		return g_DebugMemoryManager->f_GetLock();
 	}
@@ -141,6 +126,11 @@ namespace NMib::NMemory
 		inline_always static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule)
 		{
 			return true;
+		}
+
+		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_DestroyThreads(CMemoryManagerCrossModule *_pModule)
+		{
+			g_DebugMemoryManager->f_DestroyCleanupThreads();
 		}
 	};
 

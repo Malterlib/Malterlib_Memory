@@ -34,8 +34,8 @@ namespace NMib::NMemory
 		void f_OnAlloc(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
 		void f_OnFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
 		void f_OnFillFree(TCMemoryManagerArena<t_CParams> &_Arena);
-		bool f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, bool _bBreak);
-		bool f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, bool _bBreak);
+		bool f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, EMemoryManagerCheckFlag _Flags);
+		bool f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, EMemoryManagerCheckFlag _Flags);
 	};
 
 	template <typename t_CParams, mint t_AllocSize>
@@ -56,6 +56,7 @@ namespace NMib::NMemory
 				)
 			)
 		;
+		static_assert(mc_NumAllocs < 0xFFFF, "Out of bounds");
 
 		static_assert(!t_CParams::mc_bUseSmallSizes || mc_SmallSlabIndex < TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabs, "Out of range");
 		static_assert(!t_CParams::mc_bUseSmallSizes || t_AllocSize != 1);
@@ -95,7 +96,7 @@ namespace NMib::NMemory
 		void f_OnAlloc(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
 		void f_OnFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
 		void f_OnFillFree(TCMemoryManagerArena<t_CParams> &_Arena);
-		bool f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, bool _bBreak);
-		bool f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, bool _bBreak);
+		bool f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, EMemoryManagerCheckFlag _Flags);
+		bool f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, EMemoryManagerCheckFlag _Flags);
 	};
 }

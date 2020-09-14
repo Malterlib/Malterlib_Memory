@@ -19,11 +19,6 @@ namespace NMib::NMemory
 		, m_Magic(_Magic)
 		, m_NumaNode(_NumaNode)
 		, m_pNumaArena(_pNumaArena)
-		, m_CheckoutCount(0)
-		, m_bWantCleanup(false)
-		, m_bRequestedCleanup(false)
-		, m_bWantNumaFreeSlabsCleanup(false)
-		, m_Locked(EArenaLockFlag_None)
 	{
 		DMibFastCheck((uint8 *)&m_Locked == fg_AlignUp((uint8 *)&m_Locked, mint(DMibPMemoryCacheLineSize)));
 		DMibFastCheck((uint8 *)&m_Messages == fg_AlignUp((uint8 *)&m_Messages, mint(DMibPMemoryCacheLineSize)));
@@ -38,8 +33,8 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	bool TCMemoryManagerArena<t_CParams>::f_ReturnCheckout()
 	{
-		DMibFastCheck(m_CheckoutCount > 0);
-		if (--m_CheckoutCount == 0)
+		DMibFastCheck(m_CheckoutCount.f_Load() > 0);
+		if (m_CheckoutCount.f_FetchSub(1, NAtomic::EMemoryOrder_Relaxed) == 1)
 		{
 			fp_CheckMessages();
 			bool bNeedCleanup = fp_CheckCleanup();
@@ -56,7 +51,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerArena<t_CParams>::f_ReturnCheckoutLight()
 	{
-		DMibFastCheck(m_CheckoutCount == 0); // Should not have been increased
+		DMibFastCheck(m_CheckoutCount.f_Load() == 0); // Should not have been increased
 		bool bNeedCleanup = false;
 		fp_CheckMessages();
 		if (m_bWantCleanup)
@@ -91,6 +86,9 @@ namespace NMib::NMemory
 
 		while (auto pSlab = m_FreeSlabs.f_Pop())
 		{
+			if constexpr (mc_EnableCallbacks)
+				m_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
+
 			pSlab->~TCMemoryManagerSlabShared<t_CParams>();
 			m_pMemoryManager->m_Allocator.f_Free(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 		}
@@ -99,10 +97,13 @@ namespace NMib::NMemory
 			mint nSlabs = sizeof(m_PartiallyFreeSlabs) / sizeof(m_PartiallyFreeSlabs[0]);
 			for (mint iSlab = 0; iSlab < nSlabs; ++iSlab)
 			{
-				for (mint iLevel = 0; iLevel < mc_NumSubSlabSizeLevels; ++iLevel)
+				for (mint iLevel = 0; iLevel < t_CParams::mc_NumSubSlabSizeLevels; ++iLevel)
 				{
 					while (auto pSlab = m_PartiallyFreeSlabs[iSlab][iLevel].f_Pop())
 					{
+						if constexpr (mc_EnableCallbacks)
+							m_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
+
 						pSlab->~TCMemoryManagerSlabShared<t_CParams>();
 						m_pMemoryManager->m_Allocator.f_Free(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 					}
@@ -113,13 +114,16 @@ namespace NMib::NMemory
 
 		while (auto pSlab = m_FullSlabs.f_Pop())
 		{
+			if constexpr (mc_EnableCallbacks)
+				m_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
+			
 			pSlab->~TCMemoryManagerSlabShared<t_CParams>();
 			m_pMemoryManager->m_Allocator.f_Free(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 		}
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManagerArena<t_CParams>::fp_FreeSmallSubSlabs(TCMemoryManagerSlabShared<t_CParams> *_pSlab)
+	bool TCMemoryManagerArena<t_CParams>::fp_FreeSmallSubSlabs(TCMemoryManagerSlabShared<t_CParams> *_pSlab)
 	{
 		auto SlabType = _pSlab->m_SlabType;
 		for (auto iSubSlab = _pSlab->m_FreeSubSlabs.f_GetIterator(); iSubSlab; )
@@ -132,12 +136,14 @@ namespace NMib::NMemory
 			auto iAlloc = mint(pSlabAddress - _pSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
 			iAlloc = t_CParams::fs_DivideBySlabMultiplier(iAlloc, SlabType);
 			_pSlab->f_DecommitSubSlabs(iAlloc, 1);
-			_pSlab->f_SetBitFree(0, iAlloc);
+			if (_pSlab->f_SetBitFree(0, iAlloc))
+				return true;
 		}
 		DMibFastCheck(_pSlab->m_nFreeSubSlabs == 0);
 		fp_CheckSlabNoLongerGarbage(_pSlab);
-	}
 
+		return false;
+	}
 
 	template <typename t_CParams>
 	inline_small void *TCMemoryManagerArena<t_CParams>::f_AllocWithSize(mint &_Size)
@@ -146,7 +152,7 @@ namespace NMib::NMemory
 		void * pAlloc;
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			if (likely(_Size > mc_SmallSizeSlabsLargestSize))
+			if (likely(_Size > t_CParams::mc_SmallSizeSlabsLargestSize))
 				pAlloc = fp_AllocNormal(_Size);
 			else
 				pAlloc = fp_AllocSmallSize(_Size);
@@ -164,7 +170,7 @@ namespace NMib::NMemory
 	{
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			if (likely(_Size > mc_SmallSizeSlabsLargestSize))
+			if (likely(_Size > t_CParams::mc_SmallSizeSlabsLargestSize))
 				fp_AllocNormalBatch(_Size, _Functor);
 			else
 				fp_AllocSmallSizeBatch(_Size, _Functor);
@@ -209,11 +215,11 @@ namespace NMib::NMemory
 		{
 			if (SlabType == 0)
 			{
-				auto pData = _pSlab->f_GetSubSlabData();
+				auto pData = _pSlab->f_GetSubSlabDataType();
 				auto SubSlab = mint((uint8 *)_pMemory - _pSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
 
 				mint iSubSlab = SubSlab;
-				mint SlabBucket = pData[iSubSlab].m_Allocated.m_Type;
+				mint SlabBucket = pData[iSubSlab].m_Type;
 
 #if DMibPPtrBits == 32
 				if (unlikely(SlabBucket <= 1))
@@ -230,7 +236,7 @@ namespace NMib::NMemory
 						auto &MemoryManager = *m_pMemoryManager;
 						if (MemoryManager.m_bCanDoLazyCheckout && !LocalArena.m_TemporaryReturnCheckoutCount)
 						{
-							++MemoryManager.fp_CheckoutHelper(LocalArena)->m_CheckoutCount;
+							MemoryManager.fp_CheckoutHelper(LocalArena)->m_CheckoutCount.f_FetchAdd(1, NAtomic::EMemoryOrder_Relaxed);
 							DMibFastCheck(fg_GetSys()->f_ThreadCreated());
 							LocalArena.m_bLazyCheckout = true;
 						}
@@ -262,9 +268,9 @@ namespace NMib::NMemory
 	{
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			if (likely(_Size > mc_SmallSizeSlabsLargestSize))
+			if (likely(_Size > t_CParams::mc_SmallSizeSlabsLargestSize))
 			{
-				mint Size = fg_AlignUp(_Size, mc_MinNormalSizeAlignment);
+				mint Size = fg_AlignUp(_Size, t_CParams::mc_MinNormalSizeAlignment);
 				DMibFastCheck(Size >= sizeof(void *) * 2);
 				mint SlabBucket = NMib::fg_GetHighestBitSetNoZero(Size);
 				mint SlabBucketGranularity = (mint(1) << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
@@ -278,7 +284,7 @@ namespace NMib::NMemory
 		}
 		else
 		{
-			mint Size = fg_AlignUp(fg_Max(_Size, mc_MinAllocSize), mc_MinNormalSizeAlignment);
+			mint Size = fg_AlignUp(fg_Max(_Size, mc_MinAllocSize), t_CParams::mc_MinNormalSizeAlignment);
 			mint SlabBucket = NMib::fg_GetHighestBitSetNoZero(Size);
 			mint SlabBucketGranularity = (mint(1) << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
 			return fg_AlignUp(Size, SlabBucketGranularity);
@@ -287,23 +293,22 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManagerArena<t_CParams>::fp_FreeSubSlab(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab)
+	inline_never bool TCMemoryManagerArena<t_CParams>::fp_FreeSubSlab(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab)
 	{
-		auto pData = _pSlab->f_GetSubSlabData();
+		auto pData = _pSlab->f_GetSubSlabDataType();
 		auto pSlabData = _pSlab->f_GetSlabStart();
 		mint SlabType = _pSlab->m_SlabType;
 
 		DMibFastCheck(_iSubSlab < _pSlab->f_GetNumSubSlabs());
 
-		mint SlabBucket = pData[_iSubSlab].m_Allocated.m_Type - 2;
+		mint SlabBucket = pData[_iSubSlab].m_Type - 2;
 
-		DMibFastCheck(SlabBucket < 21);
-
-		DMibFastCheck(pData[_iSubSlab].m_Allocated.m_nAllocs == 0);
+		DMibFastCheck(SlabBucket < t_CParams::mc_NumSizeLevels);
+		DMibFastCheck(_pSlab->f_GetSubSlabDataAlloc()[_iSubSlab].m_nAllocs == 0);
 
 		mint AlignedSize;
 
-		mint SubSlabMultiplier = t_CParams::ms_SlabTypeInfo[SlabType].m_SubSlabMutiplier;
+		mint SubSlabMultiplier = t_CParams::mc_SlabTypeInfo[SlabType].m_SubSlabMutiplier;
 		mint MinSize = SubSlabMultiplier * t_CParams::mc_SubSlabSize;
 
 		mint SlabBucketStart = mint(1) << SlabBucket;
@@ -334,7 +339,8 @@ namespace NMib::NMemory
 				mint Level = NMib::fg_GetHighestBitSetNoZero(nSubSlabs);
 
 				DMibFastCheck(((_iSubSlab >> Level) << Level) == _iSubSlab);
-				_pSlab->f_SetBitFree(Level, _iSubSlab >> Level);
+				if (_pSlab->f_SetBitFree(Level, _iSubSlab >> Level))
+					return true;
 			}
 			else
 			{
@@ -352,10 +358,13 @@ namespace NMib::NMemory
 			mint Level = NMib::fg_GetHighestBitSetNoZero(nSubSlabs);
 
 			DMibFastCheck(((_iSubSlab >> Level) << Level) == _iSubSlab);
-			_pSlab->f_SetBitFree(Level, _iSubSlab >> Level);
+			if (_pSlab->f_SetBitFree(Level, _iSubSlab >> Level))
+				return true;
 		}
 
 		_pSlab->m_nAllocatedSubSlabs -= nSubSlabs;
+
+		return false;
 	}
 
 	template <typename t_CParams>
@@ -374,7 +383,7 @@ namespace NMib::NMemory
 		mint nSlabs = 0;
 		for (mint iSlabType = 0; iSlabType < t_CParams::mc_NumSizesPerLevel; ++iSlabType)
 		{
-			for (mint i = 0; i < mc_NumSubSlabSizeLevels; ++i)
+			for (mint i = 0; i < t_CParams::mc_NumSubSlabSizeLevels; ++i)
 				nSlabs += m_PartiallyFreeSlabs[iSlabType][i].f_GetLen();
 		}
 
@@ -384,7 +393,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManagerArena<t_CParams>::f_CheckFree(bool _bBreak)
+	bool TCMemoryManagerArena<t_CParams>::f_CheckFree(EMemoryManagerCheckFlag _Flags)
 	{
 		bool bError = false;
 		if constexpr (t_CParams::mc_bUseSmallSizes)
@@ -393,7 +402,7 @@ namespace NMib::NMemory
 			{
 				for (auto iAlloc = m_NormalSizeSlabsLevel0[i].f_GetIterator(); iAlloc; ++iAlloc)
 				{
-					if (fp_CheckFree(&*iAlloc, _bBreak))
+					if (fp_CheckFree(&*iAlloc, _Flags))
 						bError = true;
 
 				}
@@ -405,7 +414,7 @@ namespace NMib::NMemory
 			{
 				for (auto iAlloc = m_NormalSizeSlabs[j][i].f_GetIterator(); iAlloc; ++iAlloc)
 				{
-					if (fp_CheckFree(&*iAlloc, _bBreak))
+					if (fp_CheckFree(&*iAlloc, _Flags))
 						bError = true;
 				}
 			}
@@ -413,22 +422,22 @@ namespace NMib::NMemory
 
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			if (fp_CheckFreeSmall<1>(_bBreak))
+			if (fp_CheckFreeSmall<1>(_Flags))
 				bError = true;
-			if (fp_CheckFreeSmall<2>(_bBreak))
+			if (fp_CheckFreeSmall<2>(_Flags))
 				bError = true;
-			if (fp_CheckFreeSmall<4>(_bBreak))
+			if (fp_CheckFreeSmall<4>(_Flags))
 				bError = true;
-			if (fp_CheckFreeSmall<8>(_bBreak))
+			if (fp_CheckFreeSmall<8>(_Flags))
 				bError = true;
 			if constexpr (mc_MinAlignment == 4)
 			{
-				if (fp_CheckFreeSmall<12>(_bBreak))
+				if (fp_CheckFreeSmall<12>(_Flags))
 					bError = true;
 			}
 			if constexpr (mc_bUseFreeBlockCounting)
 			{
-				if (fp_CheckFreeSmall<16>(_bBreak))
+				if (fp_CheckFreeSmall<16>(_Flags))
 					bError = true;
 			}
 		}

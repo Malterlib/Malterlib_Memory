@@ -59,8 +59,8 @@ namespace NMib::NMemory
 
 		NContainer::TCMap<uint8 *, CMemoryManagerArenaHeapBlock, NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_Blocks;
 
-		int64 m_DecommitTimestamp;
-		int64 m_FreeTimestamp;
+		int64 m_DecommitTimestamp = 0;
+		int64 m_FreeTimestamp = 0;
 
 	public:
 
@@ -128,7 +128,7 @@ namespace NMib::NMemory
 		int64 f_GarbageCollect(int64 _Timestamp);
 		int64 f_DecommitDeferred(int64 _Timestamp);
 
-		bool f_CheckFree(bool _bBreak);
+		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 
 	};
 }
