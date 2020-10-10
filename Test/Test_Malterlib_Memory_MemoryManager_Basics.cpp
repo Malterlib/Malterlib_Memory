@@ -711,7 +711,7 @@ namespace
 				}
 				mint MaxCommittedSubSlabs = 0;
 				MemoryManager.f_GarbageCollect(false);
-				mint PreviousWaste;
+				[[maybe_unused]] mint PreviousWaste;
 				{
 					DMibTestPath("Alloc2");
 					auto Checkout = MemoryManager.f_Checkout();

@@ -1021,6 +1021,9 @@ namespace
 #ifdef DMemoryManagerTestEnable_WindowsLF
 			f_DoTest<TCMalterlibMemoryWindowsLF<false>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "WindowsLF", _MaxAllocSize, _nThreads);
 #endif
+#ifdef DMemoryManagerTestEnable_WindowsDefault
+			f_DoTest<TCMalterlibMemoryWindows<false, true>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "Windows", _MaxAllocSize, _nThreads);
+#endif
 
 			if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
 			{

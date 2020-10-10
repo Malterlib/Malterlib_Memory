@@ -938,7 +938,7 @@ namespace
 		{
 			if (_bAlignment)
 				return false;
-			return _nThreads <= 3;
+			return true;
 		}
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)

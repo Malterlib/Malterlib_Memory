@@ -30,7 +30,7 @@ extern "C"
 
 		NMib::NContainer::TCVector<NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject>> StartedThreads;
 
-		for (int i = 0; i < nThreads; ++i)
+		for (mint i = 0; i < nThreads; ++i)
 		{
 			StartedThreads.f_Insert
 				(
