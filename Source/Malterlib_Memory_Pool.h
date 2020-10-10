@@ -63,7 +63,6 @@ namespace NMib::NMemory
 		class TCPool
 		{
 		public:
-#ifndef DMibNoAggregateConstexpr
 			constexpr TCPool(EAggregateInitialization _Init)
 				: m_Chunks(_Init)
 				, m_FreeBlocks(_Init)
@@ -77,7 +76,7 @@ namespace NMib::NMemory
 			inline_always TCPool()
 			{
 			}
-#endif
+
 			using CBlock = TCBlock<t_CAllocator>;
 
 			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, NTraits::TCAlignmentOf<CBlock>::mc_Value)> CChunk;
@@ -244,7 +243,6 @@ namespace NMib::NMemory
 		class TCPool
 		{
 		public:
-#ifndef DMibNoAggregateConstexpr
 			constexpr TCPool(EAggregateInitialization _Init)
 				: m_Chunks(_Init)
 				, m_FreeChunks(_Init)
@@ -256,7 +254,7 @@ namespace NMib::NMemory
 			inline_always TCPool()
 			{
 			}
-#endif
+
 			using CBlock = TCBlock<t_CAllocator>;
 
 			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, NTraits::TCAlignmentOf<CBlock>::mc_Value)> CChunk;
@@ -479,7 +477,6 @@ namespace NMib::NMemory
 		class TCPool
 		{
 		public:
-#ifndef DMibNoAggregateConstexpr
 			constexpr TCPool(EAggregateInitialization _Init)
 				: m_Chunks(_Init)
 				, m_FreeChunks(_Init)
@@ -492,7 +489,7 @@ namespace NMib::NMemory
 			inline_always TCPool()
 			{
 			}
-#endif
+
 			using CBlock = TCBlock<t_CAllocator>;
 			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, NTraits::TCAlignmentOf<CBlock>::mc_Value)> CChunk;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
@@ -654,7 +651,6 @@ namespace NMib::NMemory
 	class TCPoolAggregateData : public t_CLock
 	{
 	public:
-#ifndef DMibNoAggregateConstexpr
 		constexpr TCPoolAggregateData(EAggregateInitialization _Init)
 			: t_CLock(_Init)
 			, m_bDoneInit(false)
@@ -663,7 +659,6 @@ namespace NMib::NMemory
 		inline_always TCPoolAggregateData()
 		{
 		}
-#endif
 
 		mint m_bDoneInit;
 
@@ -690,7 +685,6 @@ namespace NMib::NMemory
 	class TCPoolAggregate : public t_CAggregateData
 	{
 	public:
-#ifndef DMibNoAggregateConstexpr
 		constexpr TCPoolAggregate(EAggregateInitialization _Init)
 			: t_CAggregateData(_Init)
 #		if DMibConfig_Memory_Shims_Enable
@@ -702,7 +696,7 @@ namespace NMib::NMemory
 		inline_always TCPoolAggregate()
 		{
 		}
-#endif
+
 		inline_small void fp_ReturnBlock(void * _pBlock)
 		{
 			DMibMemoryGoingToReportScope(this, mc_Reporting);
