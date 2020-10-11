@@ -655,6 +655,8 @@ namespace
 
 		bool f_Init(mint _nThreads, mint _MaxSize)
 		{
+			mi_process_load();
+			mi_process_init();
 			mi_free(mi_malloc(1));
 			return true;
 		}

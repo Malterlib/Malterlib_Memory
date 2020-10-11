@@ -1,82 +1,11 @@
 Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
-%Target "Dll_mimalloc"
-{
-	Compile
-	{
-		!!Compile.Type "C++"
-		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
-		PreprocessorDefines "MI_SHARED_LIB;MI_SHARED_LIB_EXPORT;mimalloc_EXPORTS;@(Compile.PreprocessorDefines)"
-	}
-	Property.MalterlibTargetNameType "Normal"
-	Target.Group "External/libmimalloc"
-	{
-		!!Target.Group ""
-	}
-	Target.Type "SharedDynamicLibrary"
-	Target.BaseName "mimalloc"
-	%Group "src"
-	{
-		%File "../../../../External/mimalloc/src/stats.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/random.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/os.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/arena.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/region.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/segment.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/page.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/alloc.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/alloc-aligned.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/alloc-posix.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/heap.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/options.c"
-		{
-			Compile.Type "C++"
-		}
-		%File "../../../../External/mimalloc/src/init.c"
-		{
-			Compile.Type "C++"
-		}
-	}
-}
 %Target "Lib_mimalloc-static"
 {
 	Compile
 	{
 		!!Compile.Type "C++"
 		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
-		PreprocessorDefines "MI_STATIC_LIB;@(Compile.PreprocessorDefines)"
+		PreprocessorDefines "MI_PADDING=0;MI_STATIC_LIB;@(Compile.PreprocessorDefines)"
 	}
 	Property.MalterlibTargetNameType "Normal"
 	Target.Group "External/libmimalloc"
@@ -147,7 +76,7 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 	{
 		!!Compile.Type "C++"
 		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
-		PreprocessorDefines ";@(Compile.PreprocessorDefines)"
+		PreprocessorDefines "MI_PADDING=0;@(Compile.PreprocessorDefines)"
 	}
 	Property.MalterlibTargetNameType "Normal"
 	Target.Group "External/libmimalloc"
@@ -171,7 +100,7 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 	{
 		!!Compile.Type "C++"
 		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
-		PreprocessorDefines ";@(Compile.PreprocessorDefines)"
+		PreprocessorDefines "MI_PADDING=0;@(Compile.PreprocessorDefines)"
 	}
 	Property.MalterlibTargetNameType "Normal"
 	Target.Group "External/libmimalloc"
@@ -187,5 +116,4 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 			Compile.Type "C++"
 		}
 	}
-	%Dependency "Dll_mimalloc"
 }

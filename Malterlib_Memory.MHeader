@@ -204,9 +204,12 @@ Import "Apps/*/*.MHeader"
 		MalterlibEnableThirdPartyComparisonTests true
 	}
 
-	Import.CMake_FullRebuildVersion 1
+	Import.CMake_FullRebuildVersion "@(Import.CMake_FullRebuildVersion).1"
 	Import.CMake_Variables "MI_OVERRIDE=OFF;@(Import.CMake_Variables)"
 	Import.CMake_Variables "MI_USE_CXX=ON;@(Import.CMake_Variables)"
+	Import.CMake_Variables "MI_PADDING=OFF;@(Import.CMake_Variables)"
+	Import.CMake_Variables "MI_BUILD_SHARED=OFF;@(Import.CMake_Variables)"
+	Import.CMake_Variables "MI_BUILD_OBJECT=OFF;@(Import.CMake_Variables)"
 	Import.CMake_Variables "CMAKE_BUILD_WITH_INSTALL_RPATH=ON;@(Import.CMake_Variables)"
 	{
 		&
@@ -226,7 +229,7 @@ Import "Apps/*/*.MHeader"
 	{
 		!!CompileDialect "C"
 
-		PreprocessorDefines "MI_STAT=0;@(Compile.PreprocessorDefines)"
+		PreprocessorDefines "MI_STAT=0;MI_PADDING=0;@(Compile.PreprocessorDefines)"
 	}
 	%Target "Lib_mimalloc-static"
 	{
@@ -368,7 +371,15 @@ Property
 		}
 		MemoryManagerTestEnable_MiMalloc true
 		{
-			!!MalterlibEnableThirdPartyComparisonTests true
+			&
+			{
+				MalterlibEnableThirdPartyComparisonTests true
+				|
+				{
+					!Architecture x86
+					PlatformFamily Windows
+				}
+			}
 		}
 	}
 	Target
@@ -479,7 +490,7 @@ Property
 	}
 	%Dependency "Lib_mimalloc-static"
 	{
-		!!MalterlibEnableThirdPartyComparisonTests true
+		!!MemoryManagerTestEnable_MiMalloc true
 	}
 }
 
