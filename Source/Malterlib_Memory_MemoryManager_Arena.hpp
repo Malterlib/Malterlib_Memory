@@ -222,12 +222,22 @@ namespace NMib::NMemory
 				mint SlabBucket = pData[iSubSlab].m_Type;
 
 #if DMibPPtrBits == 32
-				if (unlikely(SlabBucket <= 1))
+				constexpr mint c_TooSmallBucket = 1;
 #elif DMibPPtrBits == 64
-				if (unlikely(SlabBucket <= 2))
+				constexpr mint c_TooSmallBucket = 2;
 #else
 #error "Implement this"
 #endif
+
+				if
+					(
+						unlikely(SlabBucket <= c_TooSmallBucket)
+						||
+						(
+							!t_CParams::mc_bAllowUnalignedFreeList
+							&& ((mint)_pMemory & (sizeof(void *) - 1))
+						)
+					)
 				{
 					TCMemoryManagerCheckoutLight<t_CParams> Checkout(nullptr);
 					if (_pLocalArena && _pLocalArena->m_pArena == nullptr)
