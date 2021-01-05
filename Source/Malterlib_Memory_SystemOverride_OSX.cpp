@@ -1471,12 +1471,12 @@ namespace
 {
 #ifdef DArchitecture_x86
 	using CThreadState = i386_thread_state_t;
-	static constexpr int gc_StateFlavor = x86_DEBUG_STATE32;
-	static constexpr int gc_StateCount = x86_DEBUG_STATE32_COUNT;
+	static constexpr int gc_StateFlavor = x86_THREAD_STATE32;
+	static constexpr int gc_StateCount = x86_THREAD_STATE32_COUNT;
 #elif defined(DArchitecture_x64)
 	using CThreadState = x86_thread_state64_t;
-	static constexpr int gc_StateFlavor = x86_DEBUG_STATE64;
-	static constexpr int gc_StateCount = x86_DEBUG_STATE64_COUNT;
+	static constexpr int gc_StateFlavor = x86_THREAD_STATE64;
+	static constexpr int gc_StateCount = x86_THREAD_STATE64_COUNT;
 #elif defined(DArchitecture_ppc32)
 	using CThreadState = ppc_thread_state_t;
 	static constexpr int gc_StateFlavor = PPC_THREAD_STATE32;
@@ -1717,7 +1717,7 @@ namespace
 			if (!Message.m_Exception)
 			{
 				if (Message.m_Header.msgh_id == 1)
-				  return;
+					return;
 			}
 			else
 			{
