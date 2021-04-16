@@ -136,6 +136,10 @@ namespace NMib::NMemory
 
 	DMibMemory_MemoryManagerExport void * fg_AllocAligned(mint _Size, mint _Alignment)
 	{
+#if defined(DPlatformFamily_Linux) && !defined(DMibInitInPreInitArray)
+		if (!NMib::g_bCreatedSystem)
+			NMib::NSys::fg_CreateSystem();
+#endif
 		return CCrossModuleImplementationExtra::fs_AllocAligned(&g_CrossModule, _Size, _Alignment);
 	}
 
