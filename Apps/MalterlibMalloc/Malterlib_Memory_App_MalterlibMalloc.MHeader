@@ -1,6 +1,11 @@
 // Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
+Property
+{
+	MalterlibMemoryManager_OverrideDll define bool = false
+}
+
 %Target "Malterlib_Memory_MalterlibMalloc"
 {
 	Property
@@ -8,7 +13,7 @@
 		ProductName "Malterlib Malloc"
 		MalterlibPostCopyProject "MalterlibMalloc"
 		{
-			!!MalterlibPostCopyProject ""
+			!!MalterlibPostCopyProject undefined
 		}
 	}
 	Target
@@ -19,7 +24,7 @@
 		{
 			!!GeneratorFamily "Xcode"
 		}
-		LinkWithLibraries "-install_name @rpath/MalterlibMalloc.dylib @(Target.LinkWithLibraries)"
+		LinkWithLibraries += [["-install_name", "@rpath/MalterlibMalloc.dylib"]]
 		{
 			!!PlatformFamily "OSX"
 		}
@@ -45,13 +50,13 @@
 	Property
 	{
 		MalterlibMemoryManager_OverrideDll true
-		MalterlibLog_Severities "None"
+		MalterlibLog_Severities []
 	}
 
 	Compile
 	{
 		!!CompileDialect "C"
-		PreprocessorDefines "DMibMemoryOverrideDll;@(Compile.PreprocessorDefines)"
+		PreprocessorDefines =+ "DMibMemoryOverrideDll"
 	}
 
 	%Target "Malterlib_Memory_MalterlibMalloc"
