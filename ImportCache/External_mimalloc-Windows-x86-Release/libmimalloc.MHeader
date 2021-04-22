@@ -1,16 +1,21 @@
-Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
+Property.CMakeOutputPath_libmimalloc define string = "."->MakeAbsolute()
 %Target "Lib_mimalloc-static"
 {
 	Compile
 	{
 		!!Compile.Type "C++"
-		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
-		PreprocessorDefines "MI_PADDING=0;MI_STATIC_LIB;@(Compile.PreprocessorDefines)"
+		SearchPath += [
+			"../../../../External/mimalloc/include"->MakeAbsolute()
+		]
+		PreprocessorDefines += [
+			"MI_PADDING=0",
+			"MI_STATIC_LIB"
+		]
 	}
 	Property.MalterlibTargetNameType "Normal"
 	Target.Group "External/libmimalloc"
 	{
-		!!Target.Group ""
+		!!Target.Group undefined
 	}
 	Target.Type "StaticLibrary"
 	Target.BaseName "mimalloc-static"
@@ -75,13 +80,17 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 	Compile
 	{
 		!!Compile.Type "C++"
-		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
-		PreprocessorDefines "MI_PADDING=0;@(Compile.PreprocessorDefines)"
+		SearchPath += [
+			"../../../../External/mimalloc/include"->MakeAbsolute()
+		]
+		PreprocessorDefines += [
+			"MI_PADDING=0"
+		]
 	}
 	Property.MalterlibTargetNameType "Normal"
 	Target.Group "External/libmimalloc"
 	{
-		!!Target.Group ""
+		!!Target.Group undefined
 	}
 	Target.Type "ConsoleExecutable"
 	Target.BaseName "mimalloc-test-api"
@@ -99,13 +108,17 @@ Property.CMakeOutputPath_libmimalloc "@('.'->MakeAbsolute())"
 	Compile
 	{
 		!!Compile.Type "C++"
-		SearchPath "@('../../../../External/mimalloc/include'->MakeAbsolute());@(Compile.SearchPath)"
-		PreprocessorDefines "MI_PADDING=0;@(Compile.PreprocessorDefines)"
+		SearchPath += [
+			"../../../../External/mimalloc/include"->MakeAbsolute()
+		]
+		PreprocessorDefines += [
+			"MI_PADDING=0"
+		]
 	}
 	Property.MalterlibTargetNameType "Normal"
 	Target.Group "External/libmimalloc"
 	{
-		!!Target.Group ""
+		!!Target.Group undefined
 	}
 	Target.Type "ConsoleExecutable"
 	Target.BaseName "mimalloc-test-stress"
