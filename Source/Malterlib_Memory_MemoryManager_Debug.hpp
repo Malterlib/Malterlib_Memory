@@ -1106,6 +1106,9 @@ namespace NMib::NMemory
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	inline_never void TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CArena::f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags)
 	{
+		if ((_Flags & EMemoryManagerCheckFlag_Protect) && t_COptions::mc_bAsanPoisioning)
+			DMibSanitizerAnnotate_UnpoisonMemoryRegion(_pMemory, _nBytes); // We need to do this to remove array cookies for example
+
 		if constexpr (t_COptions::mc_bCheckModifyAfterFree)
 			fs_FillFree(_pMemory, _nBytes);
 
