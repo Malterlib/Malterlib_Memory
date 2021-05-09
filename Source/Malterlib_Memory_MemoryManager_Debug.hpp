@@ -973,8 +973,7 @@ namespace NMib::NMemory
 	///	======
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
-	TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CGlobal::CGlobal(TCMemoryManager<TCMemoryManagerDebugParams> & _MemoryManager)
-		: m_MemoryManager(*((TCMemoryManagerDebug<t_CParams, t_bException, t_COptions> *)&_MemoryManager))
+	TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CGlobal::CGlobal(TCMemoryManager<TCMemoryManagerDebugParams> &_MemoryManager)
 	{
 	}
 

@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -101,7 +101,7 @@ namespace NMib::NMemory
 					mc_EnableCallbacks = true
 				};
 
-				CGlobal(TCMemoryManager<TCMemoryManagerDebugParams> & _MemoryManager);
+				CGlobal(TCMemoryManager<TCMemoryManagerDebugParams> &_MemoryManager);
 
 				void f_OnAlloc(uint8 *_pMemory, mint _nBytes);
 				void f_OnFree(uint8 *_pMemory);
@@ -109,7 +109,6 @@ namespace NMib::NMemory
 				void f_OnCommit(uint8 *_pMemory, mint _nBytes);
 				void f_OnDecommit(uint8 *_pMemory, mint _nBytes);
 
-				TCMemoryManagerDebug<t_CParams, t_bException, t_COptions> & m_MemoryManager;
 				align_cacheline NThread::CMutual m_Lock;
 
 				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2*1024*1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
