@@ -2,7 +2,20 @@
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <stdlib.h>
-#include <malloc.h>
+
+#if defined(DPlatformFamily_OSX)
+#	include <memory.h>
+#	include <malloc/malloc.h>
+#	define malloc_usable_size malloc_size
+	void *memalign(mint _Alignment, mint _Size)
+	{
+		void *pRet;
+		posix_memalign(&pRet, _Alignment, _Size);
+		return pRet;
+	}
+#else
+#	include <malloc.h>
+#endif
 
 #ifdef DArchitechture_x86
 	#define DMibMemoryAssumeAlignment 8
