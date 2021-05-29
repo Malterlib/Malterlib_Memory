@@ -320,8 +320,8 @@ namespace NMib::NMemory
 		struct CStatsEntry
 		{
 			NStr::CStrNonTracked m_Name;
-			uint64 m_nBytes;
-			uint64 m_nAllocations;
+			int64 m_nBytes;
+			int64 m_nAllocations;
 			bool operator < (CStatsEntry const &_Right) const
 			{
 				if (_Right.m_nBytes < m_nBytes)
@@ -401,14 +401,16 @@ namespace NMib::NMemory
 				NFile::CFile::fs_CreateDirectory(OutputDirectory);
 
 				NStr::CStrNonTracked OutputFile = OutputDirectory + "/MemoryCategoryLog.tsv";
+				//DMibConOut2("Outputting to {ns }: {}\n", Total.m_nBytes, OutputFile);
 
 				NFile::CFile File;
 				File.f_Open(OutputFile, NFile::EFileOpen_Write | NFile::EFileOpen_DontTruncate);
 				File.f_SetPositionFromEnd(0);
 				File.f_Write(ToLog.f_GetStr(), ToLog.f_GetLen());
 			}
-			catch (NFile::CExceptionFile const &)
+			catch (NFile::CExceptionFile const &_Exception)
 			{
+				DMibConOut2("Error outputting memory report: {}\n", _Exception);
 			}
 		}
 	}

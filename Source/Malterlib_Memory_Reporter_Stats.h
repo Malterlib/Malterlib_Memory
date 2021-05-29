@@ -39,9 +39,10 @@ namespace NMib::NMemory
 				return *this;
 			}
 		};
+		
 		static CStatsMemoryReporter *ms_pThis;
-	public:
 
+	public:
 		CStatsMemoryReporter();
 		~CStatsMemoryReporter();
 
@@ -96,9 +97,7 @@ namespace NMib::NMemory
 		void f_Commit(mint _MemoryAllocator, mint _Address, mint _Size) override;
 		void f_Decommit(mint _MemoryAllocator, mint _Address, mint _Size) override;
 
-
 	private:
-
 		struct CAllocator
 		{
 			NStr::CStrNonTracked m_Name;
@@ -121,14 +120,9 @@ namespace NMib::NMemory
 		};
 
 	private:
-
-
-
 		NThread::TCThreadLocal<CThreadLocal, NMemory::CAllocator_NonTrackedHeap, NThread::EThreadLocalFlag_FastThreadLocal> m_ThreadLocal;
 
 		NThread::CMutual m_Lock;
 		NContainer::TCMap<mint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_GlobalAllocators;
-
-
 	};
 }

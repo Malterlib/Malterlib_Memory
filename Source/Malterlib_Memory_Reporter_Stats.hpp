@@ -25,8 +25,8 @@ namespace NMib::NMemory
 		fp64 OverheadPerAlloc = (_Size.m_nBytesOverhead / fp64(_Size.m_nAllocations));
 		fp64 OverallocPercent = fp64(_Size.m_nBytes - _Size.m_nBytesRequested) / fp64(_Size.m_nBytes) * 100.0;
 		fp64 OverallocPerAlloc = fp64(_Size.m_nBytes - _Size.m_nBytesRequested) / fp64(_Size.m_nAllocations);
-		fp64 TimeSpentAlloc = fp64(_Size.m_Cycles) * fg_GetSys()->f_CyclesFrequencyReciprocal();
-		fp64 TimeSpentFree = fp64(_Size.m_CyclesFree) * fg_GetSys()->f_CyclesFrequencyReciprocal();
+		fp64 TimeSpentAlloc = fp64(_Size.m_Cycles) * NTime::CSystem_Time::fs_CyclesFrequencyReciprocal();
+		fp64 TimeSpentFree = fp64(_Size.m_CyclesFree) * NTime::CSystem_Time::fs_CyclesFrequencyReciprocal();
 		fp64 CyclesPerAllocation = fp64(_Size.m_Cycles) / fp64(_Size.m_nAllocations);
 		fp64 CyclesPerFree = fp64(_Size.m_CyclesFree) / fp64(_Size.m_nAllocations);
 

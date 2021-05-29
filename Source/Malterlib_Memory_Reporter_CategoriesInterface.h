@@ -7,21 +7,17 @@ namespace NMib::NMemory
 #if DMibConfig_MemoryManager_Stats_EnableCategories
 	struct CMemoryCategory
 	{
-#ifdef DCompiler_clang
 		constexpr CMemoryCategory(ch8 const *_pName)
 			: m_pName(_pName)
 			, m_Link()
-			, m_nBytes()
-			, m_nAllocations()
-			, m_AddedToList()
 		{
 		}
-#endif
+
 		ch8 const *m_pName;
 		NIntrusive::TCAVLLinkAggregate<> m_Link;
-		align_cacheline NAtomic::TCAtomicAggregate<mint> m_nBytes;
-		align_cacheline NAtomic::TCAtomicAggregate<mint> m_nAllocations;
-		align_cacheline NAtomic::TCAtomicAggregate<bool> m_AddedToList;
+		align_cacheline NAtomic::TCAtomicAggregate<smint> m_nBytes{0};
+		align_cacheline NAtomic::TCAtomicAggregate<smint> m_nAllocations{0};
+		align_cacheline NAtomic::TCAtomicAggregate<bool> m_AddedToList{false};
 
 		class CCompare
 		{
