@@ -234,7 +234,7 @@ Import "Apps/*/*.MHeader"
 
 		PreprocessorDefines += ["MI_STAT=0", "MI_PADDING=0"]
 	}
-	%Target "Lib_mimalloc-static"
+	%Target "Lib_libmimalloc_mimalloc-static"
 	{
 		%Group "include"
 		{
@@ -483,7 +483,7 @@ Property
 	{
 		Dependency.Link false
 	}
-	%Dependency "Lib_mimalloc-static"
+	%Dependency "Lib_libmimalloc_mimalloc-static"
 	{
 		!!MemoryManagerTestEnable_MiMalloc true
 	}
