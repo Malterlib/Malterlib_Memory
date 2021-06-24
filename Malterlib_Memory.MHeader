@@ -351,6 +351,8 @@ Property
 
 		MemoryManagerTestEnable_WindowsLF define bool = PlatformFamily == "Windows"
 
+		MalterlibWindowsSettings_SegmentHeap true
+
 		MemoryManagerTestEnable_TcMalloc define bool = false
 		MemoryManagerTestEnable_TcMalloc true
 		{
@@ -474,7 +476,6 @@ Property
 		%File "Test/Test_Malterlib_Memory_MemoryManager_Basics.cpp"
 		%File "Test/Test_Malterlib_Memory_MemoryManager_Debug.cpp"
 		%File "Test/Test_Malterlib_Memory_Pool.cpp"
-		%File "Test/Test_Malterlib_Memory_Manifest.manifest"
 	}
 
 	%Dependency "Lib_Malterlib"
