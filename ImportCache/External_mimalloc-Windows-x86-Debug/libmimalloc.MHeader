@@ -1,11 +1,11 @@
-Property.CMakeOutputPath_libmimalloc define string = "."->MakeAbsolute()
-%Target "Lib_mimalloc-static"
+Property.CMakeOutputPath_libmimalloc define string = `@('.'->MakeAbsolute())`->MakeAbsolute()
+%Target "Lib_libmimalloc_mimalloc-static"
 {
 	Compile
 	{
 		!!Compile.Type "C++"
 		SearchPath += [
-			"../../../../External/mimalloc/include"->MakeAbsolute()
+			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
 			"MI_PADDING=0",
@@ -13,118 +13,124 @@ Property.CMakeOutputPath_libmimalloc define string = "."->MakeAbsolute()
 		]
 	}
 	Property.MalterlibTargetNameType "Normal"
+	Compile.AllowNonExisting true
 	Target.Group "External/libmimalloc"
 	{
 		!!Target.Group undefined
 	}
 	Target.Type "StaticLibrary"
-	Target.BaseName "mimalloc-static"
+	Target.BaseName "libmimalloc_mimalloc-static"
+	Target.BaseFileName "mimalloc-static"
 	%Group "src"
 	{
-		%File "../../../../External/mimalloc/src/stats.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/stats.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/random.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/random.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/os.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/os.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/arena.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/arena.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/region.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/region.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/segment.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/segment.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/page.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/page.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/alloc.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/alloc.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/alloc-aligned.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/alloc-aligned.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/alloc-posix.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/alloc-posix.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/heap.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/heap.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/options.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/options.c`
 		{
 			Compile.Type "C++"
 		}
-		%File "../../../../External/mimalloc/src/init.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/init.c`
 		{
 			Compile.Type "C++"
 		}
 	}
 }
-%Target "Exe_mimalloc-test-api"
+%Target "Com_libmimalloc_mimalloc-test-api"
 {
 	Compile
 	{
 		!!Compile.Type "C++"
 		SearchPath += [
-			"../../../../External/mimalloc/include"->MakeAbsolute()
+			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
 			"MI_PADDING=0"
 		]
 	}
 	Property.MalterlibTargetNameType "Normal"
+	Compile.AllowNonExisting true
 	Target.Group "External/libmimalloc"
 	{
 		!!Target.Group undefined
 	}
 	Target.Type "ConsoleExecutable"
-	Target.BaseName "mimalloc-test-api"
+	Target.BaseName "libmimalloc_mimalloc-test-api"
+	Target.BaseFileName "mimalloc-test-api"
 	%Group "test"
 	{
-		%File "../../../../External/mimalloc/test/test-api.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/test/test-api.c`
 		{
 			Compile.Type "C++"
 		}
 	}
-	%Dependency "Lib_mimalloc-static"
+	%Dependency "Lib_libmimalloc_mimalloc-static"
 }
-%Target "Exe_mimalloc-test-stress"
+%Target "Com_libmimalloc_mimalloc-test-stress"
 {
 	Compile
 	{
 		!!Compile.Type "C++"
 		SearchPath += [
-			"../../../../External/mimalloc/include"->MakeAbsolute()
+			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
 			"MI_PADDING=0"
 		]
 	}
 	Property.MalterlibTargetNameType "Normal"
+	Compile.AllowNonExisting true
 	Target.Group "External/libmimalloc"
 	{
 		!!Target.Group undefined
 	}
 	Target.Type "ConsoleExecutable"
-	Target.BaseName "mimalloc-test-stress"
+	Target.BaseName "libmimalloc_mimalloc-test-stress"
+	Target.BaseFileName "mimalloc-test-stress"
 	%Group "test"
 	{
-		%File "../../../../External/mimalloc/test/test-stress.c"
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/test/test-stress.c`
 		{
 			Compile.Type "C++"
 		}
