@@ -36,9 +36,9 @@ namespace NMib::NMemory
 				return *this;
 			}
 
-			bool operator< (CSize const& _Other) const
+			auto operator <=> (CSize const& _Other) const
 			{
-				return m_nBytes > _Other.m_nBytes;
+				return _Other.m_nBytes <=> m_nBytes;
 			}
 		};
 		static CCallstackMemoryReporter *ms_pThis;
@@ -166,15 +166,7 @@ namespace NMib::NMemory
 			mint m_Allocator;
 			mint m_Address;
 
-			bool operator <(CAllocationKey const& _Other) const
-			{
-				if (m_Allocator < _Other.m_Allocator)
-					return true;
-				else if (m_Allocator > _Other.m_Allocator)
-					return false;
-
-				return (m_Address < _Other.m_Address);
-			}
+			auto operator <=> (CAllocationKey const& _Other) const = default;
 		};
 		NContainer::TCMap<mint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_Allocators;
 

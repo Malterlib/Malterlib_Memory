@@ -322,13 +322,12 @@ namespace NMib::NMemory
 			NStr::CStrNonTracked m_Name;
 			int64 m_nBytes;
 			int64 m_nAllocations;
-			bool operator < (CStatsEntry const &_Right) const
+			COrdering_Weak operator <=> (CStatsEntry const &_Right) const
 			{
-				if (_Right.m_nBytes < m_nBytes)
-					return true;
-				else if (_Right.m_nBytes > m_nBytes)
-					return false;
-				return m_Name < _Right.m_Name;
+				if (auto Result = _Right.m_nBytes <=> m_nBytes; Result != 0)
+					return Result;
+
+				return m_Name <=> _Right.m_Name;
 			}
 		};
 
