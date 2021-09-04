@@ -45,7 +45,7 @@ namespace NMib::NMemory
 
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 			{
-				if (likely(FreeLinkType == EMessageType_FreeNormalBlock))
+				if (FreeLinkType == EMessageType_FreeNormalBlock) [[likely]]
 				{
 					CMessage_FreeNormalBlock *pBlock = (CMessage_FreeNormalBlock *)pFreeBlock;
 					uint8 *pEndOfSlab = fg_AlignUp((uint8 *)pBlock + 1, t_CParams::mc_SlabSize);

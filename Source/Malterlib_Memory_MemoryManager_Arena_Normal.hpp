@@ -31,7 +31,7 @@ namespace NMib::NMemory
 				SlabBucket = pData[iSubSlab].m_Type;
 				if constexpr (mc_bUseSmallSizes)
 				{
-					if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+					if (SlabBucket < mc_nSmallSizeSlabs) [[unlikely]]
 						return fp_OverheadSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> const *)_pSlab, SlabBucket);
 				}
 			}
@@ -43,7 +43,7 @@ namespace NMib::NMemory
 			SlabBucket = pData[iSubSlab].m_Type;
 			if constexpr (mc_bUseSmallSizes)
 			{
-				if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+				if (SlabBucket < mc_nSmallSizeSlabs) [[unlikely]]
 					return fp_OverheadSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> const *)_pSlab, SlabBucket);
 			}
 		}
@@ -85,7 +85,7 @@ namespace NMib::NMemory
 				SlabBucket = pData[iSubSlab].m_Type;
 				if constexpr (mc_bUseSmallSizes)
 				{
-					if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+					if (SlabBucket < mc_nSmallSizeSlabs) [[unlikely]]
 						return fp_SizeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> const *)_pSlab, SlabBucket);
 				}
 			}
@@ -97,7 +97,7 @@ namespace NMib::NMemory
 			SlabBucket = pData[iSubSlab].m_Type;
 			if constexpr (mc_bUseSmallSizes)
 			{
-				if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+				if (SlabBucket < mc_nSmallSizeSlabs) [[unlikely]]
 					return fp_SizeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> const *)_pSlab, SlabBucket);
 			}
 		}
@@ -169,7 +169,7 @@ namespace NMib::NMemory
 
 				if constexpr (t_CParams::mc_bUseSmallSizes)
 				{
-					if (likely(Size > mc_Level0SmallestSize))
+					if (Size > mc_Level0SmallestSize) [[likely]]
 					{
 						mint SlabIndex = SlabBucket - 4;
 
@@ -208,7 +208,7 @@ namespace NMib::NMemory
 		l_Retry:
 			auto pAlloc = List.f_GetFirst();
 
-			if (likely(pAlloc))
+			if (pAlloc) [[likely]]
 			{
 				if constexpr (t_CParams::mc_bUseFreeBlockCounting)
 				{
@@ -252,7 +252,7 @@ namespace NMib::NMemory
 				auto &Data = pData[iAlloc];
 
 				DMibFastCheck(Data.m_nAllocs < TCMemoryManagerSubSlabDataAlloc<t_CParams>::mc_MaxAllocs);
-				if (unlikely(++Data.m_nAllocs == 1))
+				if (++Data.m_nAllocs == 1) [[unlikely]]
 					fp_SubSlabNoLongerPending(pSlab, iAlloc);
 
 //					DMibTrace("++{} {} {}" DMibNewLine, Data.m_nAllocs << iAlloc << pSlab->m_SlabType);
@@ -315,7 +315,7 @@ namespace NMib::NMemory
 
 				if constexpr (t_CParams::mc_bUseSmallSizes)
 				{
-					if (likely(Size > mc_Level0SmallestSize))
+					if (Size > mc_Level0SmallestSize) [[likely]]
 					{
 						mint SlabIndex = SlabBucket - 4;
 
@@ -370,7 +370,7 @@ namespace NMib::NMemory
 
 				auto pAlloc = List.f_GetFirst();
 
-				if (likely(pAlloc))
+				if (pAlloc) [[likely]]
 				{
 					if constexpr (t_CParams::mc_bUseFreeBlockCounting)
 					{
@@ -579,7 +579,7 @@ namespace NMib::NMemory
 				SlabBucket = pData[iSubSlab].m_Type;
 				if constexpr (t_CParams::mc_bUseSmallSizes)
 				{
-					if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+					if (SlabBucket < mc_nSmallSizeSlabs) [[unlikely]]
 					{
 						fp_FreeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> *)_pSlab, SlabBucket);
 						return;
@@ -600,7 +600,7 @@ namespace NMib::NMemory
 			SlabBucket = pData[iSubSlab].m_Type;
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 			{
-				if (unlikely(SlabBucket < mc_nSmallSizeSlabs))
+				if (SlabBucket < mc_nSmallSizeSlabs) [[unlikely]]
 				{
 					fp_FreeSmall(_pMemory, (TCMemoryManagerSlab<t_CParams, 0> *)_pSlab, SlabBucket);
 					return;
@@ -617,7 +617,7 @@ namespace NMib::NMemory
 
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			if (likely(SlabBucket > 4))
+			if (SlabBucket > 4) [[likely]]
 			{
 				mint SlabBucketStart = mint(1) << SlabBucket;
 
@@ -677,7 +677,7 @@ namespace NMib::NMemory
 
 		pList->f_UnsafeInsertFirst(pFreeMemory);
 
-		if (unlikely((--pDataAlloc[iSubSlab].m_nAllocs) == 0))
+		if ((--pDataAlloc[iSubSlab].m_nAllocs) == 0) [[unlikely]]
 		{
 			if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_NoCleanup) != 0)
 			{

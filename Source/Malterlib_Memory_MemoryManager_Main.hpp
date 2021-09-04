@@ -518,7 +518,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void *TCMemoryManager<t_CParams>::fp_AllocWithCheckout(mint &_Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena)
 	{
-		if (unlikely(m_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount))
+		if (m_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount) [[unlikely]]
 		{
 			fp_CheckoutHelper(_LocalArena)->m_CheckoutCount.f_FetchAdd(1, NAtomic::EMemoryOrder_Relaxed);
 			DMibFastCheck(fg_GetSys()->f_ThreadCreated());
@@ -546,7 +546,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchWithCheckout(mint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
 	{
-		if (unlikely(m_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount))
+		if (m_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount) [[unlikely]]
 		{
 			fp_CheckoutHelper(_LocalArena)->m_CheckoutCount.f_FetchAdd(1, NAtomic::EMemoryOrder_Relaxed);
 			DMibFastCheck(fg_GetSys()->f_ThreadCreated());
@@ -877,9 +877,9 @@ namespace NMib::NMemory
 		auto *pLocalArena = m_LocalArena.f_TryGet();
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize)
 		{
-			if (unlikely(!pLocalArena))
+			if (!pLocalArena) [[unlikely]]
 			{
-				if (unlikely(fg_GetSys()->f_ThreadDestroyed()))
+				if (fg_GetSys()->f_ThreadDestroyed()) [[unlikely]]
 					return fp_AllocBatchWithTempCheckout(_Size, _Functor);
 				pLocalArena = &(*m_LocalArena);
 			}
@@ -891,9 +891,9 @@ namespace NMib::NMemory
 		}
 
 		TCMemoryManagerNumaArena<t_CParams> *pNumaArena;
-		if (unlikely(!pLocalArena))
+		if (!pLocalArena) [[unlikely]]
 		{
-			if (unlikely(fg_GetSys()->f_ThreadDestroyed()))
+			if (fg_GetSys()->f_ThreadDestroyed()) [[unlikely]]
 				pNumaArena = fp_GetAnyNumaArena();
 			else
 				pNumaArena = m_LocalArena->m_pNumaArena;
@@ -937,9 +937,9 @@ namespace NMib::NMemory
 		auto *pLocalArena = m_LocalArena.f_TryGet();
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize)
 		{
-			if (unlikely(!pLocalArena))
+			if (!pLocalArena) [[unlikely]]
 			{
-				if (unlikely(fg_GetSys()->f_ThreadDestroyed()))
+				if (fg_GetSys()->f_ThreadDestroyed()) [[unlikely]]
 					return fp_AllocWithTempCheckout(_Size);
 				pLocalArena = &(*m_LocalArena);
 			}
@@ -951,9 +951,9 @@ namespace NMib::NMemory
 		}
 
 		TCMemoryManagerNumaArena<t_CParams> *pNumaArena;
-		if (unlikely(!pLocalArena))
+		if (!pLocalArena) [[unlikely]]
 		{
-			if (unlikely(fg_GetSys()->f_ThreadDestroyed()))
+			if (fg_GetSys()->f_ThreadDestroyed()) [[unlikely]]
 				pNumaArena = fp_GetAnyNumaArena();
 			else
 				pNumaArena = m_LocalArena->m_pNumaArena;
@@ -983,14 +983,14 @@ namespace NMib::NMemory
 	{
 		_Size = fg_AlignUp(_Size, _Alignment);
 
-		if (likely(_Size <= t_CParams::mc_MaxSlabAllocSize))
+		if (_Size <= t_CParams::mc_MaxSlabAllocSize) [[likely]]
 		{
 			auto *pLocalArena = m_LocalArena.f_TryGet();
-			if (unlikely(!pLocalArena))
+			if (!pLocalArena) [[unlikely]]
 				goto l_SlowPath;
 			auto &LocalArena = *pLocalArena;
 			auto ReentrantScope = LocalArena.f_Reentrant();
-			if (likely(LocalArena.m_pArena))
+			if (LocalArena.m_pArena) [[likely]]
 				return LocalArena.m_pArena->f_AllocWithSize(_Size);
 			return fp_AllocWithCheckout(_Size, LocalArena);
 		}
@@ -1004,14 +1004,14 @@ namespace NMib::NMemory
 	{
 		_Size = fg_AlignUp(_Size, _Alignment);
 
-		if (likely(_Size <= t_CParams::mc_MaxSlabAllocSize))
+		if (_Size <= t_CParams::mc_MaxSlabAllocSize) [[likely]]
 		{
 			auto *pLocalArena = m_LocalArena.f_TryGet();
-			if (unlikely(!pLocalArena))
+			if (!pLocalArena) [[unlikely]]
 				goto l_SlowPath;
 			auto &LocalArena = *pLocalArena;
 			auto ReentrantScope = LocalArena.f_Reentrant();
-			if (likely(LocalArena.m_pArena))
+			if (LocalArena.m_pArena) [[likely]]
 				return LocalArena.m_pArena->f_AllocWithSize(_Size);
 			return fp_AllocWithCheckout(_Size, LocalArena);
 		}
@@ -1025,10 +1025,10 @@ namespace NMib::NMemory
 	{
 		_Size = fg_AlignUp(_Size, _Alignment);
 
-		if (likely(_Size <= t_CParams::mc_MaxSlabAllocSize))
+		if (_Size <= t_CParams::mc_MaxSlabAllocSize) [[likely]]
 		{
 			auto *pLocalArena = m_LocalArena.f_TryGet();
-			if (unlikely(!pLocalArena))
+			if (!pLocalArena) [[unlikely]]
 				goto l_SlowPath;
 			auto &LocalArena = *pLocalArena;
 			auto ReentrantScope = LocalArena.f_Reentrant();
@@ -1070,16 +1070,16 @@ namespace NMib::NMemory
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-		if (likely((_Size != 0 && _Size <= t_CParams::mc_MaxSlabAllocSize)) || (_Size == 0 && pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic)))
+		if ((_Size != 0 && _Size <= t_CParams::mc_MaxSlabAllocSize) || (_Size == 0 && pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic))) [[likely]]
 		{
 			DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
 
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 
 			auto *pLocalArena = m_LocalArena.f_TryGet();
-			if (unlikely(!pLocalArena))
+			if (!pLocalArena) [[unlikely]]
 			{
-				if (unlikely(fg_GetSys()->f_ThreadDestroyed()))
+				if (fg_GetSys()->f_ThreadDestroyed()) [[unlikely]]
 				{
 					pSlab->m_pArena->f_FreeOtherThread(_pMemory, pSlab, nullptr);
 					return;
@@ -1163,7 +1163,7 @@ namespace NMib::NMemory
 
 		DMibFastCheck(_Size != 0);
 
-		if (likely(_Size <= t_CParams::mc_MaxSlabAllocSize))
+		if (_Size <= t_CParams::mc_MaxSlabAllocSize) [[likely]]
 		{
 			uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 			CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
@@ -1173,7 +1173,7 @@ namespace NMib::NMemory
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 
 			auto *pLocalArena = m_LocalArena.f_TryGet();
-			if (unlikely(!pLocalArena))
+			if (!pLocalArena) [[unlikely]]
 				goto l_SlowPath;
 			auto &LocalArena = *pLocalArena;
 
@@ -1207,12 +1207,12 @@ namespace NMib::NMemory
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-		if (likely(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic)))
+		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic)) [[likely]]
 		{
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 
 			auto *pLocalArena = m_LocalArena.f_TryGet();
-			if (unlikely(!pLocalArena))
+			if (!pLocalArena) [[unlikely]]
 				goto l_SlowPath;
 			auto &LocalArena = *pLocalArena;
 
@@ -1453,7 +1453,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_LazyReturnCheckout()
 	{
-		if (unlikely(!m_LocalArena.f_IsValid()))
+		if (!m_LocalArena.f_IsValid()) [[unlikely]]
 			return;
 		auto &ThreadLocal = *m_LocalArena;
 		if (ThreadLocal.m_bLazyCheckout && !ThreadLocal.m_Reentrant)

@@ -2134,10 +2134,10 @@ namespace
 		if (!fg_RunningUnderRosetta())
 			return false;
 
-		if (unlikely(g_bIsBeingDebugged < 0))
+		if (g_bIsBeingDebugged < 0) [[unlikely]]
 			fg_UpdateBeingDebugged();
 
-		if (likely(!g_bIsBeingDebugged))
+		if (!g_bIsBeingDebugged) [[likely]]
 			return false;
 
 		return fg_IsInvalidRegionSlowPath(_pMemory);
@@ -2311,7 +2311,7 @@ namespace
 	inline_always tf_CMemoryManager *fg_Malterlib_Safe_GetMemoryManager(void const *_pMemory)
 	{
 		auto *pManager = fg_Malterlib_Safe_GetDefaultMemoryManager<tf_CMemoryManager>(_pMemory);
-		if (likely(pManager))
+		if (pManager) [[likely]]
 			return pManager;
 		return fg_Malterlib_Safe_GetOtherMemoryManager<tf_CMemoryManager>(_pMemory);
 	}
@@ -2342,7 +2342,7 @@ namespace
 		if constexpr (NTraits::TCIsSame<tf_CMemoryManager, CMemoryManagerSmall>::mc_Value)
 		{
 			tf_CMemoryManager *pMemoryManager = DMainHeapSmall->f_GetMemoryManager(_pMemory);
-			if (likely(pMemoryManager))
+			if (pMemoryManager) [[likely]]
 				return pMemoryManager;
 			auto &State = *g_GlobalState;
 			DMibLockRead(State.m_ZoneListLock);
@@ -2358,7 +2358,7 @@ namespace
 #endif
 		{
 			tf_CMemoryManager *pMemoryManager = DMainHeapMax->f_GetMemoryManager(_pMemory);
-			if (likely(pMemoryManager))
+			if (pMemoryManager) [[likely]]
 				return pMemoryManager;
 			auto &State = *g_GlobalState;
 			DMibLockRead(State.m_ZoneListLock);
@@ -2499,7 +2499,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_realloc(void *_pMemory, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.realloc(_pMemory, _Size);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 		mint Size = DAlignSizeOSX(_Size);
@@ -2586,7 +2586,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_reallocf(void *_pMemory, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.reallocf(_pMemory, _Size);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 		mint Size = DAlignSizeOSX(_Size);
@@ -2675,7 +2675,7 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.free(_pMemory);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 		if (g_bOnlyDefaultZone)
@@ -2750,7 +2750,7 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.vfree(_pMemory);
 		if (g_bOnlyDefaultZone)
 		{
@@ -3326,7 +3326,7 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return 0;
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_size(_pMemory);
 		if (g_bOnlyDefaultZone)
 		{
@@ -3519,7 +3519,7 @@ extern "C"
 							if (!_pMemory)
 								return 0;
 							auto *pZone = (tf_CZone *)_pZone;
-							if (unlikely(g_bForeignZone))
+							if (g_bForeignZone) [[unlikely]]
 								return fg_Malterlib_Safe_GetSize(pZone, _pMemory);
 							return pZone->m_MemoryManager.f_TrySize(_pMemory);
 						}
@@ -3569,7 +3569,7 @@ extern "C"
 						, [](malloc_zone_t *_pZone)
 						{
 							NStorage::TCUniquePointer<tf_CZone> pMemoryManager = fg_Explicit((tf_CZone *)_pZone);
-							if (unlikely(g_bForeignZone))
+							if (g_bForeignZone) [[unlikely]]
 								g_OriginalFunctions.malloc_zone_unregister(pMemoryManager->f_GetMallocZone());
 							else
 							{
@@ -3676,7 +3676,7 @@ extern "C"
 					}
 				;
 
-				if (unlikely(g_bForeignZone))
+				if (g_bForeignZone) [[unlikely]]
 					g_OriginalFunctions.malloc_zone_register(pMemoryManager->f_GetMallocZone());
 				else
 				{
@@ -3710,7 +3710,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_destroy_zone(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_destroy_zone(_pZone);
 		_pZone->destroy(_pZone);
 #else
@@ -3721,7 +3721,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_malloc(malloc_zone_t *_pZone, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_malloc(_pZone, _Size);
 		return _pZone->malloc(_pZone, _Size);
 #else
@@ -3732,7 +3732,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_calloc(malloc_zone_t *_pZone, size_t _nItems, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_calloc(_pZone, _nItems, _Size);
 		return _pZone->calloc(_pZone, _nItems, _Size);
 #else
@@ -3743,7 +3743,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_valloc(malloc_zone_t *_pZone, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_valloc(_pZone, _Size);
 		return _pZone->valloc(_pZone, _Size);
 #else
@@ -3754,7 +3754,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_free(malloc_zone_t *_pZone, void *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_free(_pZone, _pMemory);
 		return _pZone->free(_pZone, _pMemory);
 #else
@@ -3765,7 +3765,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_realloc(malloc_zone_t *_pZone, void *_pMemory, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_realloc(_pZone, _pMemory, _Size);
 		return _pZone->realloc(_pZone, _pMemory, _Size);
 #else
@@ -3783,14 +3783,14 @@ extern "C"
 		if (g_bMainHeapIsSmall)
 		{
 			CMemoryManagerSmall *pMemoryManager;
-			if (unlikely(g_bForeignZone))
+			if (g_bForeignZone) [[unlikely]]
 			{
 				pMemoryManager = fg_Malterlib_Safe_GetMemoryManager<CMemoryManagerSmall>(_pMemory);
 				if (!pMemoryManager)
 					return g_OriginalFunctions.malloc_zone_from_ptr(_pMemory);
 			}
 
-			if (unlikely(g_bHasForeignZones))
+			if (g_bHasForeignZones) [[unlikely]]
 			{
 				pMemoryManager = fg_Malterlib_Safe_GetMemoryManager<CMemoryManagerSmall>(_pMemory);
 				if (pMemoryManager)
@@ -3812,14 +3812,14 @@ extern "C"
 #endif
 		{
 			CMemoryManagerMax *pMemoryManager;
-			if (unlikely(g_bForeignZone))
+			if (g_bForeignZone) [[unlikely]]
 			{
 				pMemoryManager = fg_Malterlib_Safe_GetMemoryManager<CMemoryManagerMax>(_pMemory);
 				if (!pMemoryManager)
 					return g_OriginalFunctions.malloc_zone_from_ptr(_pMemory);
 			}
 
-			if (unlikely(g_bHasForeignZones))
+			if (g_bHasForeignZones) [[unlikely]]
 			{
 				pMemoryManager = fg_Malterlib_Safe_GetMemoryManager<CMemoryManagerMax>(_pMemory);
 				if (pMemoryManager)
@@ -3845,7 +3845,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_memalign(malloc_zone_t *_pZone, size_t alignment, size_t size)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_memalign(_pZone, alignment, size);
 		return _pZone->memalign(_pZone, alignment, size);
 #else
@@ -3856,7 +3856,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport unsigned fg_Malterlib_malloc_zone_batch_malloc(malloc_zone_t *_pZone, size_t size, void **results, unsigned num_requested)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_batch_malloc(_pZone, size, results, num_requested);
 		return _pZone->batch_malloc(_pZone, size, results, num_requested);
 #else
@@ -3867,7 +3867,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_batch_free(malloc_zone_t *_pZone, void **to_be_freed, unsigned num)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_batch_free(_pZone, to_be_freed, num);
 #else
 		return g_OriginalFunctions.malloc_zone_batch_free(_pZone, to_be_freed, num);
@@ -3877,7 +3877,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport malloc_zone_t *fg_Malterlib_malloc_default_purgeable_zone(void)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_default_purgeable_zone();
 		return (malloc_zone_t *)&g_MalterlibMallocZone;
 #else
@@ -3888,7 +3888,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_make_purgeable(void *ptr)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_make_purgeable(ptr);
 #else
 		return g_OriginalFunctions.malloc_make_purgeable(ptr);
@@ -3898,7 +3898,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport int fg_Malterlib_malloc_make_nonpurgeable(void *ptr)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_make_nonpurgeable(ptr);
 		return 0;
 #else
@@ -3909,7 +3909,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_register(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_register(_pZone);
 		if (_pZone == (malloc_zone_t *)&g_MalterlibMallocZone)
 			return;
@@ -3944,7 +3944,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_unregister(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_unregister(_pZone);
 		if (_pZone == (malloc_zone_t *)&g_MalterlibMallocZone)
 			return;
@@ -4000,7 +4000,7 @@ extern "C"
 			_pZone->zone_name = name;
 			return;
 		}
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_set_zone_name(_pZone, name);
 		_pZone->zone_name = strdup(name);
 #else
@@ -4011,7 +4011,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport const char *fg_Malterlib_malloc_get_zone_name(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_get_zone_name(_pZone);
 		return _pZone->zone_name;
 #else
@@ -4022,7 +4022,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport size_t fg_Malterlib_malloc_zone_pressure_relief(malloc_zone_t *_pZone, size_t goal)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_pressure_relief(_pZone, goal);
 		if (_pZone->pressure_relief)
 			return _pZone->pressure_relief(_pZone, goal);
@@ -4035,7 +4035,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport kern_return_t fg_Malterlib_malloc_get_all_zones(task_t task, memory_reader_t reader, vm_address_t **addresses, unsigned *count)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_get_all_zones(task, reader, addresses, count);
 		return KERN_FAILURE;
 #else
@@ -4046,7 +4046,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_print_ptr_info(void *ptr)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_print_ptr_info(ptr);
 #else
 		return g_OriginalFunctions.malloc_zone_print_ptr_info(ptr);
@@ -4056,7 +4056,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport boolean_t fg_Malterlib_malloc_zone_check(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_check(_pZone);
 		return true;
 #else
@@ -4067,7 +4067,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_print(malloc_zone_t *_pZone, boolean_t verbose)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_print(_pZone, verbose);
 #else
 		return g_OriginalFunctions.malloc_zone_print(_pZone, verbose);
@@ -4077,7 +4077,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_statistics(malloc_zone_t *_pZone, malloc_statistics_t *stats)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_statistics(_pZone, stats);
 #else
 		return g_OriginalFunctions.malloc_zone_statistics(_pZone, stats);
@@ -4087,7 +4087,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_log(malloc_zone_t *_pZone, void *address)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_log(_pZone, address);
 #else
 		return g_OriginalFunctions.malloc_zone_log(_pZone, address);
@@ -4103,7 +4103,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport boolean_t fg_Malterlib_malloc_zone_enable_discharge_checking(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_enable_discharge_checking(_pZone);
 		return false;
 #else
@@ -4114,7 +4114,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_disable_discharge_checking(malloc_zone_t *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_disable_discharge_checking(_pZone);
 #else
 		return g_OriginalFunctions.malloc_zone_disable_discharge_checking(_pZone);
@@ -4124,7 +4124,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_discharge(malloc_zone_t *_pZone, void *memory)
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_discharge(_pZone, memory);
 #else
 		return g_OriginalFunctions.malloc_zone_discharge(_pZone, memory);
@@ -4134,7 +4134,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_enumerate_discharged_pointers(malloc_zone_t *_pZone, void (^report_discharged)(void *memory, void *info))
 	{
 #ifdef DMemoryManagerIsSame
-		if (unlikely(g_bForeignZone))
+		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_enumerate_discharged_pointers(_pZone, report_discharged);
 #else
 		return g_OriginalFunctions.malloc_zone_enumerate_discharged_pointers(_pZone, report_discharged);

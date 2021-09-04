@@ -152,7 +152,7 @@ namespace NMib::NMemory
 		void * pAlloc;
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			if (likely(_Size > t_CParams::mc_SmallSizeSlabsLargestSize))
+			if (_Size > t_CParams::mc_SmallSizeSlabsLargestSize) [[likely]]
 				pAlloc = fp_AllocNormal(_Size);
 			else
 				pAlloc = fp_AllocSmallSize(_Size);
@@ -160,7 +160,7 @@ namespace NMib::NMemory
 		else
 			pAlloc = fp_AllocNormal(_Size);
 
-		if (unlikely(m_bWantNumaFreeSlabsCleanup))
+		if (m_bWantNumaFreeSlabsCleanup) [[unlikely]]
 			fp_CheckCleanupNumaFree();
 		return pAlloc;
 	}
@@ -170,7 +170,7 @@ namespace NMib::NMemory
 	{
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			if (likely(_Size > t_CParams::mc_SmallSizeSlabsLargestSize))
+			if (_Size > t_CParams::mc_SmallSizeSlabsLargestSize) [[likely]]
 				fp_AllocNormalBatch(_Size, _Functor);
 			else
 				fp_AllocSmallSizeBatch(_Size, _Functor);
@@ -178,7 +178,7 @@ namespace NMib::NMemory
 		else
 			fp_AllocNormalBatch(_Size, _Functor);
 
-		if (unlikely(m_bWantNumaFreeSlabsCleanup))
+		if (m_bWantNumaFreeSlabsCleanup) [[unlikely]]
 			fp_CheckCleanupNumaFree();
 	}
 
@@ -187,7 +187,7 @@ namespace NMib::NMemory
 	{
 		//fp_CheckMessages();
 		fp_FreeInline(_pMemory, _pSlab);
-		if (unlikely(m_bWantNumaFreeSlabsCleanup))
+		if (m_bWantNumaFreeSlabsCleanup) [[unlikely]]
 			fp_CheckCleanupNumaFree();
 	}
 
@@ -231,13 +231,13 @@ namespace NMib::NMemory
 
 				if
 					(
-						unlikely(SlabBucket <= c_TooSmallBucket)
+						SlabBucket <= c_TooSmallBucket
 						||
 						(
 							!t_CParams::mc_bAllowUnalignedFreeList
 							&& ((mint)_pMemory & (sizeof(void *) - 1))
 						)
-					)
+					) [[unlikely]]
 				{
 					TCMemoryManagerCheckoutLight<t_CParams> Checkout(nullptr);
 					if (_pLocalArena && _pLocalArena->m_pArena == nullptr)
@@ -278,7 +278,7 @@ namespace NMib::NMemory
 	{
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			if (likely(_Size > t_CParams::mc_SmallSizeSlabsLargestSize))
+			if (_Size > t_CParams::mc_SmallSizeSlabsLargestSize) [[likely]]
 			{
 				mint Size = fg_AlignUp(_Size, t_CParams::mc_MinNormalSizeAlignment);
 				DMibFastCheck(Size >= sizeof(void *) * 2);

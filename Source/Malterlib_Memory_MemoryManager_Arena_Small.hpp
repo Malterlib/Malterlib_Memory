@@ -10,7 +10,7 @@ namespace NMib::NMemory
 	{
 		mint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
 		DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(_Size));
-		if (unlikely(iSlab == 0))
+		if (iSlab == 0) [[unlikely]]
 			return fsp_AllocSmall<1>(this);
 		return fsp_AllocSmallShared(this, iSlab);
 	}
@@ -25,7 +25,7 @@ namespace NMib::NMemory
 		;
 
 		mint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
-		if (unlikely(iSlab == 0))
+		if (iSlab == 0) [[unlikely]]
 		{
 			while (true)
 			{
@@ -70,7 +70,7 @@ namespace NMib::NMemory
 		mint Index;
 		TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *pSubSlab = fg_AlignDown((TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *)_pMemory, t_CParams::mc_SubSlabSize);
 
-		if (unlikely(_SlabType == 0))
+		if (_SlabType == 0) [[unlikely]]
 		{
 			Index = 0;
 			TCMemoryManagerSubSlab_SmallSize<t_CParams, 1> *pSubSlab1 = (TCMemoryManagerSubSlab_SmallSize<t_CParams, 1> *)pSubSlab;
@@ -115,7 +115,7 @@ namespace NMib::NMemory
 			SmallState = pSubSlab->f_Free(_pMemory, iAlloc);
 		}
 
-		if (unlikely(SmallState != ESmallState_None))
+		if (SmallState != ESmallState_None) [[unlikely]]
 			fp_FreeSmallShared(pSubSlab, _pSlab, Index, SmallState);
 	}
 
@@ -236,7 +236,7 @@ namespace NMib::NMemory
 		typedef TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> CSubSlab;
 		auto &Slabs = _pThis->m_SmallSizeSlabs[_Index];
 		CSubSlab *pSlab = (CSubSlab *)Slabs.f_GetFirst();
-		if (unlikely(!pSlab))
+		if (!pSlab) [[unlikely]]
 			return mc_SmallAllocCategoryJumpTable.m_Table[_Index](_pThis);
 
 		bool bFull;
@@ -247,7 +247,7 @@ namespace NMib::NMemory
 			pSlab->f_OnAlloc(*_pThis, pAlloc);
 		}
 
-		if (unlikely(bFull))
+		if (bFull) [[unlikely]]
 		{
 			pSlab->m_Params.m_Link.m_Link.f_UnsafeUnlink();
 			_pThis->m_SmallSizeSlabsFull.f_UnsafeInsertFirst(pSlab->m_Params.m_Link);
