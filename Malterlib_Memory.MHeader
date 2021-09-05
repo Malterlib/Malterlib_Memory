@@ -351,7 +351,7 @@ Property
 
 		MemoryManagerTestEnable_WindowsLF define bool = PlatformFamily == "Windows"
 
-		MalterlibWindowsSettings_SegmentHeap true
+		//MalterlibWindowsSettings_SegmentHeap true
 
 		MemoryManagerTestEnable_TcMalloc define bool = false
 		MemoryManagerTestEnable_TcMalloc true
