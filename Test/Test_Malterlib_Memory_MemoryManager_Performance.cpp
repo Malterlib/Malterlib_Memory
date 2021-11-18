@@ -151,8 +151,6 @@ namespace
 		CPerformance_Tests()
 		{
 			m_nCores = NMib::NSys::fg_Thread_GetVirtualCores();
-
-
 		}
 
 		struct CAllocPattern_Random
@@ -1095,9 +1093,12 @@ namespace
 			mint nCores = m_nCores;
 			//nCores = 1;
 			mint i = 1;
+			NMib::NContainer::TCSet<mint> AlreadyRan;
 
 			auto fRunTest = [&](mint _nThreads)
 				{
+					if (!AlreadyRan(_nThreads).f_WasCreated())
+						return;
 					if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
 					{
 						if
@@ -1129,14 +1130,17 @@ namespace
 				}
 			;
 
-			for (; i < nCores; i = i << 1)
+			mint nEndCores = NMib::fg_Max(nCores * 2, 128);
+
+			for (; i <= nEndCores; i = i << 1)
 				fRunTest(i);
+
 			if (!NMib::fg_IsPowerOfTwo(nPhysicalCores) && nPhysicalCores != nCores)
 				fRunTest(nPhysicalCores);
+
 			i = nCores;
 			fRunTest(i);
 			i = i << 1;
-			mint nEndCores = nCores * 2;
 #if 0
 			mint nEndCores = NMib::fg_Min(nCores*1024, 64u); // Max 4096 threads as it taskes some time to start threads
 			//mint nEndCores = NMib::fg_Min(nCores*1024, 4096u); // Max 4096 threads as it taskes some time to start threads
