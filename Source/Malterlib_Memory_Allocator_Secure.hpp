@@ -18,7 +18,7 @@ namespace NMib::NMemory
 		if (_OldSize == 0)
 			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		fg_SecureMemClear((uint8*)_pMem, _OldSize);
 
 		return CBaseAllocator::f_Realloc(_pMem, _Size, _OldSize, _AllocFlags, _NumaNode);
 	}
@@ -29,7 +29,7 @@ namespace NMib::NMemory
 		if (_OldSize == 0)
 			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		fg_SecureMemClear((uint8*)_pMem, _OldSize);
 
 		return CBaseAllocator::f_ReallocDebug(_pMem, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 	}
@@ -44,7 +44,7 @@ namespace NMib::NMemory
 
 		fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
-		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		fg_SecureMemClear((uint8*)_pMem, _OldSize);
 
 		CBaseAllocator::f_Free(_pMem, _OldSize);
 
@@ -61,7 +61,7 @@ namespace NMib::NMemory
 
 		fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
-		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		fg_SecureMemClear((uint8*)_pMem, _OldSize);
 
 		CBaseAllocator::f_Free(_pMem, _OldSize);
 
@@ -72,7 +72,7 @@ namespace NMib::NMemory
 	inline_small void TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_Free(void *_pBlock, mint _Size)
 	{
 		DMibFastCheck(_Size != 0);
-		NMemory::fg_ObjectSet((uint8*)_pBlock, 0, _Size);
+		fg_SecureMemClear((uint8*)_pBlock, _Size);
 		return CBaseAllocator::f_Free(_pBlock, _Size);
 	}
 
@@ -80,7 +80,7 @@ namespace NMib::NMemory
 	inline_small void TCAllocator_Secure<t_CBaseAllocator, t_bStatic>::f_FreeNoSize(void *_pBlock)
 	{
 		mint Size = CBaseAllocator::f_Size(_pBlock);
-		NMemory::fg_ObjectSet((uint8*)_pBlock, 0, Size);
+		fg_SecureMemClear((uint8*)_pBlock, Size);
 		return CBaseAllocator::f_Free(_pBlock, Size);
 	}
 
@@ -91,7 +91,7 @@ namespace NMib::NMemory
 		if (_OldSize == 0)
 			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		fg_SecureMemClear((uint8*)_pMem, _OldSize);
 
 		return CBaseAllocator::f_Realloc(_pMem, _Size, _OldSize, _AllocFlags, _NumaNode);
 	}
@@ -102,7 +102,7 @@ namespace NMib::NMemory
 		if (_OldSize == 0)
 			_OldSize = CBaseAllocator::f_Size(_pMem);
 
-		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		fg_SecureMemClear((uint8*)_pMem, _OldSize);
 
 		return CBaseAllocator::f_ReallocDebug(_pMem, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 	}
@@ -117,7 +117,7 @@ namespace NMib::NMemory
 
 		fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
-		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		fg_SecureMemClear((uint8*)_pMem, _OldSize);
 
 		CBaseAllocator::f_Free(_pMem, _OldSize);
 
@@ -134,7 +134,7 @@ namespace NMib::NMemory
 
 		fg_MemCopy(pNewMem, _pMem, fg_Min(_Size, _OldSize));
 
-		NMemory::fg_ObjectSet((uint8*)_pMem, 0, _OldSize);
+		fg_SecureMemClear((uint8*)_pMem, _OldSize);
 
 		CBaseAllocator::f_Free(_pMem, _OldSize);
 
@@ -146,7 +146,7 @@ namespace NMib::NMemory
 	{
 		DMibFastCheck(_Size != 0);
 
-		NMemory::fg_ObjectSet((uint8*)_pBlock, 0, _Size);
+		fg_SecureMemClear((uint8*)_pBlock, _Size);
 
 		return CBaseAllocator::f_Free(_pBlock, _Size);
 	}
@@ -156,7 +156,7 @@ namespace NMib::NMemory
 	{
 		mint Size = CBaseAllocator::f_Size(_pBlock);
 
-		NMemory::fg_ObjectSet((uint8*)_pBlock, 0, Size);
+		fg_SecureMemClear((uint8*)_pBlock, Size);
 
 		return CBaseAllocator::f_Free(_pBlock, Size);
 	}
