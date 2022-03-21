@@ -80,6 +80,7 @@ namespace NMib::NMemory
 		return false;
 	}
 
+#ifndef DDocumentation_Doxygen
 	template <typename t_CParams, mint ...tp_Indices>
 	uint32 TCMemoryManagerParams<t_CParams, NMeta::TCIndices<tp_Indices...>>::fs_DivideBySlabMultiplier(uint32 _Offset, uint32 _SlabMultiplier)
 	{
@@ -112,4 +113,5 @@ namespace NMib::NMemory
 
 		return fg_AlignUp(c_MetaDataBlockSize[_SlabType], t_CParams::mc_SubSlabSize);
 	}
+#endif
 }

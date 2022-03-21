@@ -1,5 +1,5 @@
-﻿
-\page p_Malterlib_Memory_MemoryManagerSlabs Memory Manager Slabs
+Memory Manager Slabs {#p_Malterlib_Memory_MemoryManagerSlabs}
+====================
 
 All services allocations sizes
 ------------------------------

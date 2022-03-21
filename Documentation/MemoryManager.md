@@ -1,5 +1,5 @@
-﻿
-\page p_Malterlib_Memory_MemoryManager Memory Manager
+Memory Manager {#p_Malterlib_Memory_MemoryManager}
+==============
 
 The Malterlib memory manager overall design goal is to allow concurrent memory allocations with minimal interaction between threads. Space-wise it's designed to minimize overhead and by default keep worst case internal fragmentation below 12.5%.
 
@@ -109,7 +109,7 @@ If you allocate memory on one thread and free it on another thread, that memory 
 
 The queue is processed before the arena allocates a new sub slab, when the memory manager is checked in and also on the background cleanup thread.
 
-Arena checkouts<a name="ArenaCheckout"></a>
+Arena checkouts {#ArenaCheckout}
 ---------------
 
 For maximum perfomance allocating and freeing memory the memory manager needs to be "checked out". Without this each allocation will perform two atomic operations and each free will perform one atomic operation.

@@ -5,12 +5,13 @@
 
 namespace NMib::NMemory
 {
-	/// Keep in mind that these two classes are used in the cross module interface and has to be versioned properly if changed
+	// Keep in mind that these two classes are used in the cross module interface and has to be versioned properly if changed
 
 	enum
 	{
 		ECMemoryManagerReturnCheckoutVersion = 0x102
 	};
+
 	struct ICMemoryManagerReturnCheckout
 	{
 		uint32 m_Version;
