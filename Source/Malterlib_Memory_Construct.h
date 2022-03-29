@@ -32,7 +32,7 @@ namespace NMib
 		else
 		{
 			mint Size = sizeof(tf_CObjectType);
-			auto Memory = fg_Forward<tf_CAllocator>(_Allocator).f_AllocSafe(Size, NTraits::TCAlignmentOf<tf_CObjectType>::mc_Value);
+			auto Memory = fg_Forward<tf_CAllocator>(_Allocator).f_AllocSafe(Size, alignof(tf_CObjectType));
 			auto pReturn = new(Memory.f_Get()) tf_CObjectType(fg_Forward<tfp_CParams>(p_Params)...);
 			Memory.f_Claim();
 			return pReturn;

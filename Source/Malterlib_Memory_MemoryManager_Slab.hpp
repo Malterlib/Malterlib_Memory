@@ -348,11 +348,11 @@ namespace NMib::NMemory
 
 			Location >>= Shift;
 #if 0
-			const static mint FreeSpace = TCAlignDown<mint, (t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab)), NTraits::TCAlignmentOf<TCMemoryManagerSlab>::mc_Value>::mc_Value;
-			uint8 *pFinalLocation = _pLocation + fg_AlignDown(Location, NTraits::TCAlignmentOf<TCMemoryManagerSlab>::mc_Value) % FreeSpace;
+			const static mint FreeSpace = TCAlignDown<mint, (t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab)), alignof(TCMemoryManagerSlab)>::mc_Value;
+			uint8 *pFinalLocation = _pLocation + fg_AlignDown(Location, alignof(TCMemoryManagerSlab)) % FreeSpace;
 #else
 			mint FreeSpace = mint(1) << (TCHighestBitSetCorrect<mint, (t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab))>::mc_Value);
-			mint ToAdd = (fg_AlignDown(Location, NTraits::TCAlignmentOf<TCMemoryManagerSlab>::mc_Value) & (FreeSpace - 1));
+			mint ToAdd = (fg_AlignDown(Location, alignof(TCMemoryManagerSlab)) & (FreeSpace - 1));
 			uint8 *pFinalLocation = _pLocation + ToAdd;
 #endif
 			return (TCMemoryManagerSlab *)pFinalLocation;

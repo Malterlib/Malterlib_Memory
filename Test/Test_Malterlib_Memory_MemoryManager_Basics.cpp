@@ -709,7 +709,7 @@ namespace
 					DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesCommit.m_Average) == DMibExpr(SlabSize / 2 + MetaCommit));
 #	endif
 				}
-				mint MaxCommittedSubSlabs = 0;
+				[[maybe_unused]] mint MaxCommittedSubSlabs = 0;
 				MemoryManager.f_GarbageCollect(false);
 				[[maybe_unused]] mint PreviousWaste;
 				{

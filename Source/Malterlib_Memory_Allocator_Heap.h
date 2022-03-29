@@ -238,7 +238,7 @@ namespace NMib
 namespace NMib::NMemory
 {
 	// Only support allocating one object
-	template <mint t_StaticStorage, mint t_Alignment = TCConstantMax<mint, sizeof(void *), NTraits::TCAlignmentOf<fp64>::mc_Value>::mc_Value, typename t_CFallbackAllocator = CAllocator_Heap>
+	template <mint t_StaticStorage, mint t_Alignment = TCConstantMax<mint, sizeof(void *), alignof(fp64)>::mc_Value, typename t_CFallbackAllocator = CAllocator_Heap>
 	class TCAllocator_Static : public t_CFallbackAllocator
 	{
 	private:

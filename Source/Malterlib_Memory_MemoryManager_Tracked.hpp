@@ -342,7 +342,7 @@ namespace NMib::NMemory
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 
-		_Alignment = fg_Max(_Alignment, sizeof(void *) * 2, NTraits::TCAlignmentOf<CPreBlockData>::mc_Value);
+		_Alignment = fg_Max(_Alignment, sizeof(void *) * 2, alignof(CPreBlockData));
 
 		mint NeededSize = fg_AlignUp(_Size, _Alignment) + fg_AlignUp(sizeof(CPreBlockData), _Alignment);
 		uint8 *pAlloc = (uint8 *)t_CSuper::f_AllocAlignedWithSize(NeededSize, _Alignment);
@@ -373,7 +373,7 @@ namespace NMib::NMemory
 
 		CFunctorOptions Options;
 
-		_Alignment = fg_Max(_Alignment, sizeof(void *) * 2, NTraits::TCAlignmentOf<CPreBlockData>::mc_Value);
+		_Alignment = fg_Max(_Alignment, sizeof(void *) * 2, alignof(CPreBlockData));
 
 		Options.m_pFunctor = &_Functor;
 		Options.m_RequestedSize = fg_AlignUp(_Size, _Alignment) + fg_AlignUp(sizeof(CPreBlockData), _Alignment);
@@ -433,7 +433,7 @@ namespace NMib::NMemory
 		t_CAllocationInfo OldInfo;
 		t_CAllocationInfo *pOldInfo = nullptr;
 		void *pOldMemory = nullptr;
-		mint Size = 0;
+		[[maybe_unused]] mint Size = 0;
 		mint OldSize = 0;
 		if (_pMemory)
 		{
@@ -450,7 +450,7 @@ namespace NMib::NMemory
 		CPreBlockData *pPreBlock;
 		uint8 *pAlloc;
 		{
-			mint Alignment = fg_Max(sizeof(void *) * 2, NTraits::TCAlignmentOf<CPreBlockData>::mc_Value);
+			mint Alignment = fg_Max(sizeof(void *) * 2, alignof(CPreBlockData));
 
 			mint NeededSize = fg_AlignUp(_Size, Alignment) + fg_AlignUp(sizeof(CPreBlockData), Alignment);
 			pAlloc = (uint8 *)t_CSuper::f_Realloc(pOldMemory, NeededSize, OldSize);
@@ -491,7 +491,7 @@ namespace NMib::NMemory
 		t_CAllocationInfo OldInfo;
 		t_CAllocationInfo *pOldInfo = nullptr;
 		void *pOldMemory = nullptr;
-		mint Size = 0;
+		[[maybe_unused]] mint Size = 0;
 		mint OldSize = 0;
 		if (_pMemory)
 		{
@@ -508,7 +508,7 @@ namespace NMib::NMemory
 		CPreBlockData *pPreBlock;
 		uint8 *pAlloc;
 		{
-			mint Alignment = fg_Max(sizeof(void *) * 2, NTraits::TCAlignmentOf<CPreBlockData>::mc_Value);
+			mint Alignment = fg_Max(sizeof(void *) * 2, alignof(CPreBlockData));
 
 			mint NeededSize = fg_AlignUp(_Size, Alignment) + fg_AlignUp(sizeof(CPreBlockData), Alignment);
 			pAlloc = (uint8 *)t_CSuper::f_Resize(pOldMemory, NeededSize, OldSize);

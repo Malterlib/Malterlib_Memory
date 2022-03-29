@@ -79,7 +79,7 @@ namespace NMib::NMemory
 
 			using CBlock = TCBlock<t_CAllocator>;
 
-			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, NTraits::TCAlignmentOf<CBlock>::mc_Value)> CChunk;
+			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))> CChunk;
 
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
@@ -257,7 +257,7 @@ namespace NMib::NMemory
 
 			using CBlock = TCBlock<t_CAllocator>;
 
-			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, NTraits::TCAlignmentOf<CBlock>::mc_Value)> CChunk;
+			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))> CChunk;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
@@ -491,7 +491,7 @@ namespace NMib::NMemory
 			}
 
 			using CBlock = TCBlock<t_CAllocator>;
-			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, NTraits::TCAlignmentOf<CBlock>::mc_Value)> CChunk;
+			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))> CChunk;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
@@ -745,7 +745,7 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
-		typename t_CPoolType::template TCPool<t_CAllocator, sizeof(t_CData), NTraits::TCAlignmentOf<t_CData>::mc_Value> m_Pool;
+		typename t_CPoolType::template TCPool<t_CAllocator, sizeof(t_CData), alignof(t_CData)> m_Pool;
 		typedef t_CData CData;
 
 		void f_Construct(ENumaNode _NumaNode);
