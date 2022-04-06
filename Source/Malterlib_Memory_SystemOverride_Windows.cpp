@@ -351,7 +351,7 @@ extern "C"
 		return NMib::NMemory::fg_Size(mem);
 	}
 
-	mint DDefaultCallingConv _msize_base(void *mem)
+	mint DDefaultCallingConv _msize_base(void *mem) _CRT_NOEXCEPT
 	{
 		return NMib::NMemory::fg_Size(mem);
 	}
