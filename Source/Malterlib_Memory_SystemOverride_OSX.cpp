@@ -2158,7 +2158,7 @@ namespace
 		if (LowLevelState.f_GetRentrant())
 			return;
 		LowLevelState.f_IncRentrant();
-		auto Cleanup = g_OnScopeExit > [&]
+		auto Cleanup = g_OnScopeExit / [&]
 			{
 				LowLevelState.f_DecRentrant();
 			}

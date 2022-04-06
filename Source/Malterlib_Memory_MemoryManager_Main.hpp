@@ -534,7 +534,7 @@ namespace NMib::NMemory
 	{
 		TCMemoryManagerThreadLocal<t_CParams> TempArena{fp_GetAnyNumaArena()};
 		fp_CheckoutHelper(TempArena);
-		auto Cleanup = g_OnScopeExit > [&]
+		auto Cleanup = g_OnScopeExit / [&]
 			{
 				DMibFastCheck(!TempArena.m_bLazyCheckout);
 				TempArena.f_ReturnCheckoutLight();
@@ -562,7 +562,7 @@ namespace NMib::NMemory
 	{
 		TCMemoryManagerThreadLocal<t_CParams> TempArena{fp_GetAnyNumaArena()};
 		fp_CheckoutHelper(TempArena);
-		auto Cleanup = g_OnScopeExit > [&]
+		auto Cleanup = g_OnScopeExit / [&]
 			{
 				DMibFastCheck(!TempArena.m_bLazyCheckout);
 				TempArena.f_ReturnCheckoutLight();
