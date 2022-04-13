@@ -1130,7 +1130,7 @@ namespace
 				}
 			;
 
-			mint nEndCores = NMib::fg_Max(nCores * 2, 128);
+			mint nEndCores = NMib::fg_Max(nCores * 2, 128u);
 
 			for (; i <= nEndCores; i = i << 1)
 				fRunTest(i);
