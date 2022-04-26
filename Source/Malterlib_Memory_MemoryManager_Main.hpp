@@ -1257,6 +1257,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never TCMemoryManagerArena<t_CParams> *TCMemoryManager<t_CParams>::fp_CheckoutHelperWaitForCleanup(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal)
 	{
+		NThread::CThreadSpinWaiter SpinWaiter;
 		while (true)
 		{
 			auto pArena = _ThreadLocal.m_pPreferredArena;
@@ -1275,7 +1276,8 @@ namespace NMib::NMemory
 			}
 			else if (!_ThreadLocal.m_bOwnArena && pArena->m_CheckoutCount.f_Load(NAtomic::EMemoryOrder_Relaxed) > 0) // Another checkout got inbetween
 				return fp_CheckoutHelperSlowPath(_ThreadLocal);
-			yield_cpu;
+
+			SpinWaiter.f_Wait();
 		}
 	}
 
