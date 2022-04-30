@@ -176,37 +176,22 @@ namespace
 					mint Size = 1;
 					void *pMemory = MemoryManager.f_AllocWithSize(Size);
 					MemoryManager.f_Free(pMemory, Size);
-					
-					DMibTest
-						(
-							DMibExpr(fg_ThrowsException(DoubleFreeException))
-							== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-						)
-					;
+
+					DMibExpectException(MemoryManager.f_Free(pMemory, Size), DoubleFreeException);
 				}
 				{
 					DMibTestPath("Normal");
 					mint Size = 64;
 					void *pMemory = MemoryManager.f_AllocWithSize(Size);
 					MemoryManager.f_Free(pMemory, Size);
-					DMibTest
-						(
-							DMibExpr(fg_ThrowsException(DoubleFreeException))
-							== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-						)
-					;
+					DMibExpectException(MemoryManager.f_Free(pMemory, Size),DoubleFreeException );
 				}
 				{
 					DMibTestPath("Big");
 					mint Size = 512*1024;
 					void *pMemory = MemoryManager.f_AllocWithSize(Size);
 					MemoryManager.f_Free(pMemory, Size);
-					DMibTest
-						(
-							DMibExpr(fg_ThrowsException(DoubleFreeException))
-							== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-						)
-					;
+					DMibExpectException(MemoryManager.f_Free(pMemory, Size), DoubleFreeException);
 				}
 				
 				// No possibility of double free as the second free will just crash
@@ -216,12 +201,7 @@ namespace
 					mint Size = 32*1024*1024;
 					void *pMemory = MemoryManager.f_AllocWithSize(Size);
 					MemoryManager.f_Free(pMemory);
-					DMibTest
-						(
-							DMibExpr(fg_ThrowsException(DoubleFreeException))
-							== DMibLExpr(MemoryManager.f_Free(pMemory))
-						)
-					;
+					DMibExpectException(MemoryManager.f_Free(pMemory), DoubleFreeException);
 				}
  */
 			};
@@ -245,21 +225,9 @@ namespace
 					Size = 4;
 
 					DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-					
-					DMibTest
-						(
-							DMibExpr(fg_ThrowsException(OverwriteException))
-							== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-						)
-					;
-					
-					DMibTest
-						(
-							DMibExpr(fg_ThrowsException(OverwriteException))
-							== DMibLExpr(MemoryManager.f_AllocWithSize(Size))
-						)
-					;
-					
+					DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+					DMibExpectException(MemoryManager.f_AllocWithSize(Size), OverwriteException);
+
 					pMemory[3] = OldValue;
 					
 					MemoryManager.f_Free(pMemory0, Size);
@@ -291,21 +259,9 @@ namespace
 								Size = _Size;
 
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_AllocWithSize(Size))
-									)
-								;
-								
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_AllocWithSize(Size), OverwriteException);
+
 								pMemory[0] = OldValue;
 							};
 						}
@@ -323,22 +279,9 @@ namespace
 							pMemory[-1] = 0;
 						
 							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-							
-							DMibTest
-								(
-									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-								)
-							;
-							
-							
-							DMibTest
-								(
-									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-								)(ETest_FailAndStop)
-							;
-							
+							DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+							DMibExpectException(MemoryManager.f_Free(pMemory, Size), OverwriteException);
+
 							pMemory[-1] = OldValue;
 							MemoryManager.f_Free(pMemory, Size);
 						};
@@ -355,20 +298,8 @@ namespace
 							pMemory[Size] = 0;
 						
 							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-							
-							DMibTest
-								(
-									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-								)
-							;
-							
-							DMibTest
-								(
-									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-								)
-							;
+							DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+							DMibExpectException(MemoryManager.f_Free(pMemory, Size), OverwriteException);
 
 							pMemory[Size] = OldValue;
 							MemoryManager.f_Free(pMemory, Size);
@@ -388,21 +319,9 @@ namespace
 							pMemory[-1] = 0;
 							
 							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-							
-							DMibTest
-								(
-									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-								)
-							;
-							
-							DMibTest
-								(
-									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-								)(ETest_FailAndStop)
-							;
-							
+							DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+							DMibExpectException(MemoryManager.f_Free(pMemory, Size), OverwriteException);
+
 							pMemory[-1] = OldValue;
 							MemoryManager.f_Free(pMemory, Size);
 						};
@@ -421,20 +340,8 @@ namespace
 							pMemory[Size] = 0;
 
 							DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-							
-							DMibTest
-								(
-									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-								)
-							;
-							
-							DMibTest
-								(
-									DMibExpr(fg_ThrowsException(OverwriteException))
-									== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-								)
-							;
+							DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+							DMibExpectException(MemoryManager.f_Free(pMemory, Size), OverwriteException);
 
 							pMemory[Size] = OldValue;
 							MemoryManager.f_Free(pMemory, Size);
@@ -457,21 +364,9 @@ namespace
 								mint NewSizeBigger = _Size * 8;
 						
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeBigger, Size))
-									)(ETest_FailAndStop)
-								;
-								
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Realloc(pMemory, NewSizeBigger, Size), OverwriteException);
+
 								pMemory[-1] = OldValue;
 								
 								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeBigger, Size);
@@ -487,21 +382,9 @@ namespace
 								mint NewSizeSmaller = _Size;
 						
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeSmaller, Size))
-									)
-								;
-								
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Realloc(pMemory, NewSizeSmaller, Size), OverwriteException);
+
 								pMemory[-1] = OldValue;
 								
 								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeSmaller, Size);
@@ -513,21 +396,9 @@ namespace
 								pMemory[-1] = 0;
 								
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-							
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-									)
-								;
-								
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Free(pMemory, Size), OverwriteException);
+
 								pMemory[-1] = OldValue;
 								MemoryManager.f_Free(pMemory, Size);
 							}
@@ -550,20 +421,8 @@ namespace
 								mint NewSizeBigger = _Size * 8;
 						
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeBigger, Size))
-									)
-								;
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Realloc(pMemory, NewSizeBigger, Size), OverwriteException);
 
 								pMemory[Size] = OldValue;
 
@@ -581,20 +440,8 @@ namespace
 								mint NewSizeSmaller = _Size;
 							
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Realloc(pMemory, NewSizeSmaller, Size))
-									)
-								;
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Realloc(pMemory, NewSizeSmaller, Size), OverwriteException);
 
 								pMemory[Size] = OldValue;
 
@@ -608,20 +455,8 @@ namespace
 								pMemory[Size] = 0;
 								
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-									)
-								;
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Free(pMemory, Size), OverwriteException);
 
 								pMemory[Size] = OldValue;
 								MemoryManager.f_Free(pMemory, Size);
@@ -645,21 +480,9 @@ namespace
 								mint NewSizeBigger = _Size * 8;
 						
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeBigger, Size))
-									)(ETest_FailAndStop)
-								;
-								
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Resize(pMemory, NewSizeBigger, Size), OverwriteException);
+
 								pMemory[-1] = OldValue;
 								
 								pMemory = (uint8 *)MemoryManager.f_Resize(pMemory, NewSizeBigger, Size);
@@ -674,21 +497,9 @@ namespace
 								
 								mint NewSizeSmaller = _Size;
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeSmaller, Size))
-									)
-								;
-								
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Resize(pMemory, NewSizeSmaller, Size), OverwriteException);
+
 								pMemory[-1] = OldValue;
 								
 								pMemory = (uint8 *)MemoryManager.f_Resize(pMemory, NewSizeSmaller, Size);
@@ -700,21 +511,9 @@ namespace
 								pMemory[-1] = 0;
 								
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-									)
-								;
-								
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Free(pMemory, Size), OverwriteException);
+
 								pMemory[-1] = OldValue;
 								MemoryManager.f_Free(pMemory, Size);
 							}
@@ -736,20 +535,8 @@ namespace
 								
 								mint NewSizeBigger = _Size * 8;
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeBigger, Size))
-									)
-								;
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Resize(pMemory, NewSizeBigger, Size), OverwriteException);
 
 								pMemory[Size] = OldValue;
 
@@ -766,20 +553,8 @@ namespace
 								
 								mint NewSizeSmaller = _Size;
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Resize(pMemory, NewSizeSmaller, Size))
-									)
-								;
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Resize(pMemory, NewSizeSmaller, Size), OverwriteException);
 
 								pMemory[Size] = OldValue;
 
@@ -793,20 +568,8 @@ namespace
 								pMemory[Size] = 0;
 								
 								DMibTest(!DMibExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Unprotect)));
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break))
-									)
-								;
-								
-								DMibTest
-									(
-										DMibExpr(fg_ThrowsException(OverwriteException))
-										== DMibLExpr(MemoryManager.f_Free(pMemory, Size))
-									)
-								;
+								DMibExpectException(MemoryManager.f_CheckAll(EMemoryManagerCheckFlag_Break), OverwriteException);
+								DMibExpectException(MemoryManager.f_Free(pMemory, Size), OverwriteException);
 
 								pMemory[Size] = OldValue;
 								MemoryManager.f_Free(pMemory, Size);
