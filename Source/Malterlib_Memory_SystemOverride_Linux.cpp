@@ -203,6 +203,9 @@ extern "C"
 	}
 	module_export size_t malloc_usable_size(void *_pMemory) __THROW
 	{
+		if (!_pMemory)
+			return 0;
+
 #ifndef DMibInitInPreInitArray
 		if (!NMib::g_bCreatedSystem)
 			NMib::NSys::fg_CreateSystem();
