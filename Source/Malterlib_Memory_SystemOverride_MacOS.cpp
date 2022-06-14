@@ -1490,7 +1490,7 @@ namespace
 	static constexpr int gc_StateFlavor = ARM_THREAD_STATE32;
 	static constexpr int gc_StateCount = ARM_THREAD_STATE32_COUNT;
 #elif defined(DArchitecture_arm64) || defined(DArchitecture_arm64e)
-	using CThreadState = arm_thread_state64_t;
+	using CThreadState = _STRUCT_ARM_THREAD_STATE64;
 	static constexpr int gc_StateFlavor = ARM_THREAD_STATE64;
 	static constexpr int gc_StateCount = ARM_THREAD_STATE64_COUNT;
 #else
@@ -1539,7 +1539,11 @@ extern "C"
 			*pNewState = *pOldState;
 			*_pNewStateCount = gc_StateCount;
 
-#if defined(DArchitecture_arm64) || defined(DArchitecture_arm64e)
+#if defined(DArchitecture_arm64e)
+			pNewState->__x[0] = (mint)(void *)*pJumpBuffer;
+			pNewState->__x[1] = 1;
+			__darwin_arm_thread_state64_set_pc_fptr(*pNewState, (void *)&_longjmp);
+#elif defined(DArchitecture_arm64)
 			pNewState->__x[0] = (mint)(void *)*pJumpBuffer;
 			pNewState->__x[1] = 1;
 			pNewState->__pc = (mint)(void *)&_longjmp;

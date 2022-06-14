@@ -59,13 +59,13 @@ extern "C"
 	
 	struct CInterpose
 	{ 
-		void const *m_Replacement;
-		void const *m_Replacee;
+		void (*m_Replacement)();
+		void (*m_Replacee)();
 	};
 
 #define DMibMacOSInterpose(d_Replacement, d_Replacee) \
 	assure_used static CInterpose g_Malterlib_Interpose_##d_Replacee \
-	__attribute__ ((section ("__DATA,__interpose"))) = { reinterpret_cast<void const *>(&d_Replacement), reinterpret_cast<void const *>(&d_Replacee)}
+	__attribute__ ((section ("__DATA,__interpose"))) = { (void (*)())&d_Replacement, (void (*)())&d_Replacee}
 
 	extern void __malloc_init(const char *apple[]) __attribute__((weak_import)); // from libsystem_malloc.dylib
 	void fg_Malterlib___malloc_init(const char *apple[])
