@@ -21,7 +21,7 @@ namespace NMib::NMemory
 		, m_pNumaArena(_pNumaArena)
 	{
 		DMibFastCheck((uint8 *)&m_Locked == fg_AlignUp((uint8 *)&m_Locked, mint(DMibPMemoryCacheLineSize)));
-		DMibFastCheck((uint8 *)&m_Messages == fg_AlignUp((uint8 *)&m_Messages, mint(DMibPMemoryCacheLineSize)));
+		DMibFastCheck((uint8 *)&m_MessagesAvailable == fg_AlignUp((uint8 *)&m_MessagesAvailable, mint(DMibPMemoryCacheLineSize)));
 	}
 
 	template <typename t_CParams>
@@ -269,7 +269,7 @@ namespace NMib::NMemory
 			}
 		}
 
-		f_AddMessage(pFreeLink, FreeLinkType);
+		f_AddMessage(pFreeLink, FreeLinkType, _pLocalArena);
 		m_pNumaArena->f_RequestCleanupWeak(ENumaArenaCleanup_ProcessMessages);
 	}
 

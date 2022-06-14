@@ -39,6 +39,7 @@ namespace NMib::NMemory
 #if DMibConfig_Memory_CustomThreadLocal
 		TCAutoClear<void *> m_pCustom[DMibConfig_Memory_CustomThreadLocal];
 #endif
+		uint32 m_RandomIndex = 0;
 
 		TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal const& _Other);
 
@@ -156,6 +157,9 @@ namespace NMib::NMemory
 		DMibListLinkDS_List_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkNeedDecommit) m_FreeSlabsNeedingDecommit;
 
 		TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams> m_BackgroundCleanup;
+
+		NThread::CLowLevelLock m_RandomLock;
+		NMisc::CRandomShiftRNG m_Random;
 
 		uint64 m_Magic;
 		ENumaNode m_NumaNode;

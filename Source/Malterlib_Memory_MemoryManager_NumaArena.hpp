@@ -15,8 +15,8 @@ namespace NMib::NMemory
 		, m_BackgroundCleanup(this)
 		, m_RequestedCleanup(0)
 		, m_nArenas(0)
+		, m_Random(NMisc::fg_GetHighEntropyRandomInteger<uint32>(), NMisc::fg_GetHighEntropyRandomInteger<uint32>(), NMisc::fg_GetHighEntropyRandomInteger<uint32>())
 	{
-
 	}
 
 	template <typename t_CParams>
@@ -362,6 +362,8 @@ namespace NMib::NMemory
 		, m_pPreferredArena(nullptr)
 		, m_TemporaryReturnCheckoutCount(0)
 	{
+		DMibLock(_pNumaArena->m_RandomLock);
+		m_RandomIndex = _pNumaArena->m_Random.template f_GetValue<uint32>();
 	}
 
 	/// This happens when we are recreating the thread local for use in a new numa node
@@ -386,6 +388,8 @@ namespace NMib::NMemory
 			_Other.m_pPreferredArena = nullptr;
 		}
 
+		DMibLock(_pNumaArena->m_RandomLock);
+		m_RandomIndex = _pNumaArena->m_Random.template f_GetValue<uint32>();
 	}
 
 	template <typename t_CParams>

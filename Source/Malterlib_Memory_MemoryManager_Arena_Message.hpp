@@ -6,18 +6,36 @@
 namespace NMib::NMemory
 {
 	template <typename t_CParams>
-	void TCMemoryManagerArena<t_CParams>::f_AddMessage(CMessage *_pMessage, EMessageType _MessageType)
+	inline_never void TCMemoryManagerArena<t_CParams>::f_AddMessage(CMessage *_pMessage, EMessageType _MessageType, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
 	{
+		mint RandomIndex;
+		if (_pLocalArena)
+			RandomIndex = _pLocalArena->m_RandomIndex & (mc_MessagesSpread - 1);
+		else
+			RandomIndex = m_Magic & (mc_MessagesSpread - 1);
+
+		auto &Messages = m_SpreadMessages[RandomIndex].m_Messages;
+		bool bWasEmpty = false;
 		while (1)
 		{
-			mint OldMessage = m_Messages.f_Load(NAtomic::EMemoryOrder_Relaxed);
+			mint OldMessage = Messages.f_Load(NAtomic::EMemoryOrder_Relaxed);
 			_pMessage->m_Next = OldMessage;
 
 			mint Message = (mint)_pMessage | mint(_MessageType);
-			if (m_Messages.f_CompareExchangeWeak(OldMessage, Message))
+			if (Messages.f_CompareExchangeWeak(OldMessage, Message))
+			{
+				if (!OldMessage)
+					bWasEmpty = true;
 				break;
+			}
+
 			yield_cpu;
 		}
+
+		if (!bWasEmpty)
+			return;
+
+		m_MessagesAvailable.f_FetchAdd(1);
 	}
 
 	template <typename t_CParams>
@@ -99,27 +117,53 @@ namespace NMib::NMemory
 	{
 		if (_pFreeList)
 		{
-			if (m_DeferredMessages)
+			for (auto &Messages : m_DeferredMessages)
 			{
-				if (fp_ProcessMessageList(_pFreeList, m_DeferredMessages))
-					return true;
+				if (Messages)
+				{
+					if (fp_ProcessMessageList(_pFreeList, Messages))
+						return true;
+				}
 			}
-			m_DeferredMessages = m_Messages.f_Exchange(0);
-			return fp_ProcessMessageList(_pFreeList, m_DeferredMessages);
+			if (m_MessagesAvailable.f_Exchange(0))
+			{
+				mint iMessages = 0;
+				for (auto &Messages : m_SpreadMessages)
+				{
+					m_DeferredMessages[iMessages] = Messages.m_Messages.f_Exchange(0);
+					++iMessages;
+				}
+				for (auto &Messages : m_DeferredMessages)
+				{
+					if (Messages)
+					{
+						if (fp_ProcessMessageList(_pFreeList, Messages))
+							return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		bool bDoneSomething = false;
 
-		if (m_DeferredMessages)
+		for (auto &Messages : m_DeferredMessages)
 		{
-			bDoneSomething = true;
-			fp_ProcessMessageList(_pFreeList, m_DeferredMessages);
+			if (Messages)
+			{
+				bDoneSomething = true;
+				fp_ProcessMessageList(nullptr, Messages);
+			}
 		}
 
-		if (auto Messages = m_Messages.f_Exchange(0))
+		if (m_MessagesAvailable.f_Exchange(0))
 		{
 			bDoneSomething = true;
-			fp_ProcessMessageList(_pFreeList, Messages);
+			for (auto &Messages : m_SpreadMessages)
+			{
+				auto ToProcess = Messages.m_Messages.f_Exchange(0);
+				fp_ProcessMessageList(nullptr, ToProcess);
+			}
 		}
 
 		return bDoneSomething;
@@ -128,7 +172,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_small void TCMemoryManagerArena<t_CParams>::fp_CheckMessages()
 	{
-		if (m_Messages.f_Load(NAtomic::EMemoryOrder_Relaxed))
+		if (m_MessagesAvailable.f_Load(NAtomic::EMemoryOrder_Relaxed))
 		{
 			fp_ProcessMessages(nullptr);
 		}
@@ -170,7 +214,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_small bool TCMemoryManagerArena<t_CParams>::f_ProcessMessages()
 	{
-		if (m_Messages.f_Load(NAtomic::EMemoryOrder_Relaxed))
+		if (m_MessagesAvailable.f_Load(NAtomic::EMemoryOrder_Relaxed))
 		{
 			return fp_ProcessMessages(nullptr);
 		}

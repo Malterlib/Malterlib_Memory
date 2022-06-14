@@ -41,7 +41,7 @@ namespace NMib::NMemory
 		int64 f_DecommitDeferred(int64 _Timestamp);
 
 		bool f_ProcessMessages();
-		void f_AddMessage(CMessage *_pMessage, EMessageType _MessageType);
+		void f_AddMessage(CMessage *_pMessage, EMessageType _MessageType, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 
 		void f_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 		void f_FreeThisThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab);
@@ -187,6 +187,7 @@ namespace NMib::NMemory
 		static constexpr mint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels-1 : t_CParams::mc_NumNormalSizeLevels;
 		static constexpr mint mc_Level0SmallestSize = 32 - t_CParams::mc_MinNormalSizeAlignment;
 		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CArena::mc_EnableCallbacks;
+		static constexpr mint mc_MessagesSpread = 16;
 
 		static_assert(mc_bUseSmallSizes || sizeof(void *) > 4, "Not supported on 32 bit");
 
@@ -250,8 +251,13 @@ namespace NMib::NMemory
 
 		align_cacheline NAtomic::TCAtomic<mint> m_pNextArena = 0;
 		align_cacheline NAtomic::TCAtomic<mint> m_Locked = EArenaLockFlag_None;
-		align_cacheline NAtomic::TCAtomic<mint> m_Messages = 0;
-		mint m_DeferredMessages = 0;
+		align_cacheline NAtomic::TCAtomic<mint> m_MessagesAvailable = 0;
+		struct CSpreadMessage
+		{
+			align_cacheline NAtomic::TCAtomic<mint> m_Messages = 0;
+		};
+		CSpreadMessage m_SpreadMessages[mc_MessagesSpread];
+		mint m_DeferredMessages[mc_MessagesSpread] = {};
 
 		uint64 m_Magic = 0;
 
