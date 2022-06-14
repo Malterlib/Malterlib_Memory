@@ -26,13 +26,13 @@ Property
 		}
 		LinkWithLibraries += [["-install_name", "@rpath/MalterlibMalloc.dylib"]]
 		{
-			!!PlatformFamily "OSX"
+			!!PlatformFamily "macOS"
 		}
 	}
 	%Group "Source"
 	{
 		%File "Source/*"
-		%File "../../Source/Malterlib_Memory_SystemOverride_OSXLibSystem.cpp"
+		%File "../../Source/Malterlib_Memory_SystemOverride_MacOSLibSystem.cpp"
 		{
 			!!MalterlibMemoryManager_OverrideDll true
 		}

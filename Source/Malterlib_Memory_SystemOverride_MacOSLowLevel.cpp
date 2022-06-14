@@ -1,7 +1,7 @@
 // Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
-#if (defined(DMibConfig_OverrideSystemMalloc) || defined(DMibMemoryOverrideDll)) && defined(DMalterlibMemoryOverrideOSXInitBeforeLibSystemSupport) 
+#if (defined(DMibConfig_OverrideSystemMalloc) || defined(DMibMemoryOverrideDll)) && defined(DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport)
 
 #include <Mib/Core/Core>
 #include <dlfcn.h>
@@ -13,7 +13,7 @@ namespace
 }
 
 
-bool fg_MalterlibSystem_InitOSX1060()
+bool fg_MalterlibSystem_InitMacOS1060()
 {
 	void *pLibSystemInfo = dlsym(RTLD_DEFAULT, "__Libsystem_version");
 	
@@ -64,12 +64,12 @@ bool fg_MalterlibSystem_InitOSX1060()
 	return true;
 }
 
-bool fg_MalterlibSystem_InitOSX1070(void *_pPThreadInit)
+bool fg_MalterlibSystem_InitMacOS1070(void *_pPThreadInit)
 {
 	void (* pthread_init)();
 	(void * &)pthread_init = _pPThreadInit;
 	
-	// This code path is taken on OSX 10.7 and 10.8
+	// This code path is taken on macOS 10.7 and 10.8
 	typedef struct _libkernel_functions {
 		mach_port_t (*get_reply_port)(void);
 		void (*set_reply_port)(mach_port_t);
@@ -140,9 +140,9 @@ bool fg_MalterlibSystem_InitOSX1070(void *_pPThreadInit)
 	return true;
 }
 
-bool fg_MalterlibSystem_InitOSX10100(void *_pPThreadInit, char const* envp[], char const* apple[], const struct ProgramVars * vars)
+bool fg_MalterlibSystem_InitMacOS10100(void *_pPThreadInit, char const* envp[], char const* apple[], const struct ProgramVars * vars)
 {
-	// This path is taken on OSX 10.10
+	// This path is taken on macOS 10.10
 
 	struct _libpthread_functions {
 		/* Structure version 1. Subsequent versions must only add pointers! */
@@ -272,9 +272,9 @@ bool fg_MalterlibSystem_InitOSX10100(void *_pPThreadInit, char const* envp[], ch
 	return true;
 }	
 
-bool fg_MalterlibSystem_InitOSX1090(void *_pPThreadInit, char const* envp[], char const* apple[], const struct ProgramVars * vars)
+bool fg_MalterlibSystem_InitMacOS1090(void *_pPThreadInit, char const* envp[], char const* apple[], const struct ProgramVars * vars)
 {
-	// This path is taken on OSX 10.9
+	// This path is taken on macOS 10.9
 
 	struct _libpthread_functions {
 		/* Structure version 1. Subsequent versions must only add pointers! */
@@ -365,9 +365,9 @@ bool fg_MalterlibSystem_InitOSX1090(void *_pPThreadInit, char const* envp[], cha
 	return true;
 }
 
-bool fg_MalterlibSystem_InitOSX10110(void *_pPThreadInit, char const* envp[], char const* apple[], const struct ProgramVars * vars)
+bool fg_MalterlibSystem_InitMacOS10110(void *_pPThreadInit, char const* envp[], char const* apple[], const struct ProgramVars * vars)
 {
-	// This path is taken on OSX 10.11
+	// This path is taken on macOS 10.11
 
 	struct _libpthread_functions {
 		/* Structure version 1. Subsequent versions must only add pointers! */

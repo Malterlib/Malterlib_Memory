@@ -1,7 +1,7 @@
 // Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
-#ifdef DPlatformFamily_OSX
+#ifdef DPlatformFamily_macOS
 #include <malloc/malloc.h>
 #endif
 

@@ -100,7 +100,7 @@ namespace NMib::NMemory
 		};
 	};
 
-#if defined(DPlatformFamily_OSX)
+#if defined(DPlatformFamily_macOS)
 	static constexpr mint gc_OsMaxPageSize = 16*1024;
 #else
 	static constexpr mint gc_OsMaxPageSize = 4*1024;

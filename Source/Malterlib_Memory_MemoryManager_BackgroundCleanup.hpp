@@ -2,7 +2,7 @@
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
-#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_OSX)
+#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_macOS)
 namespace NMib::NPlatform
 {
 	NThread::CMutual &fg_ForkLock();
@@ -62,7 +62,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_ForceStartThread()
 	{
-#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_OSX)
+#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_macOS)
 		auto &ForkLock = NMib::NPlatform::fg_ForkLock();
 		DMibLock(ForkLock);
 #endif
@@ -72,7 +72,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::fp_StartupThread()
 	{
-#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_OSX)
+#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_macOS)
 		auto &ForkLock = NMib::NPlatform::fg_ForkLock();
 		if (!ForkLock.f_TryLock())
 			return;
@@ -234,7 +234,7 @@ namespace NMib::NMemory
 
 		mp_GarbageCollectLock.f_ForkedParent();
 
-#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_OSX)
+#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_macOS)
 		if (mp_bStarted && !mp_pThread)
 			fp_StartupThread();
 #endif

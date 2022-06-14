@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#if defined(DPlatformFamily_OSX)
+#if defined(DPlatformFamily_macOS)
 #	include <memory.h>
 #	include <malloc/malloc.h>
 #	define malloc_usable_size malloc_size

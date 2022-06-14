@@ -18,7 +18,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <malloc/malloc.h>
-#include "Malterlib_Memory_SystemOverride_OSXInterpose.h"
+#include "Malterlib_Memory_SystemOverride_MacOSInterpose.h"
 
 extern "C"
 {
@@ -53,17 +53,17 @@ extern "C"
 
 	constinit COriginalFunctions g_OriginalFunctions =
 		{
-#			include "Malterlib_Memory_SystemOverride_OSXInterposeFunctions.h"
+#			include "Malterlib_Memory_SystemOverride_MacOSInterposeFunctions.h"
 		}
 	;
 	
 	struct CInterpose
 	{ 
-		void const *m_Replacement; 
-		void const *m_Replacee; 
+		void const *m_Replacement;
+		void const *m_Replacee;
 	};
 
-#define DMibOSXInterpose(d_Replacement, d_Replacee) \
+#define DMibMacOSInterpose(d_Replacement, d_Replacee) \
 	assure_used static CInterpose g_Malterlib_Interpose_##d_Replacee \
 	__attribute__ ((section ("__DATA,__interpose"))) = { reinterpret_cast<void const *>(&d_Replacement), reinterpret_cast<void const *>(&d_Replacee)}
 
@@ -85,14 +85,14 @@ extern "C"
 		fg_MalterlibSystem_InitAfterMalloc();
 	}
 	
-	DMibOSXInterpose(fg_Malterlib___malloc_init, __malloc_init);
-	DMibOSXInterpose(fg_Malterlib___libc_init, __libc_init);
+	DMibMacOSInterpose(fg_Malterlib___malloc_init, __malloc_init);
+	DMibMacOSInterpose(fg_Malterlib___libc_init, __libc_init);
 
 #if defined(DMibMemoryOverrideDll)
 	
 #define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
 	extern d_Return fg_Malterlib_##d_Function(__VA_ARGS__); \
-	DMibOSXInterpose(fg_Malterlib_##d_Function, d_Function);
+	DMibMacOSInterpose(fg_Malterlib_##d_Function, d_Function);
 
 #else
 
@@ -102,11 +102,11 @@ extern "C"
 	{ \
 		return fg_Malterlib_##d_Function d_Args; \
 	} \
-	DMibOSXInterpose(fg_Malterlib_Interpose_##d_Function, d_Function);
+	DMibMacOSInterpose(fg_Malterlib_Interpose_##d_Function, d_Function);
 	
 #endif
 	
-#include "Malterlib_Memory_SystemOverride_OSXInterposeFunctions.h"
+#include "Malterlib_Memory_SystemOverride_MacOSInterposeFunctions.h"
 }
 
 namespace

@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #endif
 
-#ifdef DMemoryManagerTestEnable_OSX
+#ifdef DMemoryManagerTestEnable_MacOS
 #include <malloc/malloc.h>
 #endif
 
@@ -723,17 +723,17 @@ namespace
 	};
 #endif
 
-#ifdef DMemoryManagerTestEnable_OSX
-	class CMalterlibMemoryOSX
+#ifdef DMemoryManagerTestEnable_MacOS
+	class CMalterlibMemoryMacOS
 	{
 		malloc_zone_t *m_pMallocZone;
 	public:
-		CMalterlibMemoryOSX()
+		CMalterlibMemoryMacOS()
 			: m_pMallocZone(nullptr)
 		{
 		}
 
-		~CMalterlibMemoryOSX()
+		~CMalterlibMemoryMacOS()
 		{
 			if (m_pMallocZone)
 			{
@@ -744,7 +744,7 @@ namespace
 
 		static bool fs_ShouldRun(mint _nThreads, bool _bAlignment)
 		{
-#ifdef DPlatform_OSX10_5
+#if DPlatformVersion <= 1050
 			if (_bAlignment)
 				return false;
 #endif
@@ -770,7 +770,7 @@ namespace
 
 		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
 		{
-#ifndef DPlatform_OSX10_5
+#if DPlatformVersion <= 1050
 			_Alignment = NMib::fg_Max(sizeof(void *), _Alignment);
 			return m_pMallocZone->memalign(m_pMallocZone, _Alignment, _Size);
 #else

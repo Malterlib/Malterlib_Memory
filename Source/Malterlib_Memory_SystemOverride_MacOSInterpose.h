@@ -66,5 +66,5 @@ extern "C" void _exit(int _0) __attribute__((weak_import));
 
 struct COriginalFunctions
 {
-#include "Malterlib_Memory_SystemOverride_OSXInterposeFunctions.h"
+#include "Malterlib_Memory_SystemOverride_MacOSInterposeFunctions.h"
 };

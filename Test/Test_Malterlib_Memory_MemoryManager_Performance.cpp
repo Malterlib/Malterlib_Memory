@@ -1001,8 +1001,8 @@ namespace
 			ETestMeasureType SystemMeasureType = ETestMeasureType_Reference;
 #endif
 
-#ifdef DMemoryManagerTestEnable_OSX
-			f_DoTest<CMalterlibMemoryOSX, tf_CAllocPattern>(PerfTest, MemoryTest, SystemMeasureType, "OSX" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
+#ifdef DMemoryManagerTestEnable_MacOS
+			f_DoTest<CMalterlibMemoryMacOS, tf_CAllocPattern>(PerfTest, MemoryTest, SystemMeasureType, "macOS" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
 #endif
 #ifdef DMemoryManagerTestEnable_StdLib
 			f_DoTest<CMalterlibMemoryStdLib, tf_CAllocPattern>(PerfTest, MemoryTest, SystemMeasureType, "StdLib" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);

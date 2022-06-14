@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -21,7 +21,7 @@ typedef struct malloc_introspection_t_10_7 {
 #ifdef __BLOCKS__
     void        (*enumerate_discharged_pointers)(malloc_zone_t *zone, void (^report_discharged)(void *memory, void *info));
 #else
-    void	*enumerate_unavailable_without_blocks;   
+    void	*enumerate_unavailable_without_blocks;
 #endif /* __BLOCKS__ */
 } malloc_introspection_t_10_7;
 
@@ -38,20 +38,20 @@ typedef struct _malloc_zone_t_10_7 {
     void 	*(*realloc)(struct _malloc_zone_t *zone, void *ptr, size_t size);
     void 	(*destroy)(struct _malloc_zone_t *zone); /* zone is destroyed and all memory reclaimed */
     const char	*zone_name;
-	
+
     /* Optional batch callbacks; these may be NULL */
     unsigned	(*batch_malloc)(struct _malloc_zone_t *zone, size_t size, void **results, unsigned num_requested); /* given a size, returns pointers capable of holding that size; returns the number of pointers allocated (maybe 0 or less than num_requested) */
     void	(*batch_free)(struct _malloc_zone_t *zone, void **to_be_freed, unsigned num_to_be_freed); /* frees all the pointers in to_be_freed; note that to_be_freed may be overwritten during the process */
-	
+
     malloc_introspection_t_10_7	*introspect;
     unsigned	version;
-    
+
     /* aligned memory allocation. The callback may be NULL. Present in version >= 5. */
     void *(*memalign)(struct _malloc_zone_t *zone, size_t alignment, size_t size);
-    
+
     /* free a pointer known to be in zone and known to have the given size. The callback may be NULL. Present in version >= 6.*/
     void (*free_definite_size)(struct _malloc_zone_t *zone, void *ptr, size_t size);
-	
+
     /* Empty out caches in the face of memory pressure. The callback may be NULL. Present in version >= 8. */
 	size_t 	(*pressure_relief)(struct _malloc_zone_t *zone, size_t goal);
 } malloc_zone_t_10_7;

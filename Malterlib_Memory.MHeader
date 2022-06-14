@@ -341,7 +341,7 @@ Property
 		MalterlibWindowsVersion "NTDDI_VISTA"
 
 		MemoryManagerTestEnable_Malterlib define bool = true
-		MemoryManagerTestEnable_OSX define bool = PlatformFamily == "OSX"
+		MemoryManagerTestEnable_MacOS define bool = PlatformFamily == "macOS"
 
 		MemoryManagerTestEnable_Application define bool = true
 		MemoryManagerTestEnable_StdLib define bool = true
@@ -412,9 +412,9 @@ Property
 		}
 
 		PreprocessorDefines += "PERFTOOLS_DLL_DECL="
-		PreprocessorDefines += "DMemoryManagerTestEnable_OSX"
+		PreprocessorDefines += "DMemoryManagerTestEnable_MacOS"
 		{
-			!!MemoryManagerTestEnable_OSX true
+			!!MemoryManagerTestEnable_MacOS true
 		}
 		PreprocessorDefines += "DMemoryManagerTestEnable_Malterlib"
 		{

@@ -9,8 +9,8 @@ namespace NMib::NMemory
 	// Nobody should add to this list other than Mike & Erik!
 	char const* gc_IgnoreFunctions[] =
 		{
-#ifdef DPlatformFamily_OSX
-			"_xpc_dyld_image_callback", // Possible bug in OSX, investigate later
+#ifdef DPlatformFamily_macOS
+			"_xpc_dyld_image_callback", // Possible bug in macOS, investigate later
 			"atexit_register",
 			"__vfprintf",
 			"pthread_join",
@@ -90,7 +90,7 @@ namespace NMib::NMemory
 			"_NSEventThread",
 			"_NSPopUpCarbonMenu3",
 			"pthread_once",
-			// OSX 10.12
+			// macOS 10.12
 			"_dyld_initializer",
 			"_libtrace_init",
 			"_voucher_activity_debug_channel_init",

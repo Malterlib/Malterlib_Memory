@@ -68,8 +68,8 @@ namespace NMib::NMemory
 
 		enum
 		{
-//#ifdef DPlatformFamily_OSX
-			// OSX needs 16 byte alignment to handle SSE
+//#ifdef DPlatformFamily_macOS
+			// macOS needs 16 byte alignment to handle SSE
 			EMemoryManagerAlignmentCalc = DMibGetHighestBitSet(sizeof(mint)*2) - 1
 			, EMemoryManagerAlignment = EMemoryManagerAlignmentCalc < 4 ? 4 : EMemoryManagerAlignmentCalc
 //#else

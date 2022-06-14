@@ -68,7 +68,7 @@ namespace NMib::NMemory::NPrivate
 					}
 					if (TraceInfo.m_pFunctionName)
 					{
-#ifdef DPlatformFamily_OSX
+#ifdef DPlatformFamily_macOS
 						if (NStr::fg_StrMatchWildcard(TraceInfo.m_pFunctionName, "+[* load]") == NStr::EMatchWildcardResult_WholeStringMatchedAndPatternExhausted)
 							return;
 #endif

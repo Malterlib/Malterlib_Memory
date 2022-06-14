@@ -109,7 +109,7 @@ namespace NMib::NMemory
 }
 
 #if defined(DMibPOverrideOperatorNew)
-#if defined(DMibSanitizerEnabled) && !defined(DPlatformFamily_OSX)
+#if defined(DMibSanitizerEnabled) && !defined(DPlatformFamily_macOS)
 	// operator delete(void*, std::align_val_t)
 	extern "C" void __wrap__ZdlPvSt11align_val_tRKSt9nothrow_t(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow)
 	{

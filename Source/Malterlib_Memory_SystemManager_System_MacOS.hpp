@@ -5,7 +5,7 @@
 
 namespace NMib
 {
-	ch8 const* g_pMemoryManagerName = "OSX system memory manager";
+	ch8 const* g_pMemoryManagerName = "macOS system memory manager";
 	
 	malloc_zone_t *g_DefaultZone = nullptr;
 }
