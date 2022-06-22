@@ -22,7 +22,12 @@ namespace NMib::NMemory
 		uint32 m_SlabStartOffset;
 		uint64 m_Magic;
 
-		DMibSuppressThreadSanitizer inline_always uint64 f_GetMagic() const
+#ifdef DMibSanitizerEnabled_Thread
+		DMibSuppressThreadSanitizer inline_never
+#else
+		inline_always
+#endif
+		uint64 f_GetMagic() const
 		{
 			return m_Magic;
 		}
