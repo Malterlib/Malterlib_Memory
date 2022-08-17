@@ -20,14 +20,12 @@ namespace NMib::NMemory
 		{
 			mint OldMessage = Messages.f_Load(NAtomic::EMemoryOrder_Relaxed);
 			_pMessage->m_Next = OldMessage;
+			if (!OldMessage)
+				bWasEmpty = true;
 
 			mint Message = (mint)_pMessage | mint(_MessageType);
 			if (Messages.f_CompareExchangeWeak(OldMessage, Message))
-			{
-				if (!OldMessage)
-					bWasEmpty = true;
 				break;
-			}
 
 			yield_cpu;
 		}
@@ -60,6 +58,8 @@ namespace NMib::NMemory
 			EMessageType FreeLinkType = (EMessageType)(Messages & 3);
 			CMessage *pFreeBlock = (CMessage *)(Messages & (~mint(3)));
 			mint NextMessage = pFreeBlock->m_Next;
+
+			NAtomic::fg_CompilerFence();
 
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 			{

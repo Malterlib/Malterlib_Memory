@@ -187,7 +187,11 @@ namespace NMib::NMemory
 		static constexpr mint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels-1 : t_CParams::mc_NumNormalSizeLevels;
 		static constexpr mint mc_Level0SmallestSize = 32 - t_CParams::mc_MinNormalSizeAlignment;
 		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CArena::mc_EnableCallbacks;
+#if defined(DArchitecture_arm64) || defined(DArchitecture_arm64e)
 		static constexpr mint mc_MessagesSpread = 16;
+#else
+		static constexpr mint mc_MessagesSpread = 1;
+#endif
 
 		static_assert(mc_bUseSmallSizes || sizeof(void *) > 4, "Not supported on 32 bit");
 
