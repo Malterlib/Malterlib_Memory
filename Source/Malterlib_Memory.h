@@ -660,7 +660,7 @@ namespace NMib::NMemory
 		template <typename t_CData, typename t_CSorter>
 		class TCHelpQSort
 		{
-			static void fp_InsertSort(t_CData *_pArray, aint _Low, aint _High, const t_CSorter &_Sorter)
+			static void fp_InsertSort(t_CData *_pArray, aint _Low, aint _High, const t_CSorter &_fCompare)
 			{
 				t_CData Temp;
 				aint i, j;
@@ -669,14 +669,14 @@ namespace NMib::NMemory
 				{
 					Temp = _pArray[i];
 
-					for (j = i-1; j >= _Low && _Sorter(Temp, _pArray[j]); j--)
+					for (j = i-1; j >= _Low && COrdering_Partial(_fCompare(Temp, _pArray[j])) < 0; j--)
 						_pArray[j+1] = _pArray[j];
 
 					_pArray[j+1] = Temp;
 				}
 			}
 
-			static aint fp_Partition(t_CData *_pArray, aint _Low, aint _High, const t_CSorter &_Sorter)
+			static aint fp_Partition(t_CData *_pArray, aint _Low, aint _High, const t_CSorter &_fCompare)
 			{
 				t_CData Temp, Pivot;
 				aint i, j, p;
@@ -689,9 +689,9 @@ namespace NMib::NMemory
 				j = _High;
 				while (1)
 				{
-					while (i < j && _Sorter(_pArray[i], Pivot))
+					while (i < j && COrdering_Partial(_fCompare(_pArray[i], Pivot)) < 0)
 						i++;
-					while (j >= i && _Sorter(Pivot, _pArray[j]))
+					while (j >= i && COrdering_Partial(_fCompare(Pivot, _pArray[j])) < 0)
 						j--;
 					if (i >= j)
 						break;
@@ -708,7 +708,7 @@ namespace NMib::NMemory
 			}
 
 		public:
-			static void fpr_QuickSort(t_CData *_pArray, aint _Low, aint _High, const t_CSorter &_Sorter)
+			static void fpr_QuickSort(t_CData *_pArray, aint _Low, aint _High, const t_CSorter &_fCompare)
 			{
 				aint m;
 
@@ -717,20 +717,20 @@ namespace NMib::NMemory
 
 					if (_High - _Low <= 12)
 					{
-						fp_InsertSort(_pArray, _Low, _High, _Sorter);
+						fp_InsertSort(_pArray, _Low, _High, _fCompare);
 						return;
 					}
 
-					m = fp_Partition(_pArray, _Low, _High, _Sorter);
+					m = fp_Partition(_pArray, _Low, _High, _fCompare);
 
 					if (m - _Low <= _High - m)
 					{
-						fpr_QuickSort(_pArray, _Low, m - 1, _Sorter);
+						fpr_QuickSort(_pArray, _Low, m - 1, _fCompare);
 						_Low = m + 1;
 					}
 					else
 					{
-						fpr_QuickSort(_pArray, m + 1, _High, _Sorter);
+						fpr_QuickSort(_pArray, m + 1, _High, _fCompare);
 						_High = m - 1;
 					}
 				}
@@ -738,10 +738,10 @@ namespace NMib::NMemory
 		};
 	}
 
-	template <typename t_CType, typename t_CSorter>
-	void fg_QSort(t_CType * _pToSort, mint _nNumElements, const t_CSorter &_Sorter)
+	template <typename tf_CType, typename tf_CCompare>
+	void fg_QSort(tf_CType *_pToSort, mint _nNumElements, const tf_CCompare &_fCompare)
 	{
-		NPrivate::TCHelpQSort<t_CType, t_CSorter>::fpr_QuickSort(_pToSort, 0, _nNumElements-1, _Sorter);
+		NPrivate::TCHelpQSort<tf_CType, tf_CCompare>::fpr_QuickSort(_pToSort, 0, _nNumElements-1, _fCompare);
 	}
 }
 

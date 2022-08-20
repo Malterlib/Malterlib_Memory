@@ -26,9 +26,9 @@ namespace NMib::NMemory
 			{
 				return _Node.m_pName;
 			}
-			bool operator() (ch8 const *_pLeft, ch8 const *_pRight) const
+			COrdering_Partial operator() (ch8 const *_pLeft, ch8 const *_pRight) const
 			{
-				return NStr::fg_StrCmp(_pLeft, _pRight) < 0;
+				return NStr::fg_StrCmp(_pLeft, _pRight) <=> 0;
 			}
 		};
 	};
