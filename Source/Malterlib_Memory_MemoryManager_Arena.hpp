@@ -36,7 +36,7 @@ namespace NMib::NMemory
 		DMibFastCheck(m_CheckoutCount.f_Load() > 0);
 		if (m_CheckoutCount.f_FetchSub(1, NAtomic::EMemoryOrder_Relaxed) == 1)
 		{
-			fp_CheckMessages();
+//			fp_CheckMessages();
 			bool bNeedCleanup = fp_CheckCleanup();
 			auto LockResult = m_Locked.f_Exchange(EArenaLockFlag_None, NAtomic::EMemoryOrder_Release);
 			if (LockResult & EArenaLockFlag_Waiting)
@@ -53,7 +53,7 @@ namespace NMib::NMemory
 	{
 		DMibFastCheck(m_CheckoutCount.f_Load() == 0); // Should not have been increased
 		bool bNeedCleanup = false;
-		fp_CheckMessages();
+//		fp_CheckMessages();
 		if (m_bWantCleanup)
 			bNeedCleanup = fp_CheckCleanup();
 		auto LockResult = m_Locked.f_Exchange(EArenaLockFlag_None, NAtomic::EMemoryOrder_Release);
