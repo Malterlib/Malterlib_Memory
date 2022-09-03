@@ -136,6 +136,8 @@ namespace NMib::NMemory
 							[[maybe_unused]] auto &ThreadLocal = *mp_pNumaArena->m_pMemoryManager->m_LocalArena; // Precach thread local to prevent deadlock
 
 							DMibLock(mp_GarbageCollectLock);
+
+							mp_pNumaArena->m_pMemoryManager->f_LazyReturnCheckout();
 							
 							int64 NextUpdate = mp_pNumaArena->f_GarbageCollect({RemoveTime, RemoveTimeDecommit}, true, bForceFullGarbageCollection);
 							bForceFullGarbageCollection = false;

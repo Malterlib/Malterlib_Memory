@@ -161,10 +161,11 @@ DMibMemoryInterposeCpp3(void , _ZdlPvmSt11align_val_t, void *_0, size_t _1, size
 
 #endif
 
-DMibMemoryInterpose3(kern_return_t, semaphore_timedwait_trap, mach_port_name_t _0, unsigned int _1, clock_res_t _2)
-DMibMemoryInterpose1(kern_return_t, semaphore_wait_trap, mach_port_name_t _0)
-DMibMemoryInterpose2(kern_return_t, semaphore_wait_signal_trap, mach_port_name_t _0, mach_port_name_t _1)
-DMibMemoryInterpose4(kern_return_t, semaphore_timedwait_signal_trap, mach_port_name_t _0, mach_port_name_t _1, unsigned int _2, clock_res_t _3)
+DMibMemoryInterpose2(kern_return_t, semaphore_timedwait, semaphore_t _0, mach_timespec_t _1)
+DMibMemoryInterpose1(kern_return_t, semaphore_wait, semaphore_t _0)
+DMibMemoryInterpose2(kern_return_t, semaphore_wait_signal, semaphore_t _0, semaphore_t _1)
+DMibMemoryInterpose3(kern_return_t, semaphore_timedwait_signal, semaphore_t _0, semaphore_t _1, mach_timespec_t _2)
+
 DMibMemoryInterpose4(int, __workq_kernreturn, int _0, user_addr_t _1, int _2, int _3)
 DMibMemoryInterpose8(uint32_t, __psynch_cvwait, user_addr_t _0, uint64_t _1, uint32_t _2, user_addr_t _3, uint64_t _4, uint32_t _5, int64_t _6, uint32_t _7)
 DMibMemoryInterpose6(int, kevent, int _0, const struct kevent *_1, int _2, struct kevent *_3, int _4, const struct timespec *_5)
@@ -177,8 +178,7 @@ DMibMemoryInterpose1(void, __exit, int _0)
 DMibMemoryInterpose1(void, _exit, int _0)
 
 // This needs to be last, as it will override the function used to allocate memory vm_region_64
-DMibMemoryInterpose7(mach_msg_return_t ,mach_msg_trap, mach_msg_header_t *_0, mach_msg_option_t _1, mach_msg_size_t _2, mach_msg_size_t _3, mach_port_name_t _4, mach_msg_timeout_t _5, mach_port_name_t _6)
-
+DMibMemoryInterpose7(mach_msg_return_t, mach_msg, mach_msg_header_t *_0, mach_msg_option_t _1, mach_msg_size_t _2, mach_msg_size_t _3, mach_port_name_t _4, mach_msg_timeout_t _5, mach_port_name_t _6)
 
 #undef DMibMemoryInterpose0
 #undef DMibMemoryInterpose1

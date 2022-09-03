@@ -1466,6 +1466,24 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
+	void TCMemoryManager<t_CParams>::f_LazyReturnCheckoutPrevent()
+	{
+		if (!m_LocalArena.f_IsValid()) [[unlikely]]
+			return;
+		auto &ThreadLocal = *m_LocalArena;
+		++ThreadLocal.m_TemporaryReturnCheckoutCount;
+	}
+
+	template <typename t_CParams>
+	void TCMemoryManager<t_CParams>::f_LazyReturnCheckoutAllow()
+	{
+		if (!m_LocalArena.f_IsValid()) [[unlikely]]
+			return;
+		auto &ThreadLocal = *m_LocalArena;
+		--ThreadLocal.m_TemporaryReturnCheckoutCount;
+	}
+
+	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_CanDoLazyCheckout()
 	{
 		m_bCanDoLazyCheckout = true;

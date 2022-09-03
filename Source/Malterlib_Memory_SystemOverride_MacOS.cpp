@@ -2156,15 +2156,16 @@ namespace
 {
 #ifdef DMemoryManagerIsSame
 
-	void fg_LazyReturnCheckout()
+	bool fg_LazyReturnCheckout()
 	{
 		if (!g_MalterlibMallocOveriddenInterposersInstalled)
-			return;
+			return false;
 		auto &LowLevelState = *g_LowLevelGlobalState;
 		auto &State = *g_GlobalState;
 #ifdef DMemoryManagerIsSame
 		if (LowLevelState.f_GetRentrant())
-			return;
+			return false;
+
 		LowLevelState.f_IncRentrant();
 		auto Cleanup = g_OnScopeExit / [&]
 			{
@@ -2196,6 +2197,8 @@ namespace
 		else
 #endif
 			DMainHeapMax->f_LazyReturnCheckout();
+
+		return true;
 	}
 
 	template <typename tf_CMemoryManagerZone>
@@ -4151,7 +4154,7 @@ extern "C"
 
 	constinit NAtomic::TCAtomic<mint> g_Sequence = {DAggregateInit};
 
-	assure_used mach_msg_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_mach_msg_trap
+	assure_used mach_msg_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_mach_msg
 		(
 			mach_msg_header_t *msg,
 			mach_msg_option_t option,
@@ -4163,42 +4166,66 @@ extern "C"
 		)
 	{
 #ifdef DMemoryManagerIsSame
+		bool bSuccessLazyReturn = false;
 		if ((option & MACH_RCV_MSG) && msg->msgh_remote_port == 0)
-			fg_LazyReturnCheckout();
+		{
+			bSuccessLazyReturn = fg_LazyReturnCheckout();
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				DMainHeapSmall->f_LazyReturnCheckoutPrevent();
+			else
 #endif
-		return g_OriginalFunctions.mach_msg_trap(msg, option, send_size, rcv_size, rcv_name, timeout, notify);
+				DMainHeapMax->f_LazyReturnCheckoutPrevent();
+#endif
+		}
+
+		auto Return = g_OriginalFunctions.mach_msg(msg, option, send_size, rcv_size, rcv_name, timeout, notify);
+
+#ifdef DMemoryManagerIsSame
+		if (bSuccessLazyReturn)
+		{
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				DMainHeapSmall->f_LazyReturnCheckoutAllow();
+			else
+#endif
+				DMainHeapMax->f_LazyReturnCheckoutAllow();
+		}
+#endif
+
+		return Return;
 	}
 
-	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_timedwait_trap(mach_port_name_t wait_name, unsigned int sec, clock_res_t nsec)
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_timedwait(semaphore_t semaphore, mach_timespec_t wait_time)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.semaphore_timedwait_trap(wait_name, sec, nsec);
+		return g_OriginalFunctions.semaphore_timedwait(semaphore, wait_time);
 	}
 
-	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_wait_trap(mach_port_name_t wait_name)
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_wait(semaphore_t semaphore)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.semaphore_wait_trap(wait_name);
+		return g_OriginalFunctions.semaphore_wait(semaphore);
 	}
 
-	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_wait_signal_trap(mach_port_name_t wait_name, mach_port_name_t signal_name)
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_wait_signal(semaphore_t wait_semaphore, semaphore_t signal_semaphore)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.semaphore_wait_signal_trap(wait_name, signal_name);
+		return g_OriginalFunctions.semaphore_wait_signal(wait_semaphore, signal_semaphore);
 	}
 
-	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_timedwait_signal_trap(mach_port_name_t wait_name, mach_port_name_t signal_name, unsigned int sec, clock_res_t nsec)
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_timedwait_signal(semaphore_t wait_semaphore, semaphore_t signal_semaphore, mach_timespec_t wait_time)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.semaphore_timedwait_signal_trap(wait_name, signal_name, sec, nsec);
+		return g_OriginalFunctions.semaphore_timedwait_signal(wait_semaphore, signal_semaphore, wait_time);
 	}
 
 	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib___workq_kernreturn(int options, user_addr_t item, int affinity, int prio)

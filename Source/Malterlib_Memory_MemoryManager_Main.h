@@ -102,6 +102,8 @@ namespace NMib::NMemory
 		bool f_IsCheckedOut();
 
 		void f_LazyReturnCheckout();
+		void f_LazyReturnCheckoutPrevent();
+		void f_LazyReturnCheckoutAllow();
 		void f_CanDoLazyCheckout();
 
 		void f_SetNumaNode(ENumaNode _NumaNode);
