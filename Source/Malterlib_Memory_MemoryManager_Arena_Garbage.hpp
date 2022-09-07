@@ -6,12 +6,17 @@
 namespace NMib::NMemory
 {
 	template <typename t_CParams>
-	int64 TCMemoryManagerArena<t_CParams>::f_GarbageCollect(ENumaArenaCleanup &_oCleanup, int64 _Timestamp)
+	int64 TCMemoryManagerArena<t_CParams>::f_GarbageCollect(ENumaArenaCleanup &_oCleanup, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
 	{
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 
 		for (auto iSlabType = 0; iSlabType < t_CParams::mc_NumSizesPerLevel; ++iSlabType)
-			NextTimestamp = fg_Min(NextTimestamp, fp_GarbageCollectPerform(iSlabType, _Timestamp));
+		{
+			NextTimestamp = fg_Min(NextTimestamp, fp_GarbageCollectPerform(iSlabType, _Timestamp, _pLocalArena));
+
+			if (_Timestamp != TCLimitsInt<int64>::mc_Max && f_IsContended(_pLocalArena))
+				return 0;
+		}
 
 		auto pNumaArena = m_pNumaArena;
 
@@ -110,7 +115,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	int64 TCMemoryManagerArena<t_CParams>::fp_GarbageCollectPerform(mint _SlabType, int64 _Timestamp)
+	int64 TCMemoryManagerArena<t_CParams>::fp_GarbageCollectPerform(mint _SlabType, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
 	{
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 		DMibFastCheck(_SlabType < t_CParams::mc_NumSizesPerLevel);
@@ -126,24 +131,46 @@ namespace NMib::NMemory
 				continue;
 			}
 
-			bool bAborted = false;
+			struct CParams
+			{
+				TCMemoryManagerSlabShared<t_CParams> *m_pSlab;
+				TCMemoryManagerThreadLocal<t_CParams> *m_pLocalArena;
+				int64 m_Timestamp;
+				bool m_bAborted = false;
+			};
+
+			CParams Params;
+			Params.m_pSlab = pSlab;
+			Params.m_pLocalArena = _pLocalArena;
+			Params.m_Timestamp = _Timestamp;
+
 			pSlab->f_EnumPendingBits
 				(
-					[&](mint _Bit) -> bool
+					[this, &Params](mint _Bit) -> bool
 					{
-						if (fp_FreeSubSlab(pSlab, _Bit))
+						if (fp_FreeSubSlab(Params.m_pSlab, _Bit))
 						{
-							bAborted = true;
+							Params.m_bAborted = true;
 							return false;
 						}
 
-						fp_SubSlabNoLongerPending(pSlab, _Bit);
+						fp_SubSlabNoLongerPending(Params.m_pSlab, _Bit);
+
+						if (Params.m_Timestamp != TCLimitsInt<int64>::mc_Max && f_IsContended(Params.m_pLocalArena))
+						{
+							Params.m_bAborted = true;
+							return false;
+						}
+
 						return true;
 					}
 				)
 			;
 
-			if (bAborted)
+			if (_Timestamp != TCLimitsInt<int64>::mc_Max && f_IsContended(_pLocalArena))
+				return 0;
+
+			if (Params.m_bAborted)
 				continue;
 
 			if constexpr (t_CParams::mc_bUseSmallSizes)

@@ -162,6 +162,7 @@ namespace NMib::NMemory
 
 				}
 				, "Memory manager cleanup"
+				, EExecutionPriority_BelowNormal
 			)
 		;
 	}

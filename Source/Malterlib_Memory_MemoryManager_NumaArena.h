@@ -108,7 +108,7 @@ namespace NMib::NMemory
 
 		int64 f_GarbageCollect(CMemoryManagerGarbageOptions const &_GarbageOptions, bool _bDecommit, bool _bForceCleanup);
 
-		bool f_ProcessArenaMessages(bool _bIncremental, bool & _oDeferred);
+		bool f_ProcessArenaMessages(bool _bIncremental, bool &o_Deferred);
 
 		void f_ArenaAvailable(TCMemoryManagerArena<t_CParams> * _pArena);
 

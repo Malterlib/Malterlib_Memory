@@ -172,7 +172,7 @@ namespace NMib::NMemory
 
 					int64 ArenaEarliestTimestamp = TCLimitsInt<int64>::mc_Max;
 
-					ArenaEarliestTimestamp = fg_Min(EarliestTimestamp, pArena->f_GarbageCollect(RequestedCleanup, _GarbageOptions.m_Timestamp));
+					ArenaEarliestTimestamp = fg_Min(EarliestTimestamp, pArena->f_GarbageCollect(RequestedCleanup, _GarbageOptions.m_Timestamp, &ThreadLocal));
 
 					if (pArena->m_bWantCleanup)
 					{
@@ -258,6 +258,13 @@ namespace NMib::NMemory
 					continue;
 				}
 
+				if (_GarbageOptions.m_TimestampDecommit != TCLimitsInt<int64>::mc_Max && m_FreeSlabsLock.f_Contended())
+				{
+					EarliestTimestamp = fg_Min(EarliestTimestamp, pFreeSlab->m_FreeTimestamp);
+					bAnotherCleanup = true;
+					break;
+				}
+
 				if constexpr (TCMemoryManagerArena<t_CParams>::mc_EnableCallbacks)
 					m_pMemoryManager->f_OnCommit(pFreeSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 
@@ -278,6 +285,14 @@ namespace NMib::NMemory
 						bAnotherCleanup = true;
 						continue;
 					}
+
+					if (_GarbageOptions.m_TimestampDecommit != TCLimitsInt<int64>::mc_Max && m_FreeSlabsLock.f_Contended())
+					{
+						EarliestTimestamp = fg_Min(EarliestTimestamp, pSlab->m_NeedDecommitTimestamp);
+						bAnotherCleanup = true;
+						break;
+					}
+
 					pSlab->f_DecommitDeferred();
 				}
 			}
@@ -295,7 +310,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManagerNumaArena<t_CParams>::f_ProcessArenaMessages(bool _bIncremental, bool & _oDeferred)
+	bool TCMemoryManagerNumaArena<t_CParams>::f_ProcessArenaMessages(bool _bIncremental, bool &o_Deferred)
 	{
 		auto &ThreadLocal = *m_pMemoryManager->m_LocalArena;
 		DMibFastCheck(ThreadLocal.m_Reentrant);
@@ -317,7 +332,7 @@ namespace NMib::NMemory
 					{
 						if (pArena->m_Locked.f_FetchOr(EArenaLockFlag_Cleanup, NAtomic::EMemoryOrder_Acquire) != EArenaLockFlag_None)
 						{
-							_oDeferred = true;
+							o_Deferred = true;
 							continue; // Just give up if this arena is already locked by someone else
 						}
 					}
@@ -328,10 +343,21 @@ namespace NMib::NMemory
 					}
 				}
 
-				if (pArena->f_ProcessMessages())
+				if (_bIncremental)
 				{
-					bProcessed = true;
-					bOneProcessed = true;
+					if (pArena->f_ProcessMessagesAbortable(o_Deferred, &ThreadLocal))
+					{
+						bProcessed = true;
+						bOneProcessed = true;
+					}
+				}
+				else
+				{
+					if (pArena->f_ProcessMessages())
+					{
+						bProcessed = true;
+						bOneProcessed = true;
+					}
 				}
 				bool bNeedCleanup = pArena->fp_CheckCleanup();
 
@@ -553,7 +579,7 @@ namespace NMib::NMemory
 		if (_bDecommit)
 		{
 			ENumaArenaCleanup RequestedCleanup = ENumaArenaCleanup_None;
-			m_pArena->f_GarbageCollect(RequestedCleanup, 0);
+			m_pArena->f_GarbageCollect(RequestedCleanup, 0, this);
 			m_pArena->f_DecommitDeferred(0);
 			if (RequestedCleanup)
 				m_pNumaArena->f_RequestCleanup(RequestedCleanup);

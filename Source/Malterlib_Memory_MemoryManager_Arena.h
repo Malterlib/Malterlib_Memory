@@ -37,10 +37,11 @@ namespace NMib::NMemory
 		TCMemoryManagerArena(TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic, ENumaNode _NumaNode, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
 		~TCMemoryManagerArena();
 
-		int64 f_GarbageCollect(ENumaArenaCleanup &_oCleanup, int64 _Timestamp);
+		int64 f_GarbageCollect(ENumaArenaCleanup &_oCleanup, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 		int64 f_DecommitDeferred(int64 _Timestamp);
 
 		bool f_ProcessMessages();
+		bool f_ProcessMessagesAbortable(bool &o_bAborted, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 		void f_AddMessage(CMessage *_pMessage, EMessageType _MessageType, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 
 		void f_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
@@ -58,6 +59,8 @@ namespace NMib::NMemory
 
 		bool f_ReturnCheckout();
 		void f_ReturnCheckoutLight();
+
+		bool f_IsContended(TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena) const;
 
 	private:
 		template <typename t_CParams2>
@@ -139,7 +142,7 @@ namespace NMib::NMemory
 		void fp_CheckSlabNoLongerGarbage(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 		void fp_SubSlabNoLongerPending(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab);
 
-		int64 fp_GarbageCollectPerform(mint _SlabType, int64 _Timestamp);
+		int64 fp_GarbageCollectPerform(mint _SlabType, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 		bool fp_GarbageCollectPerform(mint _SlabType);
 		bool fp_GarbageCollect(mint _SlabType);
 		void fp_GarbageCollectFull();
@@ -158,8 +161,9 @@ namespace NMib::NMemory
 		bool fp_CheckFree(CMemoryManagerSubSlab_NormalLink *_pLink, EMemoryManagerCheckFlag _Flags);
 
 		bool fp_ProcessMessages(CMemoryManagerSubSlab_NormalFreeList *_pFreeList);
-		bool fp_ProcessMessageList(CMemoryManagerSubSlab_NormalFreeList *_pFreeList, mint &o_MessageList);
-
+		bool fp_ProcessMessagesAbortable(bool &o_bAborted, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
+		template <bool tf_bAbortable>
+		bool fp_ProcessMessageList(CMemoryManagerSubSlab_NormalFreeList *_pFreeList, mint &o_MessageList, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 
 		void fp_CheckMessages();
 		bool fp_CheckCleanup();

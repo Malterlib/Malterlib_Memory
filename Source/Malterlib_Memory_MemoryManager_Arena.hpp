@@ -31,6 +31,15 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
+	bool TCMemoryManagerArena<t_CParams>::f_IsContended(TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena) const
+	{
+		if (_pLocalArena && this == _pLocalArena->m_pArena)
+			return false;
+
+		return (m_Locked.f_Load(NAtomic::EMemoryOrder_Relaxed) & (EArenaLockFlag_Waiting | EArenaLockFlag_Normal)) != EArenaLockFlag_None;
+	}
+
+	template <typename t_CParams>
 	bool TCMemoryManagerArena<t_CParams>::f_ReturnCheckout()
 	{
 		DMibFastCheck(m_CheckoutCount.f_Load() > 0);

@@ -37,7 +37,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessageList(CMemoryManagerSubSlab_NormalFreeList *_pFreeList, mint &o_MessageList)
+	template <bool tf_bAbortable>
+	inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessageList
+		(
+			CMemoryManagerSubSlab_NormalFreeList *_pFreeList
+			, mint &o_MessageList
+			, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena
+		)
 	{
 		mint Messages = o_MessageList;
 
@@ -99,6 +105,12 @@ namespace NMib::NMemory
 
 			Messages = NextMessage;
 
+			if constexpr (tf_bAbortable)
+			{
+				if (f_IsContended(_pLocalArena))
+					break;
+			}
+
 			if (!bFound)
 			{
 				if (!_pFreeList->f_IsEmpty())
@@ -113,6 +125,52 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
+	bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessagesAbortable(bool &o_bAborted, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
+	{
+		bool bDoneSomething = false;
+
+		for (auto &Messages : m_DeferredMessages)
+		{
+			if (Messages)
+			{
+				bDoneSomething = true;
+				fp_ProcessMessageList<true>(nullptr, Messages, _pLocalArena);
+				if (f_IsContended(_pLocalArena))
+				{
+					o_bAborted = true;
+					return bDoneSomething;
+				}
+			}
+		}
+
+		if (m_MessagesAvailable.f_Exchange(0))
+		{
+			mint iMessages = 0;
+			for (auto &Messages : m_SpreadMessages)
+			{
+				m_DeferredMessages[iMessages] = Messages.m_Messages.f_Exchange(0);
+				++iMessages;
+			}
+		}
+
+		for (auto &Messages : m_DeferredMessages)
+		{
+			if (Messages)
+			{
+				bDoneSomething = true;
+				fp_ProcessMessageList<true>(nullptr, Messages, _pLocalArena);
+				if (f_IsContended(_pLocalArena))
+				{
+					o_bAborted = true;
+					return bDoneSomething;
+				}
+			}
+		}
+
+		return bDoneSomething;
+	}
+
+	template <typename t_CParams>
 	inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessages(CMemoryManagerSubSlab_NormalFreeList *_pFreeList)
 	{
 		if (_pFreeList)
@@ -121,7 +179,7 @@ namespace NMib::NMemory
 			{
 				if (Messages)
 				{
-					if (fp_ProcessMessageList(_pFreeList, Messages))
+					if (fp_ProcessMessageList<false>(_pFreeList, Messages, nullptr))
 						return true;
 				}
 			}
@@ -137,7 +195,7 @@ namespace NMib::NMemory
 				{
 					if (Messages)
 					{
-						if (fp_ProcessMessageList(_pFreeList, Messages))
+						if (fp_ProcessMessageList<false>(_pFreeList, Messages, nullptr))
 							return true;
 					}
 				}
@@ -152,7 +210,7 @@ namespace NMib::NMemory
 			if (Messages)
 			{
 				bDoneSomething = true;
-				fp_ProcessMessageList(nullptr, Messages);
+				fp_ProcessMessageList<false>(nullptr, Messages, nullptr);
 			}
 		}
 
@@ -162,7 +220,7 @@ namespace NMib::NMemory
 			for (auto &Messages : m_SpreadMessages)
 			{
 				auto ToProcess = Messages.m_Messages.f_Exchange(0);
-				fp_ProcessMessageList(nullptr, ToProcess);
+				fp_ProcessMessageList<false>(nullptr, ToProcess, nullptr);
 			}
 		}
 
@@ -194,7 +252,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_small bool TCMemoryManagerArena<t_CParams>::fp_CheckCleanup()
 	{
-		bool bNeedCleanup = false;
+		bool bNeedCleanup = m_MessagesAvailable.f_Load(NAtomic::EMemoryOrder_Relaxed) != 0;
 		if (m_bWantCleanup)
 		{
 			m_bWantCleanup = false;
@@ -219,5 +277,11 @@ namespace NMib::NMemory
 			return fp_ProcessMessages(nullptr);
 		}
 		return false;
+	}
+
+	template <typename t_CParams>
+	inline_small bool TCMemoryManagerArena<t_CParams>::f_ProcessMessagesAbortable(bool &o_bAborted, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
+	{
+		return fp_ProcessMessagesAbortable(o_bAborted, _pLocalArena);
 	}
 }

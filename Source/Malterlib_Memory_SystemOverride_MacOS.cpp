@@ -4176,8 +4176,8 @@ extern "C"
 			else
 #endif
 				DMainHeapMax->f_LazyReturnCheckoutPrevent();
-#endif
 		}
+#endif
 
 		auto Return = g_OriginalFunctions.mach_msg(msg, option, send_size, rcv_size, rcv_name, timeout, notify);
 

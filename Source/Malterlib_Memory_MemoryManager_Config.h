@@ -114,7 +114,7 @@ namespace NMib::NMemory
 		static constexpr bool mc_bBackgroundCleanup = true;
 		static constexpr EDeferCleanup mc_DeferCleanup = (EDeferCleanup)(EDeferCleanup_Allocs | EDeferCleanup_Commit | EDeferCleanup_OneSizeBlocks);
 
-		static constexpr uint32 mc_BackgroundCleanupLifetime = 500; // The number of milleseconds that garbage should be kept before being cleaned up.
+		static constexpr uint32 mc_BackgroundCleanupLifetime = 50; // The number of milleseconds that garbage should be kept before being cleaned up.
 		static constexpr uint32 mc_BackgroundCleanupLifetimeDecommit = 10*1000; // The number of milleseconds that garbage pages should be kept before being decommitted.
 
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_None;
