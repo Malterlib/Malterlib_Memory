@@ -322,7 +322,7 @@ namespace NMib::NMemory
 			NStr::CStrNonTracked m_Name;
 			int64 m_nBytes;
 			int64 m_nAllocations;
-			COrdering_Weak operator <=> (CStatsEntry const &_Right) const
+			COrdering_Strong operator <=> (CStatsEntry const &_Right) const
 			{
 				if (auto Result = _Right.m_nBytes <=> m_nBytes; Result != 0)
 					return Result;
