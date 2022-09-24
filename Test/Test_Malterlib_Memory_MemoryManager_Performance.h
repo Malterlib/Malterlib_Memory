@@ -771,10 +771,10 @@ namespace
 		inline_small void *f_AllocAligned(mint _Size, mint _Alignment)
 		{
 #if DPlatformVersion <= 1050
+			return nullptr;
+#else
 			_Alignment = NMib::fg_Max(sizeof(void *), _Alignment);
 			return m_pMallocZone->memalign(m_pMallocZone, _Alignment, _Size);
-#else
-			return nullptr;
 #endif
 		}
 
