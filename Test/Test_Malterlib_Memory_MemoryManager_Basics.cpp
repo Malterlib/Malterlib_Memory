@@ -1105,6 +1105,7 @@ namespace
 		struct TCTestParamsNoSmallSize : public TCParams<t_PageSize, 8>
 		{
 			static constexpr bool mc_bUseSmallSizes = false;
+			static constexpr bool mc_bUseFreeBlockCounting = true;
 		};
 
 		void f_DoTests()

@@ -128,8 +128,8 @@ namespace NMib::NMemory
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_None;
 		static constexpr bool mc_bFullGarbageCollect  = false;
 		static constexpr bool mc_bUseSmallSizes = true;
-		static constexpr bool mc_bSpecialCaseSlabType0 = true;
-		static constexpr bool mc_bUseFreeBlockCounting = true;
+		static constexpr bool mc_bSpecialCaseSlabType0 = false;
+		static constexpr bool mc_bUseFreeBlockCounting = false;
 #ifdef DMibSanitizerEnabled_UndefinedBehavior
 		static constexpr bool mc_bAllowUnalignedFreeList = false;
 #else
