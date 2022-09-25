@@ -75,9 +75,9 @@ namespace NMib::NMemory
 	struct CMemoryManagerConfig
 	{
 #if DMibPPtrBits >= 64
-		mint m_nMaxArenas = TCLimitsInt<mint>::mc_Max;
+		uint32 m_nMaxArenas = 0;
 #elif DMibPPtrBits == 32
-		mint m_nMaxArenas = 8;
+		uint32 m_nMaxArenas = 8;
 #else
 #	error "Decide max arenas"
 #endif
@@ -95,6 +95,7 @@ namespace NMib::NMemory
 		~TCMemoryManager();
 
 		TCMemoryManagerCheckout<t_CParams> f_Checkout();
+		TCMemoryManagerCheckout<t_CParams> f_CheckoutForce();
 		CMemoryManagerCheckout f_CheckoutVirtual();
 		void f_CheckoutManual();
 		void f_CheckinManual();
@@ -159,8 +160,6 @@ namespace NMib::NMemory
 
 		void f_DestroyThreadLocals();
 
-		void f_SetMaxArenas(mint _nArenas);
-
 #if DMibConfig_Memory_CustomThreadLocal
 		void *f_GetCustomThreadLocal(mint _Index);
 		void *f_SetCustomThreadLocal(mint _Index, void *_pCustom);
@@ -183,8 +182,6 @@ namespace NMib::NMemory
 
 		TCMemoryManagerArena<t_CParams> *fp_CheckoutHelper(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal);
 		TCMemoryManagerArena<t_CParams> *fp_CheckoutHelperSlowPath(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal);
-		TCMemoryManagerArena<t_CParams> *fp_CheckoutHelperWaitForCleanup(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal);
-		TCMemoryManagerArena<t_CParams> *fp_CheckoutHelperWaitUnlock(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal);
 
 		TCMemoryManagerCheckoutLight<t_CParams> fp_Checkout(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal);
 
@@ -242,16 +239,15 @@ namespace NMib::NMemory
 
 		typename t_CParams::CAllocator m_Allocator;
 
-		mutable align_cacheline NThread::CMutual m_NumaArenasLock;
+		mutable align_cacheline NThread::CLowLevelLock m_NumaArenasLock;
 		NIntrusive::TCAVLTree<&TCMemoryManagerNumaArena<t_CParams>::m_Link, typename TCMemoryManagerNumaArena<t_CParams>::CCompare> m_NumaArenas;
 
-		align_cacheline NMib::NThread::CMutual m_nArenasLock;
-		mint m_nMaxArenas;
-		NAtomic::TCAtomic<mint> m_nArenas;
-
+		uint32 m_nMaxArenas;
+		bool m_bCanDoLazyCheckout = false;
+		bool m_bThreadLocalsDestroyed = false;
 		uint64 m_Magic;
 
-		TCPool<CLocalNumaNode, 8, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_LocalNumaNodePool;
+		TCPool<CLocalNumaNode, 8, NThread::CLowLevelLock, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_LocalNumaNodePool;
 
 		NThread::TCThreadLocalDynamic
 			<
@@ -269,8 +265,5 @@ namespace NMib::NMemory
 
 		mutable NThread::CMutualManyRead m_HeapChunksLock;
 		NContainer::TCMap<uint8 *, TCMemoryManagerArenaHeapChunk<t_CParams>, NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_HeapChunks;
-
-		bool m_bCanDoLazyCheckout = false;
-		bool m_bThreadLocalsDestroyed = false;
 	};
 }

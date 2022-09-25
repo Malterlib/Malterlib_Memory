@@ -211,7 +211,6 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_PrepareFork()
 	{
-		mp_GarbageCollectLock.f_PrepareFork();
 		if (mp_pThread)
 			mp_pThread->f_PrepareFork();
 	}
@@ -225,7 +224,7 @@ namespace NMib::NMemory
 			mp_pThread->f_ForkedChild();
 			mp_pThread.f_Clear();
 		}
-		mp_GarbageCollectLock.f_ForkedChild();
+		mp_GarbageCollectLock.f_ForkedChildLocked();
 		mp_bStarted = false;
 	}
 
@@ -234,8 +233,6 @@ namespace NMib::NMemory
 	{
 		if (mp_pThread)
 			mp_pThread->f_ForkedParent();
-
-		mp_GarbageCollectLock.f_ForkedParent();
 
 #if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_macOS)
 		if (mp_bStarted && !mp_pThread)

@@ -452,7 +452,7 @@ namespace
 					TCMemoryManagerTracked<TCMemoryManager<CParamsNoCleanup>> MemoryManager("Test", CMemoryManagerConfig());
 					MemoryManager.f_ForceStartCleanupThreads();
 					mint LastAlloc = 0;
-					auto Checkout = MemoryManager.f_Checkout();
+					auto Checkout = MemoryManager.f_CheckoutForce();
 					for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 					{
 						mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
@@ -504,7 +504,7 @@ namespace
 					TCMemoryManagerTracked<TCMemoryManager<CParamsNoCleanup>> MemoryManager("Test", CMemoryManagerConfig());
 					MemoryManager.f_ForceStartCleanupThreads();
 					mint LastAlloc = 0;
-					auto Checkout = MemoryManager.f_Checkout();
+					auto Checkout = MemoryManager.f_CheckoutForce();
 					for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 					{
 						mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
@@ -558,7 +558,7 @@ namespace
 			DMibTestSuite("Big allocs")
 			{
 				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
-				auto Checkout = MemoryManager.f_Checkout();
+				auto Checkout = MemoryManager.f_CheckoutForce();
 				mint LastAlloc = 0;
 				for (mint MemorySize = CParamsNoCleanup::mc_MaxSlabAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_SlabSize * 4; MemorySize *= 2)
 				{
@@ -592,7 +592,7 @@ namespace
 						mint nAlloc = (CParamsNoCleanup::mc_MaxSubSlabMultipliedSize * 3) / AllocSize;
 
 						TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
-						auto Checkout = MemoryManager.f_Checkout();
+						auto Checkout = MemoryManager.f_CheckoutForce();
 						NMib::NContainer::TCVector<void *> Allocs;
 						Allocs.f_SetLen(nAlloc);
 						for (mint i = 0; i < nAlloc; ++i)
@@ -625,7 +625,7 @@ namespace
 						DMibTestPath(NMib::NStr::CStr::CFormat("{}") << AllocSize);
 
 						TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
-						auto Checkout = MemoryManager.f_Checkout();
+						auto Checkout = MemoryManager.f_CheckoutForce();
 						mint nAlloc = (CParamsNoCleanup::mc_SlabSize * 4) / MemorySize;
 						NMib::NContainer::TCVector<void *> Allocs;
 						Allocs.f_SetLen(nAlloc);
@@ -648,7 +648,7 @@ namespace
 				mint LastAlloc = 0;
 				mint LastAlignment = 1;
 				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
-				auto Checkout = MemoryManager.f_Checkout();
+				auto Checkout = MemoryManager.f_CheckoutForce();
 				uint8 * pLast = nullptr;
 				for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxHeapAllocSize * 2; ++MemorySize)
 				{
@@ -680,7 +680,7 @@ namespace
 
 				{
 					DMibTestPath("Alloc1");
-					auto Checkout = MemoryManager.f_Checkout();
+					auto Checkout = MemoryManager.f_CheckoutForce();
 					mint nAllocs = (SlabSize / 2) / 256;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
 
@@ -714,7 +714,7 @@ namespace
 				[[maybe_unused]] mint PreviousWaste;
 				{
 					DMibTestPath("Alloc2");
-					auto Checkout = MemoryManager.f_Checkout();
+					auto Checkout = MemoryManager.f_CheckoutForce();
 					mint nAllocs = (SlabSize / 2) / 384;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
 
@@ -755,7 +755,7 @@ namespace
 				MemoryManager.f_GarbageCollect(false);
 				{
 					DMibTestPath("Alloc3");
-					auto Checkout = MemoryManager.f_Checkout();
+					auto Checkout = MemoryManager.f_CheckoutForce();
 					mint nAllocs = (SlabSize / 2) / 256;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
 
@@ -789,7 +789,7 @@ namespace
 				MemoryManager.f_GarbageCollect(false);
 				{
 					DMibTestPath("Alloc4");
-					auto Checkout = MemoryManager.f_Checkout();
+					auto Checkout = MemoryManager.f_CheckoutForce();
 					mint AllocSize = 256 + (258/8)*3;
 					mint nAllocs = (SlabSize / 2) / AllocSize;
 					mint nAllocBytes = nAllocs * AllocSize;
@@ -1018,7 +1018,7 @@ namespace
 										NMib::NContainer::TCVector<CAlloc> Allocs;
 										NMib::NContainer::TCVector<CAlloc> BigAllocs;
 										NMib::NContainer::TCVector<CAlloc> HugeAllocs;
-										auto Checkout = MemoryManager.f_Checkout();
+										auto Checkout = MemoryManager.f_CheckoutForce();
 										mint LastAlloc = 0;
 										for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 										{
@@ -1079,7 +1079,7 @@ namespace
 				{
 					{
 						// Do a checkout to precache the thread local, so this does not get measured.
-						MemoryManager.f_Checkout();
+						MemoryManager.f_CheckoutForce();
 					}
 					CTestMemoryMeasure MeasureMemory("Alloc");
 					MeasureMemory.f_Start();

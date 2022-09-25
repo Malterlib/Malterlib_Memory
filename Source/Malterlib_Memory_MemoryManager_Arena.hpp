@@ -13,14 +13,22 @@
 namespace NMib::NMemory
 {
 	template <typename t_CParams>
-	TCMemoryManagerArena<t_CParams>::TCMemoryManagerArena(TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic, ENumaNode _NumaNode, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena)
+	TCMemoryManagerArena<t_CParams>::TCMemoryManagerArena
+		(
+			TCMemoryManager<t_CParams> *_pMemoryManager
+			, uint64 _Magic
+			, ENumaNode _NumaNode
+			, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena
+			, bool _bLimitedArenas
+		)
 		: t_CParams::CNotifier::CArena(_pMemoryManager)
 		, m_pMemoryManager(_pMemoryManager)
 		, m_Magic(_Magic)
 		, m_NumaNode(_NumaNode)
 		, m_pNumaArena(_pNumaArena)
+		, m_bLimitedArenas(_bLimitedArenas)
 	{
-		DMibFastCheck((uint8 *)&m_Locked == fg_AlignUp((uint8 *)&m_Locked, mint(DMibPMemoryCacheLineSize)));
+		DMibFastCheck((uint8 *)&m_Lock == fg_AlignUp((uint8 *)&m_Lock, mint(DMibPMemoryCacheLineSize)));
 		DMibFastCheck((uint8 *)&m_MessagesAvailable == fg_AlignUp((uint8 *)&m_MessagesAvailable, mint(DMibPMemoryCacheLineSize)));
 	}
 
@@ -33,10 +41,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	bool TCMemoryManagerArena<t_CParams>::f_IsContended(TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena) const
 	{
-		if (_pLocalArena && this == _pLocalArena->m_pArena)
-			return false;
-
-		return (m_Locked.f_Load(NAtomic::EMemoryOrder_Relaxed) & (EArenaLockFlag_Waiting | EArenaLockFlag_Normal)) != EArenaLockFlag_None;
+		return m_LockContended.f_Load(NAtomic::EMemoryOrder_Relaxed) > 0;
 	}
 
 	template <typename t_CParams>
@@ -47,14 +52,20 @@ namespace NMib::NMemory
 		{
 //			fp_CheckMessages();
 			bool bNeedCleanup = fp_CheckCleanup();
-			auto LockResult = m_Locked.f_Exchange(EArenaLockFlag_None, NAtomic::EMemoryOrder_Release);
-			if (LockResult & EArenaLockFlag_Waiting)
-				m_pNumaArena->f_ArenaAvailable(this);
-			if ((LockResult & EArenaLockFlag_Cleanup) || bNeedCleanup)
+			m_Lock.f_UnlockNoSanitize();
+
+			if (bNeedCleanup)
 				m_pNumaArena->f_OnNeedCleanup();
+
 			return true;
 		}
 		return false;
+	}
+
+	template <typename t_CParams>
+	void TCMemoryManagerArena<t_CParams>::f_ForkedChild()
+	{
+		m_Lock.f_ForkedChildLocked();
 	}
 
 	template <typename t_CParams>
@@ -65,10 +76,10 @@ namespace NMib::NMemory
 //		fp_CheckMessages();
 		if (m_bWantCleanup)
 			bNeedCleanup = fp_CheckCleanup();
-		auto LockResult = m_Locked.f_Exchange(EArenaLockFlag_None, NAtomic::EMemoryOrder_Release);
-		if (LockResult & EArenaLockFlag_Waiting)
-			m_pNumaArena->f_ArenaAvailable(this);
-		if ((LockResult & EArenaLockFlag_Cleanup) || bNeedCleanup)
+
+		m_Lock.f_UnlockNoSanitize();
+
+		if (bNeedCleanup)
 			m_pNumaArena->f_OnNeedCleanup();
 	}
 

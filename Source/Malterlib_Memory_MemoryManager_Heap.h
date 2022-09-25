@@ -86,7 +86,7 @@ namespace NMib::NMemory
 		template <typename t_CParams2>
 		friend class TCMemoryManagerArenaHeapChunk;
 
-		align_cacheline mutable NThread::CMutual m_Lock;
+		align_cacheline mutable NThread::CLowLevelLock m_Lock;
 
 		TCMemoryManager<t_CParams> *m_pMemoryManager;
 		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;

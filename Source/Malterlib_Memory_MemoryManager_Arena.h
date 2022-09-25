@@ -22,19 +22,11 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct TCMemoryManagerNumaArena;
 
-	enum EArenaLockFlag
-	{
-		EArenaLockFlag_None
-		, EArenaLockFlag_Normal = DMibBit(0)
-		, EArenaLockFlag_Cleanup = DMibBit(1)
-		, EArenaLockFlag_Waiting = DMibBit(2)
-	};
-
 	template <typename t_CParams>
 	struct align_cacheline TCMemoryManagerArena : public t_CParams::CNotifier::CArena
 	{
 	public:
-		TCMemoryManagerArena(TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic, ENumaNode _NumaNode, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
+		TCMemoryManagerArena(TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic, ENumaNode _NumaNode, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena, bool _bLimitedArenas);
 		~TCMemoryManagerArena();
 
 		int64 f_GarbageCollect(ENumaArenaCleanup &_oCleanup, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
@@ -59,6 +51,8 @@ namespace NMib::NMemory
 
 		bool f_ReturnCheckout();
 		void f_ReturnCheckoutLight();
+
+		void f_ForkedChild();
 
 		bool f_IsContended(TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena) const;
 
@@ -100,6 +94,7 @@ namespace NMib::NMemory
 		// Links need to be public
 		DMibMemoryManagerLink(TCMemoryManagerArena, m_NumaArenaLink);
 		DMibMemoryManagerLink(TCMemoryManagerArena, m_Link);
+		DMibMemoryManagerLink(TCMemoryManagerArena, m_FreeArenasLink);
 		DMibMemoryManagerLink(TCMemoryManagerArena, m_CleanupLink);
 	private:
 
@@ -256,9 +251,8 @@ namespace NMib::NMemory
 #endif
 		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkNeedDecommit) m_SlabsNeedingDecommit;
 
-
-		align_cacheline NAtomic::TCAtomic<mint> m_pNextArena = 0;
-		align_cacheline NAtomic::TCAtomic<mint> m_Locked = EArenaLockFlag_None;
+		align_cacheline NThread::CLowLevelLock m_Lock;
+		align_cacheline NAtomic::TCAtomic<mint> m_LockContended;
 		align_cacheline NAtomic::TCAtomic<mint> m_MessagesAvailable = 0;
 		struct CSpreadMessage
 		{
@@ -279,11 +273,12 @@ namespace NMib::NMemory
 
 		TCMemoryManager<t_CParams> *m_pMemoryManager;
 		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
-		TCMemoryManagerThreadLocal<t_CParams> *m_pOwningThreadLocal = nullptr;
 		ENumaNode m_NumaNode;
+		uint8 m_iLimitedArena = 0;
 
 		bool m_bWantCleanup = false;
 		bool m_bRequestedCleanup = false;
 		bool m_bWantNumaFreeSlabsCleanup = false;
+		bool m_bLimitedArenas = false;
 	};
 }

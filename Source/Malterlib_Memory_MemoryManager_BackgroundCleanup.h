@@ -38,7 +38,7 @@ namespace NMib::NMemory
 		NTime::CCyclesClock mp_Clock;
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bStarted;
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bWaiting;
-		NMib::NThread::CMutual mp_GarbageCollectLock;
+		NMib::NThread::CLowLevelLock mp_GarbageCollectLock;
 
 		NStorage::TCUniquePointer<NThread::CThreadObjectNonTracked, NMemory::CAllocator_NonTrackedHeap> mp_pThread;
 	};

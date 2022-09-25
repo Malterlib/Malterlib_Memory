@@ -67,7 +67,7 @@ namespace
 				{
 					TCMemoryManagerTracked<TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions>> MemoryManager{"Test", CMemoryManagerConfig()};
 					mint LastAlloc = 0;
-					auto Checkout = MemoryManager.f_Checkout();
+					auto Checkout = MemoryManager.f_CheckoutForce();
 					for (mint MemorySize = 1; MemorySize <= TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>::mc_MaxSlabAllocSize; ++MemorySize)
 					{
 						mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
@@ -167,7 +167,7 @@ namespace
 			DMibTestSuite("Double free")
 			{
 				TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptionsWithoutGuard> MemoryManager{CMemoryManagerConfig()};
-				auto Checkout = MemoryManager.f_Checkout();
+				auto Checkout = MemoryManager.f_CheckoutForce();
 				
 				auto DoubleFreeException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Double free");
 				{
@@ -211,7 +211,7 @@ namespace
 				DMibTestSuite("Freed")
 				{
 					TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptionsWithoutGuard> MemoryManager{CMemoryManagerConfig()};
-					auto Checkout = MemoryManager.f_Checkout();
+					auto Checkout = MemoryManager.f_CheckoutForce();
 					
 					auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after being freed");
 					mint Size = 4;
@@ -246,7 +246,7 @@ namespace
 							{
 								f_Dummy();
 								TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
-								auto Checkout = MemoryManager.f_Checkout();
+								auto Checkout = MemoryManager.f_CheckoutForce();
 								
 								auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after being freed");
 								mint Size = _Size;
@@ -269,7 +269,7 @@ namespace
 						DMibTestSuite("Pre block")
 						{
 							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
-							auto Checkout = MemoryManager.f_Checkout();
+							auto Checkout = MemoryManager.f_CheckoutForce();
 							
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
@@ -289,7 +289,7 @@ namespace
 						DMibTestSuite("Post block")
 						{
 							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
-							auto Checkout = MemoryManager.f_Checkout();
+							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocWithSize(Size);
@@ -308,7 +308,7 @@ namespace
 						DMibTestSuite("Pre block aligned")
 						{
 							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
-							auto Checkout = MemoryManager.f_Checkout();
+							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
@@ -329,7 +329,7 @@ namespace
 						DMibTestSuite("Post block alligned")
 						{
 							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
-							auto Checkout = MemoryManager.f_Checkout();
+							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
@@ -350,7 +350,7 @@ namespace
 						DMibTestSuite("Pre block realloc")
 						{
 							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
-							auto Checkout = MemoryManager.f_Checkout();
+							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
@@ -407,7 +407,7 @@ namespace
 						DMibTestSuite("Post block realloc")
 						{
 							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
-							auto Checkout = MemoryManager.f_Checkout();
+							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
@@ -466,7 +466,7 @@ namespace
 						DMibTestSuite("Pre block resize")
 						{
 							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
-							auto Checkout = MemoryManager.f_Checkout();
+							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);
@@ -522,7 +522,7 @@ namespace
 						DMibTestSuite("Post block resize")
 						{
 							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
-							auto Checkout = MemoryManager.f_Checkout();
+							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
 							uint8 *pMemory = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, _Size * 4);

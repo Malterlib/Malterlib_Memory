@@ -22,13 +22,13 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct align_cacheline TCMemoryManagerThreadLocal
 	{
-		TCMemoryManagerArena<t_CParams> *m_pArena;
+		TCMemoryManagerArena<t_CParams> *m_pArena = nullptr;
 		mint m_Reentrant = 0;
-		TCMemoryManagerArena<t_CParams> *m_pPreferredArena;
-		mint m_TemporaryReturnCheckoutCount;
+		TCMemoryManagerArena<t_CParams> *m_pPreferredArena = nullptr;
+		mint m_TemporaryReturnCheckoutCount = 0;
 		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
 		bool m_bLazyCheckout = false;
-		bool m_bOwnArena = false;
+		bool m_bLimited = false;
 #if DMibEnableSafeCheck > 0
 		bool m_bInLightCheckout = false;
 #endif
@@ -40,8 +40,7 @@ namespace NMib::NMemory
 		TCAutoClear<void *> m_pCustom[DMibConfig_Memory_CustomThreadLocal];
 #endif
 		uint32 m_RandomIndex = 0;
-
-		TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal const& _Other);
+		NMisc::CRandomShiftRNG m_LimitedRandom;
 
 		struct CRentrantScope
 		{
@@ -57,12 +56,14 @@ namespace NMib::NMemory
 		};
 
 	public:
-		TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal && _Other, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
+		TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal const &_Other) = delete;
+		TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal &&_Other, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
 		TCMemoryManagerThreadLocal(TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
 		~TCMemoryManagerThreadLocal();
 
 		CRentrantScope f_Reentrant();
 
+		void f_ForkedChild();
 		void f_ReturnCheckout();
 		void f_ReturnCheckoutLight();
 		void f_TemporaryReturn();
@@ -81,20 +82,18 @@ namespace NMib::NMemory
 	struct align_cacheline TCMemoryManagerNumaArena
 	{
 	public:
-
-		class CCompare
+		struct CCompare
 		{
-		public:
 			inline_small ENumaNode operator () (TCMemoryManagerNumaArena const &_Node) const
 			{
 				return _Node.m_NumaNode;
 			}
-		 };
+		};
+
 		NIntrusive::TCAVLLink<> m_Link;
 
 	public:
-
-		TCMemoryManagerNumaArena(ENumaNode _NumaNode, TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic);
+		TCMemoryManagerNumaArena(ENumaNode _NumaNode, TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic, bool _bLimitedArenas);
 		~TCMemoryManagerNumaArena();
 
 		TCMemoryManagerArena<t_CParams> *f_NewArena();
@@ -109,8 +108,6 @@ namespace NMib::NMemory
 		int64 f_GarbageCollect(CMemoryManagerGarbageOptions const &_GarbageOptions, bool _bDecommit, bool _bForceCleanup);
 
 		bool f_ProcessArenaMessages(bool _bIncremental, bool &o_Deferred);
-
-		void f_ArenaAvailable(TCMemoryManagerArena<t_CParams> * _pArena);
 
 		void f_CanStartThreads();
 		void f_ForceStartCleanupThread();
@@ -135,24 +132,25 @@ namespace NMib::NMemory
 		friend struct TCMemoryManagerThreadLocal;
 
 	private:
-		TCPool<TCMemoryManagerArena<t_CParams>, 16, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_Pool;
-		TCPool<TCMemoryManagerThreadLocal<t_CParams>, 128, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_PoolThreadLocal;
+		TCPool<TCMemoryManagerArena<t_CParams>, 16, NThread::CLowLevelLock, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_Pool;
+		TCPool<TCMemoryManagerThreadLocal<t_CParams>, 128, NThread::CLowLevelLock, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_PoolThreadLocal;
 		TCMemoryManager<t_CParams> *m_pMemoryManager;
 
 		TCMemoryManagerArenaHeap<t_CParams> m_Heap;
 
-		align_cacheline NMib::NThread::CMutual m_ArenasLock;
+		align_cacheline NMib::NThread::CLowLevelLock m_ArenasLock;
 		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArena<t_CParams>, m_NumaArenaLink) m_Arenas;
-		mint m_nArenas;
 
-		align_cacheline NMib::NThread::CMutual m_ArenasNeedCleanupLock;
+		align_cacheline NMib::NThread::CLowLevelLock m_FreeArenasLock;
+		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArena<t_CParams>, m_FreeArenasLink) m_FreeArenas;
+
+		align_cacheline NMib::NThread::CLowLevelLock m_ArenasNeedCleanupLock;
 		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArena<t_CParams>, m_CleanupLink) m_ArenasNeedCleanup;
 
-		align_cacheline NAtomic::TCAtomic<TCMemoryManagerArena<t_CParams> *> m_pFirstArena;
+		align_cacheline NMib::NThread::CLowLevelLock m_LimitedArenasCreateLock;
+		NAtomic::TCAtomic<TCMemoryManagerArena<t_CParams> *> m_LimitedArenas[t_CParams::mc_MaxArenas] = {};
 
-		NThread::CEventAutoReset m_ArenaAvailableEvent;
-
-		align_cacheline NMib::NThread::CMutual m_FreeSlabsLock;
+		align_cacheline NMib::NThread::CLowLevelContendedLock m_FreeSlabsLock;
 		DMibListLinkDS_List_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) m_FreeSlabs;
 		DMibListLinkDS_List_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkNeedDecommit) m_FreeSlabsNeedingDecommit;
 
@@ -163,7 +161,8 @@ namespace NMib::NMemory
 
 		uint64 m_Magic;
 		ENumaNode m_NumaNode;
-		align_cacheline NAtomic::TCAtomic<uint32> m_RequestedCleanup;
+		bool m_bLimitedArenas;
 
+		align_cacheline NAtomic::TCAtomic<uint32> m_RequestedCleanup;
 	};
 }

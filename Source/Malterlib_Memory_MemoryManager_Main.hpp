@@ -10,8 +10,7 @@ namespace NMib::NMemory
 	TCMemoryManager<t_CParams>::TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator &&..._Params)
 		: t_CParams::CNotifier::CGlobal(*this)
 		, m_Magic(_Config.m_Magic)
-		, m_nMaxArenas(_Config.m_nMaxArenas)
-		, m_nArenas(0)
+		, m_nMaxArenas(fg_Min(fg_RoundPowerOfTwoUp(_Config.m_nMaxArenas), t_CParams::mc_MaxArenas))
 		, m_HeapChunks(NMemory::CAllocatorConstructTag(), this)
 		, m_Allocator(fg_Forward<tfp_CAllocator>(_Params)...)
 		, m_LocalArena
@@ -30,7 +29,7 @@ namespace NMib::NMemory
 					{
 						pNumaArena =
 							new(m_Allocator.f_Alloc(sizeof(TCMemoryManagerNumaArena<t_CParams>), EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags, NumaNode))
-							TCMemoryManagerNumaArena<t_CParams>(NumaNode, this, m_Magic)
+							TCMemoryManagerNumaArena<t_CParams>(NumaNode, this, m_Magic, m_nMaxArenas != 0)
 						;
 						m_NumaArenas.f_Insert(pNumaArena);
 					}
@@ -102,14 +101,8 @@ namespace NMib::NMemory
 			}
 		)
 	{
+		static_assert(fg_RoundPowerOfTwoUp(t_CParams::mc_MaxArenas) == t_CParams::mc_MaxArenas);
 		ICMemoryManagerReturnCheckout::m_Version = ECMemoryManagerReturnCheckoutVersion;
-	}
-
-	template <typename t_CParams>
-	void TCMemoryManager<t_CParams>::f_SetMaxArenas(mint _nArenas)
-	{
-		DMibLock(m_nArenasLock);
-		m_nMaxArenas = _nArenas;
 	}
 
 #if DMibConfig_Memory_Shims_Lightweight
@@ -252,8 +245,6 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::fp_ProcessArenaMessages()
 	{
-		DMibFastCheck(m_NumaArenasLock.f_OwnsLock());
-
 		auto &ThreadLocal = *m_LocalArena;
 		auto ReentrantScope = ThreadLocal.f_Reentrant();
 
@@ -291,21 +282,12 @@ namespace NMib::NMemory
 				++iArena;
 				DMibUnlock(iNumaArena->m_ArenasLock);
 				if (pArena != ThreadLocal.m_pArena)
-				{
-					while (pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire) != EArenaLockFlag_None)
-						NSys::fg_Thread_SmallestSleep();
-				}
+					pArena->m_Lock.f_LockNoSanitize();
 
 				_Functor(pArena);
 
 				if (pArena != ThreadLocal.m_pArena)
-				{
-					auto LockResult = pArena->m_Locked.f_Exchange(EArenaLockFlag_None, NAtomic::EMemoryOrder_Release);
-					if (LockResult & EArenaLockFlag_Waiting)
-						iNumaArena->f_ArenaAvailable(pArena);
-					if (LockResult & EArenaLockFlag_Cleanup)
-						iNumaArena->f_OnNeedCleanup();
-				}
+					pArena->m_Lock.f_UnlockNoSanitize();
 			}
 		}
 	}
@@ -754,29 +736,26 @@ namespace NMib::NMemory
 	void TCMemoryManager<t_CParams>::f_PrepareFork()
 	{
 		m_HeapChunksLock.f_PrepareFork();
-		m_NumaArenasLock.f_PrepareFork();
 		for (auto &Arena : m_NumaArenas)
-		{
-			Arena.m_ArenasLock.f_PrepareFork();
-			Arena.m_FreeSlabsLock.f_PrepareFork();
-			Arena.m_Pool.f_PrepareFork();
-			Arena.m_PoolThreadLocal.f_PrepareFork();
 			Arena.m_BackgroundCleanup.f_PrepareFork();
-		}
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_ForkedChild()
 	{
+		auto &ThreadLocal = *m_LocalArena;
+		DMibFastCheck(ThreadLocal.m_pArena);
+		ThreadLocal.f_ForkedChild();
+
 		for (auto &Arena : m_NumaArenas)
 		{
 			Arena.m_BackgroundCleanup.f_ForkedChild();;
-			Arena.m_PoolThreadLocal.f_ForkedChild();
-			Arena.m_Pool.f_ForkedChild();
-			Arena.m_FreeSlabsLock.f_ForkedChild();
-			Arena.m_ArenasLock.f_ForkedChild();
+			Arena.m_PoolThreadLocal.f_ForkedChildLocked();
+			Arena.m_Pool.f_ForkedChildLocked();
+			Arena.m_FreeSlabsLock.f_ForkedChildLocked();
+			Arena.m_ArenasLock.f_ForkedChildLocked();
 		}
-		m_NumaArenasLock.f_ForkedChild();
+		m_NumaArenasLock.f_ForkedChildLocked();
 		m_HeapChunksLock.f_ForkedChild();
 	}
 
@@ -784,14 +763,7 @@ namespace NMib::NMemory
 	void TCMemoryManager<t_CParams>::f_ForkedParent()
 	{
 		for (auto &Arena : m_NumaArenas)
-		{
 			Arena.m_BackgroundCleanup.f_ForkedParent();
-			Arena.m_PoolThreadLocal.f_ForkedParent();
-			Arena.m_Pool.f_ForkedParent();
-			Arena.m_FreeSlabsLock.f_ForkedParent();
-			Arena.m_ArenasLock.f_ForkedParent();
-		}
-		m_NumaArenasLock.f_ForkedParent();
 		m_HeapChunksLock.f_ForkedParent();
 	}
 
@@ -1255,163 +1227,101 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never TCMemoryManagerArena<t_CParams> *TCMemoryManager<t_CParams>::fp_CheckoutHelperWaitForCleanup(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal)
-	{
-		NThread::CThreadSpinWaiter SpinWaiter;
-		while (true)
-		{
-			auto pArena = _ThreadLocal.m_pPreferredArena;
-			auto CheckoutResult = pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire);
-			if (CheckoutResult == EArenaLockFlag_None)
-			{
-				if (pArena->m_pOwningThreadLocal && pArena->m_pOwningThreadLocal != &_ThreadLocal)
-				{
-					pArena->f_ReturnCheckoutLight();
-					_ThreadLocal.m_pPreferredArena = nullptr;
-					return fp_CheckoutHelperSlowPath(_ThreadLocal);
-				}
-
-				_ThreadLocal.m_pArena = pArena;
-				return pArena;
-			}
-			else if (!_ThreadLocal.m_bOwnArena && pArena->m_CheckoutCount.f_Load(NAtomic::EMemoryOrder_Relaxed) > 0) // Another checkout got inbetween
-				return fp_CheckoutHelperSlowPath(_ThreadLocal);
-
-			SpinWaiter.f_Wait();
-		}
-	}
-
-	template <typename t_CParams>
 	inline_always TCMemoryManagerArena<t_CParams> *TCMemoryManager<t_CParams>::fp_CheckoutHelper(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal)
 	{
 		DMibFastCheck(!_ThreadLocal.m_pArena);
 		auto pArena = _ThreadLocal.m_pPreferredArena;
-		if (pArena)
+		if (pArena) [[likely]]
 		{
-			auto CheckoutResult = pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire);
-			if (CheckoutResult == EArenaLockFlag_None)
+			if (!pArena->m_Lock.f_TryLockNoSanitize()) [[unlikely]]
 			{
-				if (pArena->m_pOwningThreadLocal && pArena->m_pOwningThreadLocal != &_ThreadLocal)
-				{
-					pArena->f_ReturnCheckoutLight();
-					_ThreadLocal.m_pPreferredArena = nullptr;
+				if (m_nMaxArenas) [[unlikely]]
 					return fp_CheckoutHelperSlowPath(_ThreadLocal);
-				}
-				_ThreadLocal.m_pArena = pArena;
-				return pArena;
-			}
-			else if (CheckoutResult == EArenaLockFlag_Cleanup || _ThreadLocal.m_bOwnArena)
-				return fp_CheckoutHelperWaitForCleanup(_ThreadLocal);
-		}
-		return fp_CheckoutHelperSlowPath(_ThreadLocal);
-	}
-
-	template <typename t_CParams>
-	inline_never TCMemoryManagerArena<t_CParams> *TCMemoryManager<t_CParams>::fp_CheckoutHelperWaitUnlock(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal)
-	{
-		auto pNumaArena = _ThreadLocal.m_pNumaArena;
-
-		while (true)
-		{
-			TCMemoryManagerArena<t_CParams> *pArena;
-			pArena = pNumaArena->m_pFirstArena.f_Load();
-			while (pArena)
-			{
-				mint NextArena = pArena->m_pNextArena.f_Load(NAtomic::EMemoryOrder_Acquire);
-				if ((!(NextArena & 1)) && pArena->m_Locked.f_FetchOr(EArenaLockFlag_Waiting, NAtomic::EMemoryOrder_Acquire) == EArenaLockFlag_None)
+				else
 				{
-					if (pArena->m_pOwningThreadLocal && pArena->m_pOwningThreadLocal != &_ThreadLocal)
-						pArena->f_ReturnCheckoutLight();
-					else
-					{
-						_ThreadLocal.m_pArena = pArena;
-						return pArena;
-					}
+					++pArena->m_LockContended;
+					pArena->m_Lock.f_LockNoSanitize();
+					--pArena->m_LockContended;
 				}
-
-				pArena = (TCMemoryManagerArena<t_CParams> *)(NextArena & mint(~mint(1)));
 			}
 
-			pNumaArena->m_ArenaAvailableEvent.f_Wait();
+			_ThreadLocal.m_pArena = pArena;
+			return pArena;
 		}
+
+		return fp_CheckoutHelperSlowPath(_ThreadLocal);
 	}
 
 	template <typename t_CParams>
 	inline_never TCMemoryManagerArena<t_CParams> *TCMemoryManager<t_CParams>::fp_CheckoutHelperSlowPath(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal)
 	{
-		do
+		auto pNumaArena = _ThreadLocal.m_pNumaArena;
+
+		if (m_nMaxArenas == 0)
 		{
-			TCMemoryManagerArena<t_CParams> *pArena;
+			auto pArena = pNumaArena->f_NewArena();
+			_ThreadLocal.m_pArena = pArena;
+			_ThreadLocal.m_pPreferredArena = pArena;
+			return pArena;
+		}
 
-			auto pNumaArena = _ThreadLocal.m_pNumaArena;
-
-			for (mint i = 0; i < 2; ++i)
+		if (_ThreadLocal.m_pPreferredArena) [[likely]]
+		{
+			mint iLimitedArena = _ThreadLocal.m_pPreferredArena->m_iLimitedArena;
+			auto &LimitedArena = pNumaArena->m_LimitedArenas[iLimitedArena];
+			auto *pArena = LimitedArena.f_Load(NAtomic::EMemoryOrder_Relaxed);
+			if (pArena->m_Lock.f_TryLockNoSanitize()) [[likely]]
 			{
-				mint nArenas = m_nArenas.f_Load(NAtomic::EMemoryOrder_Relaxed); // This is racy, so we can get > 0 arenas while pArena is still nullptr
-				pArena = _ThreadLocal.m_pPreferredArena;
-				if (!pArena)
-					pArena = pNumaArena->m_pFirstArena.f_Load();
-
-				for (mint i = 0; i < nArenas && pArena; ++i)
-				{
-					mint NextArena = pArena->m_pNextArena.f_Load(NAtomic::EMemoryOrder_Relaxed);
-					if ((!(NextArena & 1)) && pArena->m_Locked.f_FetchOr(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire) == EArenaLockFlag_None)
-					{
-						if (pArena->m_pOwningThreadLocal && pArena->m_pOwningThreadLocal != &_ThreadLocal)
-							pArena->f_ReturnCheckoutLight();
-						else
-						{
-							_ThreadLocal.m_pArena = pArena;
-							return pArena;
-						}
-					}
-					pArena = (TCMemoryManagerArena<t_CParams> *)(NextArena & mint(~mint(1)));
-					if (!pArena)
-						pArena = pNumaArena->m_pFirstArena.f_Load();
-				}
+				_ThreadLocal.m_pArena = pArena;
+				return pArena;
 			}
-
-
-			bool bWait = false;
+			if (t_CParams::mc_MaxArenas == 1 || m_nMaxArenas == 1)
 			{
-				DMibLock(m_nArenasLock);
-				if (m_nArenas >= m_nMaxArenas && pNumaArena->m_nArenas != 0)
-					bWait = true;
-				else
-				{
-					++pNumaArena->m_nArenas;
-					++m_nArenas;
-				}
+				++pArena->m_LockContended;
+				pArena->m_Lock.f_LockNoSanitize();
+				--pArena->m_LockContended;
+
+				_ThreadLocal.m_pArena = pArena;
+				return pArena;
 			}
+		}
 
-			if (bWait)
-				return fp_CheckoutHelperWaitUnlock(_ThreadLocal);
+		mint iLimitedArena;
+		if (t_CParams::mc_MaxArenas == 1 || m_nMaxArenas == 1)
+			iLimitedArena = 0;
+		else
+			iLimitedArena = _ThreadLocal.m_LimitedRandom.template f_GetValue<uint32>() & (m_nMaxArenas - 1);
 
+		auto &LimitedArena = pNumaArena->m_LimitedArenas[iLimitedArena];
+		auto *pArena = LimitedArena.f_Load(NAtomic::EMemoryOrder_Relaxed);
+		if (!pArena) [[unlikely]]
+		{
+			DMibLock(pNumaArena->m_LimitedArenasCreateLock);
+			pArena = LimitedArena.f_Load();
+			if (!pArena)
 			{
 				pArena = pNumaArena->f_NewArena();
-				pArena->m_Locked.f_Exchange(EArenaLockFlag_Normal, NAtomic::EMemoryOrder_Acquire); // Set lock for us
+				pArena->m_iLimitedArena = iLimitedArena;
+				_ThreadLocal.m_pArena = pArena;
+				LimitedArena.f_Store(pArena);
+				return pArena;
+			}
+		}
 
-				DMibLock(pNumaArena->m_ArenasLock);
-				pNumaArena->m_Arenas.f_Insert(pArena);
-			}
-			{
-				while (1)
-				{
-					// Put in list
-					TCMemoryManagerArena<t_CParams> *pOldFirst = (TCMemoryManagerArena<t_CParams> *)pNumaArena->m_pFirstArena.f_Load(NAtomic::EMemoryOrder_Acquire);
-					DMibFastCheck(!(pArena->m_pNextArena.f_Load() & 1));
-					pArena->m_pNextArena.f_Store((mint)pOldFirst, NAtomic::EMemoryOrder_Release);
-					if (pNumaArena->m_pFirstArena.f_CompareExchangeWeak(pOldFirst, pArena, NAtomic::EMemoryOrder_SequentiallyConsistent))
-						break;
-				}
-			}
+		if (pArena->m_Lock.f_TryLockNoSanitize()) [[likely]]
+		{
 			_ThreadLocal.m_pArena = pArena;
 			return pArena;
 		}
-		while (false)
-			;
+		else
+		{
+			++pArena->m_LockContended;
+			pArena->m_Lock.f_LockNoSanitize();
+			--pArena->m_LockContended;
+		}
 
-		return nullptr;
+		_ThreadLocal.m_pArena = pArena;
+		return pArena;
 	}
 
 	template <typename t_CParams>
@@ -1486,6 +1396,9 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_CanDoLazyCheckout()
 	{
+		if (m_nMaxArenas != 0)
+			return;
+
 		m_bCanDoLazyCheckout = true;
 	}
 
@@ -1533,9 +1446,24 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	TCMemoryManagerCheckout<t_CParams> TCMemoryManager<t_CParams>::f_Checkout()
+	TCMemoryManagerCheckout<t_CParams> TCMemoryManager<t_CParams>::f_CheckoutForce()
 	{
 		if (m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
+			return nullptr;
+
+		auto &ThreadLocal = *m_LocalArena;
+		if (ThreadLocal.m_pArena)
+			ThreadLocal.m_pArena->m_CheckoutCount.f_FetchAdd(1, NAtomic::EMemoryOrder_Relaxed);
+		else
+			fp_CheckoutHelper(ThreadLocal)->m_CheckoutCount.f_FetchAdd(1, NAtomic::EMemoryOrder_Relaxed);
+
+		return this;
+	}
+	
+	template <typename t_CParams>
+	TCMemoryManagerCheckout<t_CParams> TCMemoryManager<t_CParams>::f_Checkout()
+	{
+		if (m_nMaxArenas != 0 || m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
 			return nullptr;
 
 		auto &ThreadLocal = *m_LocalArena;
@@ -1550,6 +1478,9 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	CMemoryManagerCheckout TCMemoryManager<t_CParams>::f_CheckoutVirtual()
 	{
+		if (m_nMaxArenas != 0)
+			return nullptr;
+
 		auto &ThreadLocal = *m_LocalArena;
 		if (ThreadLocal.m_pArena)
 			ThreadLocal.m_pArena->m_CheckoutCount.f_FetchAdd(1, NAtomic::EMemoryOrder_Relaxed);

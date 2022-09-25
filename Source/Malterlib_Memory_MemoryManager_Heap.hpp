@@ -319,7 +319,6 @@ namespace NMib::NMemory
 	int64 TCMemoryManagerArenaHeap<t_CParams>::f_GarbageCollect(int64 _Timestamp)
 	{
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
-		DMibFastCheck(m_Lock.f_OwnsLock());
 		DMibMemLightweightTrackDisableScope;
 
 		for (auto iChunk = m_ChunksNeedingCleanup.f_GetIterator(); iChunk; )
@@ -352,8 +351,6 @@ namespace NMib::NMemory
 
 		if constexpr (!t_CParams::CAllocator::f_CanCommit())
 			return NextTimestamp;
-
-		DMibFastCheck(m_Lock.f_OwnsLock());
 
 		for (auto iChunk = m_ChunksNeedingCleanup.f_GetIterator(); iChunk; )
 		{
