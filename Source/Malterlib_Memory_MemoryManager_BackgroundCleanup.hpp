@@ -17,7 +17,8 @@ namespace NMib::NMemory
 		, mp_bStarted(false)
 		, mp_pMemoryManager(_pNumaArena->m_pMemoryManager)
 	{
-		mp_Clock.f_Start(1'000'000);
+		if (g_bCanStartThreads.f_Load())
+			f_CanStartThreads();
 	}
 
 	template <typename t_CParams>
@@ -172,6 +173,8 @@ namespace NMib::NMemory
 	{
 		// Force initialization of time context on main thread as it uses environment which is not thread safe. In future try to remove dependency on time context here
 		NTime::CSystem_Time::fs_CyclesFrequency();
+
+		mp_Clock.f_Start(NTime::CSystem_Time::fs_CyclesFrequency() * 100);
 
 		if (mp_bStarted.f_FetchAnd(~2) & 2)
 		{

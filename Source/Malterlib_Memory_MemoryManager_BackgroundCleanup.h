@@ -35,7 +35,7 @@ namespace NMib::NMemory
 	private:
 		TCMemoryManager<t_CParams> * mp_pMemoryManager;
 		TCMemoryManagerNumaArena<t_CParams> * mp_pNumaArena;
-		NTime::CCyclesClock mp_Clock;
+		NTime::CCyclesClock mp_Clock{true};
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bStarted;
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bWaiting;
 		NMib::NThread::CLowLevelLock mp_GarbageCollectLock;
