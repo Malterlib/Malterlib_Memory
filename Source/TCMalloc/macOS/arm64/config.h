@@ -253,7 +253,7 @@
 #define PACKAGE_VERSION "2.7"
 
 /* How to access the PC from a struct ucontext */
-#define PC_FROM_UCONTEXT uc_mcontext->__ss.__rip
+#define PC_FROM_UCONTEXT uc_mcontext->__ss.__pc
 
 /* Always the empty-string on non-windows systems. On windows, should be
    "__declspec(dllexport)". This way, when we compile the dll, we export our

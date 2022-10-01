@@ -5,6 +5,9 @@
 #ifndef GPERFTOOLS_CONFIG_H_
 #define GPERFTOOLS_CONFIG_H_
 
+#ifdef __cplusplus
+#include <Mib/Core/Core>
+#endif
 
 /* enable aggressive decommit by default */
 /* #undef ENABLE_AGGRESSIVE_DECOMMIT_BY_DEFAULT */

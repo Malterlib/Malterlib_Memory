@@ -76,10 +76,6 @@ Import "Apps/*/*.MHeader"
 					TabWidth 2
 					UsesTabs false
 				}
-				Compile.Disabled true
-				{
-					!MemoryManagerTestEnable_TcMalloc true
-				}
 
 				%File "../../External/gperftools/src/^*.h"
 				%File "../../External/gperftools/src/^*.c"
@@ -402,7 +398,7 @@ Property
 		}
 		ExtraGroups =+ "{Malterlib}/{TCMalloc}"
 		{
-			!!MalterlibEnableThirdPartyComparisonTests true
+			!!MemoryManagerTestEnable_TcMalloc true
 		}
 	}
 	Compile
