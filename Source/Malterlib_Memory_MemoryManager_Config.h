@@ -135,6 +135,14 @@ namespace NMib::NMemory
 #else
 		static constexpr bool mc_bAllowUnalignedFreeList = true;
 #endif
+		static constexpr bool mc_bUseSlabFromEnd = false;
+
+#if (defined(DArchitecture_arm64) || defined(DArchitecture_arm64e)) && defined(DPlatformFamily_macOS)
+		static constexpr mint mc_PreventCacheConflictSize = 64 * 1024 * 8 / 4;
+#else
+		static constexpr mint mc_PreventCacheConflictSize = 32 * 1024 * 8 / 4; // Use 0 to disable. Default = 32 KB 8-way / 4
+#endif
+		static constexpr mint mc_PreventCacheConflictSizeMaxOverhead = 32; // 1 / x maximum overhead
 
 		using CAllocator = CAllocator_Virtual;
 		using CNotifier = CDefaultMemoryManagerNotifier;
@@ -162,7 +170,7 @@ namespace NMib::NMemory
 	template <>
 	struct TCMemoryManagerParamsSizesPerLevel<4>
 	{
-		static constexpr CSlabTypeInfo mc_SlabTypeInfo[4] = {	{1}, {5}, {3}, {7}};
+		static constexpr CSlabTypeInfo mc_SlabTypeInfo[4] = {{1}, {5}, {3}, {7}};
 		static constexpr uint16 mc_DivideMultiply[4] = {1, 52429, 43691, 9363};
 		static constexpr uint8 mc_DivideShift[4] =  {0, 18, 17, 16};
 	};
@@ -227,6 +235,8 @@ namespace NMib::NMemory
 		static constexpr mint mc_MinNormalSizeAlignment = mc_MinAlignmentCalc < 4 ? 4 : mc_MinAlignmentCalc;
 
 		static constexpr mint mc_SmallSizeSlabsLargestSize = t_CParams::mc_bUseSmallSizes ? (t_CParams::mc_bUseFreeBlockCounting ? 16 : 12) : 0;
+
+		static constexpr mint mc_PreventCacheConflictSizeMaxBlockSize = t_CParams::mc_PreventCacheConflictSize / t_CParams::mc_PreventCacheConflictSizeMaxOverhead; // 1 / x maximum overhead
 
 		static constexpr mint mc_MinNormalAllocSizeAfterSmallSize = fg_AlignUpConstExpr(mc_SmallSizeSlabsLargestSize, mc_MinNormalSizeAlignment)
 			+ fg_AlignUpConstExpr

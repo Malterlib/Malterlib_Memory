@@ -166,6 +166,9 @@ namespace
 		{
 			static constexpr mint mc_NumSizesPerLevel = t_nSizesPerLevel;
 			static constexpr mint mc_SubSlabSize = t_PageSize;
+			static constexpr bool mc_bUseFreeBlockCounting = true;
+			static constexpr mint mc_PreventCacheConflictSize = 0;
+			static constexpr bool mc_bUseSlabFromEnd = true;
 		};
 
 		template <typename tf_CParams, mint t_PageSize>
@@ -1105,7 +1108,6 @@ namespace
 		struct TCTestParamsNoSmallSize : public TCParams<t_PageSize, 8>
 		{
 			static constexpr bool mc_bUseSmallSizes = false;
-			static constexpr bool mc_bUseFreeBlockCounting = true;
 		};
 
 		void f_DoTests()

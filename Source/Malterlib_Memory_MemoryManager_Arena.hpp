@@ -349,8 +349,26 @@ namespace NMib::NMemory
 			nSubSlabs = t_CParams::fs_DivideBySlabMultiplier(AlignedSize/t_CParams::mc_SubSlabSize, SlabType);
 
 		auto pStart = pSlabData + _iSubSlab * t_CParams::mc_SubSlabSize * SubSlabMultiplier;
+		auto pStartRemove = pStart;
 		auto pEnd = pStart + t_CParams::mc_SubSlabSize * SubSlabMultiplier * nSubSlabs;
-		for (auto pToRemove = pStart; pToRemove < pEnd; )
+		if constexpr (t_CParams::mc_PreventCacheConflictSize && !t_CParams::mc_bUseFreeBlockCounting)
+		{
+			uint32 nBlocks = fg_Max(t_CParams::mc_NumAllocsPerSubSlab[SlabType] >> (SlabBucket - t_CParams::mc_MinNormalSlabBucket), 1);
+
+			if (((mint)pStartRemove & (mint)(t_CParams::mc_PreventCacheConflictSize - 1)) == 0 && AlignedSize <= t_CParams::mc_PreventCacheConflictSizeMaxBlockSize && nBlocks > 1)
+			{
+				--nBlocks;
+				smint ToRemove = DMibPMemoryCacheLineSize;
+				while (ToRemove > 0 && nBlocks > 1)
+				{
+					pStartRemove += AlignedSize;
+					ToRemove -= AlignedSize;
+					--nBlocks;
+				}
+			}
+		}
+
+		for (auto pToRemove = pStartRemove; pToRemove < pEnd; )
 		{
 			CMemoryManagerSubSlab_NormalLink *pFreeBlock = (CMemoryManagerSubSlab_NormalLink *)pToRemove;
 			if constexpr (t_CParams::mc_bUseFreeBlockCounting)

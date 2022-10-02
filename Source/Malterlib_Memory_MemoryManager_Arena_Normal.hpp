@@ -232,6 +232,7 @@ namespace NMib::NMemory
 				}
 				else
 				{
+					DMibFastCheck(pAlloc->m_Link.f_IsInList());
 					pAlloc->m_Link.f_UnsafeUnlinkFirst();
 					if constexpr (mc_EnableCallbacks)
 						this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), EMemoryManagerCheckFlag_Default);
@@ -514,16 +515,6 @@ namespace NMib::NMemory
 		DMibFastCheck(pDataAlloc[iAlloc].m_nAllocs == 0);
 		++pDataAlloc[iAlloc].m_nAllocs;
 
-#if defined(DMibPNoUnalignedAccess)
-		CMemoryManagerSubSlab_NormalLink *pNormalLink;
-		if constexpr (t_CParams::mc_bUseFreeBlockCounting)
-			pNormalLink = (CMemoryManagerSubSlab_NormalLink *)fg_AlignUp(pSlabAddress, sizeof(void *));
-		else
-			pNormalLink = (CMemoryManagerSubSlab_NormalLink *)pSlabAddress;
-#else
-		CMemoryManagerSubSlab_NormalLink *pNormalLink = (CMemoryManagerSubSlab_NormalLink *)pSlabAddress;
-#endif
-
 		DMibFastCheck(_SlabBucket >= t_CParams::mc_MinNormalSlabBucket);
 
 		uint32 nBlocks = fg_Max(t_CParams::mc_NumAllocsPerSubSlab[_SubIndex] >> (_SlabBucket - t_CParams::mc_MinNormalSlabBucket), 1);
@@ -534,6 +525,16 @@ namespace NMib::NMemory
 			--nBlocks;
 			if constexpr (t_CParams::mc_bUseFreeBlockCounting)
 			{
+#if defined(DMibPNoUnalignedAccess)
+				CMemoryManagerSubSlab_NormalLink *pNormalLink;
+				if constexpr (t_CParams::mc_bUseFreeBlockCounting)
+					pNormalLink = (CMemoryManagerSubSlab_NormalLink *)fg_AlignUp(pSlabAddress, sizeof(void *));
+				else
+					pNormalLink = (CMemoryManagerSubSlab_NormalLink *)pSlabAddress;
+#else
+				CMemoryManagerSubSlab_NormalLink *pNormalLink = (CMemoryManagerSubSlab_NormalLink *)pSlabAddress;
+#endif
+
 				pNormalLink->m_nBlocks = nBlocks;
 				_pList->f_UnsafeInsertFirst(pNormalLink);
 
@@ -546,6 +547,22 @@ namespace NMib::NMemory
 			{
 				if constexpr (mc_EnableCallbacks)
 					this->f_OnFillFree(pSlabAddress + _AlignedSize, nBlocks * _AlignedSize);
+
+				CMemoryManagerSubSlab_NormalFreeList TempList;
+
+				if constexpr (t_CParams::mc_PreventCacheConflictSize)
+				{
+					if (((mint)pSlabAddress & (mint)(t_CParams::mc_PreventCacheConflictSize - 1)) == 0 && _AlignedSize <= t_CParams::mc_PreventCacheConflictSizeMaxBlockSize)
+					{
+						smint ToRemove = DMibPMemoryCacheLineSize;
+						while (ToRemove > 0 && nBlocks > 1)
+						{
+							--nBlocks;
+							pSlabAddress += _AlignedSize;
+							ToRemove -= _AlignedSize;
+						}
+					}
+				}
 
 				for (auto pLinkAddress = pSlabAddress + nBlocks  * _AlignedSize; pLinkAddress > pSlabAddress; pLinkAddress -= _AlignedSize)
 					_pList->f_UnsafeInsertFirst((CMemoryManagerSubSlab_NormalLink *)pLinkAddress);

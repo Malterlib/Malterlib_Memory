@@ -299,7 +299,12 @@ namespace NMib::NMemory
 	template <typename t_CParams, uint32 t_SlabType>
 	aint TCMemoryManagerSlab<t_CParams, t_SlabType>::f_FindFreeBitAndSet(mint _Level)
 	{
-		aint Ret = m_Allocated.f_FindFreeBitReverseAndSet(_Level);
+		aint Ret;
+		if constexpr (t_CParams::mc_bUseSlabFromEnd)
+			Ret = m_Allocated.f_FindFreeBitReverseAndSet(_Level);
+		else
+			Ret = m_Allocated.f_FindFreeBitAndSet(_Level);
+
 		DMibFastCheck(Ret >= 0); // Should not be called on full
 
 		auto pArena = this->m_pArena;
