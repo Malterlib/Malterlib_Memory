@@ -94,7 +94,12 @@ namespace NMib::NMemory
 		{
 			void *pRet = HeapReAlloc(g_pMainHeap, 0, _pMemory, _Size);
 			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
-				_Size = HeapSize(g_pMainHeap, 0, pRet);
+			{
+				if (pRet)
+					_Size = HeapSize(g_pMainHeap, 0, pRet);
+				else
+					_Size = 0;
+			}
 			return pRet;
 		}
 
@@ -102,7 +107,12 @@ namespace NMib::NMemory
 		{
 			void *pRet = HeapReAlloc(g_pMainHeap, 0, _pMemory, _Size);
 			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
-				_Size = HeapSize(g_pMainHeap, 0, pRet);
+			{
+				if (pRet)
+					_Size = HeapSize(g_pMainHeap, 0, pRet);
+				else
+					_Size = 0;
+			}
 			return pRet;
 		}
 
@@ -188,7 +198,12 @@ namespace NMib::NMemory
 		DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
 		void *pRet = HeapReAlloc(g_pMainHeap, 0, _pMemory, _Size);
 		if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
-			_Size = HeapSize(g_pMainHeap, 0, pRet);
+		{
+			if (pRet)
+				_Size = HeapSize(g_pMainHeap, 0, pRet);
+			else
+				_Size = 0;
+		}
 		DMibMemoryReportRealloc(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 	}
@@ -200,7 +215,12 @@ namespace NMib::NMemory
 		DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
 		void *pRet = HeapReAlloc(g_pMainHeap, 0, _pMemory, _Size);
 		if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
-			_Size = HeapSize(g_pMainHeap, 0, pRet);
+		{
+			if (pRet)
+				_Size = HeapSize(g_pMainHeap, 0, pRet);
+			else
+				_Size = 0;
+		}
 		DMibMemoryReportResize(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 	}
