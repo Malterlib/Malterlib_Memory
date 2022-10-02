@@ -1244,7 +1244,7 @@ void *fg_Malterlib_zone_realloc(struct _malloc_zone_t *_pZone, void *ptr, size_t
 #if DEnableDebugMemoryManager
 	pMalterlibAlloc = (uint8 *)fg_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-	pMalterlibAlloc = (uint8 *)fg_Resize(pMalterlibAlloc, Size, 0);
+	pMalterlibAlloc = (uint8 *)fg_Resize(pMalterlibAlloc, Size, 0, EAllocationFlag_SizeNotNeeded);
 #endif
 #endif
 	return pMalterlibAlloc;

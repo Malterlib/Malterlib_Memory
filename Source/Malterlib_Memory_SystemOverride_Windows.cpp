@@ -222,7 +222,7 @@ extern "C"
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		_Size = NMib::fg_AlignUp(_Size, DMibSystemAlignment);
-		void * addr = NMib::NMemory::fg_Resize(_Ptr, _Size, 0);
+		void * addr = NMib::NMemory::fg_Resize(_Ptr, _Size, 0, EAllocationFlag_SizeNotNeeded);
 		return addr;
 	}
 	_CRTIMP __checkReturn __bcount_opt(_Size*_Count) void * __cdecl _recalloc_crt(__inout_opt void *_Ptr, __in size_t _Count, __in size_t _Size)
@@ -230,7 +230,7 @@ extern "C"
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = _Count * _Size;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
-		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0);
+		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
 		return addr;
 	}
 
@@ -241,7 +241,7 @@ extern "C"
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = _Count * _Size;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
-		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0);
+		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
 		return addr;
 	}
 		
@@ -292,14 +292,14 @@ extern "C"
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
-		return NMib::NMemory::fg_Resize(ptr, sz, 0);
+		return NMib::NMemory::fg_Resize(ptr, sz, 0, EAllocationFlag_SizeNotNeeded);
 	}
 	
 	void * DDefaultCallingConv _realloc_base (void * ptr, size_t sz)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
-		return NMib::NMemory::fg_Resize(ptr, sz, 0);
+		return NMib::NMemory::fg_Resize(ptr, sz, 0, EAllocationFlag_SizeNotNeeded);
 	}
 	
 	void * DDefaultCallingConv _realloc_dbg (void * ptr, size_t sz, int BlockType, const char *Filename, int Line) 
@@ -314,7 +314,7 @@ extern "C"
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = size * count;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
-		return NMib::NMemory::fg_Resize(memblock, Size, 0);
+		return NMib::NMemory::fg_Resize(memblock, Size, 0, EAllocationFlag_SizeNotNeeded);
 
 	}
 
