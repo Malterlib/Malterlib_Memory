@@ -114,7 +114,7 @@ namespace NMib::NMemory
 		return CCrossModuleImplementationExtra::fs_AllocWithSize(&g_CrossModule, _Size);
 	}
 
-	DMibMemory_MemoryManagerExport void * fg_Alloc(mint _Size)
+	inline_always_lto DMibMemory_MemoryManagerExport void * fg_Alloc(mint _Size)
 	{
 		return CCrossModuleImplementationExtra::fs_Alloc(&g_CrossModule, _Size);
 	}
@@ -134,7 +134,7 @@ namespace NMib::NMemory
 		return CCrossModuleImplementationExtra::fs_AllocAlignedWithSize(&g_CrossModule, _Size, _Alignment);
 	}
 
-	DMibMemory_MemoryManagerExport void * fg_AllocAligned(mint _Size, mint _Alignment)
+	inline_always_lto DMibMemory_MemoryManagerExport void * fg_AllocAligned(mint _Size, mint _Alignment)
 	{
 #if defined(DPlatformFamily_Linux) && !defined(DMibInitInPreInitArray)
 		if (!NMib::g_bCreatedSystem)
@@ -194,17 +194,17 @@ namespace NMib::NMemory
 		return CCrossModuleImplementationExtra::fs_Resize(&g_CrossModule, _pMemory, _Size, _OldSize, _AllocFlags);
 	}
 
-	DMibMemory_MemoryManagerExport void fg_Free(void *_pMemory, mint _Size)
+	inline_always_lto DMibMemory_MemoryManagerExport void fg_Free(void *_pMemory, mint _Size)
 	{
 		return CCrossModuleImplementationExtra::fs_Free(&g_CrossModule, _pMemory, _Size);
 	}
 
-	DMibMemory_MemoryManagerExport void fg_FreeNoSize(void *_pMemory)
+	inline_always_lto DMibMemory_MemoryManagerExport void fg_FreeNoSize(void *_pMemory)
 	{
 		return CCrossModuleImplementationExtra::fs_FreeNoSize(&g_CrossModule, _pMemory);
 	}
 
-	DMibMemory_MemoryManagerExport mint fg_Size(const void *_pMemory)
+	inline_always_lto DMibMemory_MemoryManagerExport mint fg_Size(const void *_pMemory)
 	{
 		return CCrossModuleImplementationExtra::fs_Size(&g_CrossModule, _pMemory);
 	}
