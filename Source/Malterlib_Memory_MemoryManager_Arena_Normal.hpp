@@ -701,14 +701,23 @@ namespace NMib::NMemory
 			}
 			else if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_Allocs) != 0)
 			{
-//					DMibFastCheck(_pSlab->f_GetNumPendingBits() == _pSlab->m_nPendingSubSlabs);
+//				DMibFastCheck(_pSlab->f_GetNumPendingBits() == _pSlab->m_nPendingSubSlabs);
+				if constexpr (t_CParams::mc_MaxPendingSubSlabs)
+				{
+					if (_pSlab->m_nPendingSubSlabs >= t_CParams::mc_MaxPendingSubSlabs)
+					{
+						(void)fp_FreeSubSlab(_pSlab, iSubSlab);
+						return;
+					}
+				}
+
 				_pSlab->f_SetPendingBit(iSubSlab);
 
 				fp_SlabHasGarbage(_pSlab);
 
 				++_pSlab->m_nPendingSubSlabs;
 				DMibFastCheck(_pSlab->f_HasPendingBit());
-//					DMibFastCheck(_pSlab->f_GetNumPendingBits() == _pSlab->m_nPendingSubSlabs);
+//				DMibFastCheck(_pSlab->f_GetNumPendingBits() == _pSlab->m_nPendingSubSlabs);
 			}
 			else
 				(void)fp_FreeSubSlab(_pSlab, iSubSlab); // _pSlab will potentially be invalid after this call

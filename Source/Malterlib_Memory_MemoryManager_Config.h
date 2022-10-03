@@ -144,6 +144,8 @@ namespace NMib::NMemory
 #endif
 		static constexpr mint mc_PreventCacheConflictSizeMaxOverhead = 32; // 1 / x maximum overhead
 
+		static constexpr mint mc_MaxPendingSubSlabs = 0;
+
 		using CAllocator = CAllocator_Virtual;
 		using CNotifier = CDefaultMemoryManagerNotifier;
 	};
