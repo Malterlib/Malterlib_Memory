@@ -68,6 +68,8 @@ namespace NMib::NMemory
 		DMibLock(ForkLock);
 #endif
 		f_OnNeedCleanup();
+
+		mp_FirstGarbageCollected.f_Wait();
 	}
 
 	template <typename t_CParams>
@@ -122,6 +124,7 @@ namespace NMib::NMemory
 						)
 					;
 #endif
+					bool bFirstWait = true;
 					bool bNeedUpdate = true;
 					while (_pThread->f_GetState() != NThread::EThreadState_EventWantQuit)
 					{
@@ -152,6 +155,11 @@ namespace NMib::NMemory
 						else
 						{
 							mp_bWaiting.f_Exchange(1);
+							if (bFirstWait)
+							{
+								bFirstWait = false;
+								mp_FirstGarbageCollected.f_SetSignaled();
+							}
 							_pThread->m_EventWantQuit.f_Wait();
 						}
 

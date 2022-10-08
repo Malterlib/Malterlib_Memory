@@ -39,6 +39,7 @@ namespace NMib::NMemory
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bStarted;
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bWaiting;
 		NMib::NThread::CLowLevelLock mp_GarbageCollectLock;
+		NThread::CEvent mp_FirstGarbageCollected;
 
 		NStorage::TCUniquePointer<NThread::CThreadObjectNonTracked, NMemory::CAllocator_NonTrackedHeap> mp_pThread;
 	};
