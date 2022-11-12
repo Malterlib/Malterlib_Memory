@@ -8,6 +8,9 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void TCMemoryManagerArena<t_CParams>::f_AddMessage(CMessage *_pMessage, EMessageType _MessageType, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
 	{
+		DMibFastCheck(_pMessage);
+		DMibFastCheck(!((mint)_pMessage & mint(3)));
+
 		mint RandomIndex;
 		if (_pLocalArena)
 			RandomIndex = _pLocalArena->m_RandomIndex & (mc_MessagesSpread - 1);
