@@ -245,6 +245,8 @@ Import "Apps/*/*.MHeader"
 
 %Group "{Malterlib}/{Lib_Malterlib_Memory}"
 {
+	Property.ExcludeFiles =+ "*.aps"
+
 	%Group "Memory"
 	{
 		%Group "Include"
@@ -271,6 +273,18 @@ Import "Apps/*/*.MHeader"
 		%File "Source/Malterlib_Memory.cpp"
 		{
 			Compile.Disabled true
+		}
+		%File "Source/Malterlib_Memory_Reporter_Categories.rc"
+		{
+			Compile.Disabled true
+			{
+				|
+				{
+					!MalterlibMemory_Shims_Enable true
+					!MalterlibMemoryManager_Stats_EnableCategories true
+					!PlatformFamily "Windows"
+				}
+			}
 		}
 		%Group "Documentation"
 		{
