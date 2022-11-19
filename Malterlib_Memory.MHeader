@@ -305,18 +305,18 @@ Import "Apps/*/*.MHeader"
 
 Property
 {
-	MalterlibLibrary_Memory define bool = MalterlibLibrary_All
+	MalterlibLibrary_Memory: bool = MalterlibLibrary_All
 	MalterlibSubLibraries =+ "Memory"
 	{
 		!!MalterlibLibrary_Memory true
 	}
-	//MalterlibSubLibrarySeparate_Lib_Malterlib_Memory define bool = true
+	//MalterlibSubLibrarySeparate_Lib_Malterlib_Memory: bool = true
 	MalterlibIncludeRoots =+ "Include"->MakeAbsolute()
 	{
 		!!MalterlibLibrary_Memory true
 	}
 
-	MalterlibTestsMem_EnablePerfTests define bool = true // User(Tests)=false: Enable performance memory tests (default true)
+	MalterlibTestsMem_EnablePerfTests: bool = true // User(Tests)=false: Enable performance memory tests (default true)
 }
 
 %Target "Dll_Test_Malterlib_Helper_Memory"
@@ -350,20 +350,20 @@ Property
 		MalterlibWindowsNtVersion "_WIN32_WINNT_VISTA"
 		MalterlibWindowsVersion "NTDDI_VISTA"
 
-		MemoryManagerTestEnable_Malterlib define bool = true
-		MemoryManagerTestEnable_MacOS define bool = PlatformFamily == "macOS"
+		MemoryManagerTestEnable_Malterlib: bool = true
+		MemoryManagerTestEnable_MacOS: bool = PlatformFamily == "macOS"
 
-		MemoryManagerTestEnable_Application define bool = true
-		MemoryManagerTestEnable_StdLib define bool = true
-		MemoryManagerTestEnable_Virtual define bool = false
+		MemoryManagerTestEnable_Application: bool = true
+		MemoryManagerTestEnable_StdLib: bool = true
+		MemoryManagerTestEnable_Virtual: bool = false
 
-		MemoryManagerTestEnable_WindowsDefault define bool = false
+		MemoryManagerTestEnable_WindowsDefault: bool = false
 
-		MemoryManagerTestEnable_WindowsLF define bool = PlatformFamily == "Windows"
+		MemoryManagerTestEnable_WindowsLF: bool = PlatformFamily == "Windows"
 
 		//MalterlibWindowsSettings_SegmentHeap true
 
-		MemoryManagerTestEnable_TcMalloc define bool = false
+		MemoryManagerTestEnable_TcMalloc: bool = false
 		MemoryManagerTestEnable_TcMalloc true
 		{
 			&
@@ -375,7 +375,7 @@ Property
 			}
 		}
 
-		MemoryManagerTestEnable_MiMalloc define bool = false
+		MemoryManagerTestEnable_MiMalloc: bool = false
 		MemoryManagerTestEnable_MiMalloc true
 		{
 			&
@@ -504,10 +504,10 @@ Property
 	!!MalterlibEnableInternalTests true
 
 	MalterlibTests =+ "Malterlib_Memory"
-	MalterlibTestExtraGroups_Malterlib_Memory define [string] = ["{Test}/{Malterlib_Memory}"]
+	MalterlibTestExtraGroups_Malterlib_Memory: [string] = ["{Test}/{Malterlib_Memory}"]
 }
 
-Property.Malterlib_Memory_App_Targets define [type(CEntity)] = []
+Property.Malterlib_Memory_App_Targets: [type(CEntity)] = []
 
 %Workspace "Apps_Malterlib_Memory"
 {

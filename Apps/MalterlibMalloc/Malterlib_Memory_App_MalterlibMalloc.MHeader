@@ -3,7 +3,7 @@
 
 Property
 {
-	MalterlibMemoryManager_OverrideDll define bool = false
+	MalterlibMemoryManager_OverrideDll: bool = false
 }
 
 %Target "Malterlib_Memory_MalterlibMalloc"

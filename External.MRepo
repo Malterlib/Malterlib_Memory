@@ -1,2 +1,8 @@
-../../External/gperftools cf2ebd5327ee886c087c2933d8b6cdfeee1fda34
-../../External/mimalloc 6ee14ca12cc7f1937d943001363c03176e502715
+{
+	"../../External/gperftools": {
+		"Hash": "cf2ebd5327ee886c087c2933d8b6cdfeee1fda34"
+	},
+	"../../External/mimalloc": {
+		"Hash": "6ee14ca12cc7f1937d943001363c03176e502715"
+	}
+}
