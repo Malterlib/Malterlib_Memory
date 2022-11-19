@@ -13,6 +13,10 @@ typedef char vec16bool __attribute__((ext_vector_type(16)));
 typedef uint64 vec2uint64 __attribute__((ext_vector_type(2)));
 #endif
 
+#ifdef DMibSanitizerEnabled_Address
+#	include <sanitizer/asan_interface.h>
+#endif
+
 namespace NMib::NMemory
 {
 #ifdef DEnableVector
