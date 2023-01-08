@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <Mib/Container/MapWithPool>
+
 #include "Malterlib_Memory_MemoryManager_DebugException.h"
 
 namespace NMib::NMemory

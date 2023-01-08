@@ -2087,7 +2087,7 @@ namespace
 			}
 		};
 
-		using CRegionAllocator = TCStaticPoolAllocator<NContainer::TCMapTreeMember<mint, NContainer::TCRegionData<mint, CRegionData>>, 128, CAllocator_VirtualNoTracking>;
+		using CRegionAllocator = TCStaticPoolAllocator<NContainer::TCMapNode<mint, NContainer::TCRegionData<mint, CRegionData>>, 128, CAllocator_VirtualNoTracking>;
 
 		NContainer::TCRegions<mint, CRegionData, CRegionAllocator> m_Regions;
 	};

@@ -2,7 +2,10 @@
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
+#include <Mib/Container/MapWithPool>
+
 #define DMibConfig_Memory_CustomThreadLocal 2
+
 #include "Malterlib_Memory_MemoryManager.hpp"
 
 namespace NMib::NMemory
