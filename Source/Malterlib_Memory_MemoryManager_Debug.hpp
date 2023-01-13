@@ -785,7 +785,6 @@ namespace NMib::NMemory
 		if (!CSuper::f_IsCheckedOut())
 			MemoryManagerCheckout = CSuper::f_CheckoutForce();
 
-		DMibFastCheck(_Size != 0);
 		DMibFastCheck(!f_ReportingLeaks());
 		fsp_CheckGuard((uint8 *)_pMemory, EMemoryManagerCheckFlag_Default);
 
