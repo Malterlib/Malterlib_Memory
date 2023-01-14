@@ -703,9 +703,11 @@ namespace NMib::NMemory
 
 			if (AllocatorSize - (pOldPreBlock->m_PostCheck + pOldPreBlock->m_PreCheck) < pOldPreBlock->m_Size)
 			{
+#ifdef DMibNeedDebugException
 				if constexpr (t_bException)
 					DMibErrorMemoryManagerDebug("Corruption in pre block");
 				else
+#endif
 					DMibPDebugBreak;
 			}
 
@@ -728,9 +730,11 @@ namespace NMib::NMemory
 
 			if (AllocatorSize - (pOldPreBlock->m_PostCheck + pOldPreBlock->m_PreCheck) < pOldPreBlock->m_Size)
 			{
+#ifdef DMibNeedDebugException
 				if constexpr (t_bException)
 					DMibErrorMemoryManagerDebug("Corruption in pre block");
 				else
+#endif
 					DMibPDebugBreak;
 			}
 
@@ -957,9 +961,11 @@ namespace NMib::NMemory
 
 		if (_bBreak)
 		{
+#ifdef DMibNeedDebugException
 			if constexpr (t_bException)
 				DMibErrorMemoryManagerDebug(_pMessage);
 			else
+#endif
 			{
 				static bool bBreak = true;
 				if (bBreak)
@@ -993,9 +999,11 @@ namespace NMib::NMemory
 		if (!Mapped.f_WasCreated())
 		{
 			// Double alloc (internal error)
+#ifdef DMibNeedDebugException
 			if constexpr (t_bException)
 				DMibErrorMemoryManagerDebug("Double alloc (internal error)");
 			else
+#endif
 				DMibPDebugBreak;
 		}
 
@@ -1022,9 +1030,11 @@ namespace NMib::NMemory
 			if (!pOldAlloc)
 			{
 				// Double free
+#ifdef DMibNeedDebugException
 				if constexpr (t_bException)
 					DMibErrorMemoryManagerDebug("Double free");
 				else
+#endif
 					DMibPDebugBreak;
 			}
 
@@ -1069,9 +1079,11 @@ namespace NMib::NMemory
 		if (!Mapped.f_WasCreated())
 		{
 			// Double alloc (internal error)
+#ifdef DMibNeedDebugException
 			if constexpr (t_bException)
 				DMibErrorMemoryManagerDebug("Double alloc (internal error)");
 			else
+#endif
 				DMibPDebugBreak;
 		}
 
@@ -1096,9 +1108,11 @@ namespace NMib::NMemory
 		if (!pOldAlloc)
 		{
 			// Double free
+#ifdef DMibNeedDebugException
 			if constexpr (t_bException)
 				DMibErrorMemoryManagerDebug("Double free");
 			else
+#endif
 				DMibPDebugBreak;
 		}
 
@@ -1159,9 +1173,11 @@ namespace NMib::NMemory
 		if (!Mapped.f_WasCreated())
 		{
 			// Double alloc (internal error)
+#ifdef DMibNeedDebugException
 			if constexpr (t_bException)
 				DMibErrorMemoryManagerDebug("Double alloc (internal error)");
 			else
+#endif
 				DMibPDebugBreak;
 		}
 
@@ -1186,9 +1202,11 @@ namespace NMib::NMemory
 		if (!pOldAlloc)
 		{
 			// Double free
+#ifdef DMibNeedDebugException
 			if constexpr (t_bException)
 				DMibErrorMemoryManagerDebug("Double free");
 			else
+#endif
 				DMibPDebugBreak;
 		}
 

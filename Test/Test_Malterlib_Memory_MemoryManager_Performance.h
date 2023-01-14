@@ -239,10 +239,16 @@ namespace
 
 	class CMalterlibMemoryMalterlib_Debug
 	{
+#ifdef DMibNeedDebugException
+		static constexpr bool mc_bHasExceptions = true;
+#else
+		static constexpr bool mc_bHasExceptions = false;
+#endif
+
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
 		{
 		};
-		NMib::NMemory::TCMemoryManagerDebug<CParams, false> m_MemoryManager;
+		NMib::NMemory::TCMemoryManagerDebug<CParams, mc_bHasExceptions> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlib_Debug()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}

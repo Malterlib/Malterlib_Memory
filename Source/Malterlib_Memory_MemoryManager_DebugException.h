@@ -7,11 +7,13 @@
 
 namespace NMib::NMemory
 {
+#ifdef DMibNeedDebugException
+
 	DMibImpErrorClassDefine(CExceptionMemoryManagerDebug, NException::CDebugException);
 #	define DMibErrorMemoryManagerDebug(_Description) DMibImpError(NMib::NMemory::CExceptionMemoryManagerDebug, _Description)
 
 #	ifndef DMibPNoShortCuts
 #		define DErrorMemoryManagerDebug(_Description) DMibErrorMemoryManagerDebug(_Description)
 #	endif
-
+#endif
 }

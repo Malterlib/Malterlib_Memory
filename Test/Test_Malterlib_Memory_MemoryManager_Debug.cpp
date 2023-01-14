@@ -19,6 +19,12 @@ namespace
 	class CDebug_Tests : public CTest
 	{
 	public:
+#ifdef DMibNeedDebugException
+		static constexpr bool mc_bHasExceptions = true;
+#else
+		static constexpr bool mc_bHasExceptions = false;
+#endif
+
 		struct CDebugOptions : public CMemoryManagerDebugOptionsDefault
 		{
 			enum
@@ -65,7 +71,12 @@ namespace
 				MeasureMemory.f_Start();
 				
 				{
-					TCMemoryManagerTracked<TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions>> MemoryManager{"Test", CMemoryManagerConfig()};
+					TCMemoryManagerTracked<TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions>> MemoryManager
+						{
+							"Test"
+							, CMemoryManagerConfig()
+						}
+					;
 					mint LastAlloc = 0;
 					auto Checkout = MemoryManager.f_CheckoutForce();
 					for (mint MemorySize = 1; MemorySize <= TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>::mc_MaxSlabAllocSize; ++MemorySize)
@@ -122,7 +133,7 @@ namespace
 			};
 			DMibTestSuite("Leaks")
 			{
-				TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+				TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 				
 				uint8 *pAlloc = nullptr;
 				bool bFoundAlloc = false;
@@ -163,10 +174,11 @@ namespace
 					bFoundAlloc = false;
 				}
 			};
-			
+
+#ifdef DMibNeedDebugException
 			DMibTestSuite("Double free")
 			{
-				TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptionsWithoutGuard> MemoryManager{CMemoryManagerConfig()};
+				TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptionsWithoutGuard> MemoryManager{CMemoryManagerConfig()};
 				auto Checkout = MemoryManager.f_CheckoutForce();
 				
 				auto DoubleFreeException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Double free");
@@ -210,7 +222,7 @@ namespace
 			{
 				DMibTestSuite("Freed")
 				{
-					TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptionsWithoutGuard> MemoryManager{CMemoryManagerConfig()};
+					TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptionsWithoutGuard> MemoryManager{CMemoryManagerConfig()};
 					auto Checkout = MemoryManager.f_CheckoutForce();
 					
 					auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after being freed");
@@ -245,7 +257,7 @@ namespace
 							DMibTestSuite("Freed")
 							{
 								f_Dummy();
-								TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+								TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 								auto Checkout = MemoryManager.f_CheckoutForce();
 								
 								auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after being freed");
@@ -268,7 +280,7 @@ namespace
 						
 						DMibTestSuite("Pre block")
 						{
-							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_CheckoutForce();
 							
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
@@ -288,7 +300,7 @@ namespace
 						
 						DMibTestSuite("Post block")
 						{
-							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
@@ -307,7 +319,7 @@ namespace
 
 						DMibTestSuite("Pre block aligned")
 						{
-							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
@@ -328,7 +340,7 @@ namespace
 						
 						DMibTestSuite("Post block alligned")
 						{
-							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
@@ -349,7 +361,7 @@ namespace
 
 						DMibTestSuite("Pre block realloc")
 						{
-							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
@@ -406,7 +418,7 @@ namespace
 						
 						DMibTestSuite("Post block realloc")
 						{
-							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
@@ -465,7 +477,7 @@ namespace
 						
 						DMibTestSuite("Pre block resize")
 						{
-							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten before allocated block");
 							mint Size = _Size;
@@ -521,7 +533,7 @@ namespace
 						
 						DMibTestSuite("Post block resize")
 						{
-							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, true, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+							TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
 							auto Checkout = MemoryManager.f_CheckoutForce();
 							auto OverwriteException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Memory overwritten after allocated block");
 							mint Size = _Size;
@@ -584,6 +596,7 @@ namespace
 				fl_TestOverwite(32*1024*1024, "Huge");
 #endif
 			};
+#endif
 		}
 	};
 

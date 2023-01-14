@@ -40,6 +40,13 @@ namespace NMib
 	{
 	};
 
+#ifdef DMibNeedDebugException
+	static constexpr bool gc_bHasExceptions = true;
+#else
+	static constexpr bool gc_bHasExceptions = false;
+#endif
+
+
 #	if DEnableDebugMemoryManager
 		struct CMemoryManagerDebugOptions : public NMemory::CMemoryManagerDebugOptionsDefault
 		{
@@ -71,9 +78,9 @@ namespace NMib
 			};
 		};
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		typedef NMemory::TCMemoryManagerDebug<CMemoryManagerParamsSmall, false, CMemoryManagerDebugOptions> CMemoryManagerWithDebugSmall;
+		typedef NMemory::TCMemoryManagerDebug<CMemoryManagerParamsSmall, gc_bHasExceptions, CMemoryManagerDebugOptions> CMemoryManagerWithDebugSmall;
 #endif
-		typedef NMemory::TCMemoryManagerDebug<CMemoryManagerParamsMax, false, CMemoryManagerDebugOptions> CMemoryManagerWithDebugMax;
+		typedef NMemory::TCMemoryManagerDebug<CMemoryManagerParamsMax, gc_bHasExceptions, CMemoryManagerDebugOptions> CMemoryManagerWithDebugMax;
 #	else
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		typedef NMemory::TCMemoryManager<CMemoryManagerParamsSmall> CMemoryManagerWithDebugSmall;

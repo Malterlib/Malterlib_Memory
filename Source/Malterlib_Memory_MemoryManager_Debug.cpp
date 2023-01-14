@@ -6,7 +6,9 @@
 
 namespace NMib::NMemory
 {
+#ifdef DMibNeedDebugException
 	DMibImpErrorClassImplement(CExceptionMemoryManagerDebug);
+#endif
 	
 	extern char const* gc_IgnoreFunctions[];
 }
