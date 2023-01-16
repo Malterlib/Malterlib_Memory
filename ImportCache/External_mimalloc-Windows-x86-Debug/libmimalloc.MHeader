@@ -1,4 +1,4 @@
-Property.CMakeOutputPath_libmimalloc define string = `@('.'->MakeAbsolute())`->MakeAbsolute()
+Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbsolute()
 %Target "Lib_libmimalloc_mimalloc-static"
 {
 	Compile
