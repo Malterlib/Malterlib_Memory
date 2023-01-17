@@ -868,7 +868,7 @@ namespace
 							break;
 						case NMib::NProcess::EProcessLaunchState_LaunchFailed:
 							{
-								DMibDTrace("Error: {}\r\n", _State.f_Get<NMib::NProcess::EProcessLaunchState_LaunchFailed>());
+								DMibConErrOut("Error: {}\r\n", _State.f_Get<NMib::NProcess::EProcessLaunchState_LaunchFailed>());
 								Exited.f_SetSignaled();
 							}
 							break;
@@ -881,7 +881,7 @@ namespace
 						if (_OutputType == NMib::NProcess::EProcessLaunchOutputType_StdOut)
 							ResultParser.f_FeedText(_Output);
 						else
-							DMibDTrace("{}", _Output);
+							DMibConErrOut("{}", _Output);
 					}
 				;
 				{
