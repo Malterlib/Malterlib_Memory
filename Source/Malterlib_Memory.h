@@ -669,7 +669,7 @@ namespace NMib::NMemory
 				{
 					Temp = _pArray[i];
 
-					for (j = i-1; j >= _Low && COrdering_Partial(_fCompare(Temp, _pArray[j])) < 0; j--)
+					for (j = i-1; j >= _Low && fg_CheckOrdering(_fCompare(Temp, _pArray[j])) < 0; j--)
 						_pArray[j+1] = _pArray[j];
 
 					_pArray[j+1] = Temp;
@@ -689,9 +689,9 @@ namespace NMib::NMemory
 				j = _High;
 				while (1)
 				{
-					while (i < j && COrdering_Partial(_fCompare(_pArray[i], Pivot)) < 0)
+					while (i < j && fg_CheckOrdering(_fCompare(_pArray[i], Pivot)) < 0)
 						i++;
-					while (j >= i && COrdering_Partial(_fCompare(Pivot, _pArray[j])) < 0)
+					while (j >= i && fg_CheckOrdering(_fCompare(Pivot, _pArray[j])) < 0)
 						j--;
 					if (i >= j)
 						break;
