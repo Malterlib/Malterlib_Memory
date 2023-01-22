@@ -227,6 +227,7 @@ Import "Apps/*/*.MHeader"
 	Compile
 	{
 		!!CompileDialect "C"
+		Analyzer false
 
 		PreprocessorDefines += ["MI_STAT=0", "MI_PADDING=0", "MI_SECURE=0"]
 	}
