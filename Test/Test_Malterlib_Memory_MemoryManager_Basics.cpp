@@ -1006,6 +1006,10 @@ namespace
 					MeasureMemory.f_Stop(1);
 				}
 
+				mint nThreads = 16;
+#if DMibPPtrBits <= 32
+				nThreads = 4;
+#endif
 				for (int i = 0; i < 16; ++i)
 				{
 					StartedThreads.f_Insert
