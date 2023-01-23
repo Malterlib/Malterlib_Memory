@@ -432,7 +432,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void *TCMemoryManagerArenaHeap<t_CParams>::f_AllocWithSize(mint &_Size)
 	{
-		DMibLock(m_Lock);
+		DMibLock(*this);
 		mint Size = (_Size + t_CParams::mc_HeapBlockSize - 1) & ~mint(t_CParams::mc_HeapBlockSize - 1);
 
 		DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(Size));
@@ -485,7 +485,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void *TCMemoryManagerArenaHeap<t_CParams>::f_AllocAlignedWithSize(mint &_Size, mint _Alignment)
 	{
-		DMibLock(m_Lock);
+		DMibLock(*this);
 		mint Size = fg_AlignUp(_Size, _Alignment);
 		Size = (Size + t_CParams::mc_HeapBlockSize - 1) & ~mint(t_CParams::mc_HeapBlockSize - 1);
 
@@ -621,7 +621,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	mint TCMemoryManagerArenaHeap<t_CParams>::f_Size(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
 	{
-		DMibLock(m_Lock);
+		DMibLock(fg_RemoveQualifiers(*this));
 
 		uint8 *pMem = (uint8 *)_pMemory;
 		auto *pBlock = _pChunk->m_Blocks.f_FindEqual(pMem);
@@ -634,6 +634,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerArenaHeap<t_CParams>::f_Lock()
 	{
+		DMibFastCheck(!m_pMemoryManager->m_LocalArena->m_pNumaArena->m_bLimitedArenas || !m_pMemoryManager->m_LocalArena->m_pArena);
 		m_Lock.f_Lock();
 	}
 
@@ -646,7 +647,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	fp32 TCMemoryManagerArenaHeap<t_CParams>::f_Overhead(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
 	{
-		DMibLock(m_Lock);
+		DMibLock(fg_RemoveQualifiers(*this));
 		uint8 *pMem = (uint8 *)_pMemory;
 		auto *pBlock = _pChunk->m_Blocks.f_FindEqual(pMem);
 
@@ -665,7 +666,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void TCMemoryManagerArenaHeap<t_CParams>::f_Free(void *_pMem, TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk)
 	{
-		DMibLock(m_Lock);
+		DMibLock(*this);
 		DMibMemLightweightTrackDisableScope;
 
 		uint8 *pMem = (uint8 *)_pMem;

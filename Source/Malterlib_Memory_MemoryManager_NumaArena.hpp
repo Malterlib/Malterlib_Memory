@@ -570,6 +570,42 @@ namespace NMib::NMemory
 		}
 	}
 
+	template <typename t_CParams>
+	TCMemoryManagerLimitedTemporaryReturn<t_CParams>::TCMemoryManagerLimitedTemporaryReturn(TCMemoryManagerLimitedTemporaryReturn &&_Other)
+		: mp_pThreadLocal(fg_Exchange(_Other.mp_pThreadLocal, nullptr))
+	{
+	}
+
+	template <typename t_CParams>
+	TCMemoryManagerLimitedTemporaryReturn<t_CParams>::TCMemoryManagerLimitedTemporaryReturn(TCMemoryManager<t_CParams> &_Manager)
+		: TCMemoryManagerLimitedTemporaryReturn(_Manager.m_LocalArena.f_TryGet())
+	{
+	}
+
+	template <typename t_CParams>
+	TCMemoryManagerLimitedTemporaryReturn<t_CParams>::TCMemoryManagerLimitedTemporaryReturn(TCMemoryManagerThreadLocal<t_CParams> *_pThreadLocal)
+	{
+		if (_pThreadLocal && _pThreadLocal->m_pArena && _pThreadLocal->m_pNumaArena->m_bLimitedArenas)
+		{
+			_pThreadLocal->f_TemporaryReturn();
+			mp_pThreadLocal = _pThreadLocal;
+		}
+	}
+
+	template <typename t_CParams>
+	TCMemoryManagerLimitedTemporaryReturn<t_CParams>::~TCMemoryManagerLimitedTemporaryReturn()
+	{
+		if (mp_pThreadLocal)
+			mp_pThreadLocal->f_TemporaryGetBack();
+	}
+
+	template <typename t_CParams>
+	TCMemoryManagerLimitedTemporaryReturn<t_CParams> &TCMemoryManagerLimitedTemporaryReturn<t_CParams>::operator = (TCMemoryManagerLimitedTemporaryReturn<t_CParams> &&_Other)
+	{
+		mp_pThreadLocal = fg_Exchange(_Other.mp_pThreadLocal, nullptr);
+		return *this;
+	}
+
 #if DMibConfig_Memory_Shims_Lightweight
 	template <typename t_CParams>
 	inline_never void TCMemoryManagerThreadLocal<t_CParams>::f_TrackAlloc(mint _Size)

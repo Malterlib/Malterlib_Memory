@@ -20,6 +20,21 @@ namespace NMib::NMemory
 	class TCMemoryManagerArenaHeap;
 
 	template <typename t_CParams>
+	struct TCMemoryManagerLimitedTemporaryReturn
+	{
+		TCMemoryManagerLimitedTemporaryReturn(TCMemoryManagerLimitedTemporaryReturn const &_Other) = delete;
+		TCMemoryManagerLimitedTemporaryReturn &operator = (TCMemoryManagerLimitedTemporaryReturn const &_Other) = delete;
+		TCMemoryManagerLimitedTemporaryReturn(TCMemoryManagerLimitedTemporaryReturn &&_Other);
+		TCMemoryManagerLimitedTemporaryReturn(TCMemoryManagerThreadLocal<t_CParams> *_pThreadLocal);
+		TCMemoryManagerLimitedTemporaryReturn(TCMemoryManager<t_CParams> &_Manager);
+		TCMemoryManagerLimitedTemporaryReturn &operator = (TCMemoryManagerLimitedTemporaryReturn &&_Other);
+		~TCMemoryManagerLimitedTemporaryReturn();
+
+	private:
+		TCMemoryManagerThreadLocal<t_CParams> *mp_pThreadLocal = nullptr;
+	};
+
+	template <typename t_CParams>
 	struct align_cacheline TCMemoryManagerThreadLocal
 	{
 		TCMemoryManagerArena<t_CParams> *m_pArena = nullptr;
@@ -130,6 +145,9 @@ namespace NMib::NMemory
 
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerThreadLocal;
+
+		template <typename t_CParams2>
+		friend struct TCMemoryManagerLimitedTemporaryReturn;
 
 	private:
 		TCPool<TCMemoryManagerArena<t_CParams>, 16, NThread::CLowLevelLock, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_Pool;

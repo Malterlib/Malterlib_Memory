@@ -295,6 +295,8 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	mint TCMemoryManager<t_CParams>::f_GetNumUsedSlabs()
 	{
+		TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
+
 		mint nSlabs = 0;
 		DMibLock(m_NumaArenasLock);
 		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
@@ -339,6 +341,8 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_GarbageCollect(bool _bDecommit)
 	{
+		TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
+
 		// We need to garbage collect the heaps first as they generate frees to arenas
 		DMibLock(m_NumaArenasLock);
 		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
@@ -417,6 +421,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::fp_EnumHeaps(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArenaHeap<t_CParams> *)> const &_Functor)
 	{
+		TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
 		DMibLock(m_NumaArenasLock);
 		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 		{
@@ -449,6 +454,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_EnumHeaps(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CHeap *)> const &_Functor)
 	{
+		TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
 		DMibLock(m_NumaArenasLock);
 		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 		{
@@ -624,6 +630,8 @@ namespace NMib::NMemory
 		}
 
 		{
+			TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(fg_RemoveQualifiers(*this));
+
 			TCMemoryManagerArenaHeapChunk<t_CParams> const *pChunk;
 			bool bIsChunk;
 			{
@@ -657,6 +665,8 @@ namespace NMib::NMemory
 		}
 
 		{
+			TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
+
 			TCMemoryManagerArenaHeapChunk<t_CParams> const *pChunk;
 			{
 				DMibLockRead(m_HeapChunksLock);
@@ -683,6 +693,7 @@ namespace NMib::NMemory
 		}
 
 		{
+			TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(fg_RemoveQualifiers(*this));
 			TCMemoryManagerArenaHeapChunk<t_CParams> const *pChunk;
 			bool bIsChunk;
 			{
@@ -710,6 +721,7 @@ namespace NMib::NMemory
 		}
 
 		{
+			TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
 			TCMemoryManagerArenaHeapChunk<t_CParams> const *pChunk;
 			bool bIsChunk;
 			{
@@ -875,6 +887,7 @@ namespace NMib::NMemory
 
 		if (_Size <= t_CParams::mc_MaxHeapAllocSize)
 		{
+			TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(pLocalArena);
 			while (true)
 			{
 				mint Size = _Size;
@@ -934,7 +947,10 @@ namespace NMib::NMemory
 			pNumaArena = pLocalArena->m_pNumaArena;
 
 		if (_Size <= t_CParams::mc_MaxHeapAllocSize)
+		{
+			TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(pLocalArena);
 			return pNumaArena->m_Heap.f_AllocAlignedWithSize(_Size, _Alignment);
+		}
 
 		DMibMemLightweightTrack
 			(
@@ -1080,6 +1096,8 @@ namespace NMib::NMemory
 
 		if (_Size == 0 || _Size <= t_CParams::mc_MaxHeapAllocSize)
 		{
+			TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
+
 			TCMemoryManagerArenaHeapChunk<t_CParams> *pChunk;
 			bool bIsChunk;
 			{
