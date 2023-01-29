@@ -93,7 +93,21 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 
 
 #ifdef DMibPOverrideOperatorNew
+#if defined(DMalterlibUseStaticLibCxx)
+
+#include <stddef.h>
+
+namespace std
+{
+	using ::nullptr_t;
+	using ::ptrdiff_t _LIBCPP_USING_IF_EXISTS;
+	using ::size_t _LIBCPP_USING_IF_EXISTS;
+}
+#	include <__new/new.h>
+
+#else
 #	include <new>
+#endif
 	// Default new
 #	if DMibPInlineActive > 0 && !defined(DMibNoInlineNew) && !defined(DCompiler_MSVC) && defined(DMalterlibUseStaticLibCxx)
 		inline_always only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size)
