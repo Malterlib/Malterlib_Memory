@@ -483,7 +483,7 @@ namespace NMib::NMemory
 				if (fp_CheckFreeSmall<12>(_Flags))
 					bError = true;
 			}
-			if constexpr (mc_bUseFreeBlockCounting)
+			if constexpr (t_CParams::mc_SmallSizeSlabsLargestSize == 16)
 			{
 				if (fp_CheckFreeSmall<16>(_Flags))
 					bError = true;

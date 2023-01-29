@@ -195,7 +195,7 @@ namespace NMib::NMemory
 		static_assert(mc_bUseSmallSizes || sizeof(void *) > 4, "Not supported on 32 bit");
 
 	private:
-		static constexpr mint mc_SmallAllocCategoryJumpTableSize = mc_bUseSmallSizes ? (mc_bUseFreeBlockCounting ? 6 : 5) : 1;
+		static constexpr mint mc_SmallAllocCategoryJumpTableSize = mc_bUseSmallSizes ? (t_CParams::mc_SmallSizeSlabsLargestSize == 16 ? 6 : 5) : 1;
 
 		using FSmallAllocJump = void *(*)(TCMemoryManagerArena *);
 		struct CSmallAllocJumbTable
@@ -206,7 +206,7 @@ namespace NMib::NMemory
 			{
 				if constexpr (mc_bUseSmallSizes)
 				{
-					if constexpr (mc_bUseFreeBlockCounting)
+					if constexpr (t_CParams::mc_SmallSizeSlabsLargestSize == 16)
 					{
 						return
 							{

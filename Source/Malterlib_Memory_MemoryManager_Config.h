@@ -240,10 +240,11 @@ namespace NMib::NMemory
 
 		static constexpr mint mc_PreventCacheConflictSizeMaxBlockSize = t_CParams::mc_PreventCacheConflictSize / t_CParams::mc_PreventCacheConflictSizeMaxOverhead; // 1 / x maximum overhead
 
-		static constexpr mint mc_MinNormalAllocSizeAfterSmallSize = fg_AlignUpConstExpr(mc_SmallSizeSlabsLargestSize, mc_MinNormalSizeAlignment)
-			+ fg_AlignUpConstExpr
+		static constexpr mint mc_MinNormalAllocSizeAfterSmallSize =
+			fg_AlignUpConstExpr
 			(
-				fg_RoundPowerOfTwoDown(fg_AlignUpConstExpr(mc_SmallSizeSlabsLargestSize, mc_MinNormalSizeAlignment)) / t_CParams::mc_NumSizesPerLevel, mc_MinNormalSizeAlignment
+				mc_SmallSizeSlabsLargestSize + (fg_RoundPowerOfTwoDown(mc_SmallSizeSlabsLargestSize) / t_CParams::mc_NumSizesPerLevel)
+				, mc_MinNormalSizeAlignment
 			)
 		;
 		static constexpr mint mc_MinNormalAllocSize = fg_MaxConstexpr
