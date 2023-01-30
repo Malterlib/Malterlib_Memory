@@ -60,7 +60,7 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CParams>
-	struct TCMemoryManagerSlabShared
+	struct alignas(16) TCMemoryManagerSlabShared
 	{
 		TCMemoryManagerSlabShared(uint32 _SlabType, TCMemoryManagerArena<t_CParams> * _pArena, uint8 _nCommittedHeaderSubSlabs);
 		virtual ~TCMemoryManagerSlabShared();
@@ -144,13 +144,13 @@ namespace NMib::NMemory
 
 
 	template <typename t_CParams, uint32 t_SlabType>
-	struct TCMemoryManagerSlab : public TCMemoryManagerSlabShared<t_CParams>
+	struct alignas(16) TCMemoryManagerSlab : public TCMemoryManagerSlabShared<t_CParams>
 	{
 		static constexpr mint mc_SlabMultiplier = t_CParams::mc_SlabTypeInfo[t_SlabType].m_SubSlabMutiplier;
 		static constexpr mint mc_nSubSlabs = TCMemoryManagerSlabShared<t_CParams>::template fs_CalculateSubSlabs<mc_SlabMultiplier>();
 		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CArena::mc_EnableCallbacks;
 
-		TCMemoryManagerSubSlabDataType<t_CParams> m_SubSlabDataType[mc_nSubSlabs]; // This one has to stay first
+		alignas(16) TCMemoryManagerSubSlabDataType<t_CParams> m_SubSlabDataType[mc_nSubSlabs]; // This one has to stay first
 		TCMemoryManagerSubSlabDataAlloc<t_CParams> m_SubSlabDataAlloc[mc_nSubSlabs];
 
 		NContainer::TCBitArrayPowerTwo<mc_nSubSlabs, t_CParams::mc_NumSubSlabSizeLevels, NContainer::TCBitArrayHierarchical> m_Allocated;

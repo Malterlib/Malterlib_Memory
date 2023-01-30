@@ -123,7 +123,6 @@ namespace NMib::NMemory
 
 		DMibFastCheck(this->f_GetSubSlabDataType() == m_SubSlabDataType);
 		DMibFastCheck(this->f_GetSubSlabDataAlloc() == m_SubSlabDataAlloc);
-
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
