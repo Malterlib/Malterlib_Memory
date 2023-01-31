@@ -23,6 +23,11 @@
 #include <string.h>
 #include <errno.h>
 
+#include "Mig/mach_exc.h"
+#include "Mig/exc.h"
+
+constexpr exception_behavior_t gc_MachExceptionCodes = MACH_EXCEPTION_CODES;
+
 #include "Malterlib_Memory_SystemOverride_MacOSInterpose.h"
 #include "Malterlib_Memory_SystemOverride_MacOSMallocZone.h"
 
@@ -268,45 +273,23 @@ namespace
 
 	constinit NStorage::TCAggregateSimple<CLowLevelGlobalState> g_LowLevelGlobalState = {DAggregateInit};
 
+	constexpr mint gc_TypeCounts = 32;
+
 	struct CExceptionParameters
 	{
-		mach_msg_type_number_t m_nTypes = 0;
-		exception_mask_t m_Masks[EXC_TYPES_COUNT];
-		mach_port_t m_Ports[EXC_TYPES_COUNT];
-		exception_behavior_t m_Behaviors[EXC_TYPES_COUNT];
-		thread_state_flavor_t m_Flavors[EXC_TYPES_COUNT];
+		mach_msg_type_number_t m_nTypes = gc_TypeCounts;
+		exception_mask_t m_Masks[gc_TypeCounts];
+		mach_port_t m_Ports[gc_TypeCounts];
+		exception_behavior_t m_Behaviors[gc_TypeCounts];
+		thread_state_flavor_t m_Flavors[gc_TypeCounts];
 	};
 
 #ifdef  __MigPackStructs
 #pragma pack(4)
 #endif
 
-	struct CExceptionMessage
-	{
-		mach_msg_header_t m_Header;
-		/* start of the kernel processed data */
-		mach_msg_body_t m_Body;
-		mach_msg_port_descriptor_t m_Thread;
-		mach_msg_port_descriptor_t m_Task;
-		/* end of the kernel processed data */
-		NDR_record_t m_NdrRecord;
-		exception_type_t m_Exception;
-		mach_msg_type_number_t m_CodeCnt;
-		int64_t m_Code[2];
-		int m_Flavor;
-		mach_msg_type_number_t m_OldStateCnt;
-		natural_t old_state[1296];
-	};
-
-	struct CExceptionReplyMessage
-	{
-		mach_msg_header_t m_Header;
-		NDR_record_t m_NdrRecord;
-		kern_return_t m_ReturnCode;
-		int m_Flavor;
-		mach_msg_type_number_t m_NewStateCnt;
-		natural_t m_NewState[1296];
-	};
+	using CExceptionMessage = __RequestUnion__mach_exc_subsystem;
+	using CExceptionReplyMessage = __ReplyUnion__mach_exc_subsystem;
 
 #ifdef  __MigPackStructs
 #pragma pack()
@@ -319,6 +302,8 @@ namespace
 		void f_Abort();
 		bool f_InstallHandler();
 		bool f_UnInstallHandler();
+		bool f_InstallHandlerPorts();
+		bool f_UninstallHandlerPorts();
 		void f_HandleMessages();
 
 		mach_port_t m_ExceptionHandlingPort = 0;
@@ -352,6 +337,7 @@ namespace
 
 namespace
 {
+#ifdef DArchitecture_x64
 	uint32 g_RunningUnderRosetta = 2;
 
 	inline_never bool fg_RunningUnderRosettaUpdate()
@@ -366,13 +352,17 @@ namespace
 
 	inline_always bool fg_RunningUnderRosetta()
 	{
-		return false;
-
 		if (g_RunningUnderRosetta < 2)
 			return !!g_RunningUnderRosetta;
 
 		return fg_RunningUnderRosettaUpdate();
 	}
+#else
+	inline_always bool fg_RunningUnderRosetta()
+	{
+		return false;
+	}
+#endif
 }
 
 extern "C"
@@ -572,6 +562,7 @@ extern "C"
 
 		NSys::fg_CreateSystemVersion();
 
+#if 0
 		if (fg_RunningUnderRosetta())
 		{
 			if (NSys::fg_System_BeingDebugged())
@@ -580,6 +571,7 @@ extern "C"
 				return;
 			}
 		}
+#endif
 
 		DMibOverrideTrace("fg_MalterlibSystem_InitEarly!\n");
 #ifndef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
@@ -1500,15 +1492,79 @@ namespace
 
 extern "C"
 {
-	boolean_t exc_server(mach_msg_header_t* request, mach_msg_header_t* reply);
+	boolean_t mach_exc_server(mach_msg_header_t *InHeadP, mach_msg_header_t *OutHeadP);
 
-	module_export assure_used kern_return_t catch_exception_raise_state_identity
+	kern_return_t catch_exception_raise_state
+	(
+		mach_port_t exception_port,
+		exception_type_t exception,
+		const exception_data_t code,
+		mach_msg_type_number_t codeCnt,
+		int *flavor,
+		const thread_state_t old_state,
+		mach_msg_type_number_t old_stateCnt,
+		thread_state_t new_state,
+		mach_msg_type_number_t *new_stateCnt
+	)
+	{
+		return KERN_FAILURE;
+	}
+
+	kern_return_t catch_exception_raise_state_identity
+	(
+		mach_port_t exception_port,
+		mach_port_t thread,
+		mach_port_t task,
+		exception_type_t exception,
+		exception_data_t code,
+		mach_msg_type_number_t codeCnt,
+		int *flavor,
+		thread_state_t old_state,
+		mach_msg_type_number_t old_stateCnt,
+		thread_state_t new_state,
+		mach_msg_type_number_t *new_stateCnt
+	)
+	{
+		return KERN_FAILURE;
+	}
+
+
+	kern_return_t catch_mach_exception_raise
+	(
+		mach_port_t exception_port,
+		mach_port_t thread,
+		mach_port_t task,
+		exception_type_t exception,
+		mach_exception_data_t code,
+		mach_msg_type_number_t codeCnt
+	)
+	{
+		return KERN_FAILURE;
+	}
+
+	kern_return_t catch_mach_exception_raise_state
+	(
+		mach_port_t exception_port,
+		exception_type_t exception,
+		const mach_exception_data_t code,
+		mach_msg_type_number_t codeCnt,
+		int *flavor,
+		const thread_state_t old_state,
+		mach_msg_type_number_t old_stateCnt,
+		thread_state_t new_state,
+		mach_msg_type_number_t *new_stateCnt
+	)
+	{
+		return KERN_FAILURE;
+	}
+
+	kern_return_t catch_mach_exception_raise_state_identity
 		(
 			mach_port_t _ExceptionPort
 			, mach_port_t _Thread
 			, mach_port_t _Task
 			, exception_type_t _Exception
-			, const exception_data_t _pCodes
+			, mach_exception_data_t _pCodes
 			, mach_msg_type_number_t _CodesCount
 			, int *_pFlavor
 			, const thread_state_t _pOldState
@@ -1523,7 +1579,7 @@ extern "C"
 		auto pThread = pthread_from_mach_thread_np(_Thread);
 
 		if (!g_MalterlibMallocOveriddenInstalled)
-			return true;
+			return KERN_FAILURE;
 
 		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((mint)pThread, g_LowLevelGlobalState->m_iThreadLocal);
 		if (pJumpBuffer)
@@ -1583,11 +1639,36 @@ extern "C"
 		switch (TargetBehavior)
 		{
 		case EXCEPTION_DEFAULT:
-			return exception_raise(TargetPort, _Thread, _Task, _Exception, _pCodes, _CodesCount);
 		case EXCEPTION_STATE:
-			return exception_raise_state(TargetPort, _Exception, _pCodes, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
 		case EXCEPTION_STATE_IDENTITY:
-			return exception_raise_state_identity(TargetPort, _Thread, _Task, _Exception, _pCodes, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
+			{
+				NContainer::TCVector<exception_data_type_t> SmallCodes;
+				exception_data_t pSmallCode = nullptr;
+				if (_CodesCount)
+				{
+					for (size_t iCode = 0; iCode < _CodesCount; ++iCode)
+						SmallCodes.f_Insert(_pCodes[iCode]);
+
+					pSmallCode = SmallCodes.f_GetArray();
+				}
+
+				switch (TargetBehavior)
+				{
+				case EXCEPTION_DEFAULT:
+					return exception_raise(TargetPort, _Thread, _Task, _Exception, pSmallCode, _CodesCount);
+				case EXCEPTION_STATE:
+					return exception_raise_state(TargetPort, _Exception, pSmallCode, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
+				case EXCEPTION_STATE_IDENTITY:
+					return exception_raise_state_identity(TargetPort, _Thread, _Task, _Exception, pSmallCode, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
+				}
+			}
+			break;
+		case EXCEPTION_DEFAULT | gc_MachExceptionCodes:
+			return mach_exception_raise(TargetPort, _Thread, _Task, _Exception, _pCodes, _CodesCount);
+		case EXCEPTION_STATE | gc_MachExceptionCodes:
+			return mach_exception_raise_state(TargetPort, _Exception, _pCodes, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
+		case EXCEPTION_STATE_IDENTITY | gc_MachExceptionCodes:
+			return mach_exception_raise_state_identity(TargetPort, _Thread, _Task, _Exception, _pCodes, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
 		default:
 			return KERN_FAILURE;
 		}
@@ -1609,22 +1690,53 @@ namespace
 		CExceptionMessage Message;
 		fg_MemClear(Message);
 
-		Message.m_Header.msgh_id = 1;
-		Message.m_Header.msgh_size = sizeof(Message);
-		Message.m_Header.msgh_remote_port = m_ExceptionHandlingPort;
-		Message.m_Header.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, MACH_MSG_TYPE_MAKE_SEND_ONCE);
+		auto &Header = Message.Request_mach_exception_raise_state_identity.Head;
+
+		Header.msgh_id = 1;
+		Header.msgh_size = sizeof(Message);
+		Header.msgh_remote_port = m_ExceptionHandlingPort;
+		Header.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, MACH_MSG_TYPE_MAKE_SEND_ONCE);
 
 		mach_msg
 			(
-				&Message.m_Header
+				&Header
 				, MACH_SEND_MSG | MACH_SEND_TIMEOUT
-				, Message.m_Header.msgh_size
+				, Header.msgh_size
 				, 0
 				, 0
 				, MACH_MSG_TIMEOUT_NONE
 				, MACH_PORT_NULL
 			)
 		;
+	}
+
+	bool CExceptionHandlingState::f_InstallHandlerPorts()
+	{
+		mach_port_t CurrentTask = mach_task_self();
+
+		m_PreviousParams.m_nTypes = gc_TypeCounts;
+		kern_return_t Result = task_swap_exception_ports
+			(
+				CurrentTask
+				, EXC_MASK_BAD_ACCESS
+				, m_ExceptionHandlingPort
+				, EXCEPTION_STATE_IDENTITY | gc_MachExceptionCodes
+				, gc_StateFlavor
+				, m_PreviousParams.m_Masks
+				, &m_PreviousParams.m_nTypes
+				, m_PreviousParams.m_Ports
+				, m_PreviousParams.m_Behaviors
+				, m_PreviousParams.m_Flavors
+			)
+		;
+
+		if (Result != KERN_SUCCESS)
+		{
+			DMibConErrOut("Failed to install exception handler (task_swap_exception_ports): {}\n", Result);
+			return false;
+		}
+
+		return true;
 	}
 
 	bool CExceptionHandlingState::f_InstallHandler()
@@ -1645,26 +1757,8 @@ namespace
 			return false;
 		}
 
-		Result = task_swap_exception_ports
-			(
-				CurrentTask
-				, EXC_MASK_BAD_ACCESS
-				, m_ExceptionHandlingPort
-				, EXCEPTION_STATE_IDENTITY
-				, gc_StateFlavor
-				, m_PreviousParams.m_Masks
-				, &m_PreviousParams.m_nTypes
-				, m_PreviousParams.m_Ports
-				, m_PreviousParams.m_Behaviors
-				, m_PreviousParams.m_Flavors
-			)
-		;
-
-		if (Result != KERN_SUCCESS)
-		{
-			DMibConErrOut("Failed to install exception handler (task_swap_exception_ports): {}\n", Result);
+		if (!f_InstallHandlerPorts())
 			return false;
-		}
 
 		return true;
 	}
@@ -1697,18 +1791,21 @@ namespace
 
 	void CExceptionHandlingState::f_HandleMessages()
 	{
-		CExceptionMessage Message;
+		CExceptionMessage FullMessage;
 
 		while (true)
 		{
-			Message.m_Header.msgh_local_port = m_ExceptionHandlingPort;
-			Message.m_Header.msgh_size = sizeof(Message);
+			auto &Message = FullMessage.Request_mach_exception_raise_state_identity;
+			auto &Header = Message.Head;
+
+			Header.msgh_local_port = m_ExceptionHandlingPort;
+			Header.msgh_size = sizeof(Message);
 			kern_return_t Result = mach_msg
 				(
-					&Message.m_Header
+					&Header
 					,MACH_RCV_MSG | MACH_RCV_LARGE
 					, 0
-					, Message.m_Header.msgh_size
+					, Header.msgh_size
 					, m_ExceptionHandlingPort
 					, MACH_MSG_TIMEOUT_NONE
 					, MACH_PORT_NULL
@@ -1718,27 +1815,29 @@ namespace
 			if (Result != KERN_SUCCESS)
 				return;
 
-			if (!Message.m_Exception)
+			if (!Message.exception)
 			{
-				if (Message.m_Header.msgh_id == 1)
+				if (Header.msgh_id == 1)
 					return;
 			}
 			else
 			{
-				if (Message.m_Task.name != mach_task_self())
+				if (Message.task.name != mach_task_self())
 					continue; // Not our process, could have been forked
 
-				CExceptionReplyMessage Reply;
-				Reply.m_Header.msgh_size = sizeof(Reply);
-				if (!exc_server(&Message.m_Header, &Reply.m_Header))
+				CExceptionReplyMessage FullReply;
+				auto &Reply = FullReply.Reply_mach_exception_raise_state_identity;
+				auto &ReplyHeader = Reply.Head;
+				ReplyHeader.msgh_size = sizeof(Reply);
+				if (!mach_exc_server(&Header, &ReplyHeader))
 					return;
 
 				// Send a reply and exit
 				mach_msg
 					(
-						&Reply.m_Header
+						&ReplyHeader
 						, MACH_SEND_MSG
-						, Reply.m_Header.msgh_size
+						, ReplyHeader.msgh_size
 						, 0
 						, MACH_PORT_NULL
 						, MACH_MSG_TIMEOUT_NONE
@@ -1806,8 +1905,9 @@ void fg_MalterlibMallocOverride_CanStartThreads()
 		}
 	}
 
-	if (!fg_RunningUnderRosetta() || (fg_RunningUnderRosetta() && !NSys::fg_System_BeingDebugged()))
+	if (NSys::fg_System_BeingDebugged() && !fg_RunningUnderRosetta())
 	{
+		// This mode is slower but more reliable and works with debuggers
 		State.m_pExceptionHandlingState = fg_Construct();
 		State.m_pExceptionHandlingThread = NThread::CThreadObject::fs_StartThread
 			(
@@ -1822,9 +1922,9 @@ void fg_MalterlibMallocOverride_CanStartThreads()
 						return 0;
 					}
 
-					ExceptionState.m_InstalledEvent.f_SetSignaled();
-
 					fg_MalterlibMallocOverrideInit_UninstallHandler();
+
+					ExceptionState.m_InstalledEvent.f_SetSignaled();
 
 					ExceptionState.f_HandleMessages();
 					ExceptionState.f_UnInstallHandler();
@@ -3339,6 +3439,8 @@ extern "C"
 			return 0;
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_size(_pMemory);
+
+#if 0 // OS functions can ask at any point for malloc_size on invalid pointers
 		if (g_bOnlyDefaultZone)
 		{
 			if (fg_IsInvalidRegion(_pMemory))
@@ -3355,6 +3457,7 @@ extern "C"
 			return fg_Size(_pMemory);
 #endif
 		}
+#endif
 
 		// Need safe because objc stupidly relies on being able to check if it's a real memory block
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize

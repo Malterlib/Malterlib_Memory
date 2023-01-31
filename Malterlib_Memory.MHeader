@@ -49,8 +49,8 @@ Import "Apps/*/*.MHeader"
 		{
 			!!PlatformFamily "Windows"
 		}
-		SearchPath += `@("Source/TCMalloc"->MakeAbsolute())/@(PlatformFamily)/@(Architecture)`
 		SearchPath += "Source/TCMalloc/Shared"->MakeAbsolute()
+		SearchPath += `@("Source/TCMalloc"->MakeAbsolute())/@(PlatformFamily)/@(Architecture)`
 		PreprocessorDefines += "TCMALLOC_NO_REPLACE_SYSTEM_MALLOC"
 	}
 	%Group "TcMalloc"
@@ -283,6 +283,15 @@ Import "Apps/*/*.MHeader"
 				}
 			}
 		}
+		%Group "Mig"
+		{
+			&
+			{
+				PlatformFamily "macOS"
+				MalterlibMemoryManager_EnableOverrideSystemMalloc true
+			}
+			%File "Source/Mig/*"
+		}
 		%Group "Documentation"
 		{
 			%File "Documentation/*"
@@ -397,7 +406,7 @@ Property
 		{
 			!!PlatformType "Windows"
 		}
-		ExtraGroups =+ "{Malterlib}/{TCMalloc}"
+		ExtraGroups += "{Malterlib}/{TCMalloc}"
 		{
 			!!MemoryManagerTestEnable_TcMalloc true
 		}
@@ -473,20 +482,18 @@ Property
 	}
 	%Group "Tests"
 	{
-		%Group "Performance"
+		%File "Test/*"
+		%File "Test/Test_Malterlib_Memory_DllMain.cpp"
+		{
+			Compile.Disabled true
+		}
+		%File "Test/Test_Malterlib_Memory_MemoryManager_Performance.cpp"
 		{
 			Compile.Disabled true
 			{
 				!!MalterlibTestsMem_EnablePerfTests false
 			}
-			%File "Test/Test_Malterlib_Memory_MemoryManager_Performance.h"
-			%File "Test/Test_Malterlib_Memory_MemoryManager_Performance.cpp"
 		}
-
-		%File "Test/Test_Malterlib_Memory_DebugMemoryManager.cpp"
-		%File "Test/Test_Malterlib_Memory_MemoryManager_Basics.cpp"
-		%File "Test/Test_Malterlib_Memory_MemoryManager_Debug.cpp"
-		%File "Test/Test_Malterlib_Memory_Pool.cpp"
 	}
 
 	%Dependency "Lib_Malterlib"
