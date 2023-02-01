@@ -354,6 +354,8 @@ namespace NMib::NMemory
 			g_MemoryManagerForkLock.f_ForkedChild();
 			g_MemoryManagerUnforked = true;
 			DNonTrackedHeap->f_ForkedChild();
+			DNonTrackedHeap->f_Unlock();
+
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 				DMainHeapSmall->f_ForkedChild();
@@ -361,7 +363,6 @@ namespace NMib::NMemory
 #endif
 				DMainHeapMax->f_ForkedChild();
 
-			DNonTrackedHeap->f_Unlock();
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 				DMainHeapSmall->f_Unlock();

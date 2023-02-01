@@ -761,14 +761,19 @@ namespace NMib::NMemory
 
 		for (auto &Arena : m_NumaArenas)
 		{
-			Arena.m_BackgroundCleanup.f_ForkedChild();;
 			Arena.m_PoolThreadLocal.f_ForkedChildLocked();
 			Arena.m_Pool.f_ForkedChildLocked();
 			Arena.m_FreeSlabsLock.f_ForkedChildLocked();
 			Arena.m_ArenasLock.f_ForkedChildLocked();
+			Arena.m_FreeArenasLock.f_ForkedChildLocked();
+			Arena.m_ArenasNeedCleanupLock.f_ForkedChildLocked();
+			Arena.m_LimitedArenasCreateLock.f_ForkedChildLocked();
 		}
 		m_NumaArenasLock.f_ForkedChildLocked();
 		m_HeapChunksLock.f_ForkedChild();
+
+		for (auto &Arena : m_NumaArenas)
+			Arena.m_BackgroundCleanup.f_ForkedChild();;
 	}
 
 	template <typename t_CParams>
@@ -789,6 +794,9 @@ namespace NMib::NMemory
 		m_HeapChunksLock.f_Lock();
 		for (auto &Arena : m_NumaArenas)
 		{
+			Arena.m_LimitedArenasCreateLock.f_Lock();
+			Arena.m_ArenasNeedCleanupLock.f_Lock();
+			Arena.m_FreeArenasLock.f_Lock();
 			Arena.m_ArenasLock.f_Lock();
 			Arena.m_FreeSlabsLock.f_Lock();
 			Arena.m_Pool.f_Lock();
@@ -805,6 +813,9 @@ namespace NMib::NMemory
 			Arena.m_Pool.f_Unlock();
 			Arena.m_FreeSlabsLock.f_Unlock();
 			Arena.m_ArenasLock.f_Unlock();
+			Arena.m_FreeArenasLock.f_Unlock();
+			Arena.m_ArenasNeedCleanupLock.f_Unlock();
+			Arena.m_LimitedArenasCreateLock.f_Unlock();
 		}
 		m_HeapChunksLock.f_Unlock();
 		for (auto &Arena : m_NumaArenas)
