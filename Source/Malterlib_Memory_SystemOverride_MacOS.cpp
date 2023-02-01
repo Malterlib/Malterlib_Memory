@@ -1905,9 +1905,31 @@ void fg_MalterlibMallocOverride_CanStartThreads()
 		}
 	}
 
-	if (NSys::fg_System_BeingDebugged() && !fg_RunningUnderRosetta())
+	if (!fg_RunningUnderRosetta() || !NSys::fg_System_BeingDebugged())
 	{
-		// This mode is slower but more reliable and works with debuggers
+	/*
+		SIGSEGV / SIGBUS handling is faster, but SIGSEGV isn't reliably signaled. Example:
+
+			Exception Type:        EXC_BAD_ACCESS (SIGSEGV)
+			Exception Codes:       KERN_PROTECTION_FAILURE at 0x000000016bfffff8
+			Exception Codes:       0x0000000000000002, 0x000000016bfffff8
+
+			VM Region Info: 0x16bfffff8 is in 0x1698d0000-0x16d0d4000;  bytes after start: 41091064  bytes before end: 17645575
+			  REGION TYPE                    START - END         [ VSIZE] PRT/MAX SHRMOD  REGION DETAIL
+			  __LINKEDIT                  1697a0000-1697b4000    [   80K] r--/rwx SM=COW  ...acOS/csparser
+			  GAP OF 0x11c000 BYTES
+		--->  STACK GUARD                 1698d0000-16d0d4000    [ 56.0M] ---/rwx SM=NUL  ... for thread 0
+			  Stack                       16d0d4000-16d8d0000    [ 8176K] rw-/rwx SM=PRV  thread 0
+
+		Signals can also be masked, so it's better to pay the cost of MACH exception handling to keep
+		the happy case fast.
+
+		When running under the debugger MACH exception handling works out well so the debugger won't catch exceptions,
+		which is how we want it. Under Rosetta this doesn't work and the debugger till break when we don't want it to break,
+		so while being debugged running under Rosetta we manually check each address if it's valid or not.
+
+	*/
+
 		State.m_pExceptionHandlingState = fg_Construct();
 		State.m_pExceptionHandlingThread = NThread::CThreadObject::fs_StartThread
 			(
