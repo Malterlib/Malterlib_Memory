@@ -1117,7 +1117,7 @@ namespace NMib::NMemory
 				bIsChunk = pChunk && (uint8 *)_pMemory < pChunk->f_GetEndAddress();
 			}
 
-   			if (bIsChunk)
+			if (bIsChunk)
 			{
 				DMibMemLightweightTrack
 					(

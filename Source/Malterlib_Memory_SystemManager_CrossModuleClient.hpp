@@ -61,8 +61,8 @@ namespace NMib
 
 				NMemory::g_CrossModule.m_fReallocDebug = []
 					(
-					 	CMemoryManagerCrossModule *_pModule
-					 	, void *_pMemory
+						CMemoryManagerCrossModule *_pModule
+						, void *_pMemory
 						 , mint &_Size
 						 , mint _OldSize
 						 , const ch8 *_pFile
@@ -76,14 +76,14 @@ namespace NMib
 				;
 				NMemory::g_CrossModule.m_fResizeDebug = []
 					(
-					 	CMemoryManagerCrossModule *_pModule
-					 	, void *_pMemory
-					 	, mint &_Size
-					 	, mint _OldSize
-					 	, const ch8 *_pFile
-					 	, aint _Line
-					 	, EHeapDebugFlag _Flags
-					 	, EAllocationFlag _AllocFlags
+						CMemoryManagerCrossModule *_pModule
+						, void *_pMemory
+						, mint &_Size
+						, mint _OldSize
+						, const ch8 *_pFile
+						, aint _Line
+						, EHeapDebugFlag _Flags
+						, EAllocationFlag _AllocFlags
 					) DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fResizeNoOldDebug(&g_CrossModule, _pMemory, _Size, _pFile, _Line, _Flags);
@@ -118,14 +118,14 @@ namespace NMib
 
 				NMemory::g_CrossModule.m_fNonTracked_ReallocDebug = []
 					(
-					 	CMemoryManagerCrossModule *_pModule
-					 	, void *_pMem
-					 	, mint &_Size
-					 	, mint _OldSize
-					 	, const ch8 *_pFile
-					 	, aint _Line
-					 	, EHeapDebugFlag _Flags
-					 	, EAllocationFlag _AllocFlags
+						CMemoryManagerCrossModule *_pModule
+						, void *_pMem
+						, mint &_Size
+						, mint _OldSize
+						, const ch8 *_pFile
+						, aint _Line
+						, EHeapDebugFlag _Flags
+						, EAllocationFlag _AllocFlags
 					) DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fNonTracked_ReallocNoOldDebug(&g_CrossModule, _pMem, _Size, _pFile, _Line, _Flags);
@@ -134,7 +134,7 @@ namespace NMib
 
 				NMemory::g_CrossModule.m_fNonTracked_ResizeDebug = []
 					(
-					 	CMemoryManagerCrossModule *_pModule
+						CMemoryManagerCrossModule *_pModule
 						, void *_pMem
 						, mint &_Size
 						, mint _OldSize

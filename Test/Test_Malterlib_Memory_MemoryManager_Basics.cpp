@@ -965,7 +965,7 @@ namespace
 
 						CTestMemoryMeasure MeasureMemory("Alloc");
 						MeasureMemory.f_Start();
-					 	MemoryManager.f_GarbageCollect(true);
+						MemoryManager.f_GarbageCollect(true);
 						MeasureMemory.f_Stop(1);
 
 						NMib::NTest::CTestMemoryResult Results;

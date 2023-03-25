@@ -3187,21 +3187,21 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		if (g_bMainHeapIsSmall)
-			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-		else
-#endif
+		#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			else
+		#endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		if (g_bMainHeapIsSmall)
-			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(_Size, (mint)_Alignment);
-		else
-#endif
+		#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(_Size, (mint)_Alignment);
+			else
+		#endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(_Size, (mint)_Alignment);
- 	#endif
+	#endif
 		return pMalterlibAlloc;
 #else
 		return fg_AllocAligned(_Size, _Alignment);

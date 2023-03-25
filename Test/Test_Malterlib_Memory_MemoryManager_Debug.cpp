@@ -30,7 +30,7 @@ namespace
 			enum
 			{
 				mc_bAsanPoisioning = false
-				, mc_StackTraceDepth 	= 0
+				, mc_StackTraceDepth	= 0
 			};
 		};
 
@@ -41,7 +41,7 @@ namespace
 				mc_bAsanPoisioning = false
 				, mc_nPreGuardBytes		= 0
 				, mc_nPostGuardBytes	= 0
-				, mc_StackTraceDepth 	= 0
+				, mc_StackTraceDepth	= 0
 			};
 		};
 

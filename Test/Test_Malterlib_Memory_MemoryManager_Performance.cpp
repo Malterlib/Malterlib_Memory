@@ -125,7 +125,7 @@ namespace
 					DMibConOut2("TCMemoryManagerSubSlab_SmallSize<{},4>::mc_NumAllocs = {}\r\n", Type, mint(TCMemoryManagerSubSlab_SmallSize<CParams,4>::mc_NumAllocs));
 					DMibConOut2("TCMemoryManagerSubSlab_SmallSize<{},8>::mc_NumAllocs = {}\r\n", Type, mint(TCMemoryManagerSubSlab_SmallSize<CParams,8>::mc_NumAllocs));
 					DMibConOut2("TCMemoryManagerSubSlab_SmallSize<{},12>::mc_NumAllocs = {}\r\n", Type, mint(TCMemoryManagerSubSlab_SmallSize<CParams,12>::mc_NumAllocs));
- 					DMibConOut2("sizeof(TCMemoryManagerArena<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerArena<CParams>));
+					DMibConOut2("sizeof(TCMemoryManagerArena<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerArena<CParams>));
 					DMibConOut2("sizeof(TCMemoryManagerNumaArena<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerNumaArena<CParams>));
 					DMibConOut2("sizeof(TCMemoryManager<{}>) = {}\r\n", Type, sizeof(TCMemoryManager<CParams>));
 					DMibConOut2("sizeof(TCMemoryManagerArenaHeap<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerArenaHeap<CParams>));
@@ -1103,8 +1103,8 @@ namespace
 					{
 						if
 							(
-							 	(_MaxAlloc >= gc_TestSize && _MaxAlloc <= gc_TestSizeEnd)
-							 	&& (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores || _nThreads == nPhysicalCores * 2)
+								(_MaxAlloc >= gc_TestSize && _MaxAlloc <= gc_TestSizeEnd)
+								&& (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores || _nThreads == nPhysicalCores * 2)
 							)
 						{
 							DMibTestSuite(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads)

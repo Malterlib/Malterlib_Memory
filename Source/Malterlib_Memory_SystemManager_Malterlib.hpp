@@ -530,7 +530,7 @@ namespace NMib::NMemory
 		inline_always static void DMibCrossmoduleAPI fs_AllocBatchDebug(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment, bool (DMibCrossmoduleAPI * _fCallBatchFunctor)(void *_pContext, void * _pAlloc, mint _Size), void * _pContext, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
- 			if (g_bMainHeapIsSmall)
+			if (g_bMainHeapIsSmall)
 			{
 				DMainHeapSmall->f_AllocBatchDebug
 					(

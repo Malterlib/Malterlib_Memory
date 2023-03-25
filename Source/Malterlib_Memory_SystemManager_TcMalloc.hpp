@@ -35,7 +35,7 @@ namespace NMib::NMemory
 #endif
 	void DMibCrossmoduleAPI CCrossModuleImplementation::fs_CreateNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 	{
-    	tc_free(tc_malloc(1));
+		tc_free(tc_malloc(1));
 	}
 
 	void DMibCrossmoduleAPI CCrossModuleImplementation::fs_DestroyNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
@@ -49,7 +49,7 @@ namespace NMib::NMemory
 		inline_always static void DMibCrossmoduleAPI fs_CreateMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
 			DMibMemoryReportAllocatorName(g_pMemoryManagerName, g_pMemoryManagerName);
-    		tc_free(tc_malloc(1));
+			tc_free(tc_malloc(1));
 		}
 
 		inline_always static void DMibCrossmoduleAPI fs_DestroyMemoryManager(CMemoryManagerCrossModule *_pModule)

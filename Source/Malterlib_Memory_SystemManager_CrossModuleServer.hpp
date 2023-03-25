@@ -364,8 +364,8 @@ namespace NMib::NMemory::NCrossModuleServer
 	}
 	void * DMibCrossmoduleAPI fg_ReallocDebug
 		(
-		 	NMemory::CMemoryManagerCrossModule *_pModule
-		 	, void *_pMemory
+			NMemory::CMemoryManagerCrossModule *_pModule
+			, void *_pMemory
 			, mint &_Size
 			, mint _OldSize
 			, const ch8 *_pFile
@@ -384,7 +384,7 @@ namespace NMib::NMemory::NCrossModuleServer
 	}
 	void * DMibCrossmoduleAPI fg_ResizeDebug
 		(
-		 	NMemory::CMemoryManagerCrossModule *_pModule
+			NMemory::CMemoryManagerCrossModule *_pModule
 			, void *_pMemory
 			, mint &_Size
 			, mint _OldSize
@@ -409,7 +409,7 @@ namespace NMib::NMemory::NCrossModuleServer
 	}
 	void * DMibCrossmoduleAPI fg_NonTracked_ReallocDebug
 		(
-		 	NMemory::CMemoryManagerCrossModule *_pModule
+			NMemory::CMemoryManagerCrossModule *_pModule
 			, void *_pMemory
 			, mint &_Size
 			, mint _OldSize
@@ -429,7 +429,7 @@ namespace NMib::NMemory::NCrossModuleServer
 	}
 	void * DMibCrossmoduleAPI fg_NonTracked_ResizeDebug
 		(
-		 	NMemory::CMemoryManagerCrossModule *_pModule
+			NMemory::CMemoryManagerCrossModule *_pModule
 			, void *_pMemory
 			, mint &_Size
 			, mint _OldSize
@@ -444,7 +444,7 @@ namespace NMib::NMemory::NCrossModuleServer
 	}
 	void * DMibCrossmoduleAPI fg_NonTracked_AllocAlignedDebug
 		(
-		 	NMemory::CMemoryManagerCrossModule *_pModule
+			NMemory::CMemoryManagerCrossModule *_pModule
 			, mint &_Size
 			, mint _Alignment
 			, const ch8 *_pFile
@@ -458,7 +458,7 @@ namespace NMib::NMemory::NCrossModuleServer
 
 	void DMibCrossmoduleAPI fg_AllocBatchDebug
 		(
-		 	NMemory::CMemoryManagerCrossModule *_pModule
+			NMemory::CMemoryManagerCrossModule *_pModule
 			, mint _Size
 			, mint _Alignment
 			, bool (DMibCrossmoduleAPI * _fCallBatchFunctor)(void *_pContext, void * _pAlloc, mint _Size)
