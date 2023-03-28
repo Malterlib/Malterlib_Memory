@@ -169,11 +169,11 @@ namespace NMib::NMemory
 		{
 			fg_ReportMemoryTo(m_pOldReporter);
 		}
-		void f_Suspend() override
+		void f_Suspend() noexcept override
 		{
 			fg_ReportMemoryTo(m_pOldReporter);
 		}
-		void f_Resume() override
+		void f_ResumeNoExcept() noexcept override
 		{
 			m_pOldReporter = fg_ReportMemoryTo(m_pNewReporter);
 		}
@@ -191,11 +191,11 @@ namespace NMib::NMemory
 		{
 			fg_ReportMemoryTo(m_pOldReporter);
 		}
-		void f_Suspend() override
+		void f_Suspend() noexcept override
 		{
 			fg_ReportMemoryTo(m_pOldReporter);
 		}
-		void f_Resume() override
+		void f_ResumeNoExcept() noexcept override
 		{
 			m_pOldReporter = fg_ReportMemoryTo(nullptr);
 		}
