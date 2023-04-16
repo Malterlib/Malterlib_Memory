@@ -992,6 +992,7 @@ namespace
 				};
 			};
 
+#if !(defined(DMibSanitizerEnabled_Address) && DMibPPtrBits <= 32)
 			DMibTestSuite("BackgroundCleanup")
 			{
 				TCMemoryManager<CParamsBackgroundTest> MemoryManager{CMemoryManagerConfig()};
@@ -1106,6 +1107,7 @@ namespace
 					DMibTest(DMibExpr(Results.m_AllAllocations.m_nDecommit.m_Average) == DMibExpr(0));
 				}
 			};
+#endif
 		}
 
 		template <mint t_PageSize>
