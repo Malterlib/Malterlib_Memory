@@ -861,7 +861,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_always void *TCMemoryManager<t_CParams>::f_AllocAligned(mint _Size, mint _Alignment)
+	inline_never void *TCMemoryManager<t_CParams>::f_AllocAligned(mint _Size, mint _Alignment)
 	{
 		return f_AllocAlignedInline(_Size, _Alignment);
 	}

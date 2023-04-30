@@ -43,18 +43,15 @@ namespace NMib
 	void fg_DeleteObject(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject, mint _Alignment = 1)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
-		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
+		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value || NTraits::cIsFinal<tf_CObjectType>);
 
-		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault)
+		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault && (!NTraits::cIsFinal<tf_CObjectType> || NTraits::cHasOperatorDelete<tf_CObjectType>))
 			delete _pObject;
 		else
 		{
-			if constexpr (NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value)
+			if constexpr (NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value && !NTraits::cIsFinal<tf_CObjectType>)
 			{
-#if !defined(DCompiler_MSVC_Workaround)
-				static_assert(!NTraits::TCHasOperatorDelete<tf_CObjectType>::mc_Value);
-#endif
-
+				static_assert(!NTraits::cHasOperatorDelete<tf_CObjectType>);
 #if defined(DMibPOverrideOperatorNew)
 				NMemory::CCaptureDefaultDelete Captured;
 				delete _pObject;
@@ -84,8 +81,14 @@ namespace NMib
 		static_assert(sizeof(tf_CObjectType) > 0);
 		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
 
-		_pObject->~tf_CObjectType();
-		fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, fg_AlignUp(sizeof(tf_CObjectType), _Alignment));
+		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault && NTraits::cHasOperatorDelete<tf_CObjectType>)
+			delete _pObject;
+		else
+		{
+			static_assert(!NTraits::cHasOperatorDelete<tf_CObjectType>);
+			_pObject->~tf_CObjectType();
+			fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, fg_AlignUp(sizeof(tf_CObjectType), _Alignment));
+		}
 	}
 
 	template <typename t_CType, typename t_CAllocator>

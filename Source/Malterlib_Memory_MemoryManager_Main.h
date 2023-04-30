@@ -114,7 +114,7 @@ namespace NMib::NMemory
 		void *f_AllocInline(mint _Size);
 		void *f_AllocAlignedWithSize(mint &_Size, mint _Alignment);
 		void *f_AllocAlignedWithSizeInline(mint &_Size, mint _Alignment);
-		void *f_AllocAligned(mint _Size, mint _Alignment);
+		inline_never void *f_AllocAligned(mint _Size, mint _Alignment);
 		void *f_AllocAlignedInline(mint _Size, mint _Alignment);
 		void f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
 		void *f_Realloc(void * _pMemory, mint &_Size, mint _OldSize);
