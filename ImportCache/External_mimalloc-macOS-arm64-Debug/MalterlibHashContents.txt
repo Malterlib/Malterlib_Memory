@@ -1,4 +1,4 @@
-GeneratorVersion: 38
+GeneratorVersion: 40
 Import.CMake_FullRebuildVersion: 4.1-4
 Import.CMake_CacheExcludePatterns: [
 	*/CMakeFiles/*,
@@ -65,9 +65,7 @@ Import.CMake_CacheReplaceContents: [
 		"Replace": ""
 	}
 ]
-
 Import.CMake_Environment: {}
-
 Import.CMake_CacheIgnoreInputs: [
 ]
 
@@ -89,7 +87,6 @@ Import.CMake_Languages: [
 		"MalterlibLanguage": "Assembler"
 	}
 ]
-
 Import.CMake_Config: Debug
 Import.CMake_Variables: [
 	MI_OVERRIDE=OFF,
