@@ -16,14 +16,14 @@ namespace NMib::NMemory
 	};
 
 	DMibPStartPackedStruct;
-	struct CMemoryManagerSubSlab_NormalLinkWithBlocks
+	struct DMibPPackedStruct CMemoryManagerSubSlab_NormalLinkWithBlocks
 	{
 		CMemoryManagerSubSlab_NormalLinkWithBlocks() = delete;
 		~CMemoryManagerSubSlab_NormalLinkWithBlocks() = delete;
 
-		DMibListLinkDS_Link(CMemoryManagerSubSlab_NormalLinkWithBlocks, m_Link);
-		uint32 m_nBlocks;
-	} DMibPPackedStruct;
+		DMibPPackedStruct DMibListLinkDS_Link(CMemoryManagerSubSlab_NormalLinkWithBlocks, m_Link);
+		DMibPPackedStruct uint32 m_nBlocks;
+	};
 	DMibPEndPackedStruct;
 
 	struct CMemoryManagerSubSlab_NormalLinkWithoutBlocks
