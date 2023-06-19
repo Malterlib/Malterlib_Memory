@@ -157,8 +157,8 @@ namespace NMib::NMemory
 
 		bool fp_ProcessMessages(CMemoryManagerSubSlab_NormalFreeList *_pFreeList);
 		bool fp_ProcessMessagesAbortable(bool &o_bAborted, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
-		template <bool tf_bAbortable>
-		bool fp_ProcessMessageList(CMemoryManagerSubSlab_NormalFreeList *_pFreeList, mint &o_MessageList, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
+		template <bool tf_bAbortable, bool tf_bFreeList>
+		inline_never bool fp_ProcessMessageList(mint &o_MessageList, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena, CMemoryManagerSubSlab_NormalFreeList *_pFreeList, smint &_nToProcess);
 
 		void fp_CheckMessages();
 		bool fp_CheckCleanup();

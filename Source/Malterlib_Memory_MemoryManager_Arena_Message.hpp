@@ -40,27 +40,16 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	template <bool tf_bAbortable>
+	template <bool tf_bAbortable, bool tf_bFreeList>
 	inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessageList
 		(
-			CMemoryManagerSubSlab_NormalFreeList *_pFreeList
-			, mint &o_MessageList
+			mint &o_MessageList
 			, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena
+ 			, CMemoryManagerSubSlab_NormalFreeList *_pFreeList
+			, smint &_nToProcess
 		)
 	{
 		mint Messages = o_MessageList;
-
-		smint nToProcess = TCLimitsInt<smint>::mc_Max;
-
-		bool bFound;
-
-		if (_pFreeList)
-		{
-			bFound = false;
-			nToProcess = 1024;
-		}
-		else
-			bFound = true;
 
 		while (Messages)
 		{
@@ -114,17 +103,19 @@ namespace NMib::NMemory
 					break;
 			}
 
-			if (!bFound)
+			if constexpr (tf_bFreeList)
 			{
 				if (!_pFreeList->f_IsEmpty())
-					bFound = true;
-				--nToProcess;
+					break;
+
+				if (--_nToProcess <= 0)
+					break;
 			}
-			else if (--nToProcess <= 0)
-				break;
 		}
 		o_MessageList = Messages;
-		return bFound;
+		if constexpr (tf_bFreeList)
+			return !_pFreeList->f_IsEmpty();
+		return false;
 	}
 
 	template <typename t_CParams>
@@ -137,7 +128,8 @@ namespace NMib::NMemory
 			if (Messages)
 			{
 				bDoneSomething = true;
-				fp_ProcessMessageList<true>(nullptr, Messages, _pLocalArena);
+				smint nToProcess = 0;
+				fp_ProcessMessageList<true, false>(Messages, _pLocalArena, nullptr, nToProcess);
 				if (f_IsContended(_pLocalArena))
 				{
 					o_bAborted = true;
@@ -161,7 +153,8 @@ namespace NMib::NMemory
 			if (Messages)
 			{
 				bDoneSomething = true;
-				fp_ProcessMessageList<true>(nullptr, Messages, _pLocalArena);
+				smint nToProcess = 0;
+				fp_ProcessMessageList<true, false>(Messages, _pLocalArena, nullptr, nToProcess);
 				if (f_IsContended(_pLocalArena))
 				{
 					o_bAborted = true;
@@ -178,12 +171,16 @@ namespace NMib::NMemory
 	{
 		if (_pFreeList)
 		{
+			smint nToProcess = 128;
+
 			for (auto &Messages : m_DeferredMessages)
 			{
 				if (Messages)
 				{
-					if (fp_ProcessMessageList<false>(_pFreeList, Messages, nullptr))
+					if (fp_ProcessMessageList<false, true>(Messages, nullptr, _pFreeList, nToProcess))
 						return true;
+					else if (nToProcess <= 0)
+						return false;
 				}
 			}
 			if (m_MessagesAvailable.f_Exchange(0))
@@ -198,8 +195,10 @@ namespace NMib::NMemory
 				{
 					if (Messages)
 					{
-						if (fp_ProcessMessageList<false>(_pFreeList, Messages, nullptr))
+						if (fp_ProcessMessageList<false, true>(Messages, nullptr, _pFreeList, nToProcess))
 							return true;
+						else if (nToProcess <= 0)
+							return false;
 					}
 				}
 			}
@@ -213,7 +212,8 @@ namespace NMib::NMemory
 			if (Messages)
 			{
 				bDoneSomething = true;
-				fp_ProcessMessageList<false>(nullptr, Messages, nullptr);
+				smint nToProcess = 0;
+				fp_ProcessMessageList<false, false>(Messages, nullptr, nullptr, nToProcess);
 			}
 		}
 
@@ -223,7 +223,8 @@ namespace NMib::NMemory
 			for (auto &Messages : m_SpreadMessages)
 			{
 				auto ToProcess = Messages.m_Messages.f_Exchange(0);
-				fp_ProcessMessageList<false>(nullptr, ToProcess, nullptr);
+				smint nToProcess = 0;
+				fp_ProcessMessageList<false, false>(ToProcess, nullptr, nullptr, nToProcess);
 			}
 		}
 
@@ -234,9 +235,7 @@ namespace NMib::NMemory
 	inline_small void TCMemoryManagerArena<t_CParams>::fp_CheckMessages()
 	{
 		if (m_MessagesAvailable.f_Load(NAtomic::EMemoryOrder_Relaxed))
-		{
 			fp_ProcessMessages(nullptr);
-		}
 	}
 
 	template <typename t_CParams>
