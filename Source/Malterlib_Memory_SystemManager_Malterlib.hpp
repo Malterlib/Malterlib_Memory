@@ -294,15 +294,15 @@ namespace NMib::NMemory
 			if (g_bMainHeapIsSmall)
 			{
 				DMainHeapSmall->f_ForkedParent();
-				DMainHeapSmall->f_CheckinManual();
 				DMainHeapSmall->f_Unlock();
+				DMainHeapSmall->f_CheckinManual();
 			}
 			else
 #endif
 			{
 				DMainHeapMax->f_ForkedParent();
-				DMainHeapMax->f_CheckinManual();
 				DMainHeapMax->f_Unlock();
+				DMainHeapMax->f_CheckinManual();
 			}
 
 			g_MemoryManagerForkLock.f_Unlock();
@@ -323,15 +323,15 @@ namespace NMib::NMemory
 			if (g_bMainHeapIsSmall)
 			{
 				DMainHeapSmall->f_ForkedChild();
-				DMainHeapSmall->f_CheckinManual();
 				DMainHeapSmall->f_Unlock();
+				DMainHeapSmall->f_CheckinManual();
 			}
 			else
 #endif
 			{
 				DMainHeapMax->f_ForkedChild();
-				DMainHeapMax->f_CheckinManual();
 				DMainHeapMax->f_Unlock();
+				DMainHeapMax->f_CheckinManual();
 			}
 
 			g_MemoryManagerForkLock.f_Unlock();
