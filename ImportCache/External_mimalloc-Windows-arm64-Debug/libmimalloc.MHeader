@@ -8,7 +8,6 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
-			"MI_PADDING=0",
 			"MI_STATIC_LIB",
 			"MI_WIN_NOREDIRECT=1"
 		]
@@ -24,38 +23,6 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 	Target.BaseFileName "mimalloc-static"
 	%Group "src"
 	{
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/stats.c`
-		{
-			Compile.Type "C++"
-		}
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/random.c`
-		{
-			Compile.Type "C++"
-		}
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/os.c`
-		{
-			Compile.Type "C++"
-		}
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/bitmap.c`
-		{
-			Compile.Type "C++"
-		}
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/arena.c`
-		{
-			Compile.Type "C++"
-		}
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/segment-cache.c`
-		{
-			Compile.Type "C++"
-		}
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/segment.c`
-		{
-			Compile.Type "C++"
-		}
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/page.c`
-		{
-			Compile.Type "C++"
-		}
 		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/alloc.c`
 		{
 			Compile.Type "C++"
@@ -68,7 +35,19 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 		{
 			Compile.Type "C++"
 		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/arena.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/bitmap.c`
+		{
+			Compile.Type "C++"
+		}
 		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/heap.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/init.c`
 		{
 			Compile.Type "C++"
 		}
@@ -76,9 +55,36 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 		{
 			Compile.Type "C++"
 		}
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/init.c`
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/os.c`
 		{
 			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/page.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/random.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/segment.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/segment-map.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/stats.c`
+		{
+			Compile.Type "C++"
+		}
+		%Group "prim"
+		{
+			%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/prim/prim.c`
+			{
+				Compile.Type "C++"
+			}
 		}
 	}
 }
@@ -91,7 +97,6 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
-			"MI_PADDING=0",
 			"MI_WIN_NOREDIRECT=1"
 		]
 	}
@@ -121,7 +126,6 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
-			"MI_PADDING=0",
 			"MI_WIN_NOREDIRECT=1"
 		]
 	}
@@ -151,7 +155,6 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
-			"MI_PADDING=0",
 			"MI_WIN_NOREDIRECT=1"
 		]
 	}
