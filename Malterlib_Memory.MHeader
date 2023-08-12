@@ -51,7 +51,7 @@ Import "Apps/*/*.MHeader"
 		}
 		SearchPath += "Source/TCMalloc/Shared"->MakeAbsolute()
 		SearchPath += `@("Source/TCMalloc"->MakeAbsolute())/@(PlatformFamily)/@(Architecture)`
-		PreprocessorDefines += "TCMALLOC_NO_REPLACE_SYSTEM_MALLOC"
+		PreprocessorDefines += ["TCMALLOC_NO_REPLACE_SYSTEM_MALLOC", "HAVE_TLS"]
 	}
 	%Group "TcMalloc"
 	{
@@ -78,7 +78,6 @@ Import "Apps/*/*.MHeader"
 				}
 
 				%File "../../External/gperftools/src/^*.h"
-				%File "../../External/gperftools/src/^*.c"
 				%File "../../External/gperftools/src/^*.cc"
 				%File "../../External/gperftools/src/debugallocation.cc"
 				{
@@ -123,13 +122,6 @@ Import "Apps/*/*.MHeader"
 						!!PlatformFamily "Windows"
 					}
 				}
-				%File "../../External/gperftools/src/maybe_threads.cc"
-				{
-					Compile.Disabled true
-					{
-						!!PlatformFamily "Windows"
-					}
-				}
 				%File "../../External/gperftools/src/emergency_malloc.cc"
 				{
 					Compile.Disabled true
@@ -148,24 +140,18 @@ Import "Apps/*/*.MHeader"
 				{
 					Compile.Disabled true
 					{
-						!!PlatformFamily "Windows"
+						!PlatformFamily "Linux"
 					}
 				}
 				%File "../../External/gperftools/src/heap-checker-bcad.cc"
 				{
 					Compile.Disabled true
-					{
-						!!PlatformFamily "Windows"
-					}
 				}
 				%Group "base"
 				{
-					%File "../../External/gperftools/src/base/thread_lister.c"
+					%File "../../External/gperftools/src/base/linuxthreads.cc"
 					{
 						Compile.Disabled true
-						{
-							!!PlatformFamily "Windows"
-						}
 					}
 				}
 				%Group "windows"
@@ -374,6 +360,7 @@ Property
 		//MalterlibWindowsSettings_SegmentHeap true
 
 		MemoryManagerTestEnable_TcMalloc: bool = false
+		/* Problematic, overrides global functions
 		MemoryManagerTestEnable_TcMalloc true
 		{
 			&
@@ -384,6 +371,7 @@ Property
 				!MalterlibSupportSanitizers true
 			}
 		}
+		 */
 
 		MemoryManagerTestEnable_MiMalloc: bool = false
 		MemoryManagerTestEnable_MiMalloc true
