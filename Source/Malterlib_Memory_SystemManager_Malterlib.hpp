@@ -199,6 +199,11 @@ namespace NMib::NMemory
 			return true;
 		}
 
+		inline_always static EMemoryManagerFeatureFlag DMibCrossmoduleAPI fs_MemoryManagerFeatures(CMemoryManagerCrossModule *_pModule)
+		{
+			return EMemoryManagerFeatureFlag_None;
+		}
+
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_GarbageCollect(CMemoryManagerCrossModule *_pModule)
 		{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize

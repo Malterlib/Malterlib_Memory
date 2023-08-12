@@ -194,6 +194,11 @@ namespace NMib::NMemory
 		{
 			return false;
 		}
+
+		inline_always static EMemoryManagerFeatureFlag DMibCrossmoduleAPI fs_MemoryManagerFeatures(CMemoryManagerCrossModule *_pModule)
+		{
+			return EMemoryManagerFeatureFlag_None;
+		}
 	};
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 	{

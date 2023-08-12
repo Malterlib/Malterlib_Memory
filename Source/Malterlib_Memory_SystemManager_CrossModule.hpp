@@ -115,6 +115,11 @@ namespace NMib::NMemory
 		return CCrossModuleImplementationExtra::fs_AllocHasDeterministicSize(_pModule);
 	}
 
+	EMemoryManagerFeatureFlag DMibCrossmoduleAPI CCrossModuleImplementationDefaults::fs_MemoryManagerFeatures(CMemoryManagerCrossModule *_pModule)
+	{
+		return CCrossModuleImplementationExtra::fs_MemoryManagerFeatures(_pModule);
+	}
+
 	inline_always void DMibCrossmoduleAPI CCrossModuleImplementationDefaults::fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 	{
 		return CCrossModuleImplementationExtra::fs_FreeNoSize(_pModule, _pMemory);
@@ -388,6 +393,7 @@ namespace NMib::NMemory
 			, &CCrossModuleImplementationExtra::fs_Free
 			, &CCrossModuleImplementationExtra::fs_NonTracked_Free
 			, &CCrossModuleImplementationExtra::fs_AllocHasDeterministicSize
+			, &CCrossModuleImplementationExtra::fs_MemoryManagerFeatures
 		}
 	;
 }

@@ -126,6 +126,11 @@ namespace NMib::NMemory
 			return false;
 		}
 
+		inline_always static EMemoryManagerFeatureFlag DMibCrossmoduleAPI fs_MemoryManagerFeatures(CMemoryManagerCrossModule *_pModule)
+		{
+			return EMemoryManagerFeatureFlag_None;
+		}
+
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
 			HeapFree(g_pMainHeap, 0, _pMemory);

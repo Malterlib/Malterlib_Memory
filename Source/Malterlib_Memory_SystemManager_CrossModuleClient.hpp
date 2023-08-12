@@ -169,6 +169,15 @@ namespace NMib
 					}
 				;
 			}
+
+			if (NMemory::g_CrossModule.m_Version < 0x105)
+			{
+				NMemory::g_CrossModule.m_fMemoryManagerFeatures = [](CMemoryManagerCrossModule *_pModule) DMibSuppressUndefinedSanitizer -> EMemoryManagerFeatureFlag
+					{
+						return EMemoryManagerFeatureFlag_None;
+					}
+				;
+			}
 		}
 		
 		NMemory::g_CrossModule.m_fCreateNonTrackedMemoryManager(&NMemory::g_CrossModule);
@@ -293,6 +302,11 @@ namespace NMib::NMemory
 	DMibSuppressUndefinedSanitizer bool fg_AllocHasDeterministicSize()
 	{
 		return g_CrossModule.m_fAllocHasDeterministicSize(&g_CrossModule);
+	}
+
+	DMibSuppressUndefinedSanitizer EMemoryManagerFeatureFlag fg_MemoryManagerFeatures()
+	{
+		return g_CrossModule.m_fMemoryManagerFeatures(&g_CrossModule);
 	}
 
 	DMibSuppressUndefinedSanitizer void fg_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)

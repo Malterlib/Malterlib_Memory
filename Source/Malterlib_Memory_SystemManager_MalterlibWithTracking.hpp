@@ -689,6 +689,37 @@ namespace NMib::NMemory
 #endif
 		}
 
+		inline_always static EMemoryManagerFeatureFlag DMibCrossmoduleAPI fs_MemoryManagerFeatures(CMemoryManagerCrossModule *_pModule)
+		{
+			auto Return = EMemoryManagerFeatureFlag_None;
+
+			if constexpr (CMemoryManagerDebugOptions::mc_bTraceLeaks)
+				Return |= EMemoryManagerFeatureFlag_TraceLeaks;
+
+			if constexpr (CMemoryManagerDebugOptions::mc_StackTraceDepth > 0)
+				Return |= EMemoryManagerFeatureFlag_StackTrace;
+
+			if constexpr (CMemoryManagerDebugOptions::mc_bCheckModifyAfterFree)
+				Return |= EMemoryManagerFeatureFlag_CheckModifyAfterFree;
+
+			if constexpr (CMemoryManagerDebugOptions::mc_nPreGuardBytes > 0)
+				Return |= EMemoryManagerFeatureFlag_PreGuard;
+
+			if constexpr (CMemoryManagerDebugOptions::mc_nPostGuardBytes > 0)
+				Return |= EMemoryManagerFeatureFlag_PostGuard;
+
+			if constexpr (CMemoryManagerDebugOptions::mc_bFreeValidation)
+				Return |= EMemoryManagerFeatureFlag_FreeValidation;
+
+			if constexpr (CMemoryManagerDebugOptions::mc_bEnumeration)
+				Return |= EMemoryManagerFeatureFlag_Enumeration;
+
+			if constexpr (CMemoryManagerDebugOptions::mc_bAssertOnMemoryLeak)
+				Return |= EMemoryManagerFeatureFlag_AssertOnMemoryLeak;
+
+			return Return;
+		}
+
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pBlock)
 		{
 			return DNonTrackedHeap->f_FreeNoSize(_pBlock);

@@ -153,6 +153,11 @@ namespace NMib::NMemory
 		return CCrossModuleImplementationExtra::fs_AllocHasDeterministicSize(&g_CrossModule);
 	}
 
+	EMemoryManagerFeatureFlag fg_MemoryManagerFeatures()
+	{
+		return CCrossModuleImplementationExtra::fs_MemoryManagerFeatures(&g_CrossModule);
+	}
+
 #	if DMibConfig_MalterlibMemoryManager_Debug
 		DMibMemory_MemoryManagerExport void * fg_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
@@ -576,8 +581,12 @@ namespace NMib
 			_pModule->m_fFree = NMemory::g_CrossModule.m_fFree;
 			_pModule->m_fNonTracked_Free = NMemory::g_CrossModule.m_fNonTracked_Free;
 		}
+
 		if (_Version >= 0x104)
 			_pModule->m_fAllocHasDeterministicSize = NMemory::g_CrossModule.m_fAllocHasDeterministicSize;
+
+		if (_Version >= 0x105)
+			_pModule->m_fMemoryManagerFeatures = NMemory::g_CrossModule.m_fMemoryManagerFeatures;
 	}
 
 	void CMemoryManagerCrossModuleInterfaceServer::f_Unregister(NMemory::CMemoryManagerCrossModule *_pModule)

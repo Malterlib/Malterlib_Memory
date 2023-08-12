@@ -12,6 +12,19 @@ namespace NMib::NMemory
 	{
 	};
 
+	enum EMemoryManagerFeatureFlag : uint32
+	{
+		EMemoryManagerFeatureFlag_None = 0
+		, EMemoryManagerFeatureFlag_TraceLeaks = DMibBit(0)
+		, EMemoryManagerFeatureFlag_StackTrace = DMibBit(1)
+		, EMemoryManagerFeatureFlag_CheckModifyAfterFree = DMibBit(2)
+		, EMemoryManagerFeatureFlag_PreGuard = DMibBit(3)
+		, EMemoryManagerFeatureFlag_PostGuard = DMibBit(4)
+		, EMemoryManagerFeatureFlag_FreeValidation = DMibBit(5)
+		, EMemoryManagerFeatureFlag_Enumeration = DMibBit(6)
+		, EMemoryManagerFeatureFlag_AssertOnMemoryLeak = DMibBit(7)
+	};
+
 	class CGlobalReportMemory
 	{
 	public:

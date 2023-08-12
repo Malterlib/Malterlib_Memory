@@ -28,6 +28,7 @@ namespace NMib::NMemory
 	DMibMemory_MemoryManagerExport only_parameters_aliased fp32 fg_Overhead(void const *_pMemory);
 	DMibMemory_MemoryManagerExport only_parameters_aliased mint fg_Granularity();
 	DMibMemory_MemoryManagerExport bool fg_AllocHasDeterministicSize();
+	DMibMemory_MemoryManagerExport EMemoryManagerFeatureFlag fg_MemoryManagerFeatures();
 
 #		if DMibConfig_MalterlibMemoryManager_Debug
 			DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
