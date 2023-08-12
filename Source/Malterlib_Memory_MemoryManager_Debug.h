@@ -26,6 +26,7 @@ namespace NMib::NMemory
 			, mc_bFreeValidation		= true // Enables validation of free blocks (double free)
 			, mc_bEnumeration			= true // Enables enumeration. Needed for reporting leaks.
 			, mc_bTraceLeaks			= true // Enables leak tracing
+			, mc_bAssertOnMemoryLeak	= false
 		};
 	};
 	template <typename t_CParams, bool t_bException, typename t_COptions = CMemoryManagerDebugOptionsDefault>
@@ -50,6 +51,7 @@ namespace NMib::NMemory
 				mint m_Size;
 				CMibCodeAddress m_CallStack[t_COptions::mc_StackTraceDepth ? t_COptions::mc_StackTraceDepth : 1];
 				mint m_nCallStack;
+				mint m_AllocID = 0;
 
 				uint8 * f_GetAddress() const;
 			};
@@ -67,6 +69,7 @@ namespace NMib::NMemory
 
 				void f_OnFree(uint8 *_pMemory);
 				void f_OnAlloc(uint8 *_pMemory, mint _nBytes);
+				void f_OnFreeOtherThread(uint8 *_pMemory);
 
 				void f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
 				bool f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
@@ -74,6 +77,7 @@ namespace NMib::NMemory
 				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2*1024*1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
 					m_Allocations
 				;
+				CGlobal *m_pGlobal;
 			};
 
 			struct CHeap
@@ -94,6 +98,7 @@ namespace NMib::NMemory
 				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2*1024*1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
 					m_Allocations
 				;
+				CGlobal *m_pGlobal;
 			};
 
 			struct CGlobal
@@ -111,6 +116,7 @@ namespace NMib::NMemory
 				void f_OnCommit(uint8 *_pMemory, mint _nBytes);
 				void f_OnDecommit(uint8 *_pMemory, mint _nBytes);
 
+				align_cacheline NAtomic::TCAtomic<mint> m_AllocIDCounter = 0;
 				align_cacheline NThread::CMutual m_Lock;
 
 				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2*1024*1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
@@ -125,6 +131,9 @@ namespace NMib::NMemory
 	struct TCMemoryManagerDebug : public TCMemoryManager<TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>>
 	{
 	public:
+		template <typename t_CParams2, bool t_bException2, typename t_COptions2>
+		friend struct TCMemoryManagerDebugParams;
+
 		typedef TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions> CParams;
 		typedef TCMemoryManager<CParams> CSuper;
 	public:
@@ -175,7 +184,7 @@ namespace NMib::NMemory
 			(
 				NFunction::TCFunctionNoAlloc
 				<
-					void (uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags, mint _ThreadID)
+					void (uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags, mint _ThreadID, mint _AllocID)
 				> const &_Functor
 			)
 		;
@@ -220,7 +229,7 @@ namespace NMib::NMemory
 			(
 				NFunction::TCFunctionNoAlloc
 				<
-					void (uint8 *_pMemory, mint _Size, CMibCodeAddress *_pStackTrace, mint _nStackTrace, CPreBlock *_pPreAlloc)
+					void (uint8 *_pMemory, CPreBlock *_pPreAlloc, typename CParams::CNotifier::CAllocInfo &_AllocInfo)
 				> const &_Functor
 			)
 		;

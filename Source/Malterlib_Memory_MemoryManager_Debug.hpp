@@ -129,7 +129,7 @@ namespace NMib::NMemory
 		(
 			NFunction::TCFunctionNoAlloc
 			<
-				void (uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, CPreBlock *_pPreAlloc)
+				void (uint8 *_pMemory, CPreBlock *_pPreAlloc, typename CParams::CNotifier::CAllocInfo &_AllocInfo)
 			> const &_Functor
 		)
 	{
@@ -137,7 +137,7 @@ namespace NMib::NMemory
 			return;
 
 		auto fl_ReportAlloc
-			= [&](typename TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CAllocInfo & _AllocInfo)
+			= [&](typename CParams::CNotifier::CAllocInfo &_AllocInfo)
 			{
 
 				uint8 * pAddress = _AllocInfo.f_GetAddress();
@@ -148,7 +148,7 @@ namespace NMib::NMemory
 					)
 				{
 					CPreBlock *pPreBlock = (CPreBlock *)(pAddress + ((CPreBlock *)pAddress)->m_Offset);
-					_Functor(pAddress, _AllocInfo.m_Size, _AllocInfo.m_CallStack, _AllocInfo.m_nCallStack, pPreBlock);
+					_Functor(pAddress, pPreBlock, _AllocInfo);
 				}
 			}
 		;
@@ -187,7 +187,7 @@ namespace NMib::NMemory
 		bool bError = false;
 		fp_EnumAllocations
 			(
-				[&](uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, CPreBlock *_pPreBlock)
+				[&](uint8 *_pMemory, CPreBlock *_pPreBlock, CParams::CNotifier::CAllocInfo &_AllocInfo)
 				{
 					auto pAddress = (uint8 *)(_pPreBlock + 1);
 					if (fsp_CheckGuard((uint8 *)pAddress, _Flags))
@@ -207,17 +207,28 @@ namespace NMib::NMemory
 		(
 			NFunction::TCFunctionNoAlloc
 			<
-				void (uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags, mint _ThreadID)
+				void (uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags, mint _ThreadID, mint _AllocID)
 			> const &_Functor
 		)
 	{
-
 		fp_EnumAllocations
 			(
-				[&](uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, CPreBlock *_pPreBlock)
+				[&](uint8 *_pMemory, CPreBlock *_pPreBlock, CParams::CNotifier::CAllocInfo &_AllocInfo)
 				{
 					auto pAddress = (uint8 *)(_pPreBlock + 1);
-					_Functor(pAddress, _pPreBlock->m_Size, _pStackTrace, _nStackTrace, _pPreBlock->m_pFile, _pPreBlock->m_Line, _pPreBlock->m_Flags, _pPreBlock->m_ThreadID);
+					_Functor
+						(
+							pAddress
+							, _pPreBlock->m_Size
+							, _AllocInfo.m_CallStack
+							, _AllocInfo.m_nCallStack
+							, _pPreBlock->m_pFile
+							, _pPreBlock->m_Line
+							, _pPreBlock->m_Flags
+							, _pPreBlock->m_ThreadID
+							, _AllocInfo.m_AllocID
+						)
+					;
 				}
 			)
 		;
@@ -225,7 +236,19 @@ namespace NMib::NMemory
 
 	namespace NPrivate
 	{
-		void fg_ReportLeak(uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags, mint _ThreadID, bool _bCanAllocateNonTracked);
+		bool fg_ReportLeak
+			(
+				uint8 *_pMemory
+				, mint _Size
+				, CMibCodeAddress *_pStackTrace
+				, mint _nStackTrace
+				, ch8 const *_pFile
+				, uint32 _Line
+				, EHeapDebugFlag _Flags
+				, mint _ThreadID
+				, bool _bCanAllocateNonTracked
+			)
+		;
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -259,29 +282,135 @@ namespace NMib::NMemory
 		return *pReportingLeaks;
 	};
 
-
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ReportLeaks()
 	{
 		if constexpr (!t_COptions::mc_bTraceLeaks)
 			return;
-		*m_bReportingLeaks = true;
-		auto Cleanup = fg_OnScopeExit
-			(
-				[&]()
+
+		this->f_GarbageCollect(true);
+
+		struct CLocalAllocInfo
+		{
+			uint8 *m_pMemory;
+			mint m_Size;
+			CMibCodeAddress *m_pStackTrace;
+			mint m_nStackTrace;ch8 const *m_pFile;
+			uint32 m_Line;
+			EHeapDebugFlag m_Flags;
+			mint m_ThreadID;
+		};
+
+		NContainer::TCMapWithPool<mint, CLocalAllocInfo, NMib::CSort_Default, NMib::NMemory::CAllocator_VirtualNoTracking> Allocations;
+
+		{
+			*m_bReportingLeaks = true;
+			auto Cleanup = fg_OnScopeExit
+				(
+					[&]()
+					{
+						*m_bReportingLeaks = false;
+					}
+				)
+			;
+
+			f_EnumAllocations
+				(
+					[&](uint8 *_pMemory, mint _Size, CMibCodeAddress *_pStackTrace, mint _nStackTrace, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags, mint _ThreadID, mint _AllocID)
+					{
+						[[maybe_unused]] bool bWasCreated = Allocations(_AllocID, CLocalAllocInfo{_pMemory, _Size, _pStackTrace, _nStackTrace, _pFile, _Line, _Flags, _ThreadID}).f_WasCreated();
+						DMibFastCheck(bWasCreated);
+					}
+				)
+			;
+		}
+
+		[[maybe_unused]] bool bFoundLeak = false;
+
+		for (auto &LeakInfo : Allocations)
+		{
+			[[maybe_unused]] bool bReported = NPrivate::fg_ReportLeak
+				(
+					LeakInfo.m_pMemory
+					, LeakInfo.m_Size
+					, LeakInfo.m_pStackTrace
+					, LeakInfo.m_nStackTrace
+					, LeakInfo.m_pFile
+					, LeakInfo.m_Line
+					, LeakInfo.m_Flags
+					, LeakInfo.m_ThreadID
+					, t_COptions::mc_bCanAllocateNonTracked
+				)
+			;
+
+			if (!bReported)
+				continue;
+
+			bFoundLeak = true;
+
+#if DMibConfig_RefCountDebugging && DMibConfig_RefCountLeakDebugging
+
+			if (fg_AlignUp(LeakInfo.m_pMemory, alignof(mint)) != LeakInfo.m_pMemory)
+				continue;
+
+			auto const *pRefcountDebugCandidateEnd = (mint const *)fg_AlignDown(LeakInfo.m_pMemory + LeakInfo.m_Size, alignof(mint));
+
+			for (auto const *pRefcountDebugCandidate = (mint const *)LeakInfo.m_pMemory; pRefcountDebugCandidate < pRefcountDebugCandidateEnd; ++pRefcountDebugCandidate)
+			{
+				if (*pRefcountDebugCandidate == NStorage::TCIntrusiveRefCount<NStorage::ESharedPointerOption_SupportWeakPointer>::ms_Magic)
 				{
-					*m_bReportingLeaks = false;
+					auto *pRefCount = (NStorage::TCIntrusiveRefCount<NStorage::ESharedPointerOption_SupportWeakPointer> const *)
+						((uint8 const *)pRefcountDebugCandidate - DMibPOffsetOf(NStorage::TCIntrusiveRefCount<NStorage::ESharedPointerOption_SupportWeakPointer>, m_Magic))
+					;
+					NSys::fg_DebugOutput(NMib::NStr::fg_Format<NMib::NStr::CStrNonTracked>("        Refcount: {}   Weak: {}\n\n", pRefCount->f_Get(), pRefCount->f_WeakGet()));
+					continue;
 				}
-			)
-		;
-		f_EnumAllocations
-			(
-				[&](uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags, mint _ThreadID)
+
+				if (*pRefcountDebugCandidate == NStorage::TCIntrusiveRefCount<NStorage::ESharedPointerOption_None>::ms_Magic)
 				{
-					NPrivate::fg_ReportLeak(_pMemory, _Size, _pStackTrace, _nStackTrace, _pFile, _Line, _Flags, _ThreadID, t_COptions::mc_bCanAllocateNonTracked);
+					auto *pRefCount = (NStorage::TCIntrusiveRefCount<NStorage::ESharedPointerOption_None> const *)
+						((uint8 const *)pRefcountDebugCandidate - DMibPOffsetOf(NStorage::TCIntrusiveRefCount<NStorage::ESharedPointerOption_None>, m_Magic))
+					;
+					NSys::fg_DebugOutput(NMib::NStr::fg_Format<NMib::NStr::CStrNonTracked>("        Refcount: {}\n\n", pRefCount->f_Get()));
+					continue;
 				}
-			)
-		;
+
+				if (*pRefcountDebugCandidate != NStorage::CRefCountDebug::ms_Magic)
+					continue;
+
+				auto *pRefcountDebug = (NStorage::CRefCountDebug const *)pRefcountDebugCandidate;
+				mint iCallstack = 0;
+				NSys::fg_DebugOutput(NMib::NStr::fg_Format<NMib::NStr::CStrNonTracked>("        Destroy location: 0b{nfb,sf0,sj64}\n\n", pRefcountDebug->m_DestroyLocation.f_Load()));
+
+				if (pRefcountDebug->m_Callstacks.f_IsEmpty() && pRefcountDebug->m_WeakCallstacks.f_IsEmpty())
+				{
+					NSys::fg_DebugOutput(NMib::NStr::CStrNonTracked("        No reference callstacks\n\n"));
+					continue;
+				}
+
+				for (auto &Callstack : pRefcountDebug->m_Callstacks)
+				{
+					NSys::fg_DebugOutput(NMib::NStr::fg_Format<NMib::NStr::CStrNonTracked>("        Reference callstack {}\n", iCallstack));
+					Callstack.f_Trace(12);
+					++iCallstack;
+				}
+				iCallstack = 0;
+				for (auto &Callstack : pRefcountDebug->m_WeakCallstacks)
+				{
+					NSys::fg_DebugOutput(NMib::NStr::fg_Format<NMib::NStr::CStrNonTracked>("        Weak reference callstack {}\n", iCallstack));
+					Callstack.f_Trace(12);
+					++iCallstack;
+				}
+				NSys::fg_DebugOutput(NMib::NStr::CStrNonTracked("\n"));
+			}
+#endif
+		}
+
+		if constexpr (t_COptions::mc_bAssertOnMemoryLeak)
+		{
+			if (bFoundLeak)
+				DMibPDebugBreak;
+		}
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -797,6 +926,8 @@ namespace NMib::NMemory
 			CPreBlock *pPreBlock = ((CPreBlock *)_pMemory) - 1;
 			uint8 * pOldMemory = (uint8 *)_pMemory - pPreBlock->m_PreCheck;
 
+			pPreBlock->m_Flags |= EHeapDebugFlag_Freed;
+
 			mint PreBytes = pPreBlock->m_PreCheck;
 			mint PostBytes = t_COptions::mc_nPostGuardBytes;
 			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, alignof(CPreBlock));
@@ -1010,6 +1141,7 @@ namespace NMib::NMemory
 		auto &AllocInfo = *Mapped;
 
 		AllocInfo.m_Size = _nBytes;
+		AllocInfo.m_AllocID = ++m_AllocIDCounter;
 
 		if constexpr (t_COptions::mc_StackTraceDepth != 0)
 			AllocInfo.m_nCallStack = NMib::NSys::fg_System_GetStackTrace(AllocInfo.m_CallStack, t_COptions::mc_StackTraceDepth);
@@ -1062,6 +1194,7 @@ namespace NMib::NMemory
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CArena::CArena(CGlobal *_pGlobal)
+		: m_pGlobal(_pGlobal)
 	{
 	}
 
@@ -1090,11 +1223,29 @@ namespace NMib::NMemory
 		auto &AllocInfo = *Mapped;
 
 		AllocInfo.m_Size = _nBytes;
+		AllocInfo.m_AllocID = ++m_pGlobal->m_AllocIDCounter;
 
 		if constexpr (t_COptions::mc_StackTraceDepth != 0)
 			AllocInfo.m_nCallStack = NMib::NSys::fg_System_GetStackTrace(AllocInfo.m_CallStack, t_COptions::mc_StackTraceDepth);
 		else
 			AllocInfo.m_nCallStack = 0;
+	}
+
+	template <typename t_CParams, bool t_bException, typename t_COptions>
+	inline_never void TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CArena::f_OnFreeOtherThread(uint8 *_pMemory)
+	{
+		using CPreBlock = typename TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::CPreBlock;
+
+		if constexpr ((t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes) == 0)
+			return;
+
+		auto *pPreBlock = (CPreBlock *)_pMemory;
+		if (pPreBlock->m_Magic != 0x12b30ce0658a1ceaULL)
+			return;
+
+		pPreBlock = (CPreBlock *)(_pMemory + pPreBlock->m_Offset);
+
+		pPreBlock->m_Flags |= EHeapDebugFlag_FreedOnOtherThread;
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -1159,6 +1310,7 @@ namespace NMib::NMemory
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>::CNotifier::CHeap::CHeap(CGlobal *_pGlobal)
+		: m_pGlobal(_pGlobal)
 	{
 	}
 
@@ -1184,6 +1336,7 @@ namespace NMib::NMemory
 		auto &AllocInfo = *Mapped;
 
 		AllocInfo.m_Size = _nBytes;
+		AllocInfo.m_AllocID = m_pGlobal->m_AllocIDCounter++;
 
 		if constexpr (t_COptions::mc_StackTraceDepth != 0)
 			AllocInfo.m_nCallStack = NMib::NSys::fg_System_GetStackTrace(AllocInfo.m_CallStack, t_COptions::mc_StackTraceDepth);

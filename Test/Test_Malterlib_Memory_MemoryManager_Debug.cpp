@@ -139,7 +139,7 @@ namespace
 				bool bFoundAlloc = false;
 
 				auto fl_AllocFunctor
-					=[&](uint8 *_pAlloc, mint, CMibCodeAddress*, mint, const ch8 *, uint32, uint32, mint)
+					=[&](uint8 *_pAlloc, mint, CMibCodeAddress*, mint, const ch8 *, uint32, uint32, mint, mint)
 					{
 						if (pAlloc == _pAlloc)
 							bFoundAlloc = true;

@@ -36,6 +36,8 @@ namespace NMib
 		EHeapDebugFlag_None = 0
 		, EHeapDebugFlag_Ignore		= DMibBit(0)
 		, EHeapDebugFlag_Internal	= DMibBit(1)
+		, EHeapDebugFlag_Freed		= DMibBit(2)
+		, EHeapDebugFlag_FreedOnOtherThread	= DMibBit(3)
 	};
 }
 

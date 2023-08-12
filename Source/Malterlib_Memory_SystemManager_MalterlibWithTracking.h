@@ -75,6 +75,9 @@ namespace NMib
 	#if  !DMibConfig_MalterlibMemoryManager_Debug_EnableMemoryLeaks
 				, mc_bTraceLeaks			= false
 	#endif
+	#if  DMibConfig_MalterlibMemoryManager_Debug_EnableAssertOnMemoryLeak
+				, mc_bAssertOnMemoryLeak	= true
+	#endif
 			};
 		};
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize

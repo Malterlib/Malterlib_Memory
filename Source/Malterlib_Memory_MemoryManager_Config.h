@@ -57,6 +57,7 @@ namespace NMib::NMemory
 
 			void f_OnAlloc(uint8 *_pMemory, mint _nBytes);
 			void f_OnFree(uint8 *_pMemory);
+			void f_OnFreeOtherThread(uint8 *_pMemory);
 
 			void f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
 			bool f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);

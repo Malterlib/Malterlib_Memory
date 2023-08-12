@@ -231,6 +231,8 @@ namespace NMib::NMemory
 		CMessage *pFreeLink = (CMessage *)_pMemory;
 		EMessageType FreeLinkType = EMessageType_FreeNormalBlock;
 
+		this->f_OnFreeOtherThread((uint8 *)_pMemory);
+
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
 			if (SlabType == 0)

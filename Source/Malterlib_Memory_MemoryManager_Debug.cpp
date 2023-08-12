@@ -15,10 +15,22 @@ namespace NMib::NMemory
 
 namespace NMib::NMemory::NPrivate
 {
-	void fg_ReportLeak(uint8 *_pMemory, mint _Size, CMibCodeAddress* _pStackTrace, mint _nStackTrace, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags, mint _ThreadID, bool _bCanAllocateNonTracked)
+	bool fg_ReportLeak
+		(
+			uint8 *_pMemory
+			, mint _Size
+			, CMibCodeAddress *_pStackTrace
+			, mint _nStackTrace
+			, ch8 const *_pFile
+			, uint32 _Line
+			, EHeapDebugFlag _Flags
+			, mint _ThreadID
+			, bool _bCanAllocateNonTracked
+		)
 	{
 		if (_Flags & EHeapDebugFlag_Ignore)
-			return;
+			return false;
+
 		// Do this now, rather than when reporting the stacktrace, so we can see if we should ignore this report.
 		mint LongestSource = 0;
 		mint LongestModule = 0;
@@ -27,22 +39,17 @@ namespace NMib::NMemory::NPrivate
 
 		CStackTraceInfo StackTraceInfos[256] = {0};
 
-		auto StackTraceCleanup
-			= fg_OnScopeExit
-			(
-				[&]
+		auto StackTraceCleanup = g_OnScopeExit / [&]
+			{
+				for (mint i = 0; i < nStackTrace; ++i)
 				{
-					for (mint i = 0; i < nStackTrace; ++i)
-					{
-						if (StackTraceInfos[i].m_pContext)
-							NSys::fg_Debug_ReleaseStackTraceInfo(&StackTraceInfos[i]);
-					}
+					if (StackTraceInfos[i].m_pContext)
+						NSys::fg_Debug_ReleaseStackTraceInfo(&StackTraceInfos[i]);
 				}
-			)
+			}
 		;
 
-		auto fl_SkipFunction
-			= [&](ch8 const *_pFunctionName) -> bool
+		auto fSkipFunction = [&](ch8 const *_pFunctionName) -> bool
 			{
 				if (!_pFunctionName)
 					return false;
@@ -61,24 +68,23 @@ namespace NMib::NMemory::NPrivate
 				auto &TraceInfo = StackTraceInfos[i];
 				if (NSys::fg_Debug_AquireStackTraceInfo(TraceInfo, _pStackTrace[i], _bCanAllocateNonTracked))
 				{
-
 					if (bCanSkip)
 					{
-						if (fl_SkipFunction(TraceInfo.m_pFunctionName))
+						if (fSkipFunction(TraceInfo.m_pFunctionName))
 							continue;
 						bCanSkip = false;
 					}
+
 					if (TraceInfo.m_pFunctionName)
 					{
 #ifdef DPlatformFamily_macOS
 						if (NStr::fg_StrMatchWildcard(TraceInfo.m_pFunctionName, "+[* load]") == NStr::EMatchWildcardResult_WholeStringMatchedAndPatternExhausted)
-							return;
+							return false;
 #endif
-
-						for (char const** pCurIgnoreFunction = gc_IgnoreFunctions; *pCurIgnoreFunction; ++pCurIgnoreFunction)
+						for (char const **pCurIgnoreFunction = gc_IgnoreFunctions; *pCurIgnoreFunction; ++pCurIgnoreFunction)
 						{
 							if (NStr::fg_StrStartsWith(TraceInfo.m_pFunctionName, *pCurIgnoreFunction))
-								return; // Ignore this report.
+								return false; // Ignore this report.
 						}
 					}
 
@@ -88,21 +94,21 @@ namespace NMib::NMemory::NPrivate
 						if (Len > LongestSource)
 							LongestSource = Len;
 					}
+
 					if (TraceInfo.m_pModuleName)
 					{
 						uint32 Len = NStr::fg_StrLen(TraceInfo.m_pModuleName);
 						if (Len > LongestModule)
 							LongestModule = Len;
 					}
+
 					if (TraceInfo.m_pFunctionName)
 					{
 						uint32 Len = NStr::fg_StrLen(TraceInfo.m_pFunctionName);
 						if (Len > LongestFunction)
 							LongestFunction = Len;
 					}
-
 				}
-
 			}
 		}
 
@@ -116,19 +122,20 @@ namespace NMib::NMemory::NPrivate
 		TempStr = CFStr::CFormat(DMibPFileLineFormat " ") << pFile << _Line;
 
 		mint BlockSize = _Size;
-		TempStr += (CFStr::CFormat("Memory Leak, Flags = 0x{sj*4,sf0,nh}, Address = 0x{sj*4,sf0,nh}, Size = 0x{sj*4,sf0,nh}, Thread = {}{\n}")
+		TempStr += (CFStr::CFormat("Memory Leak, Flags = 0b{sj4,sf0,nfb}, Address = 0x{sj*4,sf0,nh}, Size = 0x{sj*4,sf0,nh}, Thread = {}{\n}")
 			<< _Flags
 			<< (mint)pCurrentBlock
 			<< BlockSize
 			<< _ThreadID
 			<< sizeof(void *)*2
-			).f_GetStr();
+			).f_GetStr()
+		;
 
 		NSys::fg_DebugOutput(TempStr.f_GetStr());
 		uint32 nBytes = fg_Min(BlockSize, (mint)128);
 		NSys::fg_DebugOutput((CFStr::CFormat("Displaying first {} bytes of block{\n}") << nBytes).f_GetStr().f_GetStr());
 
-		CFStr TraceString;
+		CFStr TraceString = "0x";
 		CFStr TraceString2;
 		for (uint32 i = 0; i < nBytes; ++i)
 		{
@@ -140,6 +147,7 @@ namespace NMib::NMemory::NPrivate
 		}
 
 		TraceString += DMibNewLine;
+		TraceString2 = TraceString2.f_EscapeStr();
 		TraceString2 += DMibNewLine;
 		NSys::fg_DebugOutput(TraceString.f_GetStr());
 		NSys::fg_DebugOutput(TraceString2.f_GetStr());
@@ -158,11 +166,12 @@ namespace NMib::NMemory::NPrivate
 			{
 				if (bCanSkip)
 				{
-					if (fl_SkipFunction(TraceInfo.m_pFunctionName))
+					if (fSkipFunction(TraceInfo.m_pFunctionName))
 					{
 						++nSkipped;
 						continue;
 					}
+
 					bCanSkip = false;
 					if (nSkipped)
 						NSys::fg_DebugOutput((CFStr::CFormat("Skipped {} stack frames{\n}") << nSkipped).f_GetStr().f_GetStr());
@@ -189,5 +198,7 @@ namespace NMib::NMemory::NPrivate
 			NSys::fg_DebugOutput(TempStr.f_GetStr());
 		}
 		NSys::fg_DebugOutput(DMibNewLine);
+
+		return true;
 	}
 }

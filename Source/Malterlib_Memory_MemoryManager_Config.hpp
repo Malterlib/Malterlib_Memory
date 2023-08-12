@@ -46,6 +46,10 @@ namespace NMib::NMemory
 	{
 	}
 
+	inline void CDefaultMemoryManagerNotifier::CArena::f_OnFreeOtherThread(uint8 *_pMemory)
+	{
+	}
+
 	inline void CDefaultMemoryManagerNotifier::CArena::f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags)
 	{
 	}
