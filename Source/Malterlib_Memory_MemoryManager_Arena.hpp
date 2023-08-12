@@ -41,6 +41,8 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	bool TCMemoryManagerArena<t_CParams>::f_IsContended(TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena) const
 	{
+		if (_pLocalArena->m_bForcingCleanup)
+			return false;
 		return m_LockContended.f_Load(NAtomic::EMemoryOrder_Relaxed) > 0;
 	}
 
@@ -50,7 +52,6 @@ namespace NMib::NMemory
 		DMibFastCheck(m_CheckoutCount.f_Load() > 0);
 		if (m_CheckoutCount.f_FetchSub(1, NAtomic::EMemoryOrder_Relaxed) == 1)
 		{
-//			fp_CheckMessages();
 			bool bNeedCleanup = fp_CheckCleanup();
 			m_Lock.f_UnlockNoSanitize();
 
@@ -73,7 +74,6 @@ namespace NMib::NMemory
 	{
 		DMibFastCheck(m_CheckoutCount.f_Load() == 0); // Should not have been increased
 		bool bNeedCleanup = false;
-//		fp_CheckMessages();
 		if (m_bWantCleanup)
 			bNeedCleanup = fp_CheckCleanup();
 
@@ -168,7 +168,6 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_small void *TCMemoryManagerArena<t_CParams>::f_AllocWithSize(mint &_Size)
 	{
-		//fp_CheckMessages();
 		void * pAlloc;
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
@@ -205,7 +204,6 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_small void TCMemoryManagerArena<t_CParams>::f_FreeThisThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab)
 	{
-		//fp_CheckMessages();
 		fp_FreeInline(_pMemory, _pSlab);
 		if (m_bWantNumaFreeSlabsCleanup) [[unlikely]]
 			fp_CheckCleanupNumaFree();

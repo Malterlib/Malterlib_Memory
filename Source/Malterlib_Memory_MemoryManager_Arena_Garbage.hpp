@@ -14,7 +14,7 @@ namespace NMib::NMemory
 		{
 			NextTimestamp = fg_Min(NextTimestamp, fp_GarbageCollectPerform(iSlabType, _Timestamp, _pLocalArena));
 
-			if (_Timestamp != TCLimitsInt<int64>::mc_Max && f_IsContended(_pLocalArena))
+			if (_Timestamp != (TCLimitsInt<int64>::mc_Max - 1) && f_IsContended(_pLocalArena))
 				return 0;
 		}
 
@@ -156,7 +156,7 @@ namespace NMib::NMemory
 
 						fp_SubSlabNoLongerPending(Params.m_pSlab, _Bit);
 
-						if (Params.m_Timestamp != TCLimitsInt<int64>::mc_Max && f_IsContended(Params.m_pLocalArena))
+						if (Params.m_Timestamp != (TCLimitsInt<int64>::mc_Max - 1) && f_IsContended(Params.m_pLocalArena))
 						{
 							Params.m_bAborted = true;
 							return false;
@@ -167,7 +167,7 @@ namespace NMib::NMemory
 				)
 			;
 
-			if (_Timestamp != TCLimitsInt<int64>::mc_Max && f_IsContended(_pLocalArena))
+			if (_Timestamp != (TCLimitsInt<int64>::mc_Max - 1) && f_IsContended(_pLocalArena))
 				return 0;
 
 			if (Params.m_bAborted)
@@ -192,6 +192,7 @@ namespace NMib::NMemory
 	void TCMemoryManagerArena<t_CParams>::fp_GarbageCollectFull()
 	{
 		fp_CheckMessages();
+
 		for (mint i = 0; i < t_CParams::mc_NumSizesPerLevel; ++i)
 		{
 			for (auto iSlab = m_SlabsToGarbageCollect[i].f_GetIterator(); iSlab; )

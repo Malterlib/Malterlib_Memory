@@ -348,10 +348,9 @@ namespace NMib::NMemory
 		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 		{
 			DMibUnlock(m_NumaArenasLock); // Arenas should only be added to m_NumaArenas, so this should be safe
-			while (iNumaArena->f_GarbageCollect({TCLimitsInt<int64>::mc_Max, TCLimitsInt<int64>::mc_Max}, _bDecommit, false) != TCLimitsInt<int64>::mc_Max)
+			while (iNumaArena->f_GarbageCollect({TCLimitsInt<int64>::mc_Max - 1, TCLimitsInt<int64>::mc_Max - 1}, _bDecommit, true) != TCLimitsInt<int64>::mc_Max)
 				;
 		}
-
 	}
 
 	template <typename t_CParams>

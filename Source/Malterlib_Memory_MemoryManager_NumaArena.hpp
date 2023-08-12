@@ -114,9 +114,18 @@ namespace NMib::NMemory
 	{
 		int64 EarliestTimestamp = TCLimitsInt<int64>::mc_Max;
 
-		bool bIncremental = _GarbageOptions.m_Timestamp != TCLimitsInt<int64>::mc_Max;
+		bool bIncremental = _GarbageOptions.m_Timestamp != (TCLimitsInt<int64>::mc_Max - 1);
 
 		auto &ThreadLocal = *m_pMemoryManager->m_LocalArena;
+
+		auto bOldForcing = ThreadLocal.m_bForcingCleanup;
+		ThreadLocal.m_bForcingCleanup = _bForceCleanup;
+		auto Cleanup = g_OnScopeExit / [&]
+			{
+				ThreadLocal.m_bForcingCleanup = bOldForcing;
+			}
+		;
+
 		auto ReentrantScope = ThreadLocal.f_Reentrant();
 
 		ENumaArenaCleanup RequestedCleanup = (ENumaArenaCleanup)m_RequestedCleanup.f_Exchange(0);
@@ -153,6 +162,7 @@ namespace NMib::NMemory
 		{
 			bool bDeferred = false;
 			f_ProcessArenaMessages(bIncremental, bDeferred);
+
 			if (bDeferred)
 			{
 				EarliestTimestamp = fg_Min(EarliestTimestamp, _GarbageOptions.m_Timestamp); // Directly request another go
@@ -262,7 +272,7 @@ namespace NMib::NMemory
 					continue;
 				}
 
-				if (_GarbageOptions.m_TimestampDecommit != TCLimitsInt<int64>::mc_Max && m_FreeSlabsLock.f_Contended())
+				if (_GarbageOptions.m_TimestampDecommit != (TCLimitsInt<int64>::mc_Max - 1) && m_FreeSlabsLock.f_Contended())
 				{
 					EarliestTimestamp = fg_Min(EarliestTimestamp, pFreeSlab->m_FreeTimestamp);
 					bAnotherCleanup = true;
@@ -290,7 +300,7 @@ namespace NMib::NMemory
 						continue;
 					}
 
-					if (_GarbageOptions.m_TimestampDecommit != TCLimitsInt<int64>::mc_Max && m_FreeSlabsLock.f_Contended())
+					if (_GarbageOptions.m_TimestampDecommit != (TCLimitsInt<int64>::mc_Max - 1) && m_FreeSlabsLock.f_Contended())
 					{
 						EarliestTimestamp = fg_Min(EarliestTimestamp, pSlab->m_NeedDecommitTimestamp);
 						bAnotherCleanup = true;

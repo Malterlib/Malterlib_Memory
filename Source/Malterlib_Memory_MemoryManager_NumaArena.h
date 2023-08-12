@@ -44,6 +44,7 @@ namespace NMib::NMemory
 		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
 		bool m_bLazyCheckout = false;
 		bool m_bLimited = false;
+		bool m_bForcingCleanup = false;
 #if DMibEnableSafeCheck > 0
 		bool m_bInLightCheckout = false;
 #endif

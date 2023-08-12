@@ -23,8 +23,7 @@ namespace NMib::NMemory
 		{
 			mint OldMessage = Messages.f_Load(NAtomic::EMemoryOrder_Relaxed);
 			_pMessage->m_Next = OldMessage;
-			if (!OldMessage)
-				bWasEmpty = true;
+			bWasEmpty = !OldMessage;
 
 			mint Message = (mint)_pMessage | mint(_MessageType);
 			if (Messages.f_CompareExchangeWeak(OldMessage, Message))
@@ -148,6 +147,14 @@ namespace NMib::NMemory
 			}
 		}
 
+		bool bNeedProcess = false;
+		auto Cleanup = g_OnScopeExit / [&]
+			{
+				if (bNeedProcess)
+					fp_RequestCleanup();
+			}
+		;
+
 		for (auto &Messages : m_DeferredMessages)
 		{
 			if (Messages)
@@ -155,6 +162,8 @@ namespace NMib::NMemory
 				bDoneSomething = true;
 				smint nToProcess = 0;
 				fp_ProcessMessageList<true, false>(Messages, _pLocalArena, nullptr, nToProcess);
+				if (Messages)
+					bNeedProcess = true;
 				if (f_IsContended(_pLocalArena))
 				{
 					o_bAborted = true;
@@ -185,6 +194,14 @@ namespace NMib::NMemory
 			}
 			if (m_MessagesAvailable.f_Exchange(0))
 			{
+				bool bNeedProcess = false;
+				auto Cleanup = g_OnScopeExit / [&]
+					{
+						if (bNeedProcess)
+							fp_RequestCleanup();
+					}
+				;
+
 				mint iMessages = 0;
 				for (auto &Messages : m_SpreadMessages)
 				{
@@ -195,7 +212,11 @@ namespace NMib::NMemory
 				{
 					if (Messages)
 					{
-						if (fp_ProcessMessageList<false, true>(Messages, nullptr, _pFreeList, nToProcess))
+						auto bProcessResult = fp_ProcessMessageList<false, true>(Messages, nullptr, _pFreeList, nToProcess);
+						if (Messages)
+							bNeedProcess = true;
+
+						if (bProcessResult)
 							return true;
 						else if (nToProcess <= 0)
 							return false;
@@ -234,8 +255,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_small void TCMemoryManagerArena<t_CParams>::fp_CheckMessages()
 	{
-		if (m_MessagesAvailable.f_Load(NAtomic::EMemoryOrder_Relaxed))
-			fp_ProcessMessages(nullptr);
+		fp_ProcessMessages(nullptr);
 	}
 
 	template <typename t_CParams>
@@ -274,11 +294,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_small bool TCMemoryManagerArena<t_CParams>::f_ProcessMessages()
 	{
-		if (m_MessagesAvailable.f_Load(NAtomic::EMemoryOrder_Relaxed))
-		{
-			return fp_ProcessMessages(nullptr);
-		}
-		return false;
+		return fp_ProcessMessages(nullptr);
 	}
 
 	template <typename t_CParams>
