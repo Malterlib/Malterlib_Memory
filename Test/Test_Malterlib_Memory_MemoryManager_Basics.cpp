@@ -176,7 +176,6 @@ namespace
 		{
 			using CParams = TCMemoryManagerParams<tf_CParams>;
 			using CParamsNoCleanup = TCMemoryManagerParams<TCParamsNoCleanup<tf_CParams>>;
-			using CParamsBackgroundTest = TCMemoryManagerParams<TCParamsBackgroundTest<tf_CParams>>;
 
 			DMibTestSuite("Internals")
 			{
@@ -993,6 +992,7 @@ namespace
 			};
 
 #if !(defined(DMibSanitizerEnabled_Address) && DMibPPtrBits <= 32)
+			using CParamsBackgroundTest = TCMemoryManagerParams<TCParamsBackgroundTest<tf_CParams>>;
 			DMibTestSuite("BackgroundCleanup")
 			{
 				TCMemoryManager<CParamsBackgroundTest> MemoryManager{CMemoryManagerConfig()};
