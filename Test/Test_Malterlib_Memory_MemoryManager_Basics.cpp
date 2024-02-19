@@ -1011,7 +1011,7 @@ namespace
 #if DMibPPtrBits <= 32
 				nThreads = 4;
 #endif
-				for (int i = 0; i < 16; ++i)
+				for (int i = 0; i < nThreads; ++i)
 				{
 					StartedThreads.f_Insert
 						(
