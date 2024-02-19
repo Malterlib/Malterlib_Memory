@@ -1,8 +1,8 @@
 {
 	"../../External/gperftools": {
-		"Hash": "f867d9514cb63759ba5f67882ec3deb4fdee51be"
+		"Hash": "e3ab335fedabe29d6ab97c201fb906685b1cd647"
 	},
 	"../../External/mimalloc": {
-		"Hash": "fd169e879e26e0e12be0b30b5110459178952e5c"
+		"Hash": "dc8999024f065177a43b21f8fd1c200088d1ae7b"
 	}
 }
