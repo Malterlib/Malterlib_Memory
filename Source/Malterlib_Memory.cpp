@@ -141,6 +141,8 @@ namespace NMib::NMemory
 			"currentlocale",
 			"_CFPreferencesCopyAppValueWithContainerAndConfiguration",
 			"__SCGetThreadSpecificData",
+			// macOS 14
+			"nw::object::vtable::register_def",
 #elif defined(DPlatformFamily_Linux)
 			"qt_load_library_runtime",
 			"qt_set_x11_resources",
