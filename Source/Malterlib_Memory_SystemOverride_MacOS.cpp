@@ -2808,11 +2808,14 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
+
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.free(_pMemory);
-		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
+
+#if 0 // Can happen in cache_t::collectNolock
 		if (g_bOnlyDefaultZone)
 		{
+			uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 #ifdef DMemoryManagerIsSame
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -2825,6 +2828,8 @@ extern "C"
 			return fg_FreeNoSize(pMalterlibAlloc);
 #endif
 		}
+#endif
+
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 		{
@@ -2837,14 +2842,18 @@ extern "C"
 					auto pZone = fg_GetForeignZone(_pMemory);
 					if (!pZone)
 					{
-						DMibOverrideErrorOutput("free failed beacuse no zone was found for pointer: {}\n", _pMemory);
-						return;
+						//DMibOverrideErrorOutput("free failed beacuse no zone was found for pointer: {}\n", _pMemory);
+						return; // Can happen in cache_t::collectNolock
 					}
 					return pZone->free(pZone, _pMemory);
 				}
 			}
 			else
-				pMemoryManager = fg_Malterlib_GetMemoryManager<CMemoryManagerSmall>(_pMemory);
+				pMemoryManager = fg_Malterlib_Safe_GetMemoryManager<CMemoryManagerSmall>(_pMemory);
+
+			if (!pMemoryManager)
+				return; // Can happen in cache_t::collectNolock
+
 			DMibFastCheck(pMemoryManager);
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 			return pMemoryManager->f_FreeNoSize(_pMemory);
@@ -2861,14 +2870,18 @@ extern "C"
 					auto pZone = fg_GetForeignZone(_pMemory);
 					if (!pZone)
 					{
-						DMibOverrideErrorOutput("free failed beacuse no zone was found for pointer: {}\n", _pMemory);
-						return;
+						//DMibOverrideErrorOutput("free failed beacuse no zone was found for pointer: {}\n", _pMemory);
+						return; // Can happen in cache_t::collectNolock
 					}
 					return pZone->free(pZone, _pMemory);
 				}
 			}
 			else
-				pMemoryManager = fg_Malterlib_GetMemoryManager<CMemoryManagerMax>(_pMemory);
+				pMemoryManager = fg_Malterlib_Safe_GetMemoryManager<CMemoryManagerMax>(_pMemory);
+
+			if (!pMemoryManager)
+				return; // Can happen in cache_t::collectNolock
+
 			DMibFastCheck(pMemoryManager);
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 			return pMemoryManager->f_FreeNoSize(_pMemory);
