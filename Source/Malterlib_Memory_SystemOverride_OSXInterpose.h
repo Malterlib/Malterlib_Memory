@@ -27,6 +27,9 @@ extern "C" void _ZdlPvmSt11align_val_t(void *, size_t, size_t) __attribute__((we
 
 extern "C" void vfree(void *) __attribute__((weak_import));
 
+extern "C" boolean_t malloc_zone_claimed_address(malloc_zone_t *_0, void *_1) __attribute__((weak_import));
+extern "C" void *malloc_zone_malloc_with_options_np(malloc_zone_t *_0, size_t _1, size_t _2, uint64_t _3) __attribute__((weak_import));
+
 extern "C" mach_msg_return_t mach_msg_trap(
 				mach_msg_header_t *msg,
 				mach_msg_option_t option,

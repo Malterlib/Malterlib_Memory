@@ -123,6 +123,9 @@ DMibMemoryInterpose1(void, malloc_zone_disable_discharge_checking, malloc_zone_t
 DMibMemoryInterpose2(void, malloc_zone_discharge, malloc_zone_t *_0, void * _1)
 DMibMemoryInterpose2(void, malloc_zone_enumerate_discharged_pointers, malloc_zone_t *_0, void (^_1)(void *memory, void *info))
 
+DMibMemoryInterpose2(boolean_t, malloc_zone_claimed_address, malloc_zone_t *_0, void *_1)
+DMibMemoryInterpose4(void *, malloc_zone_malloc_with_options_np, malloc_zone_t *_0, size_t _1, size_t _2, uint64_t _3)
+
 DMibMemoryInterpose1(void *, malloc, size_t _0)
 DMibMemoryInterpose1(void *, valloc, size_t _0)
 DMibMemoryInterpose2(void *, calloc, size_t _0, size_t _1)
