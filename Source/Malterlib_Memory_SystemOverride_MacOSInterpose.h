@@ -28,6 +28,9 @@ extern "C" void _ZdlPvmSt11align_val_t(void *, size_t, size_t) __attribute__((we
 
 extern "C" void vfree(void *) __attribute__((weak_import));
 
+extern "C" boolean_t malloc_zone_claimed_address(malloc_zone_t *_0, void *_1) __attribute__((weak_import));
+extern "C" void *malloc_zone_malloc_with_options_np(malloc_zone_t *_0, size_t _1, size_t _2, uint64_t _3) __attribute__((weak_import));
+
 extern "C" int __workq_kernreturn(int options, user_addr_t item, int affinity, int prio);
 extern "C" uint32_t __psynch_cvwait(user_addr_t cv, uint64_t cvlsgen, uint32_t cvugen, user_addr_t mutex, uint64_t mugen, uint32_t flags, int64_t sec, uint32_t nsec);
 extern "C" void _malloc_fork_prepare() __attribute__((weak_import));

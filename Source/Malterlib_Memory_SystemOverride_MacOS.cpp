@@ -194,7 +194,7 @@ namespace
 		{
 		}
 
-		malloc_zone_t_10_7 m_MallocZone;
+		malloc_zone_t_known_version m_MallocZone;
 		CMemoryManagerSmall m_MemoryManager;
 		DMibListLinkDS_Link(CMemoryManagerZoneSmall, m_Link);
 		malloc_zone_t *f_GetMallocZone()
@@ -217,7 +217,7 @@ namespace
 		{
 		}
 
-		malloc_zone_t_10_7 m_MallocZone;
+		malloc_zone_t_known_version m_MallocZone;
 		CMemoryManagerMax m_MemoryManager;
 		DMibListLinkDS_Link(CMemoryManagerZoneMax, m_Link);
 		malloc_zone_t *f_GetMallocZone()
@@ -703,10 +703,10 @@ bool fg_MalterlibMallocOverride_Enabled()
 	return g_MalterlibMallocOveriddenInstalled;
 }
 
-malloc_zone_t_10_7 g_OriginalMallocs;
-malloc_zone_t_10_7 *g_pDefaultZone = nullptr;
+malloc_zone_t_known_version g_OriginalMallocs;
+malloc_zone_t_known_version *g_pDefaultZone = nullptr;
 
-//#define DMibMacOSOverrideZoneCheck(_Z) DMibFastCheck((_malloc_zone_t_10_7 *)_Z == g_pDefaultZone)
+//#define DMibMacOSOverrideZoneCheck(_Z) DMibFastCheck((_malloc_zone_t_known_version *)_Z == g_pDefaultZone)
 #define DMibMacOSOverrideZoneCheck(_Z)
 
 struct sigaction g_OldSignalHandlerBus;
@@ -913,8 +913,44 @@ size_t fg_Malterlib_zone_pressure_relief(struct _malloc_zone_t *_pZone, size_t g
 	return 0;
 }
 
+/*
+ * Checks whether an address might belong to the zone. May be NULL. Present in version >= 10.
+ * False positives are allowed (e.g. the pointer was freed, or it's in zone space that has
+ * not yet been allocated. False negatives are not allowed.
+ */
+boolean_t fg_Malterlib_zone_claimed_address(malloc_zone_t *_pZone, void *_pMemory)
+{
+	return fg_Malterlib_zone_size(_pZone, _pMemory) != 0;
+}
+
+extern "C" void fg_Malterlib_free(void *_pMemory);
+
+/* For zone 0 implementations: try to free ptr, promising to call find_zone_and_free
+ * if it turns out not to belong to us */
+void fg_Malterlib_zone_try_free_default(malloc_zone_t *_pZone, void *_pMemory)
+{
+	if (fg_Malterlib_zone_size(_pZone, _pMemory) != 0)
+		return fg_Malterlib_zone_free(_pZone, _pMemory);
+
+	fg_Malterlib_free(_pMemory);
+}
+
+void *fg_Malterlib_zone_memalign(struct _malloc_zone_t *_pZone, size_t alignment, size_t size);
+
+/* memory allocation with an extensible binary flags option. Present in
+ * version >= 15 */
+void *fg_Malterlib_zone_malloc_with_options(malloc_zone_t *_pZone, size_t _Align, size_t _Size, uint64_t _Options)
+{
+	auto pRet = fg_Malterlib_zone_memalign(_pZone, _Align, _Size);
+	if (_Options & 1)
+		fg_MemClear(pRet, _Size);
+	return pRet;
+}
+
 #define DAlignSizeMacOS(d_Size) fg_AlignUp(fg_Max(d_Size, 1), 16)
 //#define DAlignSizeMacOS(d_Size) d_Size
+
+#define DAlignAligmentMacOS(d_Alignment) fg_Max(d_Alignment, 16)
 
 void *fg_Malterlib_zone_malloc(struct _malloc_zone_t *_pZone, size_t size)
 {
@@ -1140,6 +1176,8 @@ void *fg_Malterlib_zone_memalign(struct _malloc_zone_t *_pZone, size_t alignment
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
 
+	alignment = DAlignAligmentMacOS(alignment);
+
 	mint Size = size;
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
@@ -1261,76 +1299,89 @@ size_t fg_Malterlib_zone_good_size(malloc_zone_t *zone, size_t size) /* zone is 
 #endif
 }
 
-malloc_introspection_t_10_7 g_MalterlibMallocZoneIntrospection =
+malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 	{
-		[](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t /* enumerates all the malloc pointers in use */
+		.enumerator = [](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t /* enumerates all the malloc pointers in use */
 		{
 			return KERN_FAILURE;
 		}
-		, &fg_Malterlib_zone_good_size
-		, [](malloc_zone_t *zone) -> boolean_t /* Consistency checker */
+		, .good_size = &fg_Malterlib_zone_good_size
+		, .check = [](malloc_zone_t *zone) -> boolean_t /* Consistency checker */
 		{
 			return true;
 		}
-		, [](malloc_zone_t *zone, boolean_t verbose) /* Prints zone  */
+		, .print = [](malloc_zone_t *zone, boolean_t verbose) /* Prints zone  */
 		{
 		}
-		, [](malloc_zone_t *zone, void *address) /* Enables logging of activity */
+		, .log = [](malloc_zone_t *zone, void *address) /* Enables logging of activity */
 		{
 		}
-		, [](malloc_zone_t *zone) /* Forces locking zone */
+		, .force_lock = [](malloc_zone_t *zone) /* Forces locking zone */
 		{
 		}
-		, [](malloc_zone_t *zone) /* Forces unlocking zone */
+		, .force_unlock = [](malloc_zone_t *zone) /* Forces unlocking zone */
 		{
 		}
-		, [](malloc_zone_t *zone, malloc_statistics_t *stats) /* Fills statistics */
+		, .statistics = [](malloc_zone_t *zone, malloc_statistics_t *stats) /* Fills statistics */
 		{
 			fg_MemClear(*stats);
 		}
-		, [](malloc_zone_t *zone) -> boolean_t /* Are any zone locks held */
+		, .zone_locked = [](malloc_zone_t *zone) -> boolean_t /* Are any zone locks held */
 		{
 			return false;
 		}
-		, [](malloc_zone_t *zone) -> boolean_t
+		, .enable_discharge_checking = [](malloc_zone_t *zone) -> boolean_t
 		{
 			return false;
 		}
-		, [](malloc_zone_t *zone)
+		, .disable_discharge_checking = [](malloc_zone_t *zone)
 		{
 		}
-		, [](malloc_zone_t *zone, void *memory)
+		, .discharge = [](malloc_zone_t *zone, void *memory)
 		{
 		}
 	#ifdef __BLOCKS__
-		, [](malloc_zone_t *zone, void (^report_discharged)(void *memory, void *info))
+		, .enumerate_discharged_pointers = [](malloc_zone_t *zone, void (^report_discharged)(void *memory, void *info))
 		{
 		}
 	#else
-		, nullptr
+		, .enumerate_unavailable_without_blocks= nullptr
 	#endif /* __BLOCKS__ */
+		, .reinit_lock = [](malloc_zone_t *zone) /* Reinitialize zone locks, called only from atfork_child handler. Present in version >= 9. */
+		{
+		}
+		, .print_task = [](task_t task, unsigned level, vm_address_t zone_address, memory_reader_t reader, print_task_printer_t printer) /* debug print for another process. Present in version >= 11. */
+		{
+		}
+		, .task_statistics = [](task_t task, vm_address_t zone_address, memory_reader_t reader, malloc_statistics_t *stats) /* Present in version >= 12. */
+		{
+		}
+		, .zone_type = 0 /* Identifies the zone type.  0 means unknown/undefined zone type.  Present in version >= 14. */
 	}
 ;
 
-malloc_zone_t_10_7 g_MalterlibMallocZone =
+malloc_zone_t_known_version g_MalterlibMallocZone =
 	{
-		nullptr
-		, nullptr
-		, &fg_Malterlib_zone_size
-		, &fg_Malterlib_zone_malloc
-		, &fg_Malterlib_zone_calloc
-		, &fg_Malterlib_zone_valloc
-		, &fg_Malterlib_zone_free
-		, &fg_Malterlib_zone_realloc
-		, &fg_Malterlib_zone_destroy
-		, nullptr // "DefaultMallocZone" // "Malterlib malloc zone"
-		, &fg_Malterlib_zone_batch_malloc
-		, &fg_Malterlib_zone_batch_free
-		, &g_MalterlibMallocZoneIntrospection
-		, 8
-		, &fg_Malterlib_zone_memalign
-		, &fg_Malterlib_zone_free_definite_size
-		, &fg_Malterlib_zone_pressure_relief
+		.reserved1 = nullptr
+		, .reserved2 = nullptr
+		, .size = &fg_Malterlib_zone_size
+		, .malloc = &fg_Malterlib_zone_malloc
+		, .calloc = &fg_Malterlib_zone_calloc
+		, .valloc = &fg_Malterlib_zone_valloc
+		, .free = &fg_Malterlib_zone_free
+		, .realloc = &fg_Malterlib_zone_realloc
+		, .destroy = &fg_Malterlib_zone_destroy
+		, .zone_name = nullptr // "DefaultMallocZone" // "Malterlib malloc zone"
+		, .batch_malloc = &fg_Malterlib_zone_batch_malloc
+		, .batch_free = &fg_Malterlib_zone_batch_free
+		, .introspect = &g_MalterlibMallocZoneIntrospection
+		, .version = gc_KnownMallocZoneVersion
+		, .memalign = &fg_Malterlib_zone_memalign
+		, .free_definite_size = &fg_Malterlib_zone_free_definite_size
+		, .pressure_relief = &fg_Malterlib_zone_pressure_relief
+		, .claimed_address = &fg_Malterlib_zone_claimed_address
+		, .try_free_default = &fg_Malterlib_zone_try_free_default
+		, .malloc_with_options = &fg_Malterlib_zone_malloc_with_options
 	}
 ;
 
@@ -1405,7 +1456,7 @@ void fg_MalterlibMallocOverrideEnable()
 		if (CSystem::ms_PlatformVersion >= 10'12'00)
 		{
 			malloc_destroy_zone(malloc_create_zone(0, 0));
-			malloc_zone_t_10_7 *pDefaultZone = (malloc_zone_t_10_7 *)malloc_default_zone();
+			malloc_zone_t_known_version *pDefaultZone = (malloc_zone_t_known_version *)malloc_default_zone();
 			g_pDefaultZone = pDefaultZone;
 			g_OriginalMallocs = *pDefaultZone;
 			malloc_zone_register((malloc_zone_t *)&g_MalterlibMallocZone);
@@ -1420,7 +1471,7 @@ void fg_MalterlibMallocOverrideEnable()
 		}
 		else
 		{
-			malloc_zone_t_10_7 *pDefaultZone = (malloc_zone_t_10_7 *)malloc_default_zone();
+			malloc_zone_t_known_version *pDefaultZone = (malloc_zone_t_known_version *)malloc_default_zone();
 			g_pDefaultZone = pDefaultZone;
 			malloc_zone_unregister((malloc_zone_t *)g_pDefaultZone);
 			malloc_zone_register((malloc_zone_t *)&g_MalterlibMallocZone);
@@ -2808,11 +2859,14 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
+
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.free(_pMemory);
-		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
+
+#if 0 // Cannot be used if we have an unimplemented function so the macOS built in memory manager is used
 		if (g_bOnlyDefaultZone)
 		{
+			uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 #ifdef DMemoryManagerIsSame
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -2825,6 +2879,8 @@ extern "C"
 			return fg_FreeNoSize(pMalterlibAlloc);
 #endif
 		}
+#endif
+
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 		{
@@ -2837,15 +2893,20 @@ extern "C"
 					auto pZone = fg_GetForeignZone(_pMemory);
 					if (!pZone)
 					{
-						DMibOverrideErrorOutput("free failed beacuse no zone was found for pointer: {}\n", _pMemory);
-						return;
+						DMibDTrace("free failed beacuse no zone was found for pointer: {}\n", _pMemory);
+						DMibFastCheck(pZone);
+						return; // Can happen if we have an unimplemented function so the macOS built in memory manager is used
 					}
 					return pZone->free(pZone, _pMemory);
 				}
 			}
 			else
-				pMemoryManager = fg_Malterlib_GetMemoryManager<CMemoryManagerSmall>(_pMemory);
+				pMemoryManager = fg_Malterlib_Safe_GetMemoryManager<CMemoryManagerSmall>(_pMemory);
+
 			DMibFastCheck(pMemoryManager);
+			if (!pMemoryManager)
+				return; // Can happen if we have an unimplemented function so the macOS built in memory manager is used
+
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 			return pMemoryManager->f_FreeNoSize(_pMemory);
 		}
@@ -2861,15 +2922,20 @@ extern "C"
 					auto pZone = fg_GetForeignZone(_pMemory);
 					if (!pZone)
 					{
-						DMibOverrideErrorOutput("free failed beacuse no zone was found for pointer: {}\n", _pMemory);
-						return;
+						DMibDTrace("free failed beacuse no zone was found for pointer: {}\n", _pMemory);
+						DMibFastCheck(pZone);
+						return; // Can happen if we have an unimplemented function so the macOS built in memory manager is used
 					}
 					return pZone->free(pZone, _pMemory);
 				}
 			}
 			else
-				pMemoryManager = fg_Malterlib_GetMemoryManager<CMemoryManagerMax>(_pMemory);
+				pMemoryManager = fg_Malterlib_Safe_GetMemoryManager<CMemoryManagerMax>(_pMemory);
+
 			DMibFastCheck(pMemoryManager);
+			if (!pMemoryManager)
+				return; // Can happen if we have an unimplemented function so the macOS built in memory manager is used
+
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 			return pMemoryManager->f_FreeNoSize(_pMemory);
 		}
@@ -2956,6 +3022,8 @@ extern "C"
 	{
 #ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeMacOS(_Size);
+		_Alignment = DAlignAligmentMacOS(_Alignment);
+
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -2985,6 +3053,8 @@ extern "C"
 	{
 #ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeMacOS(_Size);
+		_Alignment = DAlignAligmentMacOS(_Alignment);
+
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -3562,7 +3632,7 @@ extern "C"
 #endif
 	}
 
-	malloc_introspection_t_10_7 g_MalterlibMallocZoneZoneIntrospection =
+	malloc_introspection_t_known_version g_MalterlibMallocZoneZoneIntrospection =
 		{
 			[](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t /* enumerates all the malloc pointers in use */
 			{
@@ -3646,11 +3716,11 @@ extern "C"
 		#endif
 
 
-				pMemoryManager->m_MallocZone =
+				pMemoryManager->m_MallocZone = malloc_zone_t_known_version
 					{
-						nullptr
-						, nullptr
-						, [](malloc_zone_t *_pZone, const void *_pMemory) -> size_t // size
+						.reserved1 = nullptr
+						, .reserved2 = nullptr
+						, .size = [](malloc_zone_t *_pZone, const void *_pMemory) -> size_t // size
 						{
 							if (!_pMemory)
 								return 0;
@@ -3659,7 +3729,7 @@ extern "C"
 								return fg_Malterlib_Safe_GetSize(pZone, _pMemory);
 							return pZone->m_MemoryManager.f_TrySize(_pMemory);
 						}
-						, [](malloc_zone_t *_pZone, size_t _Size) -> void * // malloc
+						, .malloc = [](malloc_zone_t *_pZone, size_t _Size) -> void * // malloc
 						{
 							auto *pZone = (tf_CZone *)_pZone;
 							mint Size = DAlignSizeMacOS(_Size);
@@ -3667,7 +3737,7 @@ extern "C"
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 							return pMalterlibAlloc;
 						}
-						, [](malloc_zone_t *_pZone, size_t _nItems, size_t _Size) -> void *
+						, .calloc = [](malloc_zone_t *_pZone, size_t _nItems, size_t _Size) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
 							mint Size = DAlignSizeMacOS(_Size * _nItems);
@@ -3676,7 +3746,7 @@ extern "C"
 							fg_MemClear(pMalterlibAlloc, Size);
 							return pMalterlibAlloc;
 						}
-						, [](malloc_zone_t *_pZone, size_t _Size) -> void *
+						, .valloc = [](malloc_zone_t *_pZone, size_t _Size) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
 							mint Size = fg_AlignUp(fg_Max(_Size, 1), NSys::NPrivate::g_PageSize);
@@ -3685,7 +3755,7 @@ extern "C"
 							fg_MemClear(pMalterlibAlloc, Size);
 							return pMalterlibAlloc;
 						}
-						, [](malloc_zone_t *_pZone, void *_pMemory) -> void
+						, .free = [](malloc_zone_t *_pZone, void *_pMemory) -> void
 						{
 							if (!_pMemory)
 								return;
@@ -3693,7 +3763,7 @@ extern "C"
 							uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 							return pZone->m_MemoryManager.f_FreeNoSize(pMalterlibAlloc);
 						}
-						, [](malloc_zone_t *_pZone, void *_pMemory, size_t _Size) -> void *
+						, .realloc = [](malloc_zone_t *_pZone, void *_pMemory, size_t _Size) -> void *
 						{
 							uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 							mint Size = DAlignSizeMacOS(_Size);
@@ -3702,7 +3772,7 @@ extern "C"
 							pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_Resize(pMalterlibAlloc, Size, 0);
 							return pMalterlibAlloc;
 						}
-						, [](malloc_zone_t *_pZone)
+						, .destroy = [](malloc_zone_t *_pZone)
 						{
 							NStorage::TCUniquePointer<tf_CZone> pMemoryManager = fg_Explicit((tf_CZone *)_pZone);
 							if (g_bForeignZone) [[unlikely]]
@@ -3726,8 +3796,8 @@ extern "C"
 							}
 							pMemoryManager.f_Clear();
 						}
-						, nullptr // "DefaultMallocZone" // "Malterlib malloc zone"
-						, [](struct _malloc_zone_t *_pZone, size_t size, void **results, unsigned num_requested) -> unsigned
+						, .zone_name = nullptr // "DefaultMallocZone" // "Malterlib malloc zone"
+						, .batch_malloc = [](struct _malloc_zone_t *_pZone, size_t size, void **results, unsigned num_requested) -> unsigned
 						{
 							if (num_requested)
 								return 0;
@@ -3769,7 +3839,7 @@ extern "C"
 
 							return num_requested;
 						}
-						, [](struct _malloc_zone_t *_pZone, void **to_be_freed, unsigned num_to_be_freed)
+						, .batch_free = [](struct _malloc_zone_t *_pZone, void **to_be_freed, unsigned num_to_be_freed)
 						{
 							if (num_to_be_freed == 0)
 								return;
@@ -3779,12 +3849,13 @@ extern "C"
 							for (mint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
 								pZone->m_MemoryManager.f_FreeNoSize(to_be_freed[iToFree]);
 						}
-						, &g_MalterlibMallocZoneZoneIntrospection
-						, 8
-						, [](struct _malloc_zone_t *_pZone, size_t alignment, size_t size) -> void *
+						, .introspect = &g_MalterlibMallocZoneZoneIntrospection
+						, .version = gc_KnownMallocZoneVersion
+						, .memalign = [](struct _malloc_zone_t *_pZone, size_t alignment, size_t size) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
 							mint Size = size;
+							alignment = DAlignAligmentMacOS(alignment);
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 						#if DEnableDebugMemoryManager
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, alignment, DMibPFile, DMibPLine, g_DebugFlags);
@@ -3794,7 +3865,7 @@ extern "C"
 
 							return pMalterlibAlloc;
 						}
-						, [](struct _malloc_zone_t *_pZone, void *ptr, size_t size)
+						, .free_definite_size = [](struct _malloc_zone_t *_pZone, void *ptr, size_t size)
 						{
 							if (!ptr)
 								return;
@@ -3803,11 +3874,42 @@ extern "C"
 							uint8 *pMalterlibAlloc = (uint8 *)ptr;
 							pZone->m_MemoryManager.f_Free(pMalterlibAlloc, size);
 						}
-						, [](struct _malloc_zone_t *_pZone, size_t goal) -> size_t
+						, .pressure_relief = [](struct _malloc_zone_t *_pZone, size_t goal) -> size_t
 						{
 							auto *pZone = (tf_CZone *)_pZone;
 							pZone->m_MemoryManager.f_GarbageCollect(true);
 							return 0;
+						}
+						, .claimed_address = [](malloc_zone_t *_pZone, void *_pMemory) -> boolean_t
+						{
+							if (!_pMemory)
+								return false;
+							auto *pZone = (tf_CZone *)_pZone;
+							if (g_bForeignZone) [[unlikely]]
+								return fg_Malterlib_Safe_GetSize(pZone, _pMemory) != 0;
+
+							return pZone->m_MemoryManager.f_TrySize(_pMemory) != 0;
+						}
+						, .try_free_default = [](malloc_zone_t *_pZone, void *_pMemory)
+						{
+							return fg_Malterlib_free(_pMemory);
+						}
+						, .malloc_with_options = [](malloc_zone_t *_pZone, size_t _Align, size_t _Size, uint64_t _Options) -> void *
+						{
+							auto *pZone = (tf_CZone *)_pZone;
+							mint Size = _Size;
+							_Align = DAlignAligmentMacOS(_Align);
+							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
+						#if DEnableDebugMemoryManager
+							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, _Align, DMibPFile, DMibPLine, g_DebugFlags);
+						#else
+							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, _Align);
+						#endif
+
+							if (_Options & 1)
+								fg_MemClear(pMalterlibAlloc, _Size);
+
+							return pMalterlibAlloc;
 						}
 					}
 				;
@@ -4165,6 +4267,47 @@ extern "C"
 		return 0;
 #else
 		return g_OriginalFunctions.malloc_zone_pressure_relief(_pZone, goal);
+#endif
+	}
+
+	/*
+	 * Checks whether an address might belong to the zone. May be NULL. Present in version >= 10.
+	 * False positives are allowed (e.g. the pointer was freed, or it's in zone space that has
+	 * not yet been allocated. False negatives are not allowed.
+	 */
+	assure_used DMibMalterlibOverrideMallocExport boolean_t fg_Malterlib_malloc_zone_claimed_address(malloc_zone_t *_pZone, void *_pMemory)
+	{
+#ifdef DMemoryManagerIsSame
+		if (g_bForeignZone) [[unlikely]]
+			return g_OriginalFunctions.malloc_zone_claimed_address(_pZone, _pMemory);
+		if (_pZone->claimed_address)
+			return _pZone->claimed_address(_pZone, _pMemory);
+		return 0;
+#else
+		return g_OriginalFunctions.malloc_zone_claimed_address(_pZone, _pMemory);
+#endif
+	}
+
+	/* memory allocation with an extensible binary flags option. Present in
+	 * version >= 15 */
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_malloc_with_options_np(malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options)
+	{
+#ifdef DMemoryManagerIsSame
+		if (g_bForeignZone) [[unlikely]]
+		{
+			auto pRet = g_OriginalFunctions.malloc_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+
+			[[maybe_unused]] auto Size = g_OriginalFunctions.malloc_size(pRet);
+
+			return pRet;
+		}
+
+		if (!_pZone || !_pZone->malloc_with_options)
+			return fg_Malterlib_zone_malloc_with_options((malloc_zone_t *)&g_MalterlibMallocZone, _Align, _Size, _Options);
+
+		return _pZone->malloc_with_options((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+#else
+		return g_OriginalFunctions.malloc_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options);
 #endif
 	}
 
