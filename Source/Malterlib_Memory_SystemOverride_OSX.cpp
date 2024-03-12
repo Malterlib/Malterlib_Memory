@@ -920,14 +920,19 @@ size_t fg_Malterlib_zone_pressure_relief(struct _malloc_zone_t *_pZone, size_t g
  */
 boolean_t fg_Malterlib_zone_claimed_address(malloc_zone_t *_pZone, void *_pMemory)
 {
-	return _pZone->size(_pZone, _pMemory) != 0;
+	return fg_Malterlib_zone_size(_pZone, _pMemory) != 0;
 }
+
+extern "C" void fg_Malterlib_free(void *_pMemory);
 
 /* For zone 0 implementations: try to free ptr, promising to call find_zone_and_free
  * if it turns out not to belong to us */
 void fg_Malterlib_zone_try_free_default(malloc_zone_t *_pZone, void *_pMemory)
 {
-	_pZone->free(_pZone, _pMemory);
+	if (fg_Malterlib_zone_size(_pZone, _pMemory) != 0)
+		return fg_Malterlib_zone_free(_pZone, _pMemory);
+
+	fg_Malterlib_free(_pMemory);
 }
 
 void *fg_Malterlib_zone_memalign(struct _malloc_zone_t *_pZone, size_t alignment, size_t size);
@@ -4286,13 +4291,10 @@ extern "C"
 			return pRet;
 		}
 
-		if (!_pZone)
+		if (!_pZone || !_pZone->malloc_with_options)
 			return fg_Malterlib_zone_malloc_with_options((malloc_zone_t *)&g_MalterlibMallocZone, _Align, _Size, _Options);
 
-		if (_pZone->malloc_with_options)
-			return _pZone->malloc_with_options((malloc_zone_t *)_pZone, _Align, _Size, _Options);
-
-		return nullptr;
+		return _pZone->malloc_with_options((malloc_zone_t *)_pZone, _Align, _Size, _Options);
 #else
 		return g_OriginalFunctions.malloc_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options);
 #endif
