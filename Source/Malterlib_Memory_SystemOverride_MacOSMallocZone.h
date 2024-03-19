@@ -43,7 +43,7 @@ typedef struct _malloc_zone_t_known_version {
 	void 	(* MALLOC_ZONE_FN_PTR(free))(struct _malloc_zone_t *zone, void * __unsafe_indexable ptr);
 	void 	* __sized_by(size) (* MALLOC_ZONE_FN_PTR(realloc))(struct _malloc_zone_t *zone, void * __unsafe_indexable ptr, size_t size);
 	void 	(* MALLOC_ZONE_FN_PTR(destroy))(struct _malloc_zone_t *zone); /* zone is destroyed and all memory reclaimed */
-	const char	* __null_terminated zone_name;
+	const char	* zone_name;
 
 	/* Optional batch callbacks; these may be NULL */
 	unsigned	(* MALLOC_ZONE_FN_PTR(batch_malloc))(struct _malloc_zone_t *zone, size_t size, void * __unsafe_indexable * __counted_by(num_requested) results, unsigned num_requested); /* given a size, returns pointers capable of holding that size; returns the number of pointers allocated (maybe 0 or less than num_requested) */
