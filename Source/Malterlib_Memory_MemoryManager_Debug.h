@@ -32,6 +32,17 @@ namespace NMib::NMemory
 	template <typename t_CParams, bool t_bException, typename t_COptions = CMemoryManagerDebugOptionsDefault>
 	struct TCMemoryManagerDebug;
 
+	template <mint t_PaddingSize>
+	struct TCMemoryManagerDebugPaddingHelper
+	{
+		uint8 m_Padding[t_PaddingSize];
+	};
+
+	template <>
+	struct TCMemoryManagerDebugPaddingHelper<0>
+	{
+	};
+
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	struct TCMemoryManagerDebugParams : public t_CParams
 	{
@@ -207,15 +218,36 @@ namespace NMib::NMemory
 			uint32 m_Line;
 			EHeapDebugFlag m_Flags;
 		};
-		struct CPreBlock : public NTraits::TCAlign<CPreBlockData, sizeof(void *) * 2>::CType
+
+		constexpr static mint mc_PreBlockDataSize = sizeof(CPreBlockData) + t_COptions::mc_nPreGuardBytes;
+		constexpr static mint mc_PreBlockPadding = fg_AlignUpConstExpr(mc_PreBlockDataSize, sizeof(void *) * 2) - mc_PreBlockDataSize;
+
+		struct CPreBlockNormal : public CPreBlockData
 		{
-			typename NTraits::TCAlign<uint8 [t_COptions::mc_nPreGuardBytes], sizeof(void *) * 2>::CType m_GuardBytes;
+			uint8 m_GuardBytes[t_COptions::mc_nPreGuardBytes];
 
 			uint8 *f_GetPreGuard()
 			{
 				return (uint8 *)(this + 1) - t_COptions::mc_nPreGuardBytes;
 			}
 		};
+
+		struct CPreBlockPadded : public CPreBlockData
+		{
+			TCMemoryManagerDebugPaddingHelper<mc_PreBlockPadding> m_Padding;
+			uint8 m_GuardBytes[t_COptions::mc_nPreGuardBytes];
+
+			uint8 *f_GetPreGuard()
+			{
+				return (uint8 *)(this + 1) - t_COptions::mc_nPreGuardBytes;
+			}
+		};
+
+		using CPreBlock = typename TCChooseType<(mc_PreBlockPadding > 0), CPreBlockPadded, CPreBlockNormal>::CType;
+
+		static_assert(sizeof(CPreBlock) == fg_AlignUpConstExpr(mc_PreBlockDataSize, sizeof(void *) * 2));
+
+		constexpr static mint mc_PreBlockAlignment = fg_Max(alignof(CPreBlock), sizeof(void *) * 2);
 
 		TCPool<zbool, 8, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_ReportingLeaksPool;
 		NThread::TCThreadLocalDynamic<zbool> m_bReportingLeaks;

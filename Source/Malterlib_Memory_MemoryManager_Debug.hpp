@@ -421,8 +421,8 @@ namespace NMib::NMemory
 		{
 			mint PreBytes = sizeof(CPreBlock);
 			mint PostBytes = t_COptions::mc_nPostGuardBytes;
-			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, alignof(CPreBlock));
-			uint8 * pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, alignof(CPreBlock));
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, mc_PreBlockAlignment);
+			uint8 * pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, mc_PreBlockAlignment);
 
 			mint RequestedSize = _Size;
 
@@ -498,7 +498,7 @@ namespace NMib::NMemory
 			};
 
 			CFunctorOptions Options;
-			_Alignment = fg_Max(_Alignment, alignof(CPreBlock));
+			_Alignment = fg_Max(_Alignment, mc_PreBlockAlignment);
 
 			Options.m_pFile = _pFile;
 			Options.m_Line = _Line;
@@ -589,10 +589,10 @@ namespace NMib::NMemory
 		DMibFastCheck(!f_ReportingLeaks());
 		if constexpr ((t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes) != 0)
 		{
-			mint Alignment = fg_Max(_Alignment, alignof(CPreBlock));
+			mint Alignment = fg_Max(_Alignment, mc_PreBlockAlignment);
 			mint PreBytes = fg_AlignUp(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), Alignment);
 			mint PostBytes = fg_AlignUp(t_COptions::mc_nPostGuardBytes, Alignment);
-			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, alignof(CPreBlock));
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, mc_PreBlockAlignment);
 			uint8 * pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, Alignment);
 
 			mint RequestedSize = fg_AlignUp(_Size, _Alignment);
@@ -697,13 +697,13 @@ namespace NMib::NMemory
 
 			mint PreBytes = pOldPreBlock->m_PreCheck;
 			mint PostBytes = t_COptions::mc_nPostGuardBytes;
-			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, alignof(CPreBlock));
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, mc_PreBlockAlignment);
 
 			mint OldPaddedSize = 0;
 			if (_OldSize)
 			{
 				DMibFastCheck(_OldSize == pOldPreBlock->m_Size || _OldSize == pOldPreBlock->m_RequestedSize);
-				OldPaddedSize = fg_AlignUp(_OldSize + PreBytes + PostBytes, alignof(CPreBlock));
+				OldPaddedSize = fg_AlignUp(_OldSize + PreBytes + PostBytes, mc_PreBlockAlignment);
 			}
 
 			uint8 * pMemory = (uint8 *)CSuper::f_Realloc(pOldMemory, Size, OldPaddedSize);
@@ -770,13 +770,13 @@ namespace NMib::NMemory
 
 			mint PreBytes = pOldPreBlock->m_PreCheck;
 			mint PostBytes = t_COptions::mc_nPostGuardBytes;
-			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, alignof(CPreBlock));
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, mc_PreBlockAlignment);
 
 			mint OldPaddedSize = 0;
 			if (_OldSize)
 			{
 				DMibFastCheck(_OldSize == pOldPreBlock->m_Size || _OldSize == pOldPreBlock->m_RequestedSize);
-				OldPaddedSize = fg_AlignUp(_OldSize + PreBytes + PostBytes, alignof(CPreBlock));
+				OldPaddedSize = fg_AlignUp(_OldSize + PreBytes + PostBytes, mc_PreBlockAlignment);
 			}
 
 			uint8 * pMemory = (uint8 *)CSuper::f_Resize(pOldMemory, Size, OldPaddedSize);
@@ -930,7 +930,7 @@ namespace NMib::NMemory
 
 			mint PreBytes = pPreBlock->m_PreCheck;
 			mint PostBytes = t_COptions::mc_nPostGuardBytes;
-			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, alignof(CPreBlock));
+			mint Size = fg_AlignUp(_Size + PreBytes + PostBytes, mc_PreBlockAlignment);
 
 			DMibFastCheck(_Size == pPreBlock->m_Size || _Size == pPreBlock->m_RequestedSize);
 			CSuper::f_Free(pOldMemory, Size);
