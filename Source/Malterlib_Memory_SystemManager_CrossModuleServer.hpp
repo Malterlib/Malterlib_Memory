@@ -91,7 +91,7 @@ namespace NMib
 
 	void CSystem::f_MemoryManager_CanStartThreads()
 	{
-		return NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_CanStrartThreads(&NMemory::g_CrossModule);
+		return NMemory::CCrossModuleImplementationExtra::fs_MemoryManager_CanStartThreads(&NMemory::g_CrossModule);
 	}
 
 

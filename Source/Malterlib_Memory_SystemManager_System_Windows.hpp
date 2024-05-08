@@ -198,6 +198,9 @@ namespace NMib::NMemory
 
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 	{
+		if (!_pMemory)
+			return fs_AllocWithSize(_pModule, _Size);
+
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 		DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
@@ -215,6 +218,9 @@ namespace NMib::NMemory
 
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 	{
+		if (!_pMemory)
+			return fs_AllocWithSize(_pModule, _Size);
+
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 		DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
@@ -252,6 +258,8 @@ namespace NMib::NMemory
 
 	inline_always mint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
 	{
+		if (!_pMemory)
+			return 0;
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		mint Ret = HeapSize(g_pMainHeap, 0, _pMemory);
 		DMibMemoryReportGetSize(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Ret, nullptr);

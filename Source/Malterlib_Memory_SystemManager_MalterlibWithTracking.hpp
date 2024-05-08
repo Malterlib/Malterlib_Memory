@@ -392,7 +392,7 @@ namespace NMib::NMemory
 			DNonTrackedHeap->f_DestroyCleanupThreads();
 		}
 
-		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_CanStrartThreads(CMemoryManagerCrossModule *_pModule)
+		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_CanStartThreads(CMemoryManagerCrossModule *_pModule)
 		{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)

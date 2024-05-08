@@ -416,7 +416,7 @@ Property
 
 		Warnings_DeprecatedDeclarations false
 		{
-			!!GeneratorFamily "Xcode"
+			!!Compiler "Clang"
 		}
 
 		PreprocessorDefines += "PERFTOOLS_DLL_DECL="

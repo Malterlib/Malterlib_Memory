@@ -38,7 +38,7 @@ namespace NMib::NMemory
 	inline_always void DMibCrossmoduleAPI CCrossModuleImplementationDefaults::fs_MemoryManager_DestroyThreads(CMemoryManagerCrossModule *_pModule)
 	{
 	}
-	inline_always void DMibCrossmoduleAPI CCrossModuleImplementationDefaults::fs_MemoryManager_CanStrartThreads(CMemoryManagerCrossModule *_pModule)
+	inline_always void DMibCrossmoduleAPI CCrossModuleImplementationDefaults::fs_MemoryManager_CanStartThreads(CMemoryManagerCrossModule *_pModule)
 	{
 	}
 	inline_always void DMibCrossmoduleAPI CCrossModuleImplementationDefaults::fs_MemoryManager_SetNumaNode(CMemoryManagerCrossModule *_pModule, ENumaNode _NumaNode)
@@ -300,100 +300,76 @@ namespace NMib::NMemory
 		return CCrossModuleImplementationExtra::fs_NonTracked_Resize(_pModule, _pMemory, _Size, 0, EAllocationFlag_None);
 	}
 
-	CMemoryManagerCrossModule g_CrossModule
-		=
+	CMemoryManagerCrossModule g_CrossModule =
 		{
-			EMemoryManagerCrossModule_Version
-			, 0 // Reserved
-			, 1 // Reserved
-			, 2 // Reserved
-			, 3 // Reserved
-			, 4 // Reserved
-			, 5 // Reserved
-			, 6 // Reserved
-			, 7 // Reserved
-			, 8 // Reserved
-			, 9 // Reserved
-			, 10 // Reserved
-			, 11 // Reserved
-			, 12 // Reserved
-			, 13 // Reserved
-			, 14 // Reserved
-			, 15 // Reserved
-			, &CCrossModuleImplementationExtra::fs_CreateNonTrackedMemoryManager
-			, &CCrossModuleImplementationExtra::fs_DestroyNonTrackedMemoryManager
-			, &CCrossModuleImplementationExtra::fs_MemoryManager_GarbageCollect
-			, &CCrossModuleImplementationExtra::fs_CreateMemoryManager
-			, &CCrossModuleImplementationExtra::fs_MemoryManager_Checkout
-			, &CCrossModuleImplementationExtra::fs_DestroyMemoryManager
-			, &CCrossModuleImplementationExtra::fs_MemoryManager_Check
-			, &CCrossModuleImplementationExtra::fs_MemoryManager_PrepareFork
-			, &CCrossModuleImplementationExtra::fs_MemoryManager_ForkedParent
-			, &CCrossModuleImplementationExtra::fs_MemoryManager_ForkedChild
-			, &CCrossModuleImplementationExtra::fs_MemoryManager_DestroyThreads
-			, &CCrossModuleImplementationExtra::fs_MemoryManager_CanStrartThreads
-			, &CCrossModuleImplementationExtra::fs_MemoryManager_SetNumaNode
-			, &CCrossModuleImplementationExtra::fs_MemoryManager_OnThreadCreated
-			, &CCrossModuleImplementationExtra::fs_DemandProtection
-
-			, &CCrossModuleImplementationExtra::fs_AllocWithSize
-			, &CCrossModuleImplementationExtra::fs_AllocInitZeroWithSize
-			, &CCrossModuleImplementationExtra::fs_AllocAlignedWithSize
-			, &CCrossModuleImplementationExtra::fs_AllocBatch
-			, &CCrossModuleImplementationExtra::fs_AllocBatchDebug
-			, &CCrossModuleImplementationExtra::fs_AllocWithSizeDebug
-			, &CCrossModuleImplementationExtra::fs_AllocAlignedWithSizeDebug
-			, nullptr // &CCrossModuleImplementationExtra::fs_ReallocNoOldDebug
-			, nullptr // &CCrossModuleImplementationExtra::fs_ResizeNoOldDebug
-			, &fg_OldRealloc
-			, &fg_OldResize
-			, &CCrossModuleImplementationExtra::fs_FreeNoSize
-			, &CCrossModuleImplementationExtra::fs_Size
-			, &CCrossModuleImplementationExtra::fs_TrySize
-			, &CCrossModuleImplementationExtra::fs_SizePadded
-			, &CCrossModuleImplementationExtra::fs_Overhead
-			, &CCrossModuleImplementationExtra::fs_Granularity
-
-			, &CCrossModuleImplementationExtra::fs_NonTracked_Granularity
-			, &CCrossModuleImplementationExtra::fs_NonTracked_Size
-			, &CCrossModuleImplementationExtra::fs_NonTracked_TrySize
-			, &CCrossModuleImplementationExtra::fs_NonTracked_SizePadded
-			, &CCrossModuleImplementationExtra::fs_NonTracked_Overhead
-			, &CCrossModuleImplementationExtra::fs_NonTracked_AllocWithSize
-			, &CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSize
-			, &CCrossModuleImplementationExtra::fs_NonTracked_AllocBatch
-			, &CCrossModuleImplementationExtra::fs_NonTracked_AllocBatchDebug
-			, &fg_OldNonTrackedRealloc
-			, &fg_OldNonTrackedResize
-			, &CCrossModuleImplementationExtra::fs_NonTracked_FreeNoSize
-			, &CCrossModuleImplementationExtra::fs_NonTracked_AllocWithSizeDebug
-			, &CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSizeDebug
-			, nullptr // &CCrossModuleImplementationExtra::fs_NonTracked_ReallocDebug
-			, nullptr // &CCrossModuleImplementationExtra::fs_NonTracked_ResizeDebug
-
-			, &CCrossModuleImplementationExtra::fs_ReportingLeaks
-
-			, &CCrossModuleImplementationExtra::fs_Alloc
-			, &CCrossModuleImplementationExtra::fs_AllocInitZero
-			, &CCrossModuleImplementationExtra::fs_AllocAligned
-
-			, &CCrossModuleImplementationExtra::fs_NonTracked_Alloc
-			, &CCrossModuleImplementationExtra::fs_NonTracked_AllocAligned
-
-			, &CCrossModuleImplementationExtra::fs_ReallocDebug
-			, &CCrossModuleImplementationExtra::fs_ResizeDebug
-			, &CCrossModuleImplementationExtra::fs_Realloc
-			, &CCrossModuleImplementationExtra::fs_Resize
-
-			, &CCrossModuleImplementationExtra::fs_NonTracked_Realloc
-			, &CCrossModuleImplementationExtra::fs_NonTracked_Resize
-			, &CCrossModuleImplementationExtra::fs_NonTracked_ReallocDebug
-			, &CCrossModuleImplementationExtra::fs_NonTracked_ResizeDebug
-
-			, &CCrossModuleImplementationExtra::fs_Free
-			, &CCrossModuleImplementationExtra::fs_NonTracked_Free
-			, &CCrossModuleImplementationExtra::fs_AllocHasDeterministicSize
-			, &CCrossModuleImplementationExtra::fs_MemoryManagerFeatures
+			.m_Version = EMemoryManagerCrossModule_Version
+			, .m_Reserved = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+			, .m_fCreateNonTrackedMemoryManager = &CCrossModuleImplementationExtra::fs_CreateNonTrackedMemoryManager
+			, .m_fDestroyNonTrackedMemoryManager = &CCrossModuleImplementationExtra::fs_DestroyNonTrackedMemoryManager
+			, .m_fMemoryManager_GarbageCollect = &CCrossModuleImplementationExtra::fs_MemoryManager_GarbageCollect
+			, .m_fCreateMemoryManager = &CCrossModuleImplementationExtra::fs_CreateMemoryManager
+			, .m_fMemoryManager_Checkout = &CCrossModuleImplementationExtra::fs_MemoryManager_Checkout
+			, .m_fDestroyMemoryManager = &CCrossModuleImplementationExtra::fs_DestroyMemoryManager
+			, .m_fMemoryManager_Check = &CCrossModuleImplementationExtra::fs_MemoryManager_Check
+			, .m_fMemoryManager_PrepareFork = &CCrossModuleImplementationExtra::fs_MemoryManager_PrepareFork
+			, .m_fMemoryManager_ForkedParent = &CCrossModuleImplementationExtra::fs_MemoryManager_ForkedParent
+			, .m_fMemoryManager_ForkedChild = &CCrossModuleImplementationExtra::fs_MemoryManager_ForkedChild
+			, .m_fMemoryManager_DestroyThreads = &CCrossModuleImplementationExtra::fs_MemoryManager_DestroyThreads
+			, .m_fMemoryManager_CanStartThreads = &CCrossModuleImplementationExtra::fs_MemoryManager_CanStartThreads
+			, .m_fMemoryManager_SetNumaNode = &CCrossModuleImplementationExtra::fs_MemoryManager_SetNumaNode
+			, .m_fMemoryManager_OnThreadCreated = &CCrossModuleImplementationExtra::fs_MemoryManager_OnThreadCreated
+			, .m_fDemandProtection = &CCrossModuleImplementationExtra::fs_DemandProtection
+			, .m_fAllocWithSize = &CCrossModuleImplementationExtra::fs_AllocWithSize
+			, .m_fAllocInitZeroWithSize = &CCrossModuleImplementationExtra::fs_AllocInitZeroWithSize
+			, .m_fAllocAlignedWithSize = &CCrossModuleImplementationExtra::fs_AllocAlignedWithSize
+			, .m_fAllocBatch = &CCrossModuleImplementationExtra::fs_AllocBatch
+			, .m_fAllocBatchDebug = &CCrossModuleImplementationExtra::fs_AllocBatchDebug
+			, .m_fAllocWithSizeDebug = &CCrossModuleImplementationExtra::fs_AllocWithSizeDebug
+			, .m_fAllocAlignedWithSizeDebug = &CCrossModuleImplementationExtra::fs_AllocAlignedWithSizeDebug
+			, .m_fReallocNoOldDebug = nullptr // &CCrossModuleImplementationExtra::fs_ReallocNoOldDebug
+			, .m_fResizeNoOldDebug = nullptr // &CCrossModuleImplementationExtra::fs_ResizeNoOldDebug
+			, .m_fReallocNoOld = &fg_OldRealloc
+			, .m_fResizeNoOld = &fg_OldResize
+			, .m_fFreeNoSize = &CCrossModuleImplementationExtra::fs_FreeNoSize
+			, .m_fSize = &CCrossModuleImplementationExtra::fs_Size
+			, .m_fTrySize = &CCrossModuleImplementationExtra::fs_TrySize
+			, .m_fSizePadded = &CCrossModuleImplementationExtra::fs_SizePadded
+			, .m_fOverhead = &CCrossModuleImplementationExtra::fs_Overhead
+			, .m_fGranularity = &CCrossModuleImplementationExtra::fs_Granularity
+			, .m_fNonTracked_Granularity = &CCrossModuleImplementationExtra::fs_NonTracked_Granularity
+			, .m_fNonTracked_Size = &CCrossModuleImplementationExtra::fs_NonTracked_Size
+			, .m_fNonTracked_TrySize = &CCrossModuleImplementationExtra::fs_NonTracked_TrySize
+			, .m_fNonTracked_SizePadded = &CCrossModuleImplementationExtra::fs_NonTracked_SizePadded
+			, .m_fNonTracked_Overhead = &CCrossModuleImplementationExtra::fs_NonTracked_Overhead
+			, .m_fNonTracked_AllocWithSize = &CCrossModuleImplementationExtra::fs_NonTracked_AllocWithSize
+			, .m_fNonTracked_AllocAlignedWithSize = &CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSize
+			, .m_fNonTracked_AllocBatch = &CCrossModuleImplementationExtra::fs_NonTracked_AllocBatch
+			, .m_fNonTracked_AllocBatchDebug = &CCrossModuleImplementationExtra::fs_NonTracked_AllocBatchDebug
+			, .m_fNonTracked_ReallocNoOld = &fg_OldNonTrackedRealloc
+			, .m_fNonTracked_ResizeNoOld = &fg_OldNonTrackedResize
+			, .m_fNonTracked_FreeNoSize = &CCrossModuleImplementationExtra::fs_NonTracked_FreeNoSize
+			, .m_fNonTracked_AllocWithSizeDebug = &CCrossModuleImplementationExtra::fs_NonTracked_AllocWithSizeDebug
+			, .m_fNonTracked_AllocAlignedWithSizeDebug = &CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSizeDebug
+			, .m_fNonTracked_ReallocNoOldDebug = nullptr // &CCrossModuleImplementationExtra::fs_NonTracked_ReallocDebug
+			, .m_fNonTracked_ResizeNoOldDebug = nullptr // &CCrossModuleImplementationExtra::fs_NonTracked_ResizeDebug
+			, .m_fReportingLeaks = &CCrossModuleImplementationExtra::fs_ReportingLeaks
+			, .m_fAlloc = &CCrossModuleImplementationExtra::fs_Alloc
+			, .m_fAllocInitZero = &CCrossModuleImplementationExtra::fs_AllocInitZero
+			, .m_fAllocAligned = &CCrossModuleImplementationExtra::fs_AllocAligned
+			, .m_fNonTracked_Alloc = &CCrossModuleImplementationExtra::fs_NonTracked_Alloc
+			, .m_fNonTracked_AllocAligned = &CCrossModuleImplementationExtra::fs_NonTracked_AllocAligned
+			, .m_fReallocDebug = &CCrossModuleImplementationExtra::fs_ReallocDebug
+			, .m_fResizeDebug = &CCrossModuleImplementationExtra::fs_ResizeDebug
+			, .m_fRealloc = &CCrossModuleImplementationExtra::fs_Realloc
+			, .m_fResize = &CCrossModuleImplementationExtra::fs_Resize
+			, .m_fNonTracked_Realloc = &CCrossModuleImplementationExtra::fs_NonTracked_Realloc
+			, .m_fNonTracked_Resize = &CCrossModuleImplementationExtra::fs_NonTracked_Resize
+			, .m_fNonTracked_ReallocDebug = &CCrossModuleImplementationExtra::fs_NonTracked_ReallocDebug
+			, .m_fNonTracked_ResizeDebug = &CCrossModuleImplementationExtra::fs_NonTracked_ResizeDebug
+			, .m_fFree = &CCrossModuleImplementationExtra::fs_Free
+			, .m_fNonTracked_Free = &CCrossModuleImplementationExtra::fs_NonTracked_Free
+			, .m_fAllocHasDeterministicSize = &CCrossModuleImplementationExtra::fs_AllocHasDeterministicSize
+			, .m_fMemoryManagerFeatures = &CCrossModuleImplementationExtra::fs_MemoryManagerFeatures
 		}
 	;
 }

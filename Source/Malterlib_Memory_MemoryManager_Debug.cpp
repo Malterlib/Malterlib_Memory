@@ -37,7 +37,7 @@ namespace NMib::NMemory::NPrivate
 		mint LongestFunction = 0;
 		mint nStackTrace = fg_Min(_nStackTrace, mint(256));
 
-		CStackTraceInfo StackTraceInfos[256] = {0};
+		CStackTraceInfo StackTraceInfos[256] = {};
 
 		auto StackTraceCleanup = g_OnScopeExit / [&]
 			{

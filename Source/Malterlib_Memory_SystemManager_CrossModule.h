@@ -27,7 +27,7 @@ namespace NMib::NMemory
 		static void DMibCrossmoduleAPI fs_MemoryManager_ForkedParent(CMemoryManagerCrossModule *_pModule);
 		static void DMibCrossmoduleAPI fs_MemoryManager_ForkedChild(CMemoryManagerCrossModule *_pModule);
 		static void DMibCrossmoduleAPI fs_MemoryManager_DestroyThreads(CMemoryManagerCrossModule *_pModule);
-		static void DMibCrossmoduleAPI fs_MemoryManager_CanStrartThreads(CMemoryManagerCrossModule *_pModule);
+		static void DMibCrossmoduleAPI fs_MemoryManager_CanStartThreads(CMemoryManagerCrossModule *_pModule);
 		static void DMibCrossmoduleAPI fs_MemoryManager_SetNumaNode(CMemoryManagerCrossModule *_pModule, ENumaNode _NumaNode);
 		static void DMibCrossmoduleAPI fs_MemoryManager_OnThreadCreated(CMemoryManagerCrossModule *_pModule, mint _ThreadID, mint _ParentID);
 		static void DMibCrossmoduleAPI fs_DemandProtection(CMemoryManagerCrossModule *_pModule);

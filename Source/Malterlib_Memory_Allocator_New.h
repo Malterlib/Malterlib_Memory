@@ -252,7 +252,7 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 #endif
 
 #if DMibConfig_MalterlibMemoryManager_Debug
-#if defined(DMibPOverrideOperatorNew) && (defined(DMalterlibUseStaticLibCxx) || defined(DCompiler_MSVC))
+#if defined(DMibPOverrideOperatorNew) && (defined(DMalterlibUseStaticLibCxx) || defined(DCompiler_MSVC) || defined(DCompiler_clang_cl))
 	only_parameters_aliased malloc_like inline_always void * operator new (std::size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
 	{
 		return NMib::NMemory::fg_AllocAlignedDebug(_Size, (mint)_Alignment, _pFile, _Line, _Flags);

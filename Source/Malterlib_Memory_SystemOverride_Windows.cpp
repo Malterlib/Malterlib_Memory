@@ -650,8 +650,6 @@ extern "C"
 
 	static unsigned char _bNoMansLandFill = 0xFD;   /* fill no-man's land with this */
 	static unsigned char _bAlignLandFill  = 0xED;   /* fill no-man's land for aligned routines */
-	static unsigned char _bDeadLandFill   = 0xDD;   /* fill free objects with this */
-	static unsigned char _bCleanLandFill  = 0xCD;   /* fill new objects with this */
 
 
 	void * __cdecl _aligned_malloc(
