@@ -688,7 +688,7 @@ namespace NMib::NMemory
 		constexpr TCPoolAggregate(EAggregateInitialization _Init)
 			: t_CAggregateData(_Init)
 #		if DMibConfig_Memory_Shims_Enable
-			, m_DebugName(_Init)
+			, m_DebugName()
 #endif
 			, m_Pool(_Init)
 		{

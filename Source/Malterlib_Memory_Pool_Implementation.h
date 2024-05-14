@@ -15,7 +15,7 @@ namespace NMib::NMemory
 #	if DMibConfig_Memory_Shims_Enable
 		if constexpr (mc_Reporting)
 		{
-			m_DebugName.f_Construct((NStr::CFStr256::CFormat("Pool {}") << fg_GetTypeName<t_CData>()).f_GetStr());
+			m_DebugName = (NStr::CFStr256::CFormat("Pool {}") << fg_GetTypeName<t_CData>()).f_GetStr();
 			DMibMemoryGoingToReportScope(this, true);
 			DMibMemoryReportAllocatorName(this, m_DebugName.f_GetStr());
 		}
