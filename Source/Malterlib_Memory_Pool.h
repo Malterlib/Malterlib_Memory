@@ -681,7 +681,7 @@ namespace NMib::NMemory
 		}
 	};
 
-	template <typename t_CData, aint t_GrowSize = 128, typename t_CLock = NThread::CNoLock, typename t_CPoolType = CPoolType_Freeable, typename t_CAllocator = CAllocator_Virtual, typename t_CAggregateData = TCPoolAggregateData<t_CLock>, typename t_CDebugStrType = NStr::CFStrAggregate256>
+	template <typename t_CData, aint t_GrowSize = 128, typename t_CLock = NThread::CNoLock, typename t_CPoolType = CPoolType_Freeable, typename t_CAllocator = CAllocator_Virtual, typename t_CAggregateData = TCPoolAggregateData<t_CLock>, typename t_CDebugStrType = NStr::CFStr256>
 	class TCPoolAggregate : public t_CAggregateData
 	{
 	public:
