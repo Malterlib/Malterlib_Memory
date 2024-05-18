@@ -50,7 +50,7 @@ namespace NMib::NMemory
 	TCMemoryManagerArenaHeapChunk<t_CParams>::TCMemoryManagerArenaHeapChunk(mint _Size, TCMemoryManagerArenaHeap<t_CParams> *_pHeap)
 		: m_Size(_Size)
 		, m_pHeap(_pHeap)
-		, m_Blocks(NMemory::CAllocatorConstructTag(), _pHeap->m_pMemoryManager)
+		, m_Blocks(CAllocatorConstructTag(), _pHeap->m_pMemoryManager)
 		, m_RequestedCleanup(ENumaArenaCleanup_None)
 	{
 	}
@@ -121,7 +121,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	TCMemoryManagerArenaHeap<t_CParams>::TCMemoryManagerArenaHeap(TCMemoryManager<t_CParams> *_pMemoryManager, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena)
 		: t_CParams::CNotifier::CHeap(_pMemoryManager)
-		, m_FreeBuckets(NMemory::CAllocatorConstructTag(), _pMemoryManager)
+		, m_FreeBuckets(CAllocatorConstructTag(), _pMemoryManager)
 		, m_pNumaArena(_pNumaArena)
 		, m_pMemoryManager(_pMemoryManager)
 	{

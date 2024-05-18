@@ -8,10 +8,6 @@
 
 namespace NMib::NMemory
 {
-	struct CAllocatorConstructTag
-	{
-	};
-
 	enum EMemoryManagerFeatureFlag : uint32
 	{
 		EMemoryManagerFeatureFlag_None = 0
