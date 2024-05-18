@@ -11,7 +11,7 @@ namespace NMib::NMemory
 		: t_CParams::CNotifier::CGlobal(*this)
 		, m_Magic(_Config.m_Magic)
 		, m_nMaxArenas(fg_Min(fg_RoundPowerOfTwoUp(_Config.m_nMaxArenas), t_CParams::mc_MaxArenas))
-		, m_HeapChunks(NMemory::CAllocatorConstructTag(), this)
+		, m_HeapChunks(CAllocatorConstructTag(), this)
 		, m_Allocator(fg_Forward<tfp_CAllocator>(_Params)...)
 		, m_LocalArena
 		(
