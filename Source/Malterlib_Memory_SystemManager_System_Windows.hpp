@@ -41,10 +41,12 @@ namespace NMib::NMemory
 #endif
 	inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_CreateNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 	{
+#ifndef DMibSanitizerEnabled_Address
 		//g_pMainHeap = HeapCreate(0, 0);
 		g_pMainHeap = GetProcessHeap();
 		ULONG Enable = 3;
 		HeapSetInformation(g_pMainHeap, HeapCompatibilityInformation, &Enable, sizeof(Enable));
+#endif
 	}
 
 	inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_DestroyNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
@@ -70,28 +72,61 @@ namespace NMib::NMemory
 
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size)
 		{
+#ifdef DMibSanitizerEnabled_Address
+			void * pRet = malloc(_Size);
+			_Size = _msize(pRet);
+			return pRet;
+#else
 			void * pRet = HeapAlloc(g_pMainHeap, 0, _Size);
 			_Size = HeapSize(g_pMainHeap, 0, pRet);
 			return pRet;
+#endif
 		}
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, mint &_Size, mint _Alignment)
 		{
+#ifdef DMibSanitizerEnabled_Address
+			void * pRet = malloc(_Size);
+			_Size = _msize(pRet);
+			return pRet;
+#else
 			void *pRet = HeapAlloc(g_pMainHeap, 0, _Size);
 			_Size = HeapSize(g_pMainHeap, 0, pRet);
 			return pRet;
+#endif
 		}
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, mint _Size)
 		{
+#ifdef DMibSanitizerEnabled_Address
+			void * pRet = malloc(_Size);
+			return pRet;
+#else
 			void * pRet = HeapAlloc(g_pMainHeap, 0, _Size);
 			return pRet;
+#endif
 		}
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment)
 		{
+#ifdef DMibSanitizerEnabled_Address
+			void * pRet = malloc(_Size);
+			return pRet;
+#else
 			void *pRet = HeapAlloc(g_pMainHeap, 0, _Size);
 			return pRet;
+#endif
 		}
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
+#ifdef DMibSanitizerEnabled_Address
+			void * pRet = realloc(_pMemory, _Size);
+			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+			{
+				if (pRet)
+					_Size = _msize(pRet);
+				else
+					_Size = 0;
+			}
+			return pRet;
+#else
 			void *pRet = HeapReAlloc(g_pMainHeap, 0, _pMemory, _Size);
 			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
 			{
@@ -101,10 +136,21 @@ namespace NMib::NMemory
 					_Size = 0;
 			}
 			return pRet;
+#endif
 		}
 
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
 		{
+#ifdef DMibSanitizerEnabled_Address
+			void * pRet = realloc(_pMemory, _Size);
+			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+			{
+				if (pRet)
+					_Size = _msize(pRet);
+				else
+					_Size = 0;
+			}
+#else
 			void *pRet = HeapReAlloc(g_pMainHeap, 0, _pMemory, _Size);
 			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
 			{
@@ -113,12 +159,17 @@ namespace NMib::NMemory
 				else
 					_Size = 0;
 			}
+#endif
 			return pRet;
 		}
 
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size)
 		{
+#ifdef DMibSanitizerEnabled_Address
+			free(_pMemory);
+#else
 			HeapFree(g_pMainHeap, 0, _pMemory);
+#endif
 		}
 
 		inline_always static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule)
@@ -133,12 +184,20 @@ namespace NMib::NMemory
 
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
+#ifdef DMibSanitizerEnabled_Address
+			free(_pMemory);
+#else
 			HeapFree(g_pMainHeap, 0, _pMemory);
+#endif
 		}
 
 		inline_always static mint DMibCrossmoduleAPI fs_NonTracked_Size(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
+#ifdef DMibSanitizerEnabled_Address
+			return _msize(_pMemory);
+#else
 			return HeapSize(g_pMainHeap, 0, _pMemory);
+#endif
 		}
 
 		inline_always static mint DMibCrossmoduleAPI fs_NonTracked_TrySize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
@@ -151,7 +210,11 @@ namespace NMib::NMemory
 		{
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
-			void * pRet = HeapAlloc(g_pMainHeap, 0, _Size);
+#ifdef DMibSanitizerEnabled_Address
+			void *pRet = malloc(_Size);
+#else
+			void *pRet = HeapAlloc(g_pMainHeap, 0, _Size);
+#endif
 			DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
@@ -165,7 +228,11 @@ namespace NMib::NMemory
 		{
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
+#ifdef DMibSanitizerEnabled_Address
+			void *pRet = malloc(_Size);
+#else
 			void *pRet = HeapAlloc(g_pMainHeap, 0, _Size);
+#endif
 			DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, _Alignment, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
@@ -175,8 +242,13 @@ namespace NMib::NMemory
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
-		void * pRet = HeapAlloc(g_pMainHeap, 0, _Size);
+#ifdef DMibSanitizerEnabled_Address
+		void *pRet = malloc(_Size);
+		_Size = _msize( pRet);
+#else
+		void *pRet = HeapAlloc(g_pMainHeap, 0, _Size);
 		_Size = HeapSize(g_pMainHeap, 0, pRet);
+#endif
 		DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 	}
@@ -190,8 +262,13 @@ namespace NMib::NMemory
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
+#ifdef DMibSanitizerEnabled_Address
+		void *pRet = malloc(_Size);
+		_Size = _msize( pRet);
+#else
 		void *pRet = HeapAlloc(g_pMainHeap, 0, _Size);
 		_Size = HeapSize(g_pMainHeap, 0, pRet);
+#endif
 		DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, _Alignment, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 	}
@@ -204,6 +281,16 @@ namespace NMib::NMemory
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 		DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
+#ifdef DMibSanitizerEnabled_Address
+		void *pRet = realloc(_pMemory, _Size);
+		if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+		{
+			if (pRet)
+				_Size = _msize(pRet);
+			else
+				_Size = 0;
+		}
+#else
 		void *pRet = HeapReAlloc(g_pMainHeap, 0, _pMemory, _Size);
 		if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
 		{
@@ -212,6 +299,7 @@ namespace NMib::NMemory
 			else
 				_Size = 0;
 		}
+#endif
 		DMibMemoryReportRealloc(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 	}
@@ -224,6 +312,16 @@ namespace NMib::NMemory
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 		DMibMemoryReportExpression(mint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
+#ifdef DMibSanitizerEnabled_Address
+		void *pRet = realloc(_pMemory, _Size);
+		if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
+		{
+			if (pRet)
+				_Size = _msize(pRet);
+			else
+				_Size = 0;
+		}
+#else
 		void *pRet = HeapReAlloc(g_pMainHeap, 0, _pMemory, _Size);
 		if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
 		{
@@ -232,6 +330,7 @@ namespace NMib::NMemory
 			else
 				_Size = 0;
 		}
+#endif
 		DMibMemoryReportResize(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 	}
@@ -242,7 +341,11 @@ namespace NMib::NMemory
 			return;
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(Size, fs_SizePadded(_pModule, _Size));
+#ifdef DMibSanitizerEnabled_Address
+		free(_pMemory);
+#else
 		HeapFree(g_pMainHeap, 0, _pMemory);
+#endif
 		DMibMemoryReportFree(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr);
 	}
 
@@ -252,7 +355,11 @@ namespace NMib::NMemory
 			return;
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(Size, HeapSize(g_pMainHeap, 0, _pMemory));
+#ifdef DMibSanitizerEnabled_Address
+		free(_pMemory);
+#else
 		HeapFree(g_pMainHeap, 0, _pMemory);
+#endif
 		DMibMemoryReportFree(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr);
 	}
 
@@ -261,7 +368,11 @@ namespace NMib::NMemory
 		if (!_pMemory)
 			return 0;
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
+#ifdef DMibSanitizerEnabled_Address
+		mint Ret = _msize((void *)_pMemory);
+#else
 		mint Ret = HeapSize(g_pMainHeap, 0, _pMemory);
+#endif
 		DMibMemoryReportGetSize(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Ret, nullptr);
 		return Ret;
 	}

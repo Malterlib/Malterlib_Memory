@@ -99,7 +99,6 @@ extern "C"
 				)
 			;
 		}
-		// DMibNew int;
 	}
 
 }
