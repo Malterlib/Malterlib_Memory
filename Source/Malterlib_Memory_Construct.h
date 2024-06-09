@@ -27,9 +27,11 @@ namespace NMib
 		static_assert(sizeof(tf_CObjectType) > 0);
 		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
 
+#if !(defined(DPlatformFamily_Windows) && defined(DMibSanitizerEnabled_Address))
 		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault)
 			return new tf_CObjectType(fg_Forward<tfp_CParams>(p_Params)...);
 		else
+#endif
 		{
 			mint Size = sizeof(tf_CObjectType);
 			auto Memory = fg_Forward<tf_CAllocator>(_Allocator).f_AllocSafe(Size, alignof(tf_CObjectType));
@@ -45,9 +47,11 @@ namespace NMib
 		static_assert(sizeof(tf_CObjectType) > 0);
 		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value || NTraits::cIsFinal<tf_CObjectType>);
 
+#if !(defined(DPlatformFamily_Windows) && defined(DMibSanitizerEnabled_Address))
 		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault && (!NTraits::cIsFinal<tf_CObjectType> || NTraits::cHasOperatorDelete<tf_CObjectType>))
 			delete _pObject;
 		else
+#endif
 		{
 			if constexpr (NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value && !NTraits::cIsFinal<tf_CObjectType>)
 			{
