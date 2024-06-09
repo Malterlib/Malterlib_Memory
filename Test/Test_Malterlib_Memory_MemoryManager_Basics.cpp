@@ -1150,7 +1150,7 @@ namespace
 				};
 			};
 #endif
-#ifndef DMibSanitizerEnabled_Thread
+#if !defined(DMibSanitizerEnabled_Thread) && !defined(DCompiler_MSVC_Workaround_DllsBroken)
 			// tsan does not currently support unloading dlls
 			DMibTestSuite("Dll")
 			{
