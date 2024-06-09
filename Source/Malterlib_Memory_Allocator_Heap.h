@@ -244,9 +244,8 @@ namespace NMib::NMemory
 	{
 	private:
 		static const mint mcp_StorageSize = (t_StaticStorage + t_Alignment - 1) & ~mint(t_Alignment - 1);
-		typedef uint8 CStorage[mcp_StorageSize];
-		typedef typename NTraits::TCAlign<CStorage, t_Alignment>::CType CAlignedStorage;
-		CAlignedStorage m_Storage;
+
+		alignas(t_Alignment) uint8 m_Storage[mcp_StorageSize];
 #if DMibEnableSafeCheck > 0
 		bool m_bAllocated;
 #endif
