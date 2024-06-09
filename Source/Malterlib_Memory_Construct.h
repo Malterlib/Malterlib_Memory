@@ -102,15 +102,7 @@ namespace NMib
 	}
 
 	template <typename t_CType>
-	inline_small void fg_Delete(t_CType * &_pToDelete)
-	{
-		static_assert(!NTraits::TCIsAbstract<t_CType>::mc_Value || NTraits::TCHasVirtualDestructor<t_CType>::mc_Value);
-		if (_pToDelete)
-		{
-			delete _pToDelete;
-			_pToDelete = nullptr;
-		}
-	}
+	inline_small void fg_Delete(t_CType * &_pToDelete);
 
 	
 	template <typename t_CType = void, typename... tp_CParams>

@@ -1062,3 +1062,17 @@ namespace NMib::NMemory
 		return m_Deleter;
 	}
 }
+
+namespace NMib
+{
+	template <typename t_CType>
+	inline_small void fg_Delete(t_CType * &_pToDelete)
+	{
+		static_assert(!NTraits::TCIsAbstract<t_CType>::mc_Value || NTraits::TCHasVirtualDestructor<t_CType>::mc_Value);
+		if (_pToDelete)
+		{
+			fg_DeleteObject(NMemory::CDefaultAllocator(), _pToDelete);
+			_pToDelete = nullptr;
+		}
+	}
+}
