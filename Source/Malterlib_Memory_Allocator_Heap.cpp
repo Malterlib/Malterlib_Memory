@@ -109,7 +109,7 @@ namespace NMib::NMemory
 }
 
 #if defined(DMibPOverrideOperatorNew)
-#if defined(DMibSanitizerEnabled) && !defined(DPlatformFamily_macOS) && !defined(DCompiler_MSVC)
+#if defined(DMibSanitizerEnabled) && !defined(DPlatformFamily_macOS) && !defined(DPlatformFamily_Windows)
 	// operator delete(void*, std::align_val_t)
 	extern "C" void __wrap__ZdlPvSt11align_val_tRKSt9nothrow_t(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow)
 	{
@@ -330,7 +330,7 @@ namespace NMib::NMemory
 		NMib::NMemory::fg_Free(_pMemory, Size);
 	}
 
-#else
+#elif !defined(DMibSanitizerEnabled_Address) || defined(DCompiler_MSVC)
 		
 	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment) noexcept
 	{
