@@ -126,6 +126,13 @@ DMibMemoryInterpose2(void, malloc_zone_enumerate_discharged_pointers, malloc_zon
 DMibMemoryInterpose2(boolean_t, malloc_zone_claimed_address, malloc_zone_t *_0, void *_1)
 DMibMemoryInterpose4(void *, malloc_zone_malloc_with_options_np, malloc_zone_t *_0, size_t _1, size_t _2, uint64_t _3)
 
+DMibMemoryInterpose3(void *, malloc_type_zone_malloc, malloc_zone_t *_0, size_t _1, malloc_type_id_t _2)
+DMibMemoryInterpose4(void *, malloc_type_zone_calloc, malloc_zone_t *_0, size_t _1, size_t _2, malloc_type_id_t _3)
+DMibMemoryInterpose3(void, malloc_type_zone_free, malloc_zone_t *_0, void *_1, malloc_type_id_t _2)
+DMibMemoryInterpose4(void *, malloc_type_zone_realloc, malloc_zone_t *_0, void *_1, size_t _2, malloc_type_id_t _3)
+DMibMemoryInterpose3(void *, malloc_type_zone_valloc, malloc_zone_t *_0, size_t _1, malloc_type_id_t _2)
+DMibMemoryInterpose4(void *, malloc_type_zone_memalign, malloc_zone_t *_0, size_t _1, size_t _2, malloc_type_id_t _3)
+
 DMibMemoryInterpose1(void *, malloc, size_t _0)
 DMibMemoryInterpose1(void *, valloc, size_t _0)
 DMibMemoryInterpose2(void *, calloc, size_t _0, size_t _1)
@@ -135,6 +142,14 @@ DMibMemoryInterpose1(void, free, void *_0)
 DMibMemoryInterpose1(void, vfree, void *_0)
 DMibMemoryInterpose3(int, posix_memalign, void **_0, size_t _1, size_t _2)
 DMibMemoryInterpose2(void *, aligned_alloc, size_t _0, size_t _1)
+
+DMibMemoryInterpose2(void *, malloc_type_malloc, size_t _0, malloc_type_id_t _1)
+DMibMemoryInterpose3(void *, malloc_type_calloc, size_t _0, size_t _1, malloc_type_id_t _2)
+DMibMemoryInterpose2(void, malloc_type_free, void *_0, malloc_type_id_t _1)
+DMibMemoryInterpose3(void *, malloc_type_realloc, void *_0, size_t _1, malloc_type_id_t _2)
+DMibMemoryInterpose2(void *, malloc_type_valloc, size_t _0, malloc_type_id_t _1)
+DMibMemoryInterpose3(void *, malloc_type_aligned_alloc, size_t _0, size_t _1, malloc_type_id_t _2)
+DMibMemoryInterpose4(int, malloc_type_posix_memalign, void **_0, size_t _1, size_t _2, malloc_type_id_t _3)
 
 DMibMemoryInterpose1(int, malloc_jumpstart, int _0)
 

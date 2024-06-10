@@ -10,6 +10,8 @@
 #define DMibMalterlibOverrideMallocExport module_export
 #endif
 
+#include "Malterlib_Memory_SystemOverride_MacOSInterpose.h"
+
 #pragma clang diagnostic ignored "-Wunguarded-availability-new"
 
 #include <stdlib.h>
@@ -18,7 +20,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <malloc/malloc.h>
-#include "Malterlib_Memory_SystemOverride_MacOSInterpose.h"
 
 extern "C"
 {
