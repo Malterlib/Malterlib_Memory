@@ -1,6 +1,16 @@
 // Copyright © 2015 Hansoft AB 
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
+typedef unsigned long long malloc_type_id_t;
+
+#define _MALLOC_UNDERSCORE_MALLOC_TYPE_H_
+
+#if !defined(_MALLOC_TYPED)
+#define _MALLOC_TYPED(override, type_param_pos)
+#endif
+
+#include <malloc/malloc.h>
+
 #include <mach/message.h>
 #include <mach/semaphore.h>
 #include <sys/event.h>
@@ -41,6 +51,21 @@ extern "C" void _malloc_fork_child() __attribute__((weak_import));
 extern "C" void _malloc_fork_parent() __attribute__((weak_import));
 extern "C" void __exit(int _0) __attribute__((weak_import));
 extern "C" void _exit(int _0) __attribute__((weak_import));
+
+extern "C" void *malloc_type_malloc(size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void *malloc_type_calloc(size_t count, size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void malloc_type_free(void * ptr, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void *malloc_type_realloc(void * ptr, size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void *malloc_type_valloc(size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void *malloc_type_aligned_alloc(size_t alignment, size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" int malloc_type_posix_memalign(void * *memptr, size_t alignment, size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
+
+extern "C" void *malloc_type_zone_malloc(malloc_zone_t *zone, size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void *malloc_type_zone_calloc(malloc_zone_t *zone, size_t count, size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void malloc_type_zone_free(malloc_zone_t *zone, void * ptr, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void *malloc_type_zone_realloc(malloc_zone_t *zone, void * ptr, size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void *malloc_type_zone_valloc(malloc_zone_t *zone, size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void *malloc_type_zone_memalign(malloc_zone_t *zone, size_t alignment, size_t size, malloc_type_id_t type_id) __attribute__((weak_import));
 
 #define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) d_Return (*d_Function)(__VA_ARGS__);
 
