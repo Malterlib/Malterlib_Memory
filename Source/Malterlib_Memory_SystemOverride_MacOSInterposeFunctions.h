@@ -191,6 +191,10 @@ DMibMemoryInterpose7(int, kevent64, int _0, const struct kevent64_s *_1, int _2,
 DMibMemoryInterpose0(void, _malloc_fork_prepare)
 DMibMemoryInterpose0(void, _malloc_fork_child)
 DMibMemoryInterpose0(void, _malloc_fork_parent)
+#if DMibConfig_Thread_DebugThreadLocals
+DMibMemoryInterpose2(int, pthread_key_create, pthread_key_t *_0, void (* _1)(void *))
+DMibMemoryInterpose1(int, pthread_key_delete, pthread_key_t _0)
+#endif
 
 DMibMemoryInterpose1(void, __exit, int _0)
 DMibMemoryInterpose1(void, _exit, int _0)
