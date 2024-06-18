@@ -4529,6 +4529,99 @@ extern "C"
 	}
 }
 
+#if DMibConfig_Thread_DebugThreadLocals
+namespace NMib
+{
+	struct CThreadLocalDebug : public CSubSystem
+	{
+		struct CKeyInfo
+		{
+			NException::CCallstack m_Callstack;
+		};
+
+		NThread::CLowLevelLock m_Lock;
+
+		NContainer::TCMap<pthread_key_t, CKeyInfo, CSort_Default, CAllocator_Virtual> m_ThreadLocals;
+		NContainer::TCMap<pthread_key_t, CKeyInfo, CSort_Default, CAllocator_Virtual> m_LastSnapshot;
+	};
+
+	static constinit TCSubSystem<CThreadLocalDebug, ESubSystemDestruction_Last> g_ThreadLocalDebug{EAggregateInitialization_Force};
+
+	assure_used void fg_MalterlibThreadLocalDebug_Snapshot()
+	{
+		auto &ThreadLocalDebug = *g_ThreadLocalDebug;
+		DMibLock(ThreadLocalDebug.m_Lock);
+		ThreadLocalDebug.m_LastSnapshot = ThreadLocalDebug.m_ThreadLocals;
+	}
+
+	assure_used void fg_MalterlibThreadLocalDebug_Diff(bool _bIncludeRemoved)
+	{
+		auto &ThreadLocalDebug = *g_ThreadLocalDebug;
+		DMibLock(ThreadLocalDebug.m_Lock);
+		for (auto &InfoEntry : ThreadLocalDebug.m_ThreadLocals.f_Entries())
+		{
+			if (ThreadLocalDebug.m_LastSnapshot.f_FindEqual(InfoEntry.f_Key()))
+				continue;
+
+			DMibTrace2("New thread local: {}\n", InfoEntry.f_Key());
+			InfoEntry.f_Value().m_Callstack.f_Trace(4);
+		}
+
+		if (!_bIncludeRemoved)
+			return;
+
+		for (auto &InfoEntry : ThreadLocalDebug.m_LastSnapshot.f_Entries())
+		{
+			if (ThreadLocalDebug.m_ThreadLocals.f_FindEqual(InfoEntry.f_Key()))
+				continue;
+
+			DMibTrace2("Removed thread local: {}\n", InfoEntry.f_Key());
+			InfoEntry.f_Value().m_Callstack.f_Trace(4);
+		}
+	}
+}
+
+extern "C"
+{
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_pthread_key_create(pthread_key_t *_pKey, void (*_fDestructor)(void *))
+	{
+		if (!g_bCreatedSystem)
+			return g_OriginalFunctions.pthread_key_create(_pKey, _fDestructor);
+
+		auto &ThreadLocalDebug = *g_ThreadLocalDebug;
+
+		DMibLock(ThreadLocalDebug.m_Lock);
+
+		auto Error = g_OriginalFunctions.pthread_key_create(_pKey, _fDestructor);
+
+		if (!Error)
+		{
+			auto &Info = ThreadLocalDebug.m_ThreadLocals[*_pKey];
+
+			Info.m_Callstack.m_CallstackLen = NSys::fg_System_GetStackTrace(Info.m_Callstack.m_Callstack, 128);
+		}
+
+		return Error;
+	}
+
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_pthread_key_delete(pthread_key_t _Key)
+	{
+		if (!g_bCreatedSystem)
+			return g_OriginalFunctions.pthread_key_delete(_Key);
+
+		auto &ThreadLocalDebug = *g_ThreadLocalDebug;
+
+		DMibLock(ThreadLocalDebug.m_Lock);
+		auto Error = g_OriginalFunctions.pthread_key_delete(_Key);
+
+		if (!Error)
+			ThreadLocalDebug.m_ThreadLocals.f_Remove(_Key);
+
+		return Error;
+	}
+}
+#endif
+
 extern "C"
 {
 #ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport

@@ -4,6 +4,9 @@
 #include <mach/message.h>
 #include <mach/semaphore.h>
 #include <sys/event.h>
+#if DMibConfig_Thread_DebugThreadLocals
+#include <pthread.h>
+#endif
 
 extern "C" void *_Znam(size_t) __attribute__((weak_import));
 extern "C" void *_ZnamRKSt9nothrow_t(size_t) __attribute__((weak_import));
