@@ -143,6 +143,11 @@ namespace NMib::NMemory
 			"__SCGetThreadSpecificData",
 			// macOS 14
 			"nw::object::vtable::register_def",
+			"nw::object::class_def::register_method_def",
+			"swift_copyAuxiliaryExecutablePath",
+			"nw::object::class_def::setup",
+			"initializeNonMetaClass",
+			"_CFMachPortCreateWithPort4",
 #elif defined(DPlatformFamily_Linux)
 			"qt_load_library_runtime",
 			"qt_set_x11_resources",
