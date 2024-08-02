@@ -693,6 +693,7 @@ namespace NMib::NMemory
 		{
 			auto Return = EMemoryManagerFeatureFlag_None;
 
+#if DEnableDebugMemoryManager
 			if constexpr (CMemoryManagerDebugOptions::mc_bTraceLeaks)
 				Return |= EMemoryManagerFeatureFlag_TraceLeaks;
 
@@ -716,7 +717,7 @@ namespace NMib::NMemory
 
 			if constexpr (CMemoryManagerDebugOptions::mc_bAssertOnMemoryLeak)
 				Return |= EMemoryManagerFeatureFlag_AssertOnMemoryLeak;
-
+#endif
 			return Return;
 		}
 

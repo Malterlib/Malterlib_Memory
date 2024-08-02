@@ -21,7 +21,7 @@ All threads that have not set the numa node will use the default numa arena, whi
 Arena
 -----
 
-Small allocations below 512 KiB are serviced by an arena. 
+Small allocations below 2 MiB are serviced by an arena.
 
 Ideally each thread allocates memory from it's own arena, but to save virtual memory space arenas are shared between threads when possible. This is accomplished by each thread caching the last used arena and prefering this arena when it tries to check out an arena before doing allocations.
 
@@ -33,11 +33,11 @@ When memory is allocated in an arena it will always come from a slab. A slab is 
 
 \image html MemoryManagerSlab.svg
 
-The slab is aligned on a 16 MiB address. This is to allow quick constant time calculation of the slab header with pointer arithmetic from an allocation address.
+The slab is aligned on a 16 MiB (64 MiB with 16 KiB pages) address. This is to allow quick constant time calculation of the slab header with pointer arithmetic from an allocation address.
 
 The header of the slab is located at the end of the slab which allows maximum utilization of address space when several sub slabs are used for one allocation and it keeps the alignment correct.
 
-To allow checking if the header is a slab header a random magic number xored with the header address is stored in the header. This also requires that the last page of all 16 MiB adresses be a valid address for all allocations allocated in the memory manager.
+To allow checking if the header is a slab header a random magic number xored with the header address is stored in the header. This also requires that the last page of all 16 MiB (64 MiB with 16 KiB pages) adresses be a valid address for all allocations allocated in the memory manager.
 
 The smallest allocation sizes are 1, 2 and 4 bytes, above that all allocations are always aligned on at least 4 bytes.
 
@@ -70,21 +70,21 @@ All allocations returned from the slab allocator are returned with the inherent 
 Heap
 ----
 
-Sizes between 512 KiB and 16 MiB are allocated with a heap allocator. This allocator keeps track of allocations with a data structure outside of the allocated blocks to preserve the alignment of returned blocks.
+Sizes between 2 MiB and 16 MiB (64 MiB with 16 KiB pages) are allocated with a heap allocator. This allocator keeps track of allocations with a data structure outside of the allocated blocks to preserve the alignment of returned blocks.
 
 Blocks returned are aligned on at least 64 KiB.
 
-Currently only one heap alloctor is used for each numa arena, so allocations above 512 KiB are not concurrent. This should not be a problem, but if it turns out to be there could be one heap for each arena on 64 bit architectures where virtual address space in not limited.
+Currently only one heap alloctor is used for each numa arena, so allocations above 2 MiB are not concurrent. This should not be a problem, but if it turns out to be there could be one heap for each arena on 64 bit architectures where virtual address space in not limited.
 
 Allocations are served from chunks allocated from the fallback allocator. The chunks are always 32 MiB in size (configurable).
 
-To allow the arena to check for the slab header at the end of each 16 MiB boundrary the pages there are always kept committed even if no block has been allocated there.
+To allow the arena to check for the slab header at the end of each 16 MiB (64 MiB with 16 KiB pages) boundrary the pages there are always kept committed even if no block has been allocated there.
 
 
 Fallback allocator
 ------------------
 
-For huge allocations above 16 MiB the fallback allocator will be used. This is the same allocator used to allocate the slabs and chunks in the arenas and heaps.
+For huge allocations above 16 MiB (64 MiB with 16 KiB pages) the fallback allocator will be used. This is the same allocator used to allocate the slabs and chunks in the arenas and heaps.
 
 The size at which this allocator is used has to at least as large as the slab size to allow the slab header check when freeing or checking the size of a block of memory.
 

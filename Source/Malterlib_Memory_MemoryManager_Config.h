@@ -223,7 +223,7 @@ namespace NMib::NMemory
 		static constexpr mint mc_MaxNumSubSlabs = mc_SlabSize / t_CParams::mc_SubSlabSize;
 
 		static constexpr mint mc_MaxHeapAllocSize = mc_SlabSize;
-		static constexpr mint mc_MinHeapAllocSize = mc_SlabSize / 32;
+		static constexpr mint mc_MinHeapAllocSize = sizeof(void *) == 4 ? mc_SlabSize / 32 : fg_MinConstexpr(mc_SlabSize / 8, 2u * 1024u * 1024u); // Max 8,57% virtual space fragmentation
 		static constexpr mint mc_HeapChunkSize = mc_SlabSize * 2;
 		static constexpr mint mc_HeapBlockSize = mc_MinHeapAllocSize / t_CParams::mc_NumSizesPerLevel;
 

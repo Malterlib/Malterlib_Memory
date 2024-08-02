@@ -833,7 +833,6 @@ namespace
 			{
 				DMibTestSuite("Full")
 				{
-
 					mint LastAlloc = 0;
 					TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 					MemoryManager.f_ForceStartCleanupThreads();
@@ -899,7 +898,6 @@ namespace
 
 				DMibTestSuite("Partial")
 				{
-
 					mint LastAlloc = 0;
 					TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 					MemoryManager.f_ForceStartCleanupThreads();
@@ -959,7 +957,7 @@ namespace
 #	endif
 						}
 
-						for (mint i = 1; i < BigAllocs.f_GetLen(); ++i)
+						for (mint i = 0; i < BigAllocs.f_GetLen(); ++i)
 							MemoryManager.f_Free(BigAllocs[i].m_pAlloc, BigAllocs[i].m_Size);
 
 						CTestMemoryMeasure MeasureMemory("Alloc");
@@ -973,16 +971,12 @@ namespace
 #	if DMibConfig_Memory_Shims_Enable
 						DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesDecommit.m_Average) > DMibExpr(0) && DMibExpr("Second"));
 #	endif
-						if constexpr (tf_CParams::mc_bUseSmallSizes && sizeof(void *) > 4)
-							DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(3u));
-						else
-							DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(4u));
+						mint nSlabs = MemoryManager.f_GetNumUsedSlabs();
 
+						DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(1u));
 						DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) == DMibExpr(1u));
 
 						MemoryManager.f_Free(Allocs[0].m_pAlloc, Allocs[0].m_Size);
-						MemoryManager.f_Free(BigAllocs[0].m_pAlloc, BigAllocs[0].m_Size);
-
 						MemoryManager.f_GarbageCollect(true);
 
 						DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(0));
