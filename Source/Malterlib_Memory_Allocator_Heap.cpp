@@ -330,7 +330,7 @@ namespace NMib::NMemory
 		NMib::NMemory::fg_Free(_pMemory, Size);
 	}
 
-#elif !defined(DMibSanitizerEnabled_Address) || defined(DCompiler_MSVC)
+#else
 		
 	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment) noexcept
 	{
