@@ -3722,7 +3722,7 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		return &g_MalterlibMallocZone;
 #else
-		return g_OriginalFunctions.malloc_default_zone();
+		return (malloc_zone_t_known_version *)g_OriginalFunctions.malloc_default_zone();
 #endif
 	}
 
@@ -4092,7 +4092,7 @@ extern "C"
 #endif
 			return fCreateZone.operator ()<CMemoryManagerZoneMax>();
 #else
-		return g_OriginalFunctions.malloc_create_zone(start_size, flags);
+		return (malloc_zone_t_known_version *)g_OriginalFunctions.malloc_create_zone(start_size, flags);
 #endif
 	}
 
@@ -4377,7 +4377,7 @@ extern "C"
 		State.m_pForeignZones[iLastZone] = nullptr;
 		NMib::NAtomic::fg_MemoryFence();
 #else
-		return g_OriginalFunctions.malloc_zone_unregister(_pZone);
+		return g_OriginalFunctions.malloc_zone_unregister((malloc_zone_t *)_pZone);
 #endif
 	}
 
