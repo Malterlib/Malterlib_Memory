@@ -19,7 +19,7 @@ namespace NMib::NMemory
 		CCaptureDefaultDelete();
 		~CCaptureDefaultDelete();
 
-		static bool fs_ReportDelete(void *_pMemory, mint _Size);
+		static bool fs_ReportDelete(void *_pMemory, mint _Size) noexcept;
 
 		CCaptureDefaultDelete *m_pPrevious;
 		CCapturedDelete m_Captured;

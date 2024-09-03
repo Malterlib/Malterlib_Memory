@@ -40,25 +40,33 @@ namespace NMib::NMemory
 		constinit TCSubSystem<CSubSystem_Memory, ESubSystemDestruction_BeforeThreadLocals> g_SubSystem_Memory = {DAggregateInit};
 	}
 
-	CCaptureDefaultDelete::CCaptureDefaultDelete()
+	inline_always_lto CCaptureDefaultDelete::CCaptureDefaultDelete()
 	{
 		auto &ThreadLocal = *NPrivate::g_SubSystem_Memory->m_ThreadLocal;
 		m_pPrevious = ThreadLocal.m_pCapture;
 		ThreadLocal.m_pCapture = this;
 	}
 
-	CCaptureDefaultDelete::~CCaptureDefaultDelete()
+	inline_always_lto CCaptureDefaultDelete::~CCaptureDefaultDelete()
 	{
 		auto &ThreadLocal = *NPrivate::g_SubSystem_Memory->m_ThreadLocal;
 		ThreadLocal.m_pCapture = m_pPrevious;
 	}
 
-	bool CCaptureDefaultDelete::fs_ReportDelete(void *_pMemory, mint _Size)
+	namespace
 	{
-		if (fg_GetSys()->f_ThreadDestroyed())
-			return false;
+		inline_never void fg_ReportDeleteSlowPath(void *_pMemory, mint _Size) noexcept
+		{
+			if (_Size)
+				fg_Free(_pMemory, _Size);
+			else
+				fg_FreeNoSize(_pMemory);
+		}
+	}
 
-		if (!NPrivate::g_SubSystem_Memory.f_WasCreated() || !_pMemory)
+	inline_always_lto bool CCaptureDefaultDelete::fs_ReportDelete(void *_pMemory, mint _Size) noexcept
+	{
+		if (!NPrivate::g_SubSystem_Memory.f_WasCreated() || !_pMemory) [[unlikely]]
 			return false;
 
 		auto &SubSystem = *NPrivate::g_SubSystem_Memory;
@@ -67,20 +75,19 @@ namespace NMib::NMemory
 		DMibFastCheck(!SubSystem.m_bThreadLocalsDestroyed);
 
 		auto *pThreadLocal = SubSystem.m_ThreadLocal.f_TryGet();
-		if (!pThreadLocal)
+		if (!pThreadLocal) [[unlikely]]
 			return false;
-		if (!pThreadLocal->m_pCapture)
+
+		if (!pThreadLocal->m_pCapture) [[unlikely]]
 			return false;
+
 		auto &Capture = *pThreadLocal->m_pCapture;
-		if (Capture.m_Captured.m_pMemory) // Recursive delete
-		{
-			if (Capture.m_Captured.m_Size)
-				fg_Free(Capture.m_Captured.m_pMemory, Capture.m_Captured.m_Size);
-			else
-				fg_FreeNoSize(Capture.m_Captured.m_pMemory);
-		}
+		if (Capture.m_Captured.m_pMemory) [[unlikely]] // Recursive delete
+			fg_ReportDeleteSlowPath(Capture.m_Captured.m_pMemory, Capture.m_Captured.m_Size);
+
 		Capture.m_Captured.m_pMemory = _pMemory;
 		Capture.m_Captured.m_Size = _Size;
+
 		return true;
 	}
 #endif
