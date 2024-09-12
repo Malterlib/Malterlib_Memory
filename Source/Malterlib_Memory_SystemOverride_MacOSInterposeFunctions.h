@@ -126,6 +126,9 @@ DMibMemoryInterpose2(void, malloc_zone_enumerate_discharged_pointers, malloc_zon
 DMibMemoryInterpose2(boolean_t, malloc_zone_claimed_address, malloc_zone_t *_0, void *_1)
 DMibMemoryInterpose4(void *, malloc_zone_malloc_with_options_np, malloc_zone_t *_0, size_t _1, size_t _2, uint64_t _3)
 
+DMibMemoryInterpose5(void *, malloc_type_zone_malloc_with_options_np, malloc_zone_t *_0, size_t _1, size_t _2, malloc_options_np_t _3, malloc_type_id_t _4)
+DMibMemoryInterpose5(void *, malloc_type_zone_malloc_with_options_internal, malloc_zone_t *_0, size_t _1, size_t _2, malloc_options_np_t _3, malloc_type_id_t _4)
+
 DMibMemoryInterpose3(void *, malloc_type_zone_malloc, malloc_zone_t *_0, size_t _1, malloc_type_id_t _2)
 DMibMemoryInterpose4(void *, malloc_type_zone_calloc, malloc_zone_t *_0, size_t _1, size_t _2, malloc_type_id_t _3)
 DMibMemoryInterpose3(void, malloc_type_zone_free, malloc_zone_t *_0, void *_1, malloc_type_id_t _2)
@@ -201,6 +204,63 @@ DMibMemoryInterpose1(void, _exit, int _0)
 
 // This needs to be last, as it will override the function used to allocate memory vm_region_64
 DMibMemoryInterpose7(mach_msg_return_t, mach_msg, mach_msg_header_t *_0, mach_msg_option_t _1, mach_msg_size_t _2, mach_msg_size_t _3, mach_port_name_t _4, mach_msg_timeout_t _5, mach_port_name_t _6)
+
+/* Unimplemented:
+	__mach_stack_logging_shared_memory_address
+	__malloc_late_init
+	_malloc_no_asl_log
+	_os_cpu_number_override
+	mag_set_thread_index
+	malloc_check_counter
+	malloc_check_each
+	malloc_check_start
+	malloc_claimed_address
+	malloc_create_legacy_default_zone
+	malloc_debug
+	malloc_engaged_nano
+	malloc_engaged_secure_allocator
+	malloc_enter_process_memory_limit_warn_mode
+	malloc_error
+	malloc_freezedry
+	malloc_get_thread_options
+	malloc_get_wrapped_zone
+	malloc_logger
+	malloc_memory_event_handler
+	malloc_memorypressure_mask_default_4libdispatch
+	malloc_num_zones
+	malloc_num_zones_allocated
+	malloc_printf
+	malloc_register_stack_logger
+	malloc_sanitizer_get_functions
+	malloc_sanitizer_is_enabled
+	malloc_sanitizer_set_functions
+	malloc_set_thread_options
+	malloc_singlethreaded
+	malloc_type_zone_malloc_with_options_internal
+	malloc_type_zone_malloc_with_options_np
+	malloc_variant_is_debug_4test
+	malloc_zero_on_free_disable
+	malloc_zones
+	mstats
+	pgm_extract_report_from_corpse
+	reallocarray$DARWIN_EXTSN
+	reallocarrayf$DARWIN_EXTSN
+	sanitizer_diagnose_fault_from_crash_reporter
+	scalable_zone_info
+	scalable_zone_statistics
+	set_malloc_singlethreaded
+	stack_logging_enable_logging
+	szone_check_counter
+	szone_check_modulo
+	szone_check_start
+	tiny_print_region_free_list
+	turn_off_stack_logging
+	turn_on_stack_logging
+	xzm_malloc_zone_introspect
+	xzm_ptr_lookup_4test
+	xzm_type_choose_ptr_bucket_4test
+	zeroify_scalable_zone
+*/
 
 #undef DMibMemoryInterpose0
 #undef DMibMemoryInterpose1
