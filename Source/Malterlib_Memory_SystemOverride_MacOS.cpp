@@ -4441,12 +4441,40 @@ extern "C"
 
 	/* memory allocation with an extensible binary flags option. Present in
 	 * version >= 15 */
-	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_malloc_with_options_np(malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options)
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_malloc_with_options_np
+		(
+			malloc_zone_t_known_version *_pZone
+			, size_t _Align
+			, size_t _Size
+			, malloc_options_np_t _Options
+		)
+	{
+#ifdef DMemoryManagerIsSame
+		if (g_bForeignZone) [[unlikely]]
+			return g_OriginalFunctions.malloc_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+
+		if (!_pZone || !_pZone->malloc_with_options)
+			return fg_Malterlib_zone_malloc_with_options(&g_MalterlibMallocZone, _Align, _Size, _Options);
+
+		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
+#else
+		return g_OriginalFunctions.malloc_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+#endif
+	}
+
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_type_zone_malloc_with_options_np
+		(
+			malloc_zone_t *_pZone
+			, size_t _Align
+			, size_t _Size
+			, malloc_options_np_t _Options
+			, malloc_type_id_t _TypeId
+		)
 	{
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
 		{
-			auto pRet = g_OriginalFunctions.malloc_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+			auto pRet = g_OriginalFunctions.malloc_type_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options, _TypeId);
 
 			[[maybe_unused]] auto Size = g_OriginalFunctions.malloc_size(pRet);
 
@@ -4458,7 +4486,29 @@ extern "C"
 
 		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
 #else
-		return g_OriginalFunctions.malloc_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+		return g_OriginalFunctions.malloc_type_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+#endif
+	}
+
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_type_zone_malloc_with_options_internal
+		(
+			malloc_zone_t *_pZone
+			, size_t _Align
+			, size_t _Size
+			, malloc_options_np_t _Options
+			, malloc_type_id_t _TypeId
+		)
+	{
+#ifdef DMemoryManagerIsSame
+		if (g_bForeignZone) [[unlikely]]
+			return g_OriginalFunctions.malloc_type_zone_malloc_with_options_internal((malloc_zone_t *)_pZone, _Align, _Size, _Options, _TypeId);
+
+		if (!_pZone || !_pZone->malloc_with_options)
+			return fg_Malterlib_zone_malloc_with_options(&g_MalterlibMallocZone, _Align, _Size, _Options);
+
+		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
+#else
+		return g_OriginalFunctions.malloc_type_zone_malloc_with_options_internal((malloc_zone_t *)_pZone, _Align, _Size, _Options);
 #endif
 	}
 

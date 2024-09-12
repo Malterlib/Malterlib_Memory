@@ -41,8 +41,12 @@ extern "C" void _ZdlPvmSt11align_val_t(void *, size_t, size_t) __attribute__((we
 
 extern "C" void vfree(void *) __attribute__((weak_import));
 
+using malloc_options_np_t = uint64_t;
+
 extern "C" boolean_t malloc_zone_claimed_address(malloc_zone_t *_0, void *_1) __attribute__((weak_import));
-extern "C" void *malloc_zone_malloc_with_options_np(malloc_zone_t *_0, size_t _1, size_t _2, uint64_t _3) __attribute__((weak_import));
+extern "C" void *malloc_zone_malloc_with_options_np(malloc_zone_t *_0, size_t _1, size_t _2, malloc_options_np_t _3) __attribute__((weak_import));
+extern "C" void *malloc_type_zone_malloc_with_options_np(malloc_zone_t *zone, size_t align, size_t size, malloc_options_np_t options, malloc_type_id_t type_id) __attribute__((weak_import));
+extern "C" void *malloc_type_zone_malloc_with_options_internal(malloc_zone_t *zone, size_t align, size_t size, malloc_options_np_t options, malloc_type_id_t type_id) __attribute__((weak_import));
 
 extern "C" int __workq_kernreturn(int options, user_addr_t item, int affinity, int prio);
 extern "C" uint32_t __psynch_cvwait(user_addr_t cv, uint64_t cvlsgen, uint32_t cvugen, user_addr_t mutex, uint64_t mugen, uint32_t flags, int64_t sec, uint32_t nsec);
