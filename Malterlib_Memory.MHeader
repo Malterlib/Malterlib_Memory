@@ -240,6 +240,16 @@ Import "Apps/*/*.MHeader"
 			}
 			%File "Include/Mib/Memory/^*"
 		}
+		%Group "Platform"
+		{
+			%File "Source/Platform/*"
+			{
+				Compile.Disabled true
+				{
+					!PlatformFamily PlatformFamilyFromFile
+				}
+			}
+		}
 		%File "Source/*"
 		%File "Source/Malterlib_Memory_SystemManager*"
 		{
