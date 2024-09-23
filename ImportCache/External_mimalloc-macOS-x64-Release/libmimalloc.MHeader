@@ -50,6 +50,10 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 		{
 			Compile.Type "C++"
 		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/libc.c`
+		{
+			Compile.Type "C++"
+		}
 		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/options.c`
 		{
 			Compile.Type "C++"
