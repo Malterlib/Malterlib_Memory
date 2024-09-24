@@ -65,7 +65,7 @@ typedef struct _malloc_zone_t_known_version {
 	/* Zone is destroyed and all memory reclaimed */
 	void (* MALLOC_ZONE_FN_PTR(destroy))(struct _malloc_zone_t_known_version *zone);
 
-	const char * __null_terminated zone_name;
+	const char * zone_name;
 
 	/* Optional batch callbacks; these may be NULL */
 

@@ -4464,7 +4464,7 @@ extern "C"
 
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_type_zone_malloc_with_options_np
 		(
-			malloc_zone_t *_pZone
+			malloc_zone_t_known_version *_pZone
 			, size_t _Align
 			, size_t _Size
 			, malloc_options_np_t _Options
@@ -4486,7 +4486,7 @@ extern "C"
 
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_type_zone_malloc_with_options_internal
 		(
-			malloc_zone_t *_pZone
+			malloc_zone_t_known_version *_pZone
 			, size_t _Align
 			, size_t _Size
 			, malloc_options_np_t _Options
