@@ -48,7 +48,7 @@ namespace NMib
 		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value || NTraits::cIsFinal<tf_CObjectType>);
 
 #if !(defined(DPlatformFamily_Windows) && defined(DMibSanitizerEnabled_Address))
-		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault && (!NTraits::cIsFinal<tf_CObjectType> || NTraits::cHasOperatorDelete<tf_CObjectType>))
+		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault && NTraits::cHasOperatorDelete<tf_CObjectType>)
 			delete _pObject;
 		else
 #endif
