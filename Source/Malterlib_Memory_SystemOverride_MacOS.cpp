@@ -4480,7 +4480,7 @@ extern "C"
 
 		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
 #else
-		return g_OriginalFunctions.malloc_type_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+		return g_OriginalFunctions.malloc_type_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options, _TypeId);
 #endif
 	}
 
@@ -4502,7 +4502,7 @@ extern "C"
 
 		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
 #else
-		return g_OriginalFunctions.malloc_type_zone_malloc_with_options_internal((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+		return g_OriginalFunctions.malloc_type_zone_malloc_with_options_internal((malloc_zone_t *)_pZone, _Align, _Size, _Options, _TypeId);
 #endif
 	}
 
