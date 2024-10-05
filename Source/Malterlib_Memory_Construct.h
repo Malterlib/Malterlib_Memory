@@ -19,6 +19,13 @@ namespace NMib
 			typedef typename NMib::TCChooseType<NMib::NTraits::TCIsVoid<t_CTypeExplicit>::mc_Value, t_CTypeImplicit, t_CTypeExplicit>::CType CType;
 		};
 
+		template <typename t_CData>
+		concept cHas_m_VirtualAllocSize =
+			requires (t_CData const *_pData)
+			{
+				_pData->m_VirtualAllocSize;
+			}
+		;
 	}
 
 	template <typename tf_CObjectType, typename tf_CAllocator, typename... tfp_CParams>
@@ -56,20 +63,30 @@ namespace NMib
 			if constexpr (NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value && !NTraits::cIsFinal<tf_CObjectType>)
 			{
 				static_assert(!NTraits::cHasOperatorDelete<tf_CObjectType>);
-#if defined(DMibPOverrideOperatorNew)
-				NMemory::CCaptureDefaultDelete Captured;
-				delete _pObject;
+				if constexpr (NMib::NPrivate::cHas_m_VirtualAllocSize<tf_CObjectType>)
+				{
+					mint DeleteSize = _pObject->m_VirtualAllocSize;
+					_pObject->~tf_CObjectType();
 
-				DMibFastCheck(Captured.m_Captured.m_pMemory);
-
-				if (Captured.m_Captured.m_Size)
-					fg_Forward<tf_CAllocator>(_Allocator).f_Free(Captured.m_Captured.m_pMemory, fg_AlignUp(Captured.m_Captured.m_Size, _Alignment));
+					fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, fg_AlignUp(DeleteSize, _Alignment));
+				}
 				else
-					fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(Captured.m_Captured.m_pMemory);
+				{
+#if defined(DMibPOverrideOperatorNew)
+					NMemory::CCaptureDefaultDelete Captured;
+					delete _pObject;
+
+					DMibFastCheck(Captured.m_Captured.m_pMemory);
+
+					if (Captured.m_Captured.m_Size)
+						fg_Forward<tf_CAllocator>(_Allocator).f_Free(Captured.m_Captured.m_pMemory, fg_AlignUp(Captured.m_Captured.m_Size, _Alignment));
+					else
+						fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(Captured.m_Captured.m_pMemory);
 #else
-				_pObject->~tf_CObjectType();
-				fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(_pObject);
+					_pObject->~tf_CObjectType();
+					fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(_pObject);
 #endif
+				}
 			}
 			else
 			{
