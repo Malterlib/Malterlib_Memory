@@ -842,8 +842,9 @@ namespace
 #ifdef DPlatformFamily_Windows
 			return nullptr;
 #else
-			void *pPtr;
-			posix_memalign(&pPtr, _Alignment, _Size);
+			void *pPtr = nullptr;
+			posix_memalign(&pPtr, NMib::fg_Max(_Alignment, sizeof(void *)), _Size);
+
 			return pPtr;
 #endif
 		}

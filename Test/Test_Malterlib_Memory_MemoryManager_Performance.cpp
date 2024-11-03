@@ -15,8 +15,17 @@ namespace
 
 	constexpr mint gc_TestSize = 512;
 	constexpr mint gc_TestSizeEnd = 4096;
+#if defined(DMibDebug) || defined(DMibSanitizerEnabled)
+	constexpr mint gc_TestMaxMemory = 256*1024*1;
+#else
 	constexpr mint gc_TestMaxMemory = 256*1024*1024;
+#endif
+#if defined(DMibDebug) || defined(DMibSanitizerEnabled)
+	constexpr mint gc_ArrayLimit = 128u;
+#else
 	constexpr mint gc_ArrayLimit = 16u * 1024u;
+#endif
+
 
 #if 0
 	struct CDisplayStats
@@ -749,6 +758,7 @@ namespace
 				;
 				void *pProcess = nullptr;
 
+				NMib::NThread::CMutual ProcessLaunchLock;
 				NMib::NStorage::TCUniquePointer<NMib::NProcess::CProcessLaunch> pProcessLaunch;
 
 				NMib::NThread::CEvent Exited;
@@ -842,6 +852,7 @@ namespace
 								DMibCheck(pProcess);
 								if (pProcess)
 								{
+									DMibLock(ProcessLaunchLock);
 									NMib::NProcess::CProcessStatistics MemoryStats = pProcessLaunch->f_GetOverallMemoryStatistics();
 									NMib::NProcess::CProcessStatistics ExecutionStats = pProcessLaunch->f_GetOverallExecutionStatistics();
 
@@ -885,8 +896,8 @@ namespace
 					}
 				;
 				{
+					DMibLock(ProcessLaunchLock);
 					pProcessLaunch = NMib::fg_Construct(Params, NMib::NProcess::EProcessLaunchCloseFlag_BlockOnExit);
-
 				}
 
 				NMib::NProcess::CProcessStatistics SampledMemoryStats;
@@ -915,7 +926,10 @@ namespace
 						break; // Exited
 				}
 
-				pProcessLaunch.f_Clear();
+				{
+					DMibLock(ProcessLaunchLock);
+					pProcessLaunch.f_Clear();
+				}
 
 				fl_AddStats(SampledMemoryStats);
 
