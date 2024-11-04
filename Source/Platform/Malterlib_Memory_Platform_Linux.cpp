@@ -36,11 +36,15 @@ namespace
 
 					// Committed_AS can be larger than total memory. Committed memory might not have been touched and in that case does not take up any physical memory.
 					if (_TotalMemory <= GibiByte * 1.0)
-						return _TotalMemory * 1.4;
+						return _TotalMemory * 1.6;
 					else if (_TotalMemory <= GibiByte * 2.0)
+						return _TotalMemory * 1.4;
+					else if (_TotalMemory <= GibiByte * 4.0)
+						return _TotalMemory * 1.2;
+					else if (_TotalMemory <= GibiByte * 8.0)
 						return _TotalMemory * 1.1;
 					else
-						return _TotalMemory * 0.95;
+						return _TotalMemory + GibiByte * 1.0;
 				}
 				, .m_fErrorValue = [](fp64 _TotalMemory) -> fp64
 				{
@@ -48,11 +52,15 @@ namespace
 
 					// Committed_AS can be larger than total memory. Committed memory might not have been touched and in that case does not take up any physical memory.
 					if (_TotalMemory <= GibiByte * 1.0)
-						return _TotalMemory * 1.5;
+						return _TotalMemory * 1.7;
 					else if (_TotalMemory <= GibiByte * 2.0)
+						return _TotalMemory * 1.5;
+					else if (_TotalMemory <= GibiByte * 4.0)
+						return _TotalMemory * 1.3;
+					else if (_TotalMemory <= GibiByte * 8.0)
 						return _TotalMemory * 1.2;
 					else
-						return _TotalMemory * 1.0;
+						return _TotalMemory + GibiByte * 2.0;
 				}
 				, .m_CompareTo = gc_Str<"MemTotal">
 			}
