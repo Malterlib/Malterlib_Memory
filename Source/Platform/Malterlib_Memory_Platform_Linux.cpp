@@ -13,15 +13,15 @@ using namespace NMib;
 
 namespace
 {
+	using FCalculateValue = fp64 (*)(fp64 _CompareToValue);
 	struct CKnownStat
 	{
 		CStr m_Name;
 		EMemoryStatisticsDetailLevel m_DetailLevel = EMemoryStatisticsDetailLevel::mc_All;
 		EMemoryStatisticComparisonOperator m_ValueComparisonOperator = EMemoryStatisticComparisonOperator::mc_None;
-		double m_WarningValue = 0.0;
-		double m_ErrorValue = 0.0;
-		CStr m_ComparePercentTo;
-		bool m_bComparePercent = false;
+		FCalculateValue m_fWarningValue = nullptr;
+		FCalculateValue m_fErrorValue = nullptr;
+		CStr m_CompareTo;
 	};
 
 	constexpr CKnownStat gc_KnownStats[] =
@@ -30,10 +30,31 @@ namespace
 				.m_Name = gc_Str<"Committed_AS">
 				, .m_DetailLevel = EMemoryStatisticsDetailLevel::mc_Basic
 				, .m_ValueComparisonOperator = EMemoryStatisticComparisonOperator::mc_GreaterThan
-				, .m_WarningValue = 0.95
-				, .m_ErrorValue = 1.0
-				, .m_ComparePercentTo = gc_Str<"MemTotal">
-				, .m_bComparePercent = true
+				, .m_fWarningValue = [](fp64 _TotalMemory) -> fp64
+				{
+					fp64 GibiByte = 1024 * 1024 * 1024;
+
+					// Committed_AS can be larger than total memory. Committed memory might not have been touched and in that case does not take up any physical memory.
+					if (_TotalMemory <= GibiByte * 1.0)
+						return _TotalMemory * 1.4;
+					else if (_TotalMemory <= GibiByte * 2.0)
+						return _TotalMemory * 1.1;
+					else
+						return _TotalMemory * 0.95;
+				}
+				, .m_fErrorValue = [](fp64 _TotalMemory) -> fp64
+				{
+					fp64 GibiByte = 1024 * 1024 * 1024;
+
+					// Committed_AS can be larger than total memory. Committed memory might not have been touched and in that case does not take up any physical memory.
+					if (_TotalMemory <= GibiByte * 1.0)
+						return _TotalMemory * 1.5;
+					else if (_TotalMemory <= GibiByte * 2.0)
+						return _TotalMemory * 1.2;
+					else
+						return _TotalMemory * 1.0;
+				}
+				, .m_CompareTo = gc_Str<"MemTotal">
 			}
 			, {.m_Name = gc_Str<"MemAvailable">, .m_DetailLevel = EMemoryStatisticsDetailLevel::mc_Basic}
 			, {.m_Name = gc_Str<"MemFree">, .m_DetailLevel = EMemoryStatisticsDetailLevel::mc_Basic}
@@ -143,21 +164,24 @@ CSystemMemoryStatistics NMemory::NPlatform::fg_Memory_GetStatistics(EMemoryStati
 		{
 			auto &Characteristics = Statistic.m_Characteristics;
 			Characteristics.m_ValueComparisonOperator = pKnownStat->m_ValueComparisonOperator;
-			if (pKnownStat->m_ValueComparisonOperator != EMemoryStatisticComparisonOperator::mc_None)
+			if (pKnownStat->m_ValueComparisonOperator != EMemoryStatisticComparisonOperator::mc_None && (pKnownStat->m_fWarningValue || pKnownStat->m_fErrorValue))
 			{
-				if (pKnownStat->m_bComparePercent)
+				auto *pCompareToValue = AllStats.f_FindEqual(pKnownStat->m_CompareTo);
+
+				if (pKnownStat->m_fWarningValue)
 				{
-					auto *pCompareToValue = AllStats.f_FindEqual(pKnownStat->m_ComparePercentTo);
 					if (pCompareToValue)
-					{
-						Characteristics.m_WarningValue = (fp64(pKnownStat->m_WarningValue) * pCompareToValue->m_Value).f_ToInt();
-						Characteristics.m_ErrorValue = (fp64(pKnownStat->m_ErrorValue) * pCompareToValue->m_Value).f_ToInt();
-					}
+						Characteristics.m_WarningValue = pKnownStat->m_fWarningValue(pCompareToValue->m_Value).f_ToInt();
+					else
+						Characteristics.m_WarningValue = pKnownStat->m_fWarningValue(0.0).f_ToInt();
 				}
-				else
+
+				if (pKnownStat->m_fErrorValue)
 				{
-					Characteristics.m_WarningValue = fp64(pKnownStat->m_WarningValue).f_ToInt();
-					Characteristics.m_ErrorValue = fp64(pKnownStat->m_ErrorValue).f_ToInt();
+					if (pCompareToValue)
+						Characteristics.m_ErrorValue = pKnownStat->m_fErrorValue(pCompareToValue->m_Value).f_ToInt();
+					else
+						Characteristics.m_ErrorValue = pKnownStat->m_fErrorValue(0.0).f_ToInt();
 				}
 			}
 		}
