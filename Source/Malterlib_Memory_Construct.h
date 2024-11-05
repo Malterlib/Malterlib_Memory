@@ -49,7 +49,7 @@ namespace NMib
 	}
 
 	template <typename tf_CObjectType, typename tf_CAllocator>
-	void fg_DeleteObject(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject, mint _Alignment = 1)
+	void fg_DeleteObject(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
 		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value || NTraits::cIsFinal<tf_CObjectType>);
@@ -68,7 +68,7 @@ namespace NMib
 					mint DeleteSize = _pObject->m_VirtualAllocSize;
 					_pObject->~tf_CObjectType();
 
-					fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, fg_AlignUp(DeleteSize, _Alignment));
+					fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, DeleteSize);
 				}
 				else
 				{
@@ -79,7 +79,7 @@ namespace NMib
 					DMibFastCheck(Captured.m_Captured.m_pMemory);
 
 					if (Captured.m_Captured.m_Size)
-						fg_Forward<tf_CAllocator>(_Allocator).f_Free(Captured.m_Captured.m_pMemory, fg_AlignUp(Captured.m_Captured.m_Size, _Alignment));
+						fg_Forward<tf_CAllocator>(_Allocator).f_Free(Captured.m_Captured.m_pMemory, Captured.m_Captured.m_Size);
 					else
 						fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(Captured.m_Captured.m_pMemory);
 #else
@@ -91,13 +91,29 @@ namespace NMib
 			else
 			{
 				_pObject->~tf_CObjectType();
-				fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, fg_AlignUp(sizeof(tf_CObjectType), _Alignment));
+				fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, sizeof(tf_CObjectType));
 			}
 		}
 	}
 
 	template <typename tf_CObjectType, typename tf_CAllocator>
-	void fg_DeleteObjectDefiniteType(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject, mint _Alignment = 1)
+	void fg_DeleteObjectDefiniteType(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject)
+	{
+		static_assert(sizeof(tf_CObjectType) > 0);
+		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
+
+		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault && NTraits::cHasOperatorDelete<tf_CObjectType>)
+			delete _pObject;
+		else
+		{
+			static_assert(!NTraits::cHasOperatorDelete<tf_CObjectType>);
+			_pObject->~tf_CObjectType();
+			fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, sizeof(tf_CObjectType));
+		}
+	}
+
+	template <typename tf_CObjectType, typename tf_CAllocator>
+	void fg_DeleteObjectDefiniteType(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject, mint _Alignment)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
 		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
