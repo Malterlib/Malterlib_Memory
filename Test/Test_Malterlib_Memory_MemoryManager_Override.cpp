@@ -114,7 +114,9 @@ namespace
 				fDoTest(0);
 				fDoTest(10);
 				fDoTest(100);
+#ifndef DMibDebug
 				fDoTest(200);
+#endif
 			};
 #endif
 		}
