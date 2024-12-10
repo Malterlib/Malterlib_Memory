@@ -183,6 +183,10 @@ namespace NMib::NMemory
 		fp32 f_Overhead(void const * _pMemory);
 		bool f_ContainsBlock(void const * _pMemory);
 
+		void f_PrepareFork();
+		void f_ForkedChild();
+		void f_ForkedParent();
+
 		TCMemoryManagerDebug *f_GetMemoryManager(void const *_pMemory); // Will only work between managers that share the same magic
 
 		void f_DestroyThreadLocals();

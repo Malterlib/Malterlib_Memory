@@ -158,6 +158,7 @@ namespace NMib
 		void fg_MalterlibSystem_ForkPrepare();
 		void fg_MalterlibSystem_ForkParent();
 		void fg_MalterlibSystem_ForkChild();
+		void fg_MalterlibSystem_ForkChildOverride();
 
 #ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
 		constinit NStorage::TCAggregateSimple<NInstrumentation::CMHook> g_FunctionHooks = {DAggregateInit};
@@ -2079,7 +2080,7 @@ assure_used extern "C" DMibMalterlibOverrideMallocExport void fg_Malterlib__mall
 
 assure_used extern "C" DMibMalterlibOverrideMallocExport void fg_Malterlib__malloc_fork_child()
 {
-	fg_Override_ForkedChild();
+	NSys::fg_MalterlibSystem_ForkChildOverride();
 
 	if (g_OriginalFunctions._malloc_fork_child)
 		g_OriginalFunctions._malloc_fork_child();

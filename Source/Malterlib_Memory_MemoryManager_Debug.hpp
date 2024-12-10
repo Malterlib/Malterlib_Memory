@@ -108,15 +108,37 @@ namespace NMib::NMemory
 			}
 		)
 	{
-
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::~TCMemoryManagerDebug()
 	{
-
 	}
 
+	template <typename t_CParams, bool t_bException, typename t_COptions>
+	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_PrepareFork()
+	{
+		CSuper::f_PrepareFork();
+		m_ReportingLeaksPool.f_Lock();
+		m_ReportingLeaksPool.f_PrepareFork();
+	}
+
+	template <typename t_CParams, bool t_bException, typename t_COptions>
+	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ForkedChild()
+	{
+		m_ReportingLeaksPool.f_ForkedChild();
+		m_ReportingLeaksPool.f_Unlock();
+		CSuper::f_ForkedChild();
+	}
+
+	template <typename t_CParams, bool t_bException, typename t_COptions>
+	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ForkedParent()
+	{
+		m_ReportingLeaksPool.f_ForkedParent();
+		m_ReportingLeaksPool.f_Unlock();
+		CSuper::f_ForkedParent();
+	}
+	
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_DestroyThreadLocals()
 	{
