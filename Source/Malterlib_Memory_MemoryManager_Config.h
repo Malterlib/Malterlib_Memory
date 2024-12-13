@@ -194,7 +194,7 @@ namespace NMib::NMemory
 		static constexpr uint8 mc_DivideShift[1] = {0};
 	};
 
-	template <typename t_CParams = CDefaultMemoryManagerParams, typename t_CIndexList = typename NMeta::TCMakeConsecutiveIndices<t_CParams::mc_NumSizesPerLevel>::CType>
+	template <typename t_CParams = CDefaultMemoryManagerParams, typename t_CIndexList = NMeta::TCConsecutiveIndices<t_CParams::mc_NumSizesPerLevel>>
 	struct TCMemoryManagerParams;
 
 	struct CMemoryManagerParamsBase

@@ -171,7 +171,7 @@ namespace NMib
 		template <typename tf_CType, typename tf_CAllocator>
 		typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType *f_Create(tf_CAllocator &&_Allocator)
 		{
-			return fp_Create<tf_CType>(fg_Forward<tf_CAllocator>(_Allocator), typename NMeta::TCMakeConsecutiveIndices<mc_nParams>::CType());
+			return fp_Create<tf_CType>(fg_Forward<tf_CAllocator>(_Allocator), NMeta::TCConsecutiveIndices<mc_nParams>());
 		}
 
 	};
