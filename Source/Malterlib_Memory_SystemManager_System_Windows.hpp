@@ -95,7 +95,7 @@ namespace NMib::NMemory
 #endif
 
 			uint8 *pReturn = fg_AlignUp(pMemory + sizeof(CAllocationHeader), Alignment);
-			auto *pHeader = new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
+			new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
 
 			return pReturn;
 		}
@@ -112,7 +112,7 @@ namespace NMib::NMemory
 			Size = HeapSize(g_pMainHeap, 0, pMemory);
 #endif
 			uint8 *pReturn = fg_AlignUp(pMemory + sizeof(CAllocationHeader), Alignment);
-			auto *pHeader = new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
+			new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
 
 			_Size = (pMemory + Size) - pReturn;
 
@@ -135,7 +135,7 @@ namespace NMib::NMemory
 			uint8 *pMemory = (uint8 *)HeapReAlloc(g_pMainHeap, 0, OldHeader.m_pMemory, Size);
 #endif
 			uint8 *pReturn = fg_AlignUp(pMemory + sizeof(CAllocationHeader), Alignment);
-			auto *pHeader = new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
+			new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
 
 			return pReturn;
 		}
@@ -159,7 +159,7 @@ namespace NMib::NMemory
 #endif
 
 			uint8 *pReturn = fg_AlignUp(pMemory + sizeof(CAllocationHeader), Alignment);
-			auto *pHeader = new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
+			new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
 
 			return pReturn;
 		}
