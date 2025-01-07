@@ -148,6 +148,8 @@ namespace NMib::NMemory
 			"nw::object::class_def::setup",
 			"initializeNonMetaClass",
 			"_CFMachPortCreateWithPort4",
+			// macOS 15
+			"CFStringGetFileSystemRepresentation",
 #elif defined(DPlatformFamily_Linux)
 			"qt_load_library_runtime",
 			"qt_set_x11_resources",
