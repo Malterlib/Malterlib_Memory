@@ -41,7 +41,7 @@ namespace NMib::NMemory
 	{
 		if (!mp_bStarted.f_Load(NAtomic::EMemoryOrder_Relaxed))
 		{
-			if (!g_bCanStartThreads.f_Load(NAtomic::EMemoryOrder_Relaxed)) // Cannot stat thread
+			if (!g_bCanStartThreads.f_Load(NAtomic::EMemoryOrder_Relaxed)) // Cannot start thread
 			{
 				mp_bStarted.f_FetchOr(3); // Signal
 				return;
@@ -184,7 +184,7 @@ namespace NMib::NMemory
 
 		mp_Clock.f_Start(NTime::CSystem_Time::fs_CyclesFrequency() * 100);
 
-		if (mp_bStarted.f_FetchAnd(~2) & 2)
+		if ((mp_bStarted.f_FetchAnd(~2) & (2 | 4)) == 2)
 		{
 			// Start was scheduled
 			fp_StartupThread();
@@ -194,6 +194,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_StopThread()
 	{
+		mp_bStarted.f_FetchOr(4);
 		if (mp_pThread)
 		{
 			mp_pThread->f_Stop();
@@ -246,7 +247,7 @@ namespace NMib::NMemory
 			mp_pThread->f_ForkedParent();
 
 #if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_macOS)
-		if (mp_bStarted && !mp_pThread)
+		if ((mp_bStarted.f_Load() & 7) == 1 && !mp_pThread)
 			fp_StartupThread();
 #endif
 	}
