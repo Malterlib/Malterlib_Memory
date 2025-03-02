@@ -2038,7 +2038,7 @@ void fg_MalterlibMallocOverride_CanStartThreads()
 
 					return 0;
 				}
-				, "Memory manager override exception handling"
+				, "Except Handler"
 			)
 		;
 		State.m_pExceptionHandlingState->m_InstalledEvent.f_Wait();

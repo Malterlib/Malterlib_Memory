@@ -170,7 +170,7 @@ namespace NMib::NMemory
 					return 0;
 
 				}
-				, "Memory manager cleanup"
+				, "MemMan Cleanup"
 				, EExecutionPriority_BelowNormal
 			)
 		;
