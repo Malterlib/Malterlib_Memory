@@ -105,6 +105,11 @@ using namespace NMib::NMemory;
 #define DOptimizeSetJmp
 #define DFullArenasForSecondary
 
+#define DAlignSizeMacOS(d_Size) fg_AlignUp(fg_Max(d_Size, 1), 16)
+//#define DAlignSizeMacOS(d_Size) d_Size
+
+#define DAlignAligmentMacOS(d_Alignment) fg_Max(d_Alignment, 16)
+
 extern "C"
 {
 #ifdef DMibMemoryOverrideDll
@@ -897,15 +902,17 @@ void fg_Malterlib_zone_free_definite_size(malloc_zone_t_known_version *_pZone, v
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
 	uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
+	mint Size = DAlignSizeMacOS(_Size);
+
 #ifdef DMemoryManagerIsSame
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
-		return DMainHeapSmall->f_Free(pMalterlibAlloc, _Size);
+		return DMainHeapSmall->f_Free(pMalterlibAlloc, Size);
 	else
 #endif
-		return DMainHeapMax->f_Free(pMalterlibAlloc, _Size);
+		return DMainHeapMax->f_Free(pMalterlibAlloc, Size);
 #else
-	return fg_Free(pMalterlibAlloc, _Size);
+	return fg_Free(pMalterlibAlloc, Size);
 #endif
 }
 
@@ -948,11 +955,6 @@ void *fg_Malterlib_zone_malloc_with_options(malloc_zone_t_known_version *_pZone,
 		fg_MemClear(pRet, _Size);
 	return pRet;
 }
-
-#define DAlignSizeMacOS(d_Size) fg_AlignUp(fg_Max(d_Size, 1), 16)
-//#define DAlignSizeMacOS(d_Size) d_Size
-
-#define DAlignAligmentMacOS(d_Alignment) fg_Max(d_Alignment, 16)
 
 void *fg_Malterlib_zone_malloc(malloc_zone_t_known_version *_pZone, size_t _Size)
 {
@@ -3183,8 +3185,8 @@ extern "C"
 	// operator new[](unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__Znam(size_t _Size)
 	{
-#ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeMacOS(_Size);
+#ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -3204,15 +3206,15 @@ extern "C"
 	#endif
 		return pMalterlibAlloc;
 #else
-		return fg_Alloc(_Size);
+		return fg_Alloc(Size);
 #endif
 	}
 
 	// operator new(unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__Znwm(size_t _Size)
 	{
-#ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeMacOS(_Size);
+#ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -3232,15 +3234,15 @@ extern "C"
 	#endif
 		return pMalterlibAlloc;
 #else
-		return fg_Alloc(_Size);
+		return fg_Alloc(Size);
 #endif
 	}
 
 	// operator new(unsigned long, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnwmRKSt9nothrow_t(size_t _Size)
 	{
-#ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeMacOS(_Size);
+#ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -3260,69 +3262,75 @@ extern "C"
 	#endif
 		return pMalterlibAlloc;
 #else
-		return fg_Alloc(_Size);
+		return fg_Alloc(Size);
 #endif
 	}
 
 	// operator new(unsigned long, std::align_val_t)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnwmSt11align_val_t(size_t _Size, size_t _Alignment)
 	{
+		mint Alignment = DAlignAligmentMacOS(_Alignment);
+		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
-			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
 #endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
-			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(_Size, (mint)_Alignment);
+			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
 #endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(_Size, (mint)_Alignment);
+			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
 	#endif
 		return pMalterlibAlloc;
 #else
-		return fg_AllocAligned(_Size, _Alignment);
+		return fg_AllocAligned(Size, Alignment);
 #endif
 	}
 
 	// operator new(unsigned long, std::align_val_t, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnwmSt11align_val_tRKSt9nothrow_t(size_t _Size, size_t _Alignment)
 	{
+		mint Alignment = DAlignAligmentMacOS(_Alignment);
+		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
-			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
 #endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
-			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(_Size, (mint)_Alignment);
+			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
 #endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(_Size, (mint)_Alignment);
+			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
 	#endif
 		return pMalterlibAlloc;
 #else
-		return fg_AllocAligned(_Size, _Alignment);
+		return fg_AllocAligned(Size, Alignment);
 #endif
 	}
 
 	// operator new[](unsigned long, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnamRKSt9nothrow_t(size_t _Size)
 	{
-#ifdef DMemoryManagerIsSame
 		mint Size = DAlignSizeMacOS(_Size);
+#ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -3342,62 +3350,67 @@ extern "C"
 	#endif
 		return pMalterlibAlloc;
 #else
-		return fg_Alloc(_Size);
+		return fg_Alloc(Size);
 #endif
 	}
 
 	// operator new[](unsigned long, std::align_val_t)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnamSt11align_val_t(size_t _Size, size_t _Alignment)
 	{
+		mint Alignment = DAlignAligmentMacOS(_Alignment);
+		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
 		#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
-				pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+				pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 			else
 		#endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(_Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
 		uint8 *pMalterlibAlloc;
 		#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
-				pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(_Size, (mint)_Alignment);
+				pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 			else
 		#endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(_Size, (mint)_Alignment);
+			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
 	#endif
 		return pMalterlibAlloc;
 #else
-		return fg_AllocAligned(_Size, _Alignment);
+		return fg_AllocAligned(Size, Alignment);
 #endif
 	}
 
 	// operator new[](unsigned long, std::align_val_t, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnamSt11align_val_tRKSt9nothrow_t(size_t _Size, size_t _Alignment)
 	{
+		mint Alignment = DAlignAligmentMacOS(_Alignment);
+		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+
 #ifdef DMemoryManagerIsSame
-		mint Size = DAlignSizeMacOS(_Size);
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
-			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
 #endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, (mint)_Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
-			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, (mint)_Alignment);
+			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
 #endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, (mint)_Alignment);
+			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
 	#endif
 		return pMalterlibAlloc;
 #else
-		return fg_AllocAligned(_Size, _Alignment);
+		return fg_AllocAligned(Size, Alignment);
 #endif
 	}
 
@@ -3494,28 +3507,10 @@ extern "C"
 	// operator delete[](void*, unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdaPvm(void *_pMemory, size_t _Size)
 	{
+		mint Size = DAlignSizeMacOS(_Size);
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
-		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		if (g_bMainHeapIsSmall)
-			return DMainHeapSmall->f_Free(pMalterlibAlloc, _Size);
-		else
-#endif
-			return DMainHeapMax->f_Free(pMalterlibAlloc, _Size);
-#else
-		return fg_Free(_pMemory, _Size);
-#endif
-	}
-
-	// operator delete[](void*, unsigned long, std::align_val_t)
-	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdaPvmSt11align_val_t(void *_pMemory, size_t _Size, size_t _Alignment)
-	{
-#ifdef DMemoryManagerIsSame
-		if (!_pMemory)
-			return;
-		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), (mint)_Alignment);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
@@ -3524,7 +3519,28 @@ extern "C"
 #endif
 			return DMainHeapMax->f_Free(pMalterlibAlloc, Size);
 #else
-		return fg_Free(_pMemory, _Size);
+		return fg_Free(_pMemory, Size);
+#endif
+	}
+
+	// operator delete[](void*, unsigned long, std::align_val_t)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdaPvmSt11align_val_t(void *_pMemory, size_t _Size, size_t _Alignment)
+	{
+		mint Alignment = DAlignAligmentMacOS(_Alignment);
+		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+
+#ifdef DMemoryManagerIsSame
+		if (!_pMemory)
+			return;
+		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+		if (g_bMainHeapIsSmall)
+			return DMainHeapSmall->f_Free(pMalterlibAlloc, Size);
+		else
+#endif
+			return DMainHeapMax->f_Free(pMalterlibAlloc, Size);
+#else
+		return fg_Free(_pMemory, Size);
 #endif
 	}
 
@@ -3585,28 +3601,11 @@ extern "C"
 	// operator delete(void*, unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdlPvm(void *_pMemory, size_t _Size)
 	{
+		mint Size = DAlignSizeMacOS(_Size);
+		
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
-		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		if (g_bMainHeapIsSmall)
-			return DMainHeapSmall->f_Free(pMalterlibAlloc, _Size);
-		else
-#endif
-			return DMainHeapMax->f_Free(pMalterlibAlloc, _Size);
-#else
-		return fg_Free(_pMemory, _Size);
-#endif
-	}
-
-	// operator delete(void*, unsigned long, std::align_val_t)
-	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdlPvmSt11align_val_t(void *_pMemory, size_t _Size, size_t _Alignment)
-	{
-#ifdef DMemoryManagerIsSame
-		if (!_pMemory)
-			return;
-		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), (mint)_Alignment);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
@@ -3615,7 +3614,28 @@ extern "C"
 #endif
 			return DMainHeapMax->f_Free(pMalterlibAlloc, Size);
 #else
-		return fg_Free(_pMemory, _Size);
+		return fg_Free(_pMemory, Size);
+#endif
+	}
+
+	// operator delete(void*, unsigned long, std::align_val_t)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdlPvmSt11align_val_t(void *_pMemory, size_t _Size, size_t _Alignment)
+	{
+		mint Alignment = DAlignAligmentMacOS(_Alignment);
+		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+
+#ifdef DMemoryManagerIsSame
+		if (!_pMemory)
+			return;
+		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+		if (g_bMainHeapIsSmall)
+			return DMainHeapSmall->f_Free(pMalterlibAlloc, Size);
+		else
+#endif
+			return DMainHeapMax->f_Free(pMalterlibAlloc, Size);
+#else
+		return fg_Free(_pMemory, Size);
 #endif
 	}
 
@@ -3965,9 +3985,12 @@ extern "C"
 							if (!_pMemory)
 								return;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
+
+							mint Size = DAlignSizeMacOS(_Size);
+
 							auto *pZone = (tf_CZone *)_pZone;
 							uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-							pZone->m_MemoryManager.f_Free(pMalterlibAlloc, _Size);
+							pZone->m_MemoryManager.f_Free(pMalterlibAlloc, Size);
 						}
 						, .pressure_relief = [](malloc_zone_t_known_version *_pZone, size_t _Goal) -> size_t
 						{
