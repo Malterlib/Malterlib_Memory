@@ -79,7 +79,7 @@ namespace
 		static bool s_bIsSorted = NMisc::fg_IsSorted
 			(
 				gc_KnownStats
-				, sizeof(gc_KnownStats) / sizeof(gc_KnownStats[0])
+				, fg_ArraySize(gc_KnownStats)
 				, [](CKnownStat const &_Left, CKnownStat const &_Right)
 				{
 					return _Left.m_Name <=> _Right.m_Name;
@@ -98,7 +98,7 @@ namespace
 		auto iKnownStat = NMisc::fg_BinarySearch
 			(
 				gc_KnownStats
-				, sizeof(gc_KnownStats) / sizeof(gc_KnownStats[0])
+				, fg_ArraySize(gc_KnownStats)
 				, _Key
 				, [](CKnownStat const &_Left, CStr const &_Right)
 				{

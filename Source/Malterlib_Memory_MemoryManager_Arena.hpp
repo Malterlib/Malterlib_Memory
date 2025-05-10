@@ -114,8 +114,7 @@ namespace NMib::NMemory
 		}
 
 		{
-			mint nSlabs = sizeof(m_PartiallyFreeSlabs) / sizeof(m_PartiallyFreeSlabs[0]);
-			for (mint iSlab = 0; iSlab < nSlabs; ++iSlab)
+			for (mint iSlab = 0; iSlab < t_CParams::mc_NumSizesPerLevel; ++iSlab)
 			{
 				for (mint iLevel = 0; iLevel < t_CParams::mc_NumSubSlabSizeLevels; ++iLevel)
 				{
