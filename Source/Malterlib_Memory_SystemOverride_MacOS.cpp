@@ -4883,7 +4883,7 @@ extern "C"
 		{
 			auto &Info = ThreadLocalDebug.m_ThreadLocals[*_pKey];
 
-			Info.m_Callstack.m_CallstackLen = NSys::fg_System_GetStackTrace(Info.m_Callstack.m_Callstack, 128);
+			Info.m_Callstack.f_Capture();
 		}
 
 		return Error;
