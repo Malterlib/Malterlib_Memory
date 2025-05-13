@@ -99,7 +99,7 @@ namespace NMib::NMemory
 	template <typename t_CParams, mint ...tp_Indices>
 	uint32 TCMemoryManagerParams<t_CParams, NMeta::TCIndices<tp_Indices...>>::fs_GetSlabTypeMetaSize(uint32 _SlabType)
 	{
-		static constexpr mint c_MaxMetaDataBlockSize = []
+		static constexpr mint c_MaxMetadataBlockSize = []
 			{
 				return fg_MaxConstexpr(fg_MemoryManagerSlabSize<TCMemoryManagerParams, tp_Indices>()...);
 			}
@@ -107,15 +107,15 @@ namespace NMib::NMemory
 		;
 
 		using namespace NMib::NTraits;
-		using CMetaDataBlockSize = typename TCUnsigned<typename TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(c_MaxMetaDataBlockSize) + 1 + 7) / 8, true>::CType>::CType;
+		using CMetadataBlockSize = typename TCUnsigned<typename TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(c_MaxMetadataBlockSize) + 1 + 7) / 8, true>::CType>::CType;
 
-		static constexpr CMetaDataBlockSize c_MetaDataBlockSize[t_CParams::mc_NumSizesPerLevel] =
+		static constexpr CMetadataBlockSize c_MetadataBlockSize[t_CParams::mc_NumSizesPerLevel] =
 			{
 				fg_MemoryManagerSlabSize<TCMemoryManagerParams, tp_Indices>()...
 			}
 		;
 
-		return fg_AlignUp(c_MetaDataBlockSize[_SlabType], t_CParams::mc_SubSlabSize);
+		return fg_AlignUp(c_MetadataBlockSize[_SlabType], t_CParams::mc_SubSlabSize);
 	}
 #endif
 }
