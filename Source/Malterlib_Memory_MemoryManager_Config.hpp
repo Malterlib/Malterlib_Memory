@@ -107,7 +107,7 @@ namespace NMib::NMemory
 		;
 
 		using namespace NMib::NTraits;
-		using CMetadataBlockSize = typename TCUnsigned<typename TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(c_MaxMetadataBlockSize) + 1 + 7) / 8, true>::CType>::CType;
+		using CMetadataBlockSize = TCUnsigned<TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(c_MaxMetadataBlockSize) + 1 + 7) / 8, true>>;
 
 		static constexpr CMetadataBlockSize c_MetadataBlockSize[t_CParams::mc_NumSizesPerLevel] =
 			{

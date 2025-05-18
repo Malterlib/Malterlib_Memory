@@ -2458,7 +2458,7 @@ namespace
 			return nullptr;
 
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		if constexpr (NTraits::TCIsSame<tf_CMemoryManager, CMemoryManagerSmall>::mc_Value)
+		if constexpr (NTraits::cIsSame<tf_CMemoryManager, CMemoryManagerSmall>)
 			return DMainHeapSmall->f_GetMemoryManager(_pMemory);
 		else
 #endif
@@ -2483,7 +2483,7 @@ namespace
 		;
 
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		if constexpr (NTraits::TCIsSame<tf_CMemoryManager, CMemoryManagerSmall>::mc_Value)
+		if constexpr (NTraits::cIsSame<tf_CMemoryManager, CMemoryManagerSmall>)
 		{
 			DMibLockRead(State.m_ZoneListLock);
 			auto iZone = State.m_ZoneListSmall.f_GetIterator();
@@ -2538,7 +2538,7 @@ namespace
 	inline_always malloc_zone_t_known_version *fg_Malterlib_ZoneFromMemoryManager(tf_CMemoryManager *_pMemoryManager)
 	{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		if constexpr (NTraits::TCIsSame<tf_CMemoryManager, CMemoryManagerSmall>::mc_Value)
+		if constexpr (NTraits::cIsSame<tf_CMemoryManager, CMemoryManagerSmall>)
 		{
 			if (_pMemoryManager == &(*DMainHeapSmall))
 				return &g_MalterlibMallocZone;
@@ -2557,7 +2557,7 @@ namespace
 	tf_CMemoryManager *fg_Malterlib_GetMemoryManager(void const *_pMemory)
 	{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		if constexpr (NTraits::TCIsSame<tf_CMemoryManager, CMemoryManagerSmall>::mc_Value)
+		if constexpr (NTraits::cIsSame<tf_CMemoryManager, CMemoryManagerSmall>)
 		{
 			tf_CMemoryManager *pMemoryManager = DMainHeapSmall->f_GetMemoryManager(_pMemory);
 			if (pMemoryManager) [[likely]]
@@ -3818,7 +3818,7 @@ extern "C"
 				Config.m_nMaxArenas = 1; // For these zones don't waste address space, chances are they will be single thread use anyways
 		#endif
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if constexpr (NTraits::TCIsSame<tf_CZone, CMemoryManagerZoneSmall>::mc_Value)
+				if constexpr (NTraits::cIsSame<tf_CZone, CMemoryManagerZoneSmall>)
 					Config.m_Magic = DMainHeapSmall->f_GetMagic();
 				else
 #endif
@@ -3897,7 +3897,7 @@ extern "C"
 								auto &State = *g_GlobalState;
 								DMibLock(State.m_ZoneListLock);
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-								if constexpr (NTraits::TCIsSame<tf_CZone, CMemoryManagerZoneSmall>::mc_Value)
+								if constexpr (NTraits::cIsSame<tf_CZone, CMemoryManagerZoneSmall>)
 								{
 									State.m_ZoneListSmall.f_Remove(*pMemoryManager);
 									g_bOnlyDefaultZone = State.m_ZoneListSmall.f_IsEmpty() && !g_bHasForeignZones;
@@ -4096,7 +4096,7 @@ extern "C"
 					auto &State = *g_GlobalState;
 					DMibLock(State.m_ZoneListLock);
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-					if constexpr (NTraits::TCIsSame<tf_CZone, CMemoryManagerZoneSmall>::mc_Value)
+					if constexpr (NTraits::cIsSame<tf_CZone, CMemoryManagerZoneSmall>)
 						State.m_ZoneListSmall.f_Insert(*pMemoryManager);
 					else
 #endif

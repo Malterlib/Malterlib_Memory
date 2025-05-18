@@ -16,7 +16,7 @@ namespace NMib
 		template <typename t_CTypeExplicit, typename t_CTypeImplicit>
 		struct TCChooseCreateType
 		{
-			typedef typename NMib::TCChooseType<NMib::NTraits::TCIsVoid<t_CTypeExplicit>::mc_Value, t_CTypeImplicit, t_CTypeExplicit>::CType CType;
+			typedef NMib::TCConditional<NMib::NTraits::cIsVoid<t_CTypeExplicit>, t_CTypeImplicit, t_CTypeExplicit> CType;
 		};
 
 		template <typename t_CData>
@@ -32,10 +32,10 @@ namespace NMib
 	tf_CObjectType *fg_ConstructObject(tf_CAllocator &&_Allocator, tfp_CParams &&...p_Params)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
-		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
+		static_assert(!NTraits::cIsAbstract<tf_CObjectType> || NTraits::cHasVirtualDestructor<tf_CObjectType>);
 
 #if !(defined(DPlatformFamily_Windows) && defined(DMibSanitizerEnabled_Address))
-		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault)
+		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::mc_bIsDefault)
 			return new tf_CObjectType(fg_Forward<tfp_CParams>(p_Params)...);
 		else
 #endif
@@ -52,15 +52,15 @@ namespace NMib
 	void fg_DeleteObject(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
-		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value || NTraits::cIsFinal<tf_CObjectType>);
+		static_assert(!NTraits::cIsAbstract<tf_CObjectType> || NTraits::cHasVirtualDestructor<tf_CObjectType> || NTraits::cIsFinal<tf_CObjectType>);
 
 #if !(defined(DPlatformFamily_Windows) && defined(DMibSanitizerEnabled_Address))
-		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault && NTraits::cHasOperatorDelete<tf_CObjectType>)
+		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::mc_bIsDefault && NTraits::cHasOperatorDelete<tf_CObjectType>)
 			delete _pObject;
 		else
 #endif
 		{
-			if constexpr (NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value && !NTraits::cIsFinal<tf_CObjectType>)
+			if constexpr (NTraits::cHasVirtualDestructor<tf_CObjectType> && !NTraits::cIsFinal<tf_CObjectType>)
 			{
 				static_assert(!NTraits::cHasOperatorDelete<tf_CObjectType>);
 				if constexpr (NMib::NPrivate::cHas_m_VirtualAllocSize<tf_CObjectType>)
@@ -100,9 +100,9 @@ namespace NMib
 	void fg_DeleteObjectDefiniteType(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
-		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
+		static_assert(!NTraits::cIsAbstract<tf_CObjectType> || NTraits::cHasVirtualDestructor<tf_CObjectType>);
 
-		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault && NTraits::cHasOperatorDelete<tf_CObjectType>)
+		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::mc_bIsDefault && NTraits::cHasOperatorDelete<tf_CObjectType>)
 			delete _pObject;
 		else
 		{
@@ -116,9 +116,9 @@ namespace NMib
 	void fg_DeleteObjectDefiniteType(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject, mint _Alignment)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
-		static_assert(!NTraits::TCIsAbstract<tf_CObjectType>::mc_Value || NTraits::TCHasVirtualDestructor<tf_CObjectType>::mc_Value);
+		static_assert(!NTraits::cIsAbstract<tf_CObjectType> || NTraits::cHasVirtualDestructor<tf_CObjectType>);
 
-		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::CType::mc_bIsDefault && NTraits::cHasOperatorDelete<tf_CObjectType>)
+		if constexpr (NTraits::TCRemoveReference<tf_CAllocator>::mc_bIsDefault && NTraits::cHasOperatorDelete<tf_CObjectType>)
 			delete _pObject;
 		else
 		{
@@ -161,9 +161,9 @@ namespace NMib
 			mc_nParams = sizeof...(tp_CParams)
 		};
 		
-		NStorage::TCTuple<typename NMib::NTraits::TCAddLValueReference<tp_CParams>::CType...> m_Params;
+		NStorage::TCTuple<NMib::NTraits::TCAddLValueReference<tp_CParams>...> m_Params;
 		
-		TCConstruct(typename NMib::NTraits::TCAddLValueReference<tp_CParams>::CType... p_Params)
+		TCConstruct(NMib::NTraits::TCAddLValueReference<tp_CParams>... p_Params)
 			: m_Params(p_Params...)
 		{
 		}
@@ -212,11 +212,11 @@ namespace NMib
 	template <typename tf_CType, typename... tfp_CParams>
 	inline_small TCConstruct<tf_CType, tfp_CParams...> fg_Construct(tfp_CParams &&... p_Params)
 	{
-		return TCConstruct<tf_CType, tfp_CParams...>((typename NMib::NTraits::TCAddLValueReference<tfp_CParams>::CType)p_Params...);
+		return TCConstruct<tf_CType, tfp_CParams...>((NMib::NTraits::TCAddLValueReference<tfp_CParams>)p_Params...);
 	}
 	template <typename... tfp_CParams>
 	inline_small TCConstruct<void, tfp_CParams...> fg_Construct(tfp_CParams &&... p_Params)
 	{
-		return TCConstruct<void, tfp_CParams...>((typename NMib::NTraits::TCAddLValueReference<tfp_CParams>::CType)p_Params...);
+		return TCConstruct<void, tfp_CParams...>((NMib::NTraits::TCAddLValueReference<tfp_CParams>)p_Params...);
 	}
 }

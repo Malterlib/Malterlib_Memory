@@ -39,7 +39,7 @@ namespace NMib::NMemory
 		static constexpr mint mc_nAllocBits = NMib::fg_GetHighestBitSetNoZero(t_CParams::mc_MaxAllocsPerSubSlabActual) + 1;
 		static constexpr mint mc_MaxAllocs = DMibBit(mc_nAllocBits) - 1;
 
-		using CStorageType = typename NTraits::TCUnsigned<typename NTraits::TCIntFromSizeLarger<(mc_nAllocBits + 7) / 8>::CType>::CType;
+		using CStorageType = NTraits::TCUnsigned<NTraits::TCIntFromSizeLarger<(mc_nAllocBits + 7) / 8>>;
 
 		CStorageType m_nAllocs;
 	};
@@ -50,7 +50,7 @@ namespace NMib::NMemory
 		static constexpr mint mc_nTypeBits = NMib::fg_GetHighestBitSetNoZero(t_CParams::mc_NumSizeLevels + 3) + 1;
 		static constexpr mint mc_MaxType = DMibBit(mc_nTypeBits) - 1;
 
-		using CStorageType = typename NTraits::TCUnsigned<typename NTraits::TCIntFromSizeLarger<(mc_nTypeBits + 7) / 8>::CType>::CType;
+		using CStorageType = NTraits::TCUnsigned<NTraits::TCIntFromSizeLarger<(mc_nTypeBits + 7) / 8>>;
 
 		CStorageType m_Type;
 	};

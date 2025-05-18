@@ -42,13 +42,13 @@ namespace NMib::NMemory
 	struct TCMemoryManagerSubSlab_SmallSize : TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>
 	{
 		using typename TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::CParams;
-		static constexpr mint mc_Alignment = 1 << TCLowestBitSet<t_AllocSize>::mc_Value;
+		static constexpr mint mc_Alignment = 1 << gc_LowestBitSet<t_AllocSize>;
 		static constexpr mint mc_NumAllocs = (t_CParams::mc_SubSlabSize - TCAlignUp<mint, sizeof(CParams), mc_Alignment>::mc_Value) / t_AllocSize;
 		static constexpr mint mc_SmallSlabIndex
 			=
 			(
 				t_AllocSize <= TCMemoryManagerArena<t_CParams>::mc_MinAlignment
-				? NMib::TCHighestBitSetCorrect<mint, t_AllocSize>::mc_Value
+				? NMib::gc_HighestBitSetCorrect<mint, t_AllocSize>
 				:
 				(
 					TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabsAligned

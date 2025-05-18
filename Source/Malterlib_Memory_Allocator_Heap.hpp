@@ -1068,7 +1068,7 @@ namespace NMib
 	template <typename t_CType>
 	inline_small void fg_Delete(t_CType * &_pToDelete)
 	{
-		static_assert(!NTraits::TCIsAbstract<t_CType>::mc_Value || NTraits::TCHasVirtualDestructor<t_CType>::mc_Value);
+		static_assert(!NTraits::cIsAbstract<t_CType> || NTraits::cHasVirtualDestructor<t_CType>);
 		if (_pToDelete)
 		{
 			fg_DeleteObject(NMemory::CDefaultAllocator(), _pToDelete);

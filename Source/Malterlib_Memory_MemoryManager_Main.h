@@ -235,8 +235,8 @@ namespace NMib::NMemory
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerLimitedTemporaryReturn;
 
-		static_assert(TCIsPowerOfTwo<t_CParams::mc_SubSlabSize>::mc_Value, "Must be aligned to power of two");
-		static_assert(TCIsPowerOfTwo<t_CParams::mc_SlabSize>::mc_Value, "Must be aligned to power of two");
+		static_assert(cIsPowerOfTwo<t_CParams::mc_SubSlabSize>, "Must be aligned to power of two");
+		static_assert(cIsPowerOfTwo<t_CParams::mc_SlabSize>, "Must be aligned to power of two");
 
 		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CGlobal::mc_EnableCallbacks;
 

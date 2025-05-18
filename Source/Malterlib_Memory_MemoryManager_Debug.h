@@ -247,7 +247,7 @@ namespace NMib::NMemory
 			}
 		};
 
-		using CPreBlock = typename TCChooseType<(mc_PreBlockPadding > 0), CPreBlockPadded, CPreBlockNormal>::CType;
+		using CPreBlock = TCConditional<(mc_PreBlockPadding > 0), CPreBlockPadded, CPreBlockNormal>;
 
 		static_assert(sizeof(CPreBlock) == fg_AlignUpConstExpr(mc_PreBlockDataSize, sizeof(void *) * 2));
 
