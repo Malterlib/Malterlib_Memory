@@ -24,7 +24,7 @@ namespace NMib::NMemory
 		class TCChunk
 		{
 		public:
-			typedef TCChunk CChunk;
+			using CChunk = TCChunk;
 			DMibListLinkAllocatorS_Link(CChunk, m_Link, t_CAllocator);
 			mint m_Size;
 
@@ -79,7 +79,7 @@ namespace NMib::NMemory
 
 			using CBlock = TCBlock<t_CAllocator>;
 
-			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))> CChunk;
+			using CChunk = TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))>;
 
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
@@ -198,7 +198,8 @@ namespace NMib::NMemory
 		class TCChunk
 		{
 		public:
-			typedef TCChunk CChunk;
+			using CChunk = TCChunk;
+
 			DMibListLinkAllocatorD_Link(CChunk, m_Link, t_CAllocator);
 			DMibListLinkAllocatorS_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
 			aint m_NumUsed;
@@ -257,7 +258,8 @@ namespace NMib::NMemory
 
 			using CBlock = TCBlock<t_CAllocator>;
 
-			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))> CChunk;
+			using CChunk = TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))>;
+
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
@@ -422,7 +424,7 @@ namespace NMib::NMemory
 		class TCChunk
 		{
 		public:
-			typedef TCChunk CChunk;
+			using CChunk = TCChunk;
 
 			class CCompare
 			{
@@ -491,7 +493,8 @@ namespace NMib::NMemory
 			}
 
 			using CBlock = TCBlock<t_CAllocator>;
-			typedef TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))> CChunk;
+			using CChunk = TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))>;
+
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
@@ -746,7 +749,7 @@ namespace NMib::NMemory
 		};
 
 		typename t_CPoolType::template TCPool<t_CAllocator, sizeof(t_CData), alignof(t_CData)> m_Pool;
-		typedef t_CData CData;
+		using CData = t_CData;
 
 		void f_Construct(ENumaNode _NumaNode);
 
@@ -924,8 +927,8 @@ namespace NMib::NMemory
 		};
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<TCStaticPoolAllocator>;
+		using CStaticPool = TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>;
 
-		typedef TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType> CStaticPool;
 		static inline_small mint f_StaticAddresses()
 		{
 			return 0;
@@ -1116,11 +1119,11 @@ namespace NMib::NMemory
 	class TCStaticPool
 	{
 	public:
-		typedef TCPool<t_CType, t_GrowSize, t_CLockType, t_CPoolType, t_CAllocator> CPoolType;
+		using CPoolType = TCPool<t_CType, t_GrowSize, t_CLockType, t_CPoolType, t_CAllocator>;
 
 		static NStorage::TCAggregate<CPoolType, 16> ms_Pool;
 
-		typedef TCStaticPoolAllocator<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType> CAllocator;
+		using CAllocator = TCStaticPoolAllocator<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>;
 	};
 
 	template <typename t_CType, mint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
@@ -1358,7 +1361,7 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
-		typedef typename t_CPoolType::CData CData;
+		using CData = typename t_CPoolType::CData;
 		using CAutoDestroy = TCAllocator_AutoDestroy<TCPoolReferenceAllocator>;
 
 		t_CPoolType &m_Pool;

@@ -145,8 +145,9 @@ namespace NMib::NMemory
 		template <typename t_CParams2, bool t_bException2, typename t_COptions2>
 		friend struct TCMemoryManagerDebugParams;
 
-		typedef TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions> CParams;
-		typedef TCMemoryManager<CParams> CSuper;
+		using CParams = TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>;
+		using CSuper = TCMemoryManager<CParams>;
+
 	public:
 		template <typename... tfp_CAllocator>
 		TCMemoryManagerDebug(tfp_CAllocator &&..._Params);

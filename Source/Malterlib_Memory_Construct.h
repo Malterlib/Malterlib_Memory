@@ -16,7 +16,7 @@ namespace NMib
 		template <typename t_CTypeExplicit, typename t_CTypeImplicit>
 		struct TCChooseCreateType
 		{
-			typedef NMib::TCConditional<NMib::NTraits::cIsVoid<t_CTypeExplicit>, t_CTypeImplicit, t_CTypeExplicit> CType;
+			using CType = NMib::TCConditional<NMib::NTraits::cIsVoid<t_CTypeExplicit>, t_CTypeImplicit, t_CTypeExplicit>;
 		};
 
 		template <typename t_CData>

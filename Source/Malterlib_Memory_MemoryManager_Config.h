@@ -319,7 +319,7 @@ namespace NMib::NMemory
 
 	struct CMemoryManagerParams_NoCommit : public CDefaultMemoryManagerParams
 	{
-		typedef CAllocator_VirtualNoCommit CAllocator;
+		using CAllocator = CAllocator_VirtualNoCommit;
 	};
 
 	struct CDefaultMemoryManagerParams_Tests : public CDefaultMemoryManagerParams

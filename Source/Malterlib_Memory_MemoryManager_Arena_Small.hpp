@@ -233,7 +233,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_always void *TCMemoryManagerArena<t_CParams>::fsp_AllocSmallShared(TCMemoryManagerArena *_pThis, mint _Index)
 	{
-		typedef TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> CSubSlab;
+		using CSubSlab = TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>;
 		auto &Slabs = _pThis->m_SmallSizeSlabs[_Index];
 		CSubSlab *pSlab = (CSubSlab *)Slabs.f_GetFirst();
 		if (!pSlab) [[unlikely]]
@@ -260,7 +260,7 @@ namespace NMib::NMemory
 	template <mint tf_Size>
 	inline_never void *TCMemoryManagerArena<t_CParams>::fsp_AllocSmall(TCMemoryManagerArena *_pThis)
 	{
-		typedef TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> CSubSlab;
+		using CSubSlab = TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size>;
 
 		auto &Slabs = _pThis->m_SmallSizeSlabs[CSubSlab::mc_SmallSlabIndex];
 		CSubSlab *pSlab = (CSubSlab *)Slabs.f_GetFirst();
@@ -288,7 +288,7 @@ namespace NMib::NMemory
 	template <mint tf_Size>
 	inline_never TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> *TCMemoryManagerArena<t_CParams>::fp_AllocSmallNoSlab()
 	{
-		typedef TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> CSubSlab;
+		using CSubSlab = TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size>;
 
 		auto pFreeSlab = (TCMemoryManagerSlab<t_CParams, 0> *)m_PartiallyFreeSlabs[0][0].f_GetFirst();
 
@@ -375,7 +375,7 @@ namespace NMib::NMemory
 	{
 		bool bError = false;
 
-		typedef TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> CSubSlab;
+		using CSubSlab = TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size>;
 
 		auto &Slabs = m_SmallSizeSlabs[CSubSlab::mc_SmallSlabIndex];
 		for (auto iSlab = Slabs.f_GetIterator(); iSlab; ++iSlab)

@@ -117,7 +117,7 @@ namespace NMib::NMemory::NPrivate
 			pFile = "";
 
 		void *pCurrentBlock = _pMemory;
-		typedef NStr::CFStr1024 CFStr;
+		using CFStr = NStr::CFStr1024;
 		CFStr TempStr;
 		TempStr = CFStr::CFormat(DMibPFileLineFormat " ") << pFile << _Line;
 

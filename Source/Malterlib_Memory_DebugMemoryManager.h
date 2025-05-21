@@ -83,7 +83,7 @@ namespace NMib::NMemory
 		struct CMemoryManagerParamsOverrides : public CDefaultMemoryManagerParams
 		{
 			static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
-			typedef NMemory::CAllocator_VirtualNoTracking CAllocator;
+			using CAllocator = NMemory::CAllocator_VirtualNoTracking;
 		};
 
 		struct CMemoryManagerParamsOverridesParams : public TCMemoryManagerParams<CMemoryManagerParamsOverrides>

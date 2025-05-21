@@ -8,9 +8,9 @@
 #endif
 
 #ifdef DEnableVector
-typedef uint8 vec16uint8 __attribute__((ext_vector_type(16)));
-typedef char vec16bool __attribute__((ext_vector_type(16)));
-typedef uint64 vec2uint64 __attribute__((ext_vector_type(2)));
+using vec16uint8 =  uint8 __attribute__((ext_vector_type(16)));
+using vec16bool =  char __attribute__((ext_vector_type(16)));
+using vec2uint64 =  uint64 __attribute__((ext_vector_type(2)));
 #endif
 
 #ifdef DMibSanitizerEnabled_Address

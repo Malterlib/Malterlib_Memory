@@ -21,7 +21,7 @@ namespace NMib::NMemory
 	class TCAllocator_Secure : public t_CBaseAllocator
 	{
 	public:
-		typedef t_CBaseAllocator CBaseAllocator;
+		using CBaseAllocator = t_CBaseAllocator;
 
 		void *f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		void *f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -36,7 +36,7 @@ namespace NMib::NMemory
 	class TCAllocator_Secure<t_CBaseAllocator, true> : public t_CBaseAllocator
 	{
 	public:
-		typedef t_CBaseAllocator CBaseAllocator;
+		using CBaseAllocator = t_CBaseAllocator;
 
 		static void *f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static void *f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);

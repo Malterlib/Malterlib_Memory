@@ -24,7 +24,7 @@ namespace NMib
 	{
 		static constexpr mint mc_SubSlabSize = 4096;
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
-		typedef CMainHeapVirtualAllocator CAllocator;
+		using CAllocator = CMainHeapVirtualAllocator;
 	};
 
 	struct CMemoryManagerParamsSmall : public NMemory::TCMemoryManagerParams<CMemoryManagerParamsSmallOverrides>
@@ -34,7 +34,7 @@ namespace NMib
 	struct CMemoryManagerParamsMaxOverrides : public NMemory::CDefaultMemoryManagerParams
 	{
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
-		typedef CMainHeapVirtualAllocator CAllocator;
+		using CAllocator = CMainHeapVirtualAllocator;
 	};
 
 	struct CMemoryManagerParamsMax : public NMemory::TCMemoryManagerParams<CMemoryManagerParamsMaxOverrides>

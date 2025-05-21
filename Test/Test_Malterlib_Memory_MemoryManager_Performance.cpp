@@ -182,7 +182,7 @@ namespace
 			mint m_MaxAllocSize;
 			bool m_bFailed = false;
 
-//			typedef DMibListLinkD_List(CAllocationInfo, m_Link) CAllocInfoList;
+//			using CAllocInfoList = DMibListLinkD_List(CAllocationInfo, m_Link);
 	//		NMib::NMemory::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing> m_AllocationInfoPool;
 
 
@@ -286,7 +286,7 @@ namespace
 			mint m_AlignBits;
 			bool m_bFailed = false;
 
-//			typedef DMibListLinkD_List(CAllocationInfo, m_Link) CAllocInfoList;
+//			using CAllocInfoList = DMibListLinkD_List(CAllocationInfo, m_Link);
 	//		NMib::NMemory::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing> m_AllocationInfoPool;
 
 

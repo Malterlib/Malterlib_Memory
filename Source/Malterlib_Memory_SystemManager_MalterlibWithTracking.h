@@ -22,7 +22,7 @@ namespace NMib
 	struct CMemoryManagerParamsSmallOverrides : public NMemory::CDefaultMemoryManagerParams
 	{
 		static constexpr mint mc_SubSlabSize = 4096;
-		typedef CMainHeapVirtualAllocator CAllocator;
+		using CAllocator = CMainHeapVirtualAllocator;
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 	};
 
@@ -32,7 +32,7 @@ namespace NMib
 #endif
 	struct CMemoryManagerParamsMaxOverrides : public NMemory::CDefaultMemoryManagerParams
 	{
-		typedef CMainHeapVirtualAllocator CAllocator;
+		using CAllocator = CMainHeapVirtualAllocator;
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 	};
 
@@ -81,27 +81,27 @@ namespace NMib
 			};
 		};
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		typedef NMemory::TCMemoryManagerDebug<CMemoryManagerParamsSmall, gc_bHasExceptions, CMemoryManagerDebugOptions> CMemoryManagerWithDebugSmall;
+		using CMemoryManagerWithDebugSmall = NMemory::TCMemoryManagerDebug<CMemoryManagerParamsSmall, gc_bHasExceptions, CMemoryManagerDebugOptions>;
 #endif
-		typedef NMemory::TCMemoryManagerDebug<CMemoryManagerParamsMax, gc_bHasExceptions, CMemoryManagerDebugOptions> CMemoryManagerWithDebugMax;
+		using CMemoryManagerWithDebugMax = NMemory::TCMemoryManagerDebug<CMemoryManagerParamsMax, gc_bHasExceptions, CMemoryManagerDebugOptions>;
 #	else
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		typedef NMemory::TCMemoryManager<CMemoryManagerParamsSmall> CMemoryManagerWithDebugSmall;
+		using CMemoryManagerWithDebugSmall = NMemory::TCMemoryManager<CMemoryManagerParamsSmall>;
 #endif
-		typedef NMemory::TCMemoryManager<CMemoryManagerParamsMax> CMemoryManagerWithDebugMax;
+		using CMemoryManagerWithDebugMax = NMemory::TCMemoryManager<CMemoryManagerParamsMax>;
 #	endif
 
 #if !DMibConfig_MemoryManager_Stats_EnableCategories
 	namespace NMemory
 	{
-		typedef void CTrackedAllocationInfo;
+		using CTrackedAllocationInfo = void;
 	}
 #endif
 
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-	typedef NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebugSmall, NMemory::CTrackedAllocationInfo> CMemoryManagerSmall;
+	using CMemoryManagerSmall = NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebugSmall, NMemory::CTrackedAllocationInfo> ;
 #endif
-	typedef NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebugMax, NMemory::CTrackedAllocationInfo> CMemoryManagerMax;
+	using CMemoryManagerMax = NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebugMax, NMemory::CTrackedAllocationInfo>;
 
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	extern bool g_bMainHeapIsSmall;
@@ -112,7 +112,7 @@ namespace NMib
 	struct CMemoryManagerNonTrackedParams : public CMemoryManagerParamsMax
 	{
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_NonTrackedMainHeap;
-		typedef NMemory::CAllocator_VirtualNoTracking CAllocator;
+		using CAllocator = NMemory::CAllocator_VirtualNoTracking;
 		static constexpr bool mc_bBackgroundCleanup = false; // Threading potentially recursive allocations
 	};
 
@@ -127,9 +127,9 @@ namespace NMib
 #endif
 		};
 	};
-	typedef NMemory::TCMemoryManagerDebug<CMemoryManagerNonTrackedParams, false, CMemoryManagerNonTrackedDebugOptions> CMemoryManagerNonTracked;
+	using CMemoryManagerNonTracked = NMemory::TCMemoryManagerDebug<CMemoryManagerNonTrackedParams, false, CMemoryManagerNonTrackedDebugOptions> ;
 #else
-	typedef NMemory::TCMemoryManager<CMemoryManagerNonTrackedParams> CMemoryManagerNonTracked;
+	using CMemoryManagerNonTracked = NMemory::TCMemoryManager<CMemoryManagerNonTrackedParams>;
 #endif
 
 	extern NMib::NStorage::TCAggregateSimple<CMemoryManagerNonTracked> g_NonTrackedHeap;
