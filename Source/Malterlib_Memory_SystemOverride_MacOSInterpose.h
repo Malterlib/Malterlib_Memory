@@ -9,6 +9,12 @@ typedef unsigned long long malloc_type_id_t;
 #define _MALLOC_TYPED(override, type_param_pos)
 #endif
 
+extern "C"
+{
+	struct _malloc_zone_t;
+	typedef struct _malloc_zone_t malloc_zone_t;
+}
+
 #include <malloc/malloc.h>
 
 #include <mach/message.h>
