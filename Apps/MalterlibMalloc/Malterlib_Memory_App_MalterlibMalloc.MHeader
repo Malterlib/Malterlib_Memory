@@ -21,9 +21,6 @@ Property
 		FileName "MalterlibMalloc"
 		Type "SharedDynamicLibrary"
 		GenerateScheme true
-		{
-			!!GeneratorFamily "Xcode"
-		}
 		LinkWithLibraries += [["-install_name", "@rpath/MalterlibMalloc.dylib"]]
 		{
 			!!PlatformFamily "macOS"
