@@ -216,7 +216,7 @@ Import "Apps/*/*.MHeader"
 		!!CompileDialect "C"
 		Analyzer false
 
-		PreprocessorDefines += ["MI_STAT=0", "MI_PADDING=0", "MI_SECURE=0", "MI_MALLOC_OVERRIDE_TLS_SUPPORT=1"]
+		PreprocessorDefines += ["MI_STAT=0", "MI_PADDING=0", "MI_SECURE=0", "MI_MALLOC_OVERRIDE_TLS_SUPPORT=1", "MI_USE_RTLGENRANDOM=1"]
 	}
 	%Target "Lib_libmimalloc_mimalloc-static"
 	{
