@@ -150,6 +150,11 @@ namespace NMib::NMemory
 			"_CFMachPortCreateWithPort4",
 			// macOS 15
 			"CFStringGetFileSystemRepresentation",
+			// macOS 26
+			"$ss23_ContiguousArrayStorageC29_getNonVerbatimBridgingBuffers07ManagedH7PointerVys01_gH6HeaderVyXlGyF",
+			"ConformanceState::cacheResult",
+			"FSEventStreamInvalidate",
+			"dyld::ThreadLocalVariables::instantiateVariable",
 #elif defined(DPlatformFamily_Linux)
 			"qt_load_library_runtime",
 			"qt_set_x11_resources",
@@ -608,7 +613,7 @@ namespace NMib::NMemory
 #	if DMibConfig_Memory_Shims_EnableGlobal
 		if (g_pGlobalMemoryReporter)
 			g_pGlobalMemoryReporter.f_Load()->f_Report(_bFullReport);
-#	endif		
+#	endif
 	}
 
 #	endif
