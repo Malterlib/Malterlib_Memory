@@ -8,8 +8,9 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
-			"MI_STATIC_LIB",
-			"MI_WIN_NOREDIRECT=1"
+			"MI_BUILD_RELEASE",
+			"MI_CMAKE_BUILD_TYPE=release",
+			"MI_STATIC_LIB"
 		]
 	}
 	Property.MalterlibTargetNameType "Normal"
@@ -36,6 +37,10 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			Compile.Type "C++"
 		}
 		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/arena.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/arena-meta.c`
 		{
 			Compile.Type "C++"
 		}
@@ -67,15 +72,11 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 		{
 			Compile.Type "C++"
 		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/page-map.c`
+		{
+			Compile.Type "C++"
+		}
 		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/random.c`
-		{
-			Compile.Type "C++"
-		}
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/segment.c`
-		{
-			Compile.Type "C++"
-		}
-		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/segment-map.c`
 		{
 			Compile.Type "C++"
 		}
@@ -101,7 +102,8 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
-			"MI_WIN_NOREDIRECT=1"
+			"MI_BUILD_RELEASE",
+			"MI_CMAKE_BUILD_TYPE=release"
 		]
 	}
 	Property.MalterlibTargetNameType "Normal"
@@ -120,6 +122,7 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			Compile.Type "C++"
 		}
 	}
+	%Dependency "Lib_libmimalloc_mimalloc-static"
 }
 %Target "Com_libmimalloc_mimalloc-test-api-fill"
 {
@@ -130,7 +133,8 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
-			"MI_WIN_NOREDIRECT=1"
+			"MI_BUILD_RELEASE",
+			"MI_CMAKE_BUILD_TYPE=release"
 		]
 	}
 	Property.MalterlibTargetNameType "Normal"
@@ -149,6 +153,7 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			Compile.Type "C++"
 		}
 	}
+	%Dependency "Lib_libmimalloc_mimalloc-static"
 }
 %Target "Com_libmimalloc_mimalloc-test-stress"
 {
@@ -159,7 +164,8 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
 		]
 		PreprocessorDefines += [
-			"MI_WIN_NOREDIRECT=1"
+			"MI_BUILD_RELEASE",
+			"MI_CMAKE_BUILD_TYPE=release"
 		]
 	}
 	Property.MalterlibTargetNameType "Normal"
@@ -178,4 +184,5 @@ Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbs
 			Compile.Type "C++"
 		}
 	}
+	%Dependency "Lib_libmimalloc_mimalloc-static"
 }
