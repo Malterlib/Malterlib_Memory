@@ -125,9 +125,11 @@ DMibMemoryInterpose2(void, malloc_zone_enumerate_discharged_pointers, malloc_zon
 
 DMibMemoryInterpose2(boolean_t, malloc_zone_claimed_address, malloc_zone_t *_0, void *_1)
 DMibMemoryInterpose4(void *, malloc_zone_malloc_with_options_np, malloc_zone_t *_0, size_t _1, size_t _2, uint64_t _3)
+DMibMemoryInterpose4(void *, malloc_zone_malloc_with_options, malloc_zone_t *_0, size_t _1, size_t _2, malloc_zone_malloc_options_t _3)
 
 DMibMemoryInterpose5(void *, malloc_type_zone_malloc_with_options_np, malloc_zone_t *_0, size_t _1, size_t _2, malloc_options_np_t _3, malloc_type_id_t _4)
 DMibMemoryInterpose5(void *, malloc_type_zone_malloc_with_options_internal, malloc_zone_t *_0, size_t _1, size_t _2, malloc_options_np_t _3, malloc_type_id_t _4)
+DMibMemoryInterpose5(void *, malloc_type_zone_malloc_with_options, malloc_zone_t *_0, size_t _1, size_t _2, malloc_type_id_t _3, malloc_zone_malloc_options_t _4)
 
 DMibMemoryInterpose3(void *, malloc_type_zone_malloc, malloc_zone_t *_0, size_t _1, malloc_type_id_t _2)
 DMibMemoryInterpose4(void *, malloc_type_zone_calloc, malloc_zone_t *_0, size_t _1, size_t _2, malloc_type_id_t _3)
@@ -236,8 +238,6 @@ DMibMemoryInterpose7(mach_msg_return_t, mach_msg, mach_msg_header_t *_0, mach_ms
 	malloc_sanitizer_set_functions
 	malloc_set_thread_options
 	malloc_singlethreaded
-	malloc_type_zone_malloc_with_options_internal
-	malloc_type_zone_malloc_with_options_np
 	malloc_variant_is_debug_4test
 	malloc_zero_on_free_disable
 	malloc_zones

@@ -3602,7 +3602,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdlPvm(void *_pMemory, size_t _Size)
 	{
 		mint Size = DAlignSizeMacOS(_Size);
-		
+
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
@@ -4486,6 +4486,27 @@ extern "C"
 #endif
 	}
 
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_zone_malloc_with_options
+		(
+			malloc_zone_t_known_version *_pZone
+			, size_t _Align
+			, size_t _Size
+			, malloc_zone_malloc_options_t _Options
+		)
+	{
+#ifdef DMemoryManagerIsSame
+		if (g_bForeignZone) [[unlikely]]
+			return g_OriginalFunctions.malloc_zone_malloc_with_options((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+
+		if (!_pZone || !_pZone->malloc_with_options)
+			return fg_Malterlib_zone_malloc_with_options(&g_MalterlibMallocZone, _Align, _Size, _Options);
+
+		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
+#else
+		return g_OriginalFunctions.malloc_zone_malloc_with_options((malloc_zone_t *)_pZone, _Align, _Size, _Options);
+#endif
+	}
+
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_type_zone_malloc_with_options_np
 		(
 			malloc_zone_t_known_version *_pZone
@@ -4505,6 +4526,28 @@ extern "C"
 		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
 #else
 		return g_OriginalFunctions.malloc_type_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options, _TypeId);
+#endif
+	}
+
+	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc_type_zone_malloc_with_options
+		(
+			malloc_zone_t_known_version *_pZone
+			, size_t _Align
+			, size_t _Size
+			, malloc_type_id_t _TypeId
+			, malloc_zone_malloc_options_t _Options
+		)
+	{
+#ifdef DMemoryManagerIsSame
+		if (g_bForeignZone) [[unlikely]]
+			return g_OriginalFunctions.malloc_type_zone_malloc_with_options((malloc_zone_t *)_pZone, _Align, _Size, _TypeId, _Options);
+
+		if (!_pZone || !_pZone->malloc_with_options)
+			return fg_Malterlib_zone_malloc_with_options(&g_MalterlibMallocZone, _Align, _Size, _Options);
+
+		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
+#else
+		return g_OriginalFunctions.malloc_type_zone_malloc_with_options((malloc_zone_t *)_pZone, _Align, _Size, _TypeId, _Options);
 #endif
 	}
 
