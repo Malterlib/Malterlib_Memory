@@ -51,8 +51,8 @@ using malloc_options_np_t = uint64_t;
 #if __MAC_OS_X_VERSION_MAX_ALLOWED < 260000
 	using malloc_zone_malloc_options_t = uint64_t;
 
-	extern "C" void * malloc_zone_malloc_with_options(malloc_zone_t *zone, size_t align, size_t size, malloc_zone_malloc_options_t opts);
-	extern "C" void * malloc_type_zone_malloc_with_options(malloc_zone_t *zone, size_t alignment, size_t size, malloc_type_id_t type_id, malloc_zone_malloc_options_t opts);
+	extern "C" void * malloc_zone_malloc_with_options(malloc_zone_t *zone, size_t align, size_t size, malloc_zone_malloc_options_t opts) __attribute__((weak_import));
+	extern "C" void * malloc_type_zone_malloc_with_options(malloc_zone_t *zone, size_t alignment, size_t size, malloc_type_id_t type_id, malloc_zone_malloc_options_t opts) __attribute__((weak_import));
 #endif
 
 extern "C" boolean_t malloc_zone_claimed_address(malloc_zone_t *_0, void *_1) __attribute__((weak_import));
