@@ -454,8 +454,7 @@ namespace NMib::NMemory
 
 	CCallstackMemoryReporter::CCallstack& CCallstackMemoryReporter::fp_GetCallstack(mint _MemoryAllocator, mint _Hash, CMibCodeAddress *_pStack, mint _nStack)
 	{
-		bool bCreated = false;
-		auto & CallStack = m_Callstacks.f_Map(_Hash, bCreated, _Hash, _pStack, _nStack, _MemoryAllocator);
+		auto &CallStack = m_Callstacks[_Hash, _Hash, _pStack, _nStack, _MemoryAllocator];
 		return CallStack;
 	}
 
@@ -470,10 +469,10 @@ namespace NMib::NMemory
 
 	bool CCallstackMemoryReporter::fp_RegisterAllocation(mint _MemoryAllocator, mint _Address, mint _Size, CCallstack* _pCallstack)
 	{
-		bool bCreated = false;
-		CAllocation &Allocation = m_Allocations.f_Map(CAllocationKey(_MemoryAllocator, _Address), bCreated, _Size, _pCallstack);
+		auto MapResult = m_Allocations(CAllocationKey(_MemoryAllocator, _Address), _Size, _pCallstack);
+		CAllocation &Allocation = *MapResult;
 
-		if (!bCreated)
+		if (!MapResult.f_WasCreated())
 		{
 			DMibTraceSafe("Allocation on already allocated address {} {}{\n}", _MemoryAllocator << _Address);
 			--Allocation.m_pCallstack->m_Total.m_nAllocations;
