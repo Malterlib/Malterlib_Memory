@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -22,6 +22,8 @@ namespace NMib::NMemory
 	{
 	public:
 		using CBaseAllocator = t_CBaseAllocator;
+		using t_CBaseAllocator::operator <=>;
+		using t_CBaseAllocator::operator ==;
 
 		void *f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		void *f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -37,6 +39,8 @@ namespace NMib::NMemory
 	{
 	public:
 		using CBaseAllocator = t_CBaseAllocator;
+		using t_CBaseAllocator::operator <=>;
+		using t_CBaseAllocator::operator ==;
 
 		static void *f_Realloc(void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static void *f_ReallocDebug(void *_pMem, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -48,5 +52,7 @@ namespace NMib::NMemory
 
 	struct CAllocator_HeapSecure : public TCAllocator_Secure<CAllocator_Heap, true>
 	{
+		using TCAllocator_Secure<CAllocator_Heap, true>::operator <=>;
+		using TCAllocator_Secure<CAllocator_Heap, true>::operator ==;
 	};
 }

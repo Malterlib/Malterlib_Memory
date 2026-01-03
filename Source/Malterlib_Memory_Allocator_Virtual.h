@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
@@ -21,6 +21,16 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = true
 		};
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Virtual>;
+
+		constexpr bool operator == (CAllocator_Virtual const &_Right) const
+		{
+			return true;
+		}
+
+		constexpr auto operator <=> (CAllocator_Virtual const &_Right) const
+		{
+			return COrdering_Strong::equal;
+		}
 
 		static bool f_OnlyOneAlloc();
 		static bool f_IsStatic(void const *_pBlock);
@@ -89,6 +99,13 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = true
 		};
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_VirtualNoTracking>;
+
+		constexpr bool operator == (CAllocator_VirtualNoTracking const &_Right) const = default;
+
+		constexpr auto operator <=> (CAllocator_VirtualNoTracking const &_Right) const
+		{
+			return COrdering_Strong::equal;
+		}
 
 		static bool f_OnlyOneAlloc();
 		static bool f_IsStatic(void const *_pBlock);

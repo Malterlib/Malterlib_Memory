@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -21,6 +21,16 @@ namespace NMib::NMemory
 		};
 
 		TCAllocator_MemoryManager(TCMemoryManager<t_CParams> *_pMemoryManager);
+
+		constexpr bool operator == (TCAllocator_MemoryManager const &_Right) const
+		{
+			return m_pMemoryManager == _Right.m_pMemoryManager;
+		}
+
+		constexpr auto operator <=> (TCAllocator_MemoryManager const &_Right) const
+		{
+			return m_pMemoryManager <=> _Right.m_pMemoryManager;
+		}
 
 		static bool f_IsStatic(void const *_pBlock);
 		static bool f_OnlyOneAlloc();

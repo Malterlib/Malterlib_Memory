@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -309,6 +309,7 @@ namespace NMib::NMemory
 	template <mint t_AllocSize>
 	inline_small void TCAllocator_Placement<t_AllocSize>::f_DoCheck(mint _Size)
 	{
+		DMibFastCheck(m_pPointer);
 #ifdef DMibDebug
 		DMibFastCheck(!m_bPointerTaken);
 		m_bPointerTaken = true;
@@ -323,6 +324,28 @@ namespace NMib::NMemory
 		, m_bPointerTaken(false)
 #endif
 	{
+	}
+
+	template <mint t_AllocSize>
+	TCAllocator_Placement<t_AllocSize>::TCAllocator_Placement(TCAllocator_Placement &&_Other) noexcept
+		: m_pPointer(fg_Exchange(_Other.m_pPointer, nullptr))
+#ifdef DMibDebug
+		, m_bPointerTaken(fg_Exchange(_Other.m_bPointerTaken, true))
+#endif
+	{
+	}
+
+	template <mint t_AllocSize>
+	auto TCAllocator_Placement<t_AllocSize>::operator = (TCAllocator_Placement &&_Other) noexcept -> TCAllocator_Placement &
+	{
+		if (this == &_Other)
+			return *this;
+
+		m_pPointer = fg_Exchange(_Other.m_pPointer, nullptr);
+#ifdef DMibDebug
+		m_bPointerTaken = fg_Exchange(_Other.m_bPointerTaken, true);
+#endif
+		return *this;
 	}
 
 	template <mint t_AllocSize>
@@ -556,41 +579,36 @@ namespace NMib::NMemory
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
 	TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::TCAllocator_Static()
-#if DMibEnableSafeCheck > 0
-		: m_bAllocated(false)
-#endif
 	{
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
 	TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::TCAllocator_Static(TCAllocator_Static&&_Other)
+		: t_CFallbackAllocator(fg_Move(static_cast<t_CFallbackAllocator &>(_Other)))
 	{
-#if DMibEnableSafeCheck > 0
-		m_bAllocated = _Other.m_bAllocated;
-		_Other.m_bAllocated = false;
-#endif
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
 	TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::TCAllocator_Static(TCAllocator_Static const &_Other)
+		: t_CFallbackAllocator(static_cast<t_CFallbackAllocator const &>(_Other))
 	{
 		// Do nothing
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>& TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::operator =(TCAllocator_Static&&_Other)
+	TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator> &TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::operator = (TCAllocator_Static &&_Other)
 	{
-#if DMibEnableSafeCheck > 0
-		m_bAllocated = _Other.m_bAllocated;
-		_Other.m_bAllocated = false;
-#endif
+		DMibFastCheck(!m_bAllocated && !_Other.m_bAllocated);
+		static_cast<t_CFallbackAllocator &>(*this) = fg_Move(static_cast<t_CFallbackAllocator &>(_Other));
 		return *this;
 	}
 
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
-	TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>& TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::operator =(TCAllocator_Static const &_Other)
+	auto TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::operator = (TCAllocator_Static const &_Other)
+		-> TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator> &
 	{
-		// Do nothing
+		DMibFastCheck(!m_bAllocated && !_Other.m_bAllocated);
+		static_cast<t_CFallbackAllocator &>(*this) = static_cast<t_CFallbackAllocator const &>(_Other);
 		return *this;
 	}
 
@@ -632,9 +650,7 @@ namespace NMib::NMemory
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
 	only_parameters_aliased inline_small mint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_Size(void *_pBlock)
 	{
-#if DMibEnableSafeCheck > 0
 		DMibFastCheck(m_bAllocated);
-#endif
 		if (fp_IsStatic(_pBlock))
 			return mcp_StorageSize;
 		return t_CFallbackAllocator::f_Size(_pBlock);
@@ -643,9 +659,7 @@ namespace NMib::NMemory
 	template <mint t_StaticStorage, mint t_Alignment, typename t_CFallbackAllocator>
 	only_parameters_aliased inline_small mint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_TrySize(void *_pBlock)
 	{
-#if DMibEnableSafeCheck > 0
 		DMibFastCheck(m_bAllocated);
-#endif
 		if (fp_IsStatic(_pBlock))
 			return mcp_StorageSize;
 		return t_CFallbackAllocator::f_TrySize(_pBlock);
@@ -1026,19 +1040,30 @@ namespace NMib::NMemory
 
 	template <typename t_CDeleterType, typename t_CFallbackAllocator>
 	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::TCAllocator_FunctorDeleter(TCAllocator_FunctorDeleter const &_Other)
-		: m_Deleter(_Other.m_Deleter)
+		: t_CFallbackAllocator(static_cast<t_CFallbackAllocator const &>(_Other))
+		, m_Deleter(_Other.m_Deleter)
 	{
 	}
 
 	template <typename t_CDeleterType, typename t_CFallbackAllocator>
 	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::TCAllocator_FunctorDeleter(TCAllocator_FunctorDeleter &&_Other)
-		: m_Deleter(fg_Move(_Other.m_Deleter))
+		: t_CFallbackAllocator(fg_Move(static_cast<t_CFallbackAllocator &>(_Other)))
+		, m_Deleter(fg_Move(_Other.m_Deleter))
 	{
+	}
+
+	template <typename t_CDeleterType, typename t_CFallbackAllocator>
+	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator> &TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::operator= (TCAllocator_FunctorDeleter const &_Other)
+	{
+		static_cast<t_CFallbackAllocator &>(*this) = static_cast<t_CFallbackAllocator const &>(_Other);
+		m_Deleter = _Other.m_Deleter;
+		return *this;
 	}
 
 	template <typename t_CDeleterType, typename t_CFallbackAllocator>
 	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>& TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::operator= (TCAllocator_FunctorDeleter&& _Other)
 	{
+		static_cast<t_CFallbackAllocator &>(*this) = fg_Move(static_cast<t_CFallbackAllocator &>(_Other));
 		m_Deleter = fg_Move(_Other.m_Deleter);
 		return *this;
 	}

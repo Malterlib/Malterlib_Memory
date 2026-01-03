@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -78,12 +78,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_small bool f_CanProtect()
+	inline_small bool TCAllocator_MemoryManager<t_CParams>::f_CanProtect()
 	{
 		return false;
 	}
 
-	inline_small bool f_DeterministicSize()
+	template <typename t_CParams>
+	inline_small bool TCAllocator_MemoryManager<t_CParams>::f_DeterministicSize()
 	{
 		return true;
 	}

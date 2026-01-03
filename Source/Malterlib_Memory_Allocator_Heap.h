@@ -67,6 +67,16 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = true
 		};
 
+		constexpr bool operator == (CAllocator_Heap const &_Right) const
+		{
+			return true;
+		}
+
+		constexpr auto operator <=> (CAllocator_Heap const &_Right) const
+		{
+			return COrdering_Strong::equal;
+		}
+
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Heap>;
 
 		static bool f_IsStatic(void const *_pBlock);
@@ -116,6 +126,16 @@ namespace NMib::NMemory
 			, mc_CanBeStatic = false
 			, mc_bMethodsStatic = true
 		};
+
+		constexpr bool operator == (CAllocator_NonTrackedHeap const &_Right) const
+		{
+			return true;
+		}
+
+		constexpr auto operator <=> (CAllocator_NonTrackedHeap const &_Right) const
+		{
+			return COrdering_Strong::equal;
+		}
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_NonTrackedHeap>;
 
@@ -182,9 +202,23 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
+		constexpr bool operator == (TCAllocator_Placement const &_Right) const
+		{
+			return m_pPointer == _Right.m_pPointer;
+		}
+
+		constexpr auto operator <=> (TCAllocator_Placement const &_Right) const
+		{
+			return m_pPointer <=> _Right.m_pPointer;
+		}
+
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<TCAllocator_Placement>;
 
 		TCAllocator_Placement(void *_pPointer);
+		TCAllocator_Placement(TCAllocator_Placement const &_Other) = delete;
+		TCAllocator_Placement &operator = (TCAllocator_Placement const &_Other) = delete;
+		TCAllocator_Placement(TCAllocator_Placement &&_Other) noexcept;
+		TCAllocator_Placement &operator = (TCAllocator_Placement &&_Other) noexcept;
 		static bool f_IsStatic(void const *_pBlock);
 		static bool f_OnlyOneAlloc();
 		static mint f_StaticAddresses();
@@ -253,7 +287,7 @@ namespace NMib::NMemory
 
 		alignas(t_Alignment) uint8 m_Storage[mcp_StorageSize];
 #if DMibEnableSafeCheck > 0
-		bool m_bAllocated;
+		bool m_bAllocated = false;
 #endif
 
 		bool fp_IsStatic(void const *_pBlock) const;
@@ -264,6 +298,17 @@ namespace NMib::NMemory
 			mc_CanBeStatic = true
 			, mc_bMethodsStatic = false
 		};
+
+		constexpr bool operator == (TCAllocator_Static const &_Right) const
+		{
+			return static_cast<t_CFallbackAllocator const &>(*this) == static_cast<t_CFallbackAllocator const &>(_Right);
+		}
+
+		constexpr auto operator <=> (TCAllocator_Static const &_Right) const
+		{
+			return static_cast<t_CFallbackAllocator const &>(*this) <=> static_cast<t_CFallbackAllocator const &>(_Right);
+		}
+
 		using CAutoDestroy = TCAllocator_AutoDestroy<TCAllocator_Static>;
 
 		TCAllocator_Static();
@@ -316,6 +361,7 @@ namespace NMib::NMemory
 		TCAllocator_FunctorDeleter();
 		TCAllocator_FunctorDeleter(TCAllocator_FunctorDeleter const &_Other);
 		TCAllocator_FunctorDeleter(TCAllocator_FunctorDeleter &&_Other);
+		TCAllocator_FunctorDeleter &operator= (TCAllocator_FunctorDeleter const &_Other);
 		TCAllocator_FunctorDeleter& operator= (TCAllocator_FunctorDeleter&& _Other);
 		template <typename t_CParam0>
 		TCAllocator_FunctorDeleter(t_CParam0 &&_Param0);

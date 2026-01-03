@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -16,6 +16,16 @@ namespace NMib::NMemory
 			, mc_CanBeStatic = false
 			, mc_bMethodsStatic = false
 		};
+
+		constexpr bool operator == (CAllocator_Placement const &_Right) const
+		{
+			return true;
+		}
+
+		constexpr auto operator <=> (CAllocator_Placement const &_Right) const
+		{
+			return COrdering_Strong::equal;
+		}
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Placement>;
 

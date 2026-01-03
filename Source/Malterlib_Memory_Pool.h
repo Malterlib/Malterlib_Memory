@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Core/Core>
@@ -748,6 +748,16 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
+		constexpr bool operator == (TCPoolAggregate const &_Right) const
+		{
+			return this == &_Right;
+		}
+
+		constexpr auto operator <=> (TCPoolAggregate const &_Right) const
+		{
+			return this <=> &_Right;
+		}
+
 		typename t_CPoolType::template TCPool<t_CAllocator, sizeof(t_CData), alignof(t_CData)> m_Pool;
 		using CData = t_CData;
 
@@ -925,6 +935,16 @@ namespace NMib::NMemory
 			, mc_CanBeStatic = false
 			, mc_bMethodsStatic = true
 		};
+
+		constexpr bool operator == (TCStaticPoolAllocator const &_Right) const
+		{
+			return true;
+		}
+
+		constexpr auto operator <=> (TCStaticPoolAllocator const &_Right) const
+		{
+			return COrdering_Strong::equal;
+		}
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<TCStaticPoolAllocator>;
 		using CStaticPool = TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>;
@@ -1161,6 +1181,16 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
+		constexpr bool operator == (TCPoolAllocator const &_Right) const
+		{
+			return this == &_Right;
+		}
+
+		constexpr auto operator <=> (TCPoolAllocator const &_Right) const
+		{
+			return this <=> &_Right;
+		}
+
 		using CAutoDestroy = TCAllocator_AutoDestroy<TCPoolAllocator>;
 
 		TCPool<t_CType, t_GrowSize, t_CLockType, t_CPoolType, t_CAllocator> m_Pool;
@@ -1360,6 +1390,16 @@ namespace NMib::NMemory
 			, mc_CanBeStatic = false
 			, mc_bMethodsStatic = false
 		};
+
+		constexpr bool operator == (TCPoolReferenceAllocator const &_Right) const
+		{
+			return &m_Pool == &_Right.m_Pool;
+		}
+
+		constexpr auto operator <=> (TCPoolReferenceAllocator const &_Right) const
+		{
+			return &m_Pool <=> &_Right.m_Pool;
+		}
 
 		using CData = typename t_CPoolType::CData;
 		using CAutoDestroy = TCAllocator_AutoDestroy<TCPoolReferenceAllocator>;
