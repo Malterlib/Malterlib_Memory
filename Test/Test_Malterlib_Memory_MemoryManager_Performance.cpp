@@ -52,7 +52,7 @@ namespace
 			;
 			static constexpr double mc_OverheadPercent = (double(mc_Overhead) / double(t_CParams::mc_SlabSize)) * 100.0;
 		};
-		
+
 		struct CPageSize4096 : public CDefaultMemoryManagerParams
 		{
 			static constexpr mint mc_SubSlabSize = 4096;

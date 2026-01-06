@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <gperftools/tcmalloc.h>
@@ -117,7 +117,7 @@ namespace NMib::NMemory
 		{
 			return EMemoryManagerFeatureFlag_None;
 		}
-		
+
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
 			tc_free(_pMemory);

@@ -74,6 +74,6 @@ CSystemMemoryStatistics NMemory::NPlatform::fg_Memory_GetStatistics(EMemoryStati
 
 	fAddPageStat(gc_Str<"CommitLimit">, PerfInfo.CommitLimit);
 	fAddPageStat(gc_Str<"CommitPeak">, PerfInfo.CommitPeak);
-	
+
 	return Return;
 }

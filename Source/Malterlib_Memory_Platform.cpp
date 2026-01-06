@@ -1,4 +1,4 @@
-// Copyright © 2024 Favro Holding AB 
+// Copyright © 2024 Favro Holding AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Memory/Platform>

@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #if 0
@@ -25,7 +25,7 @@ public:
 	};
 
 
-	bool f_AutomaticTest() 
+	bool f_AutomaticTest()
 	{
 		return true;
 	}
@@ -56,20 +56,20 @@ public:
 		for (aint i = 0; i < NumIter; ++i)
 		{
 			{
-				DMibScopeTimerMin(Timer);			
+				DMibScopeTimerMin(Timer);
 				for (aint i = 0; i < NumTests; ++i)
 				{
 					TestList[i] = TestPool.f_New();
 				}
 			}
 			{
-				DMibScopeTimerMin(TimerDelete);			
+				DMibScopeTimerMin(TimerDelete);
 				for (aint i = 0; i < NumTests; ++i)
 				{
 					TestPool.f_Delete(TestList[i]);
 				}
 			}
-		}		
+		}
 		DMibTrace("Performance for Pool new CPoolTye_Freeable = {0} news per second\n", fp64(NumTests) / Timer.f_GetTime());
 		DMibTrace("Performance for Pool delete CPoolTye_Freeable = {0} deletes per second\n", fp64(NumTests) / TimerDelete.f_GetTime());
 
@@ -79,20 +79,20 @@ public:
 		for (aint i = 0; i < NumIter; ++i)
 		{
 			{
-				DMibScopeTimerMin(Timer);			
+				DMibScopeTimerMin(Timer);
 				for (aint i = 0; i < NumTests; ++i)
 				{
 					TestList[i] = TestPoolGrowing.f_New();
 				}
 			}
 			{
-				DMibScopeTimerMin(TimerDelete);			
+				DMibScopeTimerMin(TimerDelete);
 				for (aint i = 0; i < NumTests; ++i)
 				{
 					TestPoolGrowing.f_Delete(TestList[i]);
 				}
 			}
-		}		
+		}
 
 		DMibTrace("Performance for Pool new CPoolTye_Growing = {0} news per second\n", fp64(NumTests) / Timer.f_GetTime());
 		DMibTrace("Performance for Pool delete CPoolTye_Growing = {0} deletes per second\n", fp64(NumTests) / TimerDelete.f_GetTime());

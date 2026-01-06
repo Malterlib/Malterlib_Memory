@@ -15,7 +15,7 @@ namespace NMib::NMemory
 
 	template <typename t_CParams>
 	struct TCMemoryManager;
-	
+
 
 	struct CMemoryManagerSlabSharedPostfixHeader
 	{

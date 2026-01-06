@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -9,15 +9,15 @@
 namespace NMib
 {
 	NMemory::ICMemoryManagerCrossModule *g_pLocalCrossModuleInterface = nullptr;
-	
+
 	DMibSuppressUndefinedSanitizer void CSystem::fp_CreateNonTrackedMemoryManager()
 	{
 		using namespace NMemory;
 
 		DMibFastCheck(fg_GetSys()->f_IsDll());
-		
+
 		g_pLocalCrossModuleInterface = (NMemory::ICMemoryManagerCrossModule *)NSys::fg_Process_GetCrossModuleMemoryManagerInterface();
-		
+
 		if (g_pLocalCrossModuleInterface)
 		{
 			g_pLocalCrossModuleInterface->f_Register(&NMemory::g_CrossModule, NMemory::EMemoryManagerCrossModule_Version);
@@ -179,23 +179,23 @@ namespace NMib
 				;
 			}
 		}
-		
+
 		NMemory::g_CrossModule.m_fCreateNonTrackedMemoryManager(&NMemory::g_CrossModule);
 	}
-	
+
 	DMibSuppressUndefinedSanitizer void CSystem::fp_DestroyNonTrackedMemoryManager()
 	{
 		NMemory::g_CrossModule.m_fDestroyNonTrackedMemoryManager(&NMemory::g_CrossModule);
-		
+
 		if (g_pLocalCrossModuleInterface)
 			g_pLocalCrossModuleInterface->f_Unregister(&NMemory::g_CrossModule);
 	}
-	
+
 	DMibSuppressUndefinedSanitizer void CSystem::f_MemoryManager_GarbageCollect()
 	{
 		NMemory::g_CrossModule.m_fMemoryManager_GarbageCollect(&NMemory::g_CrossModule);
 	}
-	
+
 	DMibSuppressUndefinedSanitizer void CSystem::fp_CreateMemoryManager()
 	{
 		NMemory::g_CrossModule.m_fCreateMemoryManager(&NMemory::g_CrossModule);
@@ -203,13 +203,13 @@ namespace NMib
 	DMibSuppressUndefinedSanitizer NMemory::CMemoryManagerCheckout CSystem::f_MemoryManager_Checkout()
 	{
 		return NMemory::g_CrossModule.m_fMemoryManager_Checkout(&NMemory::g_CrossModule);
-	}	
-	
+	}
+
 	DMibSuppressUndefinedSanitizer void CSystem::fp_DestroyMemoryManager()
 	{
 		return NMemory::g_CrossModule.m_fDestroyMemoryManager(&NMemory::g_CrossModule);
 	}
-	
+
 	DMibSuppressUndefinedSanitizer bool CSystem::f_MemoryManager_Check(bool _bBreak)
 	{
 		return NMemory::g_CrossModule.m_fMemoryManager_Check(&NMemory::g_CrossModule, _bBreak);
@@ -224,26 +224,26 @@ namespace NMib
 	{
 		return NMemory::g_CrossModule.m_fMemoryManager_PrepareFork(&NMemory::g_CrossModule);
 	}
-	
+
 	DMibSuppressUndefinedSanitizer void CSystem::f_MemoryManager_ForkedParent()
 	{
 		return NMemory::g_CrossModule.m_fMemoryManager_ForkedParent(&NMemory::g_CrossModule);
 	}
-	
+
 	DMibSuppressUndefinedSanitizer void CSystem::f_MemoryManager_ForkedChild()
 	{
 		return NMemory::g_CrossModule.m_fMemoryManager_ForkedChild(&NMemory::g_CrossModule);
 	}
-	
+
 	DMibSuppressUndefinedSanitizer void CSystem::f_MemoryManager_DestroyThreads()
 	{
 		return NMemory::g_CrossModule.m_fMemoryManager_DestroyThreads(&NMemory::g_CrossModule);
 	}
-	
+
 	DMibSuppressUndefinedSanitizer void CSystem::f_MemoryManager_CanStartThreads()
 	{
 		return NMemory::g_CrossModule.m_fMemoryManager_CanStartThreads(&NMemory::g_CrossModule);
-	}	
+	}
 
 	DMibSuppressUndefinedSanitizer void CSystem::f_MemoryManager_SetNumaNode(ENumaNode _NumaNode)
 	{
@@ -397,7 +397,7 @@ namespace NMib::NMemory
 		return g_CrossModule.m_fDemandProtection(&g_CrossModule);
 	}
 }
-	
+
 ///
 /// Nontracked heap
 /// ===============

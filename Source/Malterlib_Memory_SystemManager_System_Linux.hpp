@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <stdlib.h>
@@ -32,7 +32,7 @@ namespace NMib
 {
 	ch8 const* g_pMemoryManagerName = "Linux system memory manager";
 }
-	
+
 namespace NMib::NMemory
 {
 #if DMibConfig_Memory_Shims_Lightweight

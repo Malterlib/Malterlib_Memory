@@ -203,7 +203,7 @@ Normal sizes serviced
 |	Total overhead	|	0.10%	|
 
 #### Serviced allocation sizes
- 
+
 |	Size	|	Sub size	|	Num sub	|	Virtual space fragmentation	|
 |	----:	|	----:	|	----:	|	----:	|
 |	36	|	36864	|		|		|

@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #if (defined(DMibConfig_OverrideSystemMalloc) || defined(DMibMemoryOverrideDll)) && defined(DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport)
@@ -16,15 +16,15 @@ namespace
 bool fg_MalterlibSystem_InitMacOS1060()
 {
 	void *pLibSystemInfo = dlsym(RTLD_DEFAULT, "__Libsystem_version");
-	
+
 	if (!pLibSystemInfo)
 	{
 		DMibTraceSafe("No __Libsystem_version found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
+
 	// This path is taken os OXS 10.6
-	
+
 	Dl_info Info;
 	if (!dladdr((void *)(mint)pLibSystemInfo, &Info))
 	{
@@ -38,7 +38,7 @@ bool fg_MalterlibSystem_InitMacOS1060()
 	uint8 *pEndAddress = pStartAddress + 8*1024; // Go through 8 KB at max
 	mint nLoop = 0;
 	while (pStartAddress < pEndAddress)
-	{	
+	{
 		++nLoop;
 		Dl_info Info;
 		if (dladdr((void *)(mint)pStartAddress, &Info))
@@ -52,13 +52,13 @@ bool fg_MalterlibSystem_InitMacOS1060()
 		// 10.6 function is 614 bytes, so to be save lets walk 256 bytes a time
 		pStartAddress += 256;
 	}
-	
+
 	if (!pthread_init)
 	{
 		DMibTraceSafe("No pthread_init found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	 
+
 	mach_init();
 	pthread_init();
 	return true;
@@ -68,7 +68,7 @@ bool fg_MalterlibSystem_InitMacOS1070(void *_pPThreadInit)
 {
 	void (* pthread_init)();
 	(void * &)pthread_init = _pPThreadInit;
-	
+
 	// This code path is taken on macOS 10.7 and 10.8
 	typedef struct _libkernel_functions {
 		mach_port_t (*get_reply_port)(void);
@@ -80,7 +80,7 @@ bool fg_MalterlibSystem_InitMacOS1070(void *_pPThreadInit)
 		int* (*get_errno)(void);
 
 	} _libkernel_functions_t;
-	
+
 	_libkernel_functions_t libkernel_funcs = {
 		.get_reply_port = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "_mig_get_reply_port")),
 		.set_reply_port = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "_mig_set_reply_port")),
@@ -88,7 +88,7 @@ bool fg_MalterlibSystem_InitMacOS1070(void *_pPThreadInit)
 		.set_errno = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "cthread_set_errno_self")),
 		.dlsym = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "dlsym")),
 	};
-	
+
 	if (!libkernel_funcs.get_reply_port)
 	{
 		DMibTraceSafe("No libkernel_funcs.get_reply_port found, malloc override not enabled!\n", 0);
@@ -116,23 +116,23 @@ bool fg_MalterlibSystem_InitMacOS1070(void *_pPThreadInit)
 	}
 
 	void (*_libkernel_init)(_libkernel_functions_t fns);
-	
+
 	(void * &)_libkernel_init = dlsym(RTLD_DEFAULT, "_libkernel_init");
-	
+
 	if (!_libkernel_init)
 	{
 		DMibTraceSafe("No _libkernel_init found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
+
 	(void * &)bootstrap_init = dlsym(RTLD_DEFAULT, "bootstrap_init");
-	
+
 	if (!bootstrap_init)
 	{
 		DMibTraceSafe("No bootstrap_init found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
+
 	_libkernel_init(libkernel_funcs);
 	bootstrap_init();
 	mach_init();
@@ -151,10 +151,10 @@ bool fg_MalterlibSystem_InitMacOS10100(void *_pPThreadInit, char const* envp[], 
 		void* (*malloc)(size_t);
 		void  (*free)(void*);
 	};
-	
+
 	void (* __pthread_init)(const struct _libpthread_functions *libpthread_funcs, const char *envp[], const char *apple[], const struct ProgramVars *vars);
 	(void * &)__pthread_init = _pPThreadInit;
-	
+
 	typedef const struct _libkernel_functions {
 		/* Structure version 1. Subsequent versions must only add pointers! */
 		unsigned long version;
@@ -176,12 +176,12 @@ bool fg_MalterlibSystem_InitMacOS10100(void *_pPThreadInit, char const* envp[], 
 	} *_libc_functions_t;
 
 	void (* _libkernel_init)(_libkernel_functions_t fns, const char *envp[], const char *apple[], const struct ProgramVars *vars);
-	
+
 	(void * &)_libkernel_init = dlsym(RTLD_DEFAULT, "__libkernel_init");
 
 	if (!_libkernel_init)
 		(void * &)_libkernel_init = dlsym(RTLD_DEFAULT, "_libkernel_init");
-	
+
 	if (!_libkernel_init)
 	{
 		DMibTraceSafe("No _libkernel_init found, malloc override not enabled!\n", 0);
@@ -189,20 +189,20 @@ bool fg_MalterlibSystem_InitMacOS10100(void *_pPThreadInit, char const* envp[], 
 	}
 
 	void (* _libc_initializer)(_libc_functions_t fns, const char *envp[], const char *apple[], const struct ProgramVars *vars);
-	
+
 	(void * &)_libc_initializer = dlsym(RTLD_DEFAULT, "_libc_initializer");
 
 	if (!_libc_initializer)
 		(void * &)_libc_initializer = dlsym(RTLD_DEFAULT, "libc_initializer");
-	
+
 	if (!_libc_initializer)
 	{
 		DMibTraceSafe("No _libkernel_init found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
 
-	
+
+
 	static const struct _libkernel_functions libkernel_funcs = {
 		.version = 3,
 		.dlsym = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "dlsym")),
@@ -223,19 +223,19 @@ bool fg_MalterlibSystem_InitMacOS10100(void *_pPThreadInit, char const* envp[], 
 		DMibTraceSafe("No libkernel_funcs.dlsym found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
+
 	void (*bootstrap_init)(void);
 	(void * &)bootstrap_init = dlsym(RTLD_DEFAULT, "bootstrap_init");
-	
+
 	if (!bootstrap_init)
 	{
 		DMibTraceSafe("No bootstrap_init found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
+
 	void (* __libplatform_init)(void *future_use, const char *envp[], const char *apple[], const struct ProgramVars *vars);
 	(void * &)__libplatform_init = dlsym(RTLD_DEFAULT, "__libplatform_init");
-	
+
 	if (!__libplatform_init)
 	{
 		DMibTraceSafe("No __libplatform_init found, malloc override not enabled!\n", 0);
@@ -266,11 +266,11 @@ bool fg_MalterlibSystem_InitMacOS10100(void *_pPThreadInit, char const* envp[], 
 		._dirhelper = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "_dirhelper")),
 		.mach_init_old = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "mach_init")),
 	};
-	
+
 	_libc_initializer(&libc_funcs, envp, apple, vars);
-	
+
 	return true;
-}	
+}
 
 bool fg_MalterlibSystem_InitMacOS1090(void *_pPThreadInit, char const* envp[], char const* apple[], const struct ProgramVars * vars)
 {
@@ -281,10 +281,10 @@ bool fg_MalterlibSystem_InitMacOS1090(void *_pPThreadInit, char const* envp[], c
 		unsigned long version;
 		void (*exit)(int);
 	};
-	
+
 	void (* __pthread_init)(const struct _libpthread_functions *libpthread_funcs, const char *envp[], const char *apple[], const struct ProgramVars *vars);
 	(void * &)__pthread_init = _pPThreadInit;
-	
+
 	typedef const struct _libkernel_functions {
 		/* Structure version 1. Subsequent versions must only add pointers! */
 		unsigned long version;
@@ -296,18 +296,18 @@ bool fg_MalterlibSystem_InitMacOS1090(void *_pPThreadInit, char const* envp[], c
 	} *_libkernel_functions_t;
 
 	void (* _libkernel_init)(_libkernel_functions_t fns, const char *envp[], const char *apple[], const struct ProgramVars *vars);
-	
+
 	(void * &)_libkernel_init = dlsym(RTLD_DEFAULT, "__libkernel_init");
 
 	if (!_libkernel_init)
 		(void * &)_libkernel_init = dlsym(RTLD_DEFAULT, "_libkernel_init");
-	
+
 	if (!_libkernel_init)
 	{
 		DMibTraceSafe("No _libkernel_init found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
+
 	static const struct _libkernel_functions libkernel_funcs = {
 		.version = 1,
 		.dlsym = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "dlsym")),
@@ -328,19 +328,19 @@ bool fg_MalterlibSystem_InitMacOS1090(void *_pPThreadInit, char const* envp[], c
 		DMibTraceSafe("No libkernel_funcs.dlsym found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
+
 	void (*bootstrap_init)(void);
 	(void * &)bootstrap_init = dlsym(RTLD_DEFAULT, "bootstrap_init");
-	
+
 	if (!bootstrap_init)
 	{
 		DMibTraceSafe("No bootstrap_init found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
+
 	void (* __libplatform_init)(void *future_use, const char *envp[], const char *apple[], const struct ProgramVars *vars);
 	(void * &)__libplatform_init = dlsym(RTLD_DEFAULT, "__libplatform_init");
-	
+
 	if (!__libplatform_init)
 	{
 		DMibTraceSafe("No __libplatform_init found, malloc override not enabled!\n", 0);
@@ -361,7 +361,7 @@ bool fg_MalterlibSystem_InitMacOS1090(void *_pPThreadInit, char const* envp[], c
 	bootstrap_init();
 	__libplatform_init(NULL, envp, apple, vars);
 	__pthread_init(&libpthread_funcs, envp, apple, vars);
-	
+
 	return true;
 }
 
@@ -376,10 +376,10 @@ bool fg_MalterlibSystem_InitMacOS10110(void *_pPThreadInit, char const* envp[], 
 		void* (*malloc)(size_t);
 		void  (*free)(void*);
 	};
-	
+
 	void (* __pthread_init)(const struct _libpthread_functions *libpthread_funcs, const char *envp[], const char *apple[], const struct ProgramVars *vars);
 	(void * &)__pthread_init = _pPThreadInit;
-	
+
 	typedef const struct _libkernel_functions {
 		/* Structure version 1. Subsequent versions must only add pointers! */
 		unsigned long version;
@@ -401,12 +401,12 @@ bool fg_MalterlibSystem_InitMacOS10110(void *_pPThreadInit, char const* envp[], 
 	} *_libc_functions_t;
 
 	void (* _libkernel_init)(_libkernel_functions_t fns, const char *envp[], const char *apple[], const struct ProgramVars *vars);
-	
+
 	(void * &)_libkernel_init = dlsym(RTLD_DEFAULT, "__libkernel_init");
 
 	if (!_libkernel_init)
 		(void * &)_libkernel_init = dlsym(RTLD_DEFAULT, "_libkernel_init");
-	
+
 	if (!_libkernel_init)
 	{
 		DMibTraceSafe("No _libkernel_init found, malloc override not enabled!\n", 0);
@@ -414,20 +414,20 @@ bool fg_MalterlibSystem_InitMacOS10110(void *_pPThreadInit, char const* envp[], 
 	}
 
 	void (* _libc_initializer)(_libc_functions_t fns, const char *envp[], const char *apple[], const struct ProgramVars *vars);
-	
+
 	(void * &)_libc_initializer = dlsym(RTLD_DEFAULT, "_libc_initializer");
 
 	if (!_libc_initializer)
 		(void * &)_libc_initializer = dlsym(RTLD_DEFAULT, "libc_initializer");
-	
+
 	if (!_libc_initializer)
 	{
 		DMibTraceSafe("No _libkernel_init found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
 
-	
+
+
 	static const struct _libkernel_functions libkernel_funcs = {
 		.version = 3,
 		.dlsym = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "dlsym")),
@@ -448,19 +448,19 @@ bool fg_MalterlibSystem_InitMacOS10110(void *_pPThreadInit, char const* envp[], 
 		DMibTraceSafe("No libkernel_funcs.dlsym found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
+
 	void (*bootstrap_init)(void);
 	(void * &)bootstrap_init = dlsym(RTLD_DEFAULT, "bootstrap_init");
-	
+
 	if (!bootstrap_init)
 	{
 		DMibTraceSafe("No bootstrap_init found, malloc override not enabled!\n", 0);
 		return false;
 	}
-	
+
 	void (* __libplatform_init)(void *future_use, const char *envp[], const char *apple[], const struct ProgramVars *vars);
 	(void * &)__libplatform_init = dlsym(RTLD_DEFAULT, "__libplatform_init");
-	
+
 	if (!__libplatform_init)
 	{
 		DMibTraceSafe("No __libplatform_init found, malloc override not enabled!\n", 0);
@@ -491,9 +491,9 @@ bool fg_MalterlibSystem_InitMacOS10110(void *_pPThreadInit, char const* envp[], 
 		._dirhelper = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "_dirhelper")),
 		.mach_init_old = NMib::fg_AutoCCast(dlsym(RTLD_DEFAULT, "mach_init")),
 	};
-	
+
 	_libc_initializer(&libc_funcs, envp, apple, vars);
-	
+
 	return true;
 }
 

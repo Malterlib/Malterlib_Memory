@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -141,7 +141,7 @@ namespace NMib
 	template <typename t_CType>
 	inline_small void fg_Delete(t_CType * &_pToDelete);
 
-	
+
 	template <typename t_CType = void, typename... tp_CParams>
 	class TCConstruct
 	{
@@ -154,20 +154,20 @@ namespace NMib
 					, fg_Forward<tp_CParams>(fg_Get<tp_Indices>(m_Params))...
 				);
 		}
-		
+
 	public:
 		enum
 		{
 			mc_nParams = sizeof...(tp_CParams)
 		};
-		
+
 		NStorage::TCTuple<NMib::NTraits::TCAddLValueReference<tp_CParams>...> m_Params;
-		
+
 		TCConstruct(NMib::NTraits::TCAddLValueReference<tp_CParams>... p_Params)
 			: m_Params(p_Params...)
 		{
 		}
-		
+
 		template <typename tf_CType, typename tf_CAllocator>
 		typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType *f_Create(tf_CAllocator &&_Allocator)
 		{
@@ -176,7 +176,7 @@ namespace NMib
 
 	};
 
-	template 
+	template
 	<
 		template <typename t_COldType> class tf_TCTransformConstruct
 		, typename tf_CType
@@ -188,7 +188,7 @@ namespace NMib
 		return fg_Move((TCConstruct<typename tf_TCTransformConstruct<tf_CType>::CType, tfp_CParams...> &)_In);
 	}
 
-	template 
+	template
 	<
 		typename tf_CDefaultType
 		, typename tf_CType
@@ -199,7 +199,7 @@ namespace NMib
 		return fg_Move(_In);
 	}
 
-	template 
+	template
 	<
 		typename tf_CDefaultType
 		, typename... tfp_CParams
@@ -208,7 +208,7 @@ namespace NMib
 	{
 		return fg_Move((TCConstruct<tf_CDefaultType, tfp_CParams...> &)_In);
 	}
-		
+
 	template <typename tf_CType, typename... tfp_CParams>
 	inline_small TCConstruct<tf_CType, tfp_CParams...> fg_Construct(tfp_CParams &&... p_Params)
 	{

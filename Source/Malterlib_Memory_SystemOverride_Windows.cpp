@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #ifdef DMibConfig_OverrideSystemMalloc
@@ -9,7 +9,7 @@
 #ifdef DArchitecture_x86
 #define DDefaultCallingConv __cdecl
 #else
-#define DDefaultCallingConv 
+#define DDefaultCallingConv
 #endif
 
 #define DMibAllowCodeStandardViolations 1
@@ -100,17 +100,17 @@ extern "C"
 #define MemDeclNaR __declspec(noalias) __declspec(restrict)
 #define MemDeclNa __declspec(noalias)
 #else
-#define MemDeclNaR 
-#define MemDeclNa 
+#define MemDeclNaR
+#define MemDeclNa
 #endif
 	size_t __crtDebugFillThreshold = SIZE_MAX;
-	
+
 	MemDeclNaR void * DDefaultCallingConv malloc(size_t);
 	MemDeclNa void DDefaultCallingConv free(void *);
 	MemDeclNaR void * DDefaultCallingConv realloc(void *, size_t);
 	MemDeclNaR void * DDefaultCallingConv calloc(size_t, size_t);
 	MemDeclNaR void * DDefaultCallingConv memalign(size_t, size_t);
-	
+
 	/*************************************************************************************************\
 	|¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 	| malloc
@@ -118,32 +118,32 @@ extern "C"
 	\*************************************************************************************************/
 
 	MemDeclNaR void * DDefaultCallingConv malloc (size_t sz)
-	{		
+	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_Alloc(sz);
 	}
 
 	void * DDefaultCallingConv _malloc_base (size_t sz)
-	{		
+	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_Alloc(sz);
 	}
 
-	void * DDefaultCallingConv _malloc_dbg (size_t sz, int BlockType, const char *Filename, int Line) 
+	void * DDefaultCallingConv _malloc_dbg (size_t sz, int BlockType, const char *Filename, int Line)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_AllocDebug(sz, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 	}
-	
+
 /*************************************************************************************************\
 |¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 | calloc
 |__________________________________________________________________________________________________
 \*************************************************************************************************/
-	
+
 	MemDeclNaR void * DDefaultCallingConv calloc (size_t nelem, size_t elsize)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
@@ -153,7 +153,7 @@ extern "C"
 		memset (addr, 0, nelem * elsize);
 		return addr;
 	}
-	void * DDefaultCallingConv _calloc_dbg (size_t nelem, size_t elsize, int BlockType, const char *Filename, int Line) 
+	void * DDefaultCallingConv _calloc_dbg (size_t nelem, size_t elsize, int BlockType, const char *Filename, int Line)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		mint Size = nelem * elsize;
@@ -244,7 +244,7 @@ extern "C"
 		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
 		return addr;
 	}
-		
+
 /*************************************************************************************************\
 |¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 | free
@@ -263,13 +263,13 @@ extern "C"
 		NMib::NMemory::fg_FreeNoSize(ptr);
 	}
 
-	void DDefaultCallingConv _free_dbg (void * ptr, int) 
+	void DDefaultCallingConv _free_dbg (void * ptr, int)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		NMib::NMemory::fg_FreeNoSize(ptr);
-	}	
-	
-	
+	}
+
+
 /*************************************************************************************************\
 |¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 | memalign
@@ -280,8 +280,8 @@ extern "C"
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		return NMib::NMemory::fg_AllocAligned(size, alignment);
-	}	
-	
+	}
+
 /*************************************************************************************************\
 |¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 | realloc
@@ -294,15 +294,15 @@ extern "C"
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_Resize(ptr, sz, 0, EAllocationFlag_SizeNotNeeded);
 	}
-	
+
 	void * DDefaultCallingConv _realloc_base (void * ptr, size_t sz)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
 		return NMib::NMemory::fg_Resize(ptr, sz, 0, EAllocationFlag_SizeNotNeeded);
 	}
-	
-	void * DDefaultCallingConv _realloc_dbg (void * ptr, size_t sz, int BlockType, const char *Filename, int Line) 
+
+	void * DDefaultCallingConv _realloc_dbg (void * ptr, size_t sz, int BlockType, const char *Filename, int Line)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
@@ -339,13 +339,13 @@ extern "C"
 	}
 
 
-	
+
 /*************************************************************************************************\
 |¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 | _msize
 |__________________________________________________________________________________________________
 \*************************************************************************************************/
-	
+
 	mint DDefaultCallingConv _msize(void *mem)
 	{
 		return NMib::NMemory::fg_Size(mem);
@@ -356,7 +356,7 @@ extern "C"
 		return NMib::NMemory::fg_Size(mem);
 	}
 
-	mint DDefaultCallingConv _msize_dbg (void * mem, int blockType) 
+	mint DDefaultCallingConv _msize_dbg (void * mem, int blockType)
 	{
 		return NMib::NMemory::fg_Size(mem);
 	}
@@ -366,70 +366,70 @@ extern "C"
 | _expand
 |__________________________________________________________________________________________________
 \*************************************************************************************************/
-	
+
 	void* DDefaultCallingConv _expand(void *mem , size_t size)
 	{
 		// Just fail :P
 		DMibPDebugBreak;
 		return mem;
 	}
-	
+
 	void* DDefaultCallingConv _expand_base(void *mem , size_t size)
 	{
 		// Just fail :P
 		DMibPDebugBreak;
 		return mem;
 	}
-	
+
 	void* DDefaultCallingConv _expand_dbg(void *userData, mint newSize, int blockType, const char *filename, int linenumber)
 	{
 		// Just fail :P
 		DMibPDebugBreak;
 		return userData;
 	}
-	
+
 /*************************************************************************************************\
 |¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 | _nh_malloc
 |__________________________________________________________________________________________________
 \*************************************************************************************************/
-	
+
 	_Check_return_  _Ret_opt_bytecap_(_Size) void * __cdecl _nh_malloc(_In_ size_t _Size, _In_ int _NhFlag)
 	{
 		return malloc (_Size);
 	}
-	
+
 	void * DDefaultCallingConv _nh_malloc_base (mint nSize,int nhFlag)
 	{
 		return malloc (nSize);
 	}
-	
+
 	void * DDefaultCallingConv _nh_malloc_dbg (mint nSize,int nhFlag,int nBlockUse,const char * szFileName,int nLine)
 	{
 		return _malloc_dbg (nSize, nBlockUse, szFileName, nLine);
 	}
-	
+
 /*************************************************************************************************\
 |¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 | _heap_alloc
 |__________________________________________________________________________________________________
 \*************************************************************************************************/
-	
+
 	_Check_return_  _Ret_opt_bytecap_(_Size) void * __cdecl _heap_alloc(_In_ size_t _Size)
 	{
 		return malloc (_Size);
 	}
-	
+
 	void * DDefaultCallingConv _heap_alloc_base(mint nSize)
 	{
 		return malloc (nSize);
 	}
-	
+
 	void * DDefaultCallingConv _heap_alloc_dbg(mint nSize,int nBlockUse,const char * szFileName,int nLine)
 	{
 		return _malloc_dbg (nSize, nBlockUse, szFileName, nLine);
 	}
-	
+
 /*************************************************************************************************\
 |¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 | _free_lk
@@ -440,12 +440,12 @@ extern "C"
 	{
 		free (pUserData);
 	}
-	
+
 	void DDefaultCallingConv _free_lk_base(void * pUserData)
 	{
 		free (pUserData);
 	}
-	
+
 	void DDefaultCallingConv _free_dbg_lk(void * pUserData,int nBlockUse)
 	{
 		free (pUserData);
@@ -463,32 +463,32 @@ extern "C"
 			}
 		}
 	}
-				
 
-	
+
+
 /*************************************************************************************************\
 |¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
 | Debug routines
 |__________________________________________________________________________________________________
 \*************************************************************************************************/
-	
+
 	long DDefaultCallingConv _CrtSetBreakAlloc(long lNewBreakAlloc)
 	{
         return 0;
 	}
-	
+
 	void DDefaultCallingConv _CrtSetDbgBlockType(void * pUserData,int nBlockUse)
 	{
 	}
-	
+
 	typedef int (DDefaultCallingConv * _CRT_ALLOC_HOOK)(int, void *, mint, int, long, const unsigned char *, int);
-	
+
 	_CRT_ALLOC_HOOK DDefaultCallingConv _CrtSetAllocHook(_CRT_ALLOC_HOOK pfnNewHook)
 	{
         return nullptr;
 	}
-	
-	
+
+
 	int DDefaultCallingConv CheckBytes(unsigned char * pb,unsigned char bCheck,mint nSize)
 	{
 		// We actually need to do this (not just return 1) since both positive and negative returns are used :-)
@@ -500,24 +500,24 @@ extern "C"
 		}
         return 1;
 	}
-	
-	
+
+
 	int DDefaultCallingConv _CrtCheckMemory(void)
 	{
 		return NMib::fg_GetSys()->f_MemoryManager_Check(false);
 	}
-	
+
 	int DDefaultCallingConv _CrtSetDbgFlag(int fNewBits)
 	{
 		return _CRTDBG_LEAK_CHECK_DF;
 	}
-	
-	
+
+
 	void DDefaultCallingConv _CrtDoForAllClientObjects(void (DDefaultCallingConv *  pfn)(void *, void *),void * pContext)
 	{
 	}
-	
-	
+
+
 	int DDefaultCallingConv _CrtIsValidPointer(const void * pv,unsigned int nBytes,int bReadWrite)
 	{
         return (pv != nullptr
@@ -527,47 +527,47 @@ extern "C"
 #endif  /* _WIN32 */
             );
 	}
-	
+
 	int DDefaultCallingConv _CrtIsValidHeapPointer(const void * pUserData)
 	{
 		return true;
 	}
-	
-	
+
+
 	int DDefaultCallingConv _CrtIsMemoryBlock(const void * pUserData,unsigned int nBytes,long * plRequestNumber,char ** pszFileName,int * pnLine)
 	{
         return false;
 	}
-		
-	
+
+
 	typedef void (DDefaultCallingConv * _CRT_DUMP_CLIENT)(void *, mint);
-	
+
 	_CRT_DUMP_CLIENT DDefaultCallingConv _CrtSetDumpClient(_CRT_DUMP_CLIENT pfnNewDump)
 	{
         return nullptr;
 	}
-	
+
 	void DDefaultCallingConv _CrtMemCheckpoint(_CrtMemState * state)
 	{
-		
+
 	}
-	
+
 	int DDefaultCallingConv _CrtMemDifference(_CrtMemState * state,const _CrtMemState * oldState,const _CrtMemState * newState)
 	{
         return false;
 	}
-	
-	
+
+
 	void DDefaultCallingConv _CrtMemDumpAllObjectsSince(const _CrtMemState * state)
 	{
-		
+
 	}
-	
+
 	int DDefaultCallingConv _CrtDumpMemoryLeaks(void)
 	{
 		return false;
 	}
-	
+
 	void DDefaultCallingConv _CrtMemDumpStatistics(const _CrtMemState * state)
 	{
 	}

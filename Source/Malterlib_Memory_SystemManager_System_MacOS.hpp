@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <malloc/malloc.h>
@@ -6,7 +6,7 @@
 namespace NMib
 {
 	ch8 const* g_pMemoryManagerName = "macOS system memory manager";
-	
+
 	malloc_zone_t *g_DefaultZone = nullptr;
 }
 

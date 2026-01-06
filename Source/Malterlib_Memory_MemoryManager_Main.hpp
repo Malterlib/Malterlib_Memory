@@ -1487,7 +1487,7 @@ namespace NMib::NMemory
 
 		return this;
 	}
-	
+
 	template <typename t_CParams>
 	TCMemoryManagerCheckout<t_CParams> TCMemoryManager<t_CParams>::f_Checkout()
 	{

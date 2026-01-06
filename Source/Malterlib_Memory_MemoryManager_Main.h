@@ -206,7 +206,7 @@ namespace NMib::NMemory
 		void f_TemporaryGetBack() override;
 		void f_TakeOwnership() override;
 		void f_RelinquishOwnership() override;
-		
+
 	protected:
 		void f_GarbageCollectLocalArena(bool _bDecommit) override;
 

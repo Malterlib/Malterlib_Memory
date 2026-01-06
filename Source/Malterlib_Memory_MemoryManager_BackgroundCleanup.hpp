@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -93,7 +93,7 @@ namespace NMib::NMemory
 						NSys::fg_Thread_SetNumaAffinity(NMib::NSys::fg_Thread_GetCurrent(), mp_pNumaArena->m_NumaNode);
 						mp_pMemoryManager->f_SetNumaNode(mp_pNumaArena->m_NumaNode);
 					}
-					
+
 					static_assert(t_CParams::mc_BackgroundCleanupLifetimeDecommit >= t_CParams::mc_BackgroundCleanupLifetime);
 
 					bool bForceFullGarbageCollection = false;
@@ -142,7 +142,7 @@ namespace NMib::NMemory
 							DMibLock(mp_GarbageCollectLock);
 
 							mp_pNumaArena->m_pMemoryManager->f_LazyReturnCheckout();
-							
+
 							int64 NextUpdate = mp_pNumaArena->f_GarbageCollect({RemoveTime, RemoveTimeDecommit}, true, bForceFullGarbageCollection);
 							bForceFullGarbageCollection = false;
 

@@ -1,11 +1,11 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include "Malterlib_Memory_DebugMemoryManager.h"
 
 namespace NMib
 {
-	
+
 #if DMibPPtrBits == 32
 	//#warning "Overwrite memory manager not suiteable for 32 bit executables as you are likely to run out of memory"
 #endif
@@ -27,7 +27,7 @@ namespace NMib
 		return g_DebugMemoryManager->f_GetLock();
 	}
 }
-	
+
 namespace NMib::NMemory
 {
 #if DMibConfig_Memory_Shims_Lightweight
@@ -132,7 +132,7 @@ namespace NMib::NMemory
 		{
 			return EMemoryManagerFeatureFlag_None;
 		}
-		
+
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_DestroyThreads(CMemoryManagerCrossModule *_pModule)
 		{
 			g_DebugMemoryManager->f_DestroyCleanupThreads();

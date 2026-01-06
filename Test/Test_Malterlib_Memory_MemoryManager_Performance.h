@@ -554,7 +554,7 @@ namespace
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<NMib::NMemory::CMemoryManagerParams_NoCommit>
 		{
 		};
-		
+
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
 	public:
 		CMalterlibMemoryMalterlib_NoCommit()

@@ -105,7 +105,7 @@ This also means that there should be only one memory manager instance per proces
 Allocations between threads
 ---------------------------
 
-If you allocate memory on one thread and free it on another thread, that memory will be put on a queue to be freed. This means that the memory will not actually be freed until the queue is processed. 
+If you allocate memory on one thread and free it on another thread, that memory will be put on a queue to be freed. This means that the memory will not actually be freed until the queue is processed.
 
 The queue is processed before the arena allocates a new sub slab, when the memory manager is checked in and also on the background cleanup thread.
 

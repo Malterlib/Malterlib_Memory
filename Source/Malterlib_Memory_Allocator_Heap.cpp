@@ -338,7 +338,7 @@ namespace NMib::NMemory
 	}
 
 #else
-		
+
 	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment) noexcept
 	{
 		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))

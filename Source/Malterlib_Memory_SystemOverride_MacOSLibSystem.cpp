@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #define module_export __attribute__ ((__visibility__("default")))
@@ -31,11 +31,11 @@ extern "C"
 #endif
 	assure_used DMibMalterlibOverrideMallocExport void fg_MalterlibSystem_InitHelper()
 	{
-		
+
 	}
 
 	int malloc_jumpstart(int);
-	
+
 }
 struct CTesting
 {
@@ -47,7 +47,7 @@ extern "C"
 {
 
 #define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) &d_Function,
-	
+
 #ifndef DMibMemoryOverrideDll
 	static
 #endif
@@ -57,9 +57,9 @@ extern "C"
 #			include "Malterlib_Memory_SystemOverride_MacOSInterposeFunctions.h"
 		}
 	;
-	
+
 	struct CInterpose
-	{ 
+	{
 		void (*m_Replacement)();
 		void (*m_Replacee)();
 	};
@@ -76,7 +76,7 @@ extern "C"
 			__malloc_init(apple);
 		fg_MalterlibSystem_InitAfterMalloc();
 	}
-	
+
 	extern void __libc_init(const struct ProgramVars *vars, void (*atfork_prepare)(void),void (*atfork_parent)(void),void (*atfork_child)(void),const char *apple[]) __attribute__((weak_import));
 	void fg_Malterlib___libc_init(const struct ProgramVars *vars, void (*atfork_prepare)(void),void (*atfork_parent)(void),void (*atfork_child)(void),const char *apple[])
 	{
@@ -85,12 +85,12 @@ extern "C"
 			__libc_init(vars, atfork_prepare, atfork_parent, atfork_child, apple);
 		fg_MalterlibSystem_InitAfterMalloc();
 	}
-	
+
 	DMibMacOSInterpose(fg_Malterlib___malloc_init, __malloc_init);
 	DMibMacOSInterpose(fg_Malterlib___libc_init, __libc_init);
 
 #if defined(DMibMemoryOverrideDll)
-	
+
 #define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
 	extern d_Return fg_Malterlib_##d_Function(__VA_ARGS__); \
 	DMibMacOSInterpose(fg_Malterlib_##d_Function, d_Function);
@@ -104,9 +104,9 @@ extern "C"
 		return fg_Malterlib_##d_Function d_Args; \
 	} \
 	DMibMacOSInterpose(fg_Malterlib_Interpose_##d_Function, d_Function);
-	
+
 #endif
-	
+
 #include "Malterlib_Memory_SystemOverride_MacOSInterposeFunctions.h"
 }
 

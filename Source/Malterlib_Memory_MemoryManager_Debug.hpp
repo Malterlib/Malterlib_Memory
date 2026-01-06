@@ -138,7 +138,7 @@ namespace NMib::NMemory
 		m_ReportingLeaksPool.f_Unlock();
 		CSuper::f_ForkedParent();
 	}
-	
+
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_DestroyThreadLocals()
 	{

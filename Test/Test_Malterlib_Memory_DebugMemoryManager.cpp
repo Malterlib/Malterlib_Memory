@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #include <Mib/Memory/DebugMemoryManager>
@@ -26,7 +26,7 @@ namespace
 					mint Size = NMib::fg_Max(i, 1u);
 					TestManager.f_Free(pMem[i], Size);
 				}
-				return "";		
+				return "";
 			};
 		}
 	};

@@ -135,7 +135,7 @@ namespace NMib::NMemory
 		{
 			if constexpr (mc_EnableCallbacks)
 				m_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
-			
+
 			pSlab->~TCMemoryManagerSlabShared<t_CParams>();
 			m_pMemoryManager->m_Allocator.f_Free(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 		}

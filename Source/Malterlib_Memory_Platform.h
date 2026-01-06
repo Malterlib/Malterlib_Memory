@@ -1,4 +1,4 @@
-// Copyright © 2024 Favro Holding AB 
+// Copyright © 2024 Favro Holding AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -26,7 +26,7 @@ namespace NMib::NMemory
 	{
 		template <typename tf_CStr>
 		void f_Format(tf_CStr &o_Str) const;
-		
+
 		auto operator <=> (CSystemMemoryStatisticCharacteristics const &) const = default;
 
 		static NStr::CStr fs_UnitToStr(EMemoryStatisticUnit _Unit);

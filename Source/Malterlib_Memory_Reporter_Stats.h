@@ -1,4 +1,4 @@
-// Copyright © 2015 Hansoft AB 
+// Copyright © 2015 Hansoft AB
 // Distributed under the MIT license, see license text in LICENSE.Malterlib
 
 #pragma once
@@ -39,7 +39,7 @@ namespace NMib::NMemory
 				return *this;
 			}
 		};
-		
+
 		static CStatsMemoryReporter *ms_pThis;
 
 	public:
