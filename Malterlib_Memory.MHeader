@@ -401,10 +401,6 @@ Property
 	}
 	Target
 	{
-		LinkWithLibraries += "kernel32.lib"
-		{
-			!!PlatformType "Windows"
-		}
 		ExtraGroups += "{Malterlib}/{TCMalloc}"
 		{
 			!!MemoryManagerTestEnable_TcMalloc true
