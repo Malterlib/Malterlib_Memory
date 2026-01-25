@@ -495,6 +495,7 @@ Property
 	%Dependency "Dll_Test_Malterlib_Helper_Memory"
 	{
 		Dependency.Link false
+		Dependency.Stage "Runtime"
 	}
 	%Dependency "Lib_libmimalloc_mimalloc-static"
 	{
