@@ -201,7 +201,6 @@ Import "Apps/*/*.MHeader"
 		&
 		{
 			PlatformFamily "Linux"
-			!HostPlatformFamily "Linux"
 		}
 	}
 	Compile
