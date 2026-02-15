@@ -846,7 +846,7 @@ size_t fg_Malterlib_zone_size(malloc_zone_t_known_version *_pZone, const void *_
 #ifdef DEmulateCrash
 	if (g_bInstalled == NSys::fg_Thread_GetCurrentUID())
 	{
-		DMibConOut2("Will crash({}) = {}\n", (void *)NSys::fg_Thread_GetCurrentUID(), &State);
+		DMibConOut("Will crash({}) = {}\n", (void *)NSys::fg_Thread_GetCurrentUID(), &State);
 		pMalterlibAlloc = nullptr;
 	}
 #endif
@@ -1867,7 +1867,7 @@ namespace
 			if (Result != KERN_SUCCESS)
 			{
 				bReturn = false;
-				DMibConErrOut2("Failed to uninstall exception handler (task_set_exception_ports, {}): {}\n", i, Result);
+				DMibConErrOut("Failed to uninstall exception handler (task_set_exception_ports, {}): {}\n", i, Result);
 			}
 		}
 
@@ -4891,7 +4891,7 @@ namespace NMib
 			if (ThreadLocalDebug.m_LastSnapshot.f_FindEqual(InfoEntry.f_Key()))
 				continue;
 
-			DMibTrace2("New thread local: {}\n", InfoEntry.f_Key());
+			DMibTrace("New thread local: {}\n", InfoEntry.f_Key());
 			InfoEntry.f_Value().m_Callstack.f_Trace(4);
 		}
 
@@ -4903,7 +4903,7 @@ namespace NMib
 			if (ThreadLocalDebug.m_ThreadLocals.f_FindEqual(InfoEntry.f_Key()))
 				continue;
 
-			DMibTrace2("Removed thread local: {}\n", InfoEntry.f_Key());
+			DMibTrace("Removed thread local: {}\n", InfoEntry.f_Key());
 			InfoEntry.f_Value().m_Callstack.f_Trace(4);
 		}
 	}

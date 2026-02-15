@@ -400,7 +400,7 @@ namespace NMib::NMemory
 				NFile::CFile::fs_CreateDirectory(OutputDirectory);
 
 				NStr::CStrNonTracked OutputFile = OutputDirectory + "/MemoryCategoryLog.tsv";
-				//DMibConOut2("Outputting to {ns }: {}\n", Total.m_nBytes, OutputFile);
+				//DMibConOut("Outputting to {ns }: {}\n", Total.m_nBytes, OutputFile);
 
 				NFile::CFile File;
 				File.f_Open(OutputFile, NFile::EFileOpen_Write | NFile::EFileOpen_DontTruncate);
@@ -409,7 +409,7 @@ namespace NMib::NMemory
 			}
 			catch (NFile::CExceptionFile const &_Exception)
 			{
-				DMibConOut2("Error outputting memory report: {}\n", _Exception);
+				DMibConOut("Error outputting memory report: {}\n", _Exception);
 			}
 		}
 	}

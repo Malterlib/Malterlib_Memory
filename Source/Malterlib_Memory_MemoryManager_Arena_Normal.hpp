@@ -256,7 +256,7 @@ namespace NMib::NMemory
 				if (++Data.m_nAllocs == 1) [[unlikely]]
 					fp_SubSlabNoLongerPending(pSlab, iAlloc);
 
-//					DMibTrace("++{} {} {}" DMibNewLine, Data.m_nAllocs << iAlloc << pSlab->m_SlabType);
+//					DMibTrace("++{} {} {}" DMibNewLine, Data.m_nAllocs, iAlloc, pSlab->m_SlabType);
 
 #if DMibPPtrBits >= 64 && defined(DMibPNoUnalignedAccess)
 				if constexpr (t_CParams::mc_bUseFreeBlockCounting)
@@ -418,7 +418,7 @@ namespace NMib::NMemory
 					if (++Data.m_nAllocs == 1)
 						fp_SubSlabNoLongerPending(pSlab, iAlloc);
 
-	//					DMibTrace("++{} {} {}" DMibNewLine, pData[iAlloc].m_nAllocs << iAlloc << pSlab->m_SlabType);
+	//					DMibTrace("++{} {} {}" DMibNewLine, pData[iAlloc].m_nAllocs, iAlloc, pSlab->m_SlabType);
 
 	#if DMibPPtrBits >= 64 && defined(DMibPNoUnalignedAccess)
 					if constexpr (t_CParams::mc_bUseFreeBlockCounting)

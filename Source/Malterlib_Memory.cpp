@@ -331,13 +331,13 @@ namespace NMib::NMemory
 			(
 				"{} - Alloc({}, {}, {}, {}, {}, {}, {})" DMibNewLine
 				, !g_MemoryReporter.f_WasDestructed()
-				<< (void *)_MemoryAllocator
-				<< _pAllocatorName
-				<< (void *)_Address
-				<< _RequestedAlignment
-				<< _RequestedSize
-				<< _ReturnedSize
-				<< _nBytesOverhead
+				, (void *)_MemoryAllocator
+				, _pAllocatorName
+				, (void *)_Address
+				, _RequestedAlignment
+				, _RequestedSize
+				, _ReturnedSize
+				, _nBytesOverhead
 			)
 		;
 #endif
@@ -376,14 +376,14 @@ namespace NMib::NMemory
 			(
 				"{} - Resize({}, {}, {}, {}, {}, {}, {}, {})" DMibNewLine
 				, !g_MemoryReporter.f_WasDestructed()
-				<< (void *)_MemoryAllocator
-				<< _pAllocatorName
-				<< (void *)_OldAddress
-				<< (void *)_Address
-				<< _RequestedAlignment
-				<< _RequestedSize
-				<< _ReturnedSize
-				<< _nBytesOverhead
+				, (void *)_MemoryAllocator
+				, _pAllocatorName
+				, (void *)_OldAddress
+				, (void *)_Address
+				, _RequestedAlignment
+				, _RequestedSize
+				, _ReturnedSize
+				, _nBytesOverhead
 			)
 		;
 #endif
@@ -423,14 +423,14 @@ namespace NMib::NMemory
 			(
 				"{} - Realloc({}, {}, {}, {}, {}, {}, {}, {})" DMibNewLine
 				, !g_MemoryReporter.f_WasDestructed()
-				<< (void *)_MemoryAllocator
-				<< _pAllocatorName
-				<< (void *)_OldAddress
-				<< (void *)_Address
-				<< _RequestedAlignment
-				<< _RequestedSize
-				<< _ReturnedSize
-				<< _nBytesOverhead
+				, (void *)_MemoryAllocator
+				, _pAllocatorName
+				, (void *)_OldAddress
+				, (void *)_Address
+				, _RequestedAlignment
+				, _RequestedSize
+				, _ReturnedSize
+				, _nBytesOverhead
 			)
 		;
 #	endif
@@ -456,8 +456,8 @@ namespace NMib::NMemory
 			(
 				"{} - Free({}, {})" DMibNewLine
 				, !g_MemoryReporter.f_WasDestructed()
-				<< (void *)_MemoryAllocator
-				<< (void *)_Address
+				, (void *)_MemoryAllocator
+				, (void *)_Address
 			)
 		;
 #endif
@@ -483,9 +483,9 @@ namespace NMib::NMemory
 			(
 				"{} - GetSize({}, {}, {})" DMibNewLine
 				, !g_MemoryReporter.f_WasDestructed()
-				<< (void *)_MemoryAllocator
-				<< (void *)_Address
-				<< _Size
+				, (void *)_MemoryAllocator
+				, (void *)_Address
+				, _Size
 			)
 		;
 #endif
@@ -511,9 +511,9 @@ namespace NMib::NMemory
 			(
 				"{} - Commit({}, {}, {})" DMibNewLine
 				, !g_MemoryReporter.f_WasDestructed()
-				<< (void *)_MemoryAllocator
-				<< (void *)_Address
-				<< _Size
+				, (void *)_MemoryAllocator
+				, (void *)_Address
+				, _Size
 			)
 		;
 #endif
@@ -539,9 +539,9 @@ namespace NMib::NMemory
 			(
 				"{} - Decommit({}, {}, {})" DMibNewLine
 				, !g_MemoryReporter.f_WasDestructed()
-				<< (void *)_MemoryAllocator
-				<< (void *)_Address
-				<< _Size
+				, (void *)_MemoryAllocator
+				, (void *)_Address
+				, _Size
 			)
 		;
 #endif
@@ -567,7 +567,7 @@ namespace NMib::NMemory
 			(
 				"{} - AllocatorDelete({}){\n}"
 				, !g_MemoryReporter.f_WasDestructed()
-				<< (void *)_MemoryAllocator
+				, (void *)_MemoryAllocator
 			)
 		;
 #endif
@@ -594,8 +594,8 @@ namespace NMib::NMemory
 			(
 				"{} - AllocatorName({}, {})\r\n"
 				, !g_MemoryReporter.f_WasDestructed()
-				<< (void *)_MemoryAllocator
-				<< _pAllocatorName
+				, (void *)_MemoryAllocator
+				, _pAllocatorName
 			)
 		;
 #endif

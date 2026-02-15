@@ -613,7 +613,7 @@ namespace NMib::NMemory
 		DMibTrace("Blocks start\n", 0);
 		for (auto &Block : _pChunk->m_Blocks)
 		{
-			DMibTrace("0x{}: {}\n", (void *)(_pChunk->f_GetBlockAddress(&Block)) << Block.m_Flags);
+			DMibTrace("0x{}: {}\n", (void *)(_pChunk->f_GetBlockAddress(&Block)), Block.m_Flags);
 		}
 		DMibTrace("Blocks end\n", 0);
 	}

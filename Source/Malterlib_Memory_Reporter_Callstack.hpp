@@ -396,7 +396,7 @@ namespace NMib::NMemory
 						fp_RegisterAllocation(Op.m_MemoryAllocator, Op.m_Address, Op.m_Size, pCallstack);
 					else
 					{
-						DMibTraceSafe("Unknown allocation freed during resize/realloc {} {}, possible loss of {} bytes {\n}", Op.m_MemoryAllocator << Op.m_OldAlloc.m_Address << Op.m_OldAlloc.m_Size);
+						DMibTraceSafe("Unknown allocation freed during resize/realloc {} {}, possible loss of {} bytes {\n}", Op.m_MemoryAllocator, Op.m_OldAlloc.m_Address, Op.m_OldAlloc.m_Size);
 						uint64 Hash = fsp_GetStackFingerprint(Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack).f_FoldToInt<uint64>();
 						auto & Callstack = fp_GetCallstack(Op.m_MemoryAllocator, Hash, Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack);
 						fp_RegisterAllocation(Op.m_MemoryAllocator, Op.m_Address, Op.m_Size, &Callstack);
@@ -409,7 +409,7 @@ namespace NMib::NMemory
 					auto pCallback = fp_RemoveAllocation(Op.m_MemoryAllocator, Op.m_Address);
 					if (!pCallback)
 					{
-						DMibTraceSafe("Unknown allocation freed {} {}, possible loss of {} bytes {\n}", Op.m_MemoryAllocator << Op.m_Address << Op.m_Size);
+						DMibTraceSafe("Unknown allocation freed {} {}, possible loss of {} bytes {\n}", Op.m_MemoryAllocator, Op.m_Address, Op.m_Size);
 
 /*
 						uint64 Hash = fsp_GetStackFingerprint(Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack).f_FoldToInt<uint64>();
@@ -474,7 +474,7 @@ namespace NMib::NMemory
 
 		if (!MapResult.f_WasCreated())
 		{
-			DMibTraceSafe("Allocation on already allocated address {} {}{\n}", _MemoryAllocator << _Address);
+			DMibTraceSafe("Allocation on already allocated address {} {}{\n}", _MemoryAllocator, _Address);
 			--Allocation.m_pCallstack->m_Total.m_nAllocations;
 			Allocation.m_pCallstack->m_Total.m_nBytes -= Allocation.m_Size;
 

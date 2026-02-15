@@ -1104,10 +1104,10 @@ namespace NMib::NMemory
 				(
 					"DAMAGE: {} at 0x{nfh,sf0,sj*}: 0x{nfh,sf0,sj2} resetting to 0x{nfh,sf0,sj2}{\n}"
 					, _pMessage
-					<< (mint)_pMemory
-					<< (sizeof(mint)*2)
-					<< *_pMemory
-					<< _Fill
+					, (mint)_pMemory
+					, (sizeof(mint)*2)
+					, *_pMemory
+					, _Fill
 				)
 			;
 		}

@@ -30,12 +30,12 @@ namespace NMib::NMemory
 		fp64 CyclesPerAllocation = fp64(_Size.m_Cycles) / fp64(_Size.m_nAllocations);
 		fp64 CyclesPerFree = fp64(_Size.m_CyclesFree) / fp64(_Size.m_nAllocations);
 
-		DMibTraceSafe("{sf ,sj*}Time alloc	  {sl12,fe2} ms  ({fe2} cycles per alloc){\n}", "" << _Tabs << (TimeSpentAlloc * 1000.0) << CyclesPerAllocation);
-		DMibTraceSafe("{sf ,sj*}Time free	  {sl12,fe2} ms  ({fe2} cycles per free){\n}", "" << _Tabs << (TimeSpentFree * 1000.0) << CyclesPerFree);
-		DMibTraceSafe("{sf ,sj*}Allocations  {sl12}{\n}", "" << _Tabs << _Size.m_nAllocations);
-		DMibTraceSafe("{sf ,sj*}Bytes        {sl12}{\n}", "" << _Tabs << _Size.m_nBytes);
-		DMibTraceSafe("{sf ,sj*}Overhead     {sl12,fe2}     ({fe2} %)  ({fe2} per alloc){\n}", "" << _Tabs << _Size.m_nBytesOverhead << OverheadPercent << OverheadPerAlloc);
-		DMibTraceSafe("{sf ,sj*}Overalloc    {sl12}     ({fe2} %)  ({fe2} per alloc){\n}", "" << _Tabs << (_Size.m_nBytes - _Size.m_nBytesRequested) << OverallocPercent << OverallocPerAlloc);
+		DMibTraceSafe("{sf ,sj*}Time alloc	  {sl12,fe2} ms  ({fe2} cycles per alloc){\n}", "", _Tabs, (TimeSpentAlloc * 1000.0), CyclesPerAllocation);
+		DMibTraceSafe("{sf ,sj*}Time free	  {sl12,fe2} ms  ({fe2} cycles per free){\n}", "", _Tabs, (TimeSpentFree * 1000.0), CyclesPerFree);
+		DMibTraceSafe("{sf ,sj*}Allocations  {sl12}{\n}", "", _Tabs, _Size.m_nAllocations);
+		DMibTraceSafe("{sf ,sj*}Bytes        {sl12}{\n}", "", _Tabs, _Size.m_nBytes);
+		DMibTraceSafe("{sf ,sj*}Overhead     {sl12,fe2}     ({fe2} %)  ({fe2} per alloc){\n}", "", _Tabs, _Size.m_nBytesOverhead, OverheadPercent, OverheadPerAlloc);
+		DMibTraceSafe("{sf ,sj*}Overalloc    {sl12}     ({fe2} %)  ({fe2} per alloc){\n}", "", _Tabs, (_Size.m_nBytes - _Size.m_nBytesRequested), OverallocPercent, OverallocPerAlloc);
 	}
 
 	CStatsMemoryReporter::~CStatsMemoryReporter()
