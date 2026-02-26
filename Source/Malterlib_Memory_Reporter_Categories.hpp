@@ -35,7 +35,7 @@ namespace NMib::NMemory
 	constinit NIntrusive::TCAVLTreeAggregate<&CMemoryCategory::m_Link, CMemoryCategory::CCompare> g_AllCategories = {DAggregateInit};
 	constinit NStorage::TCAggregateSimple<TCPoolGrowing<CDynamicMemoryCategory, 128, NMib::NThread::CNoLock, CAllocator_VirtualNoTracking>> g_CategoriesPool = {DAggregateInit};
 
-	constinit NAtomic::TCAtomicAggregate<int64> g_CyclesTimer = {DAggregateInit};
+	constinit NAtomic::TCAtomic<int64> g_CyclesTimer{0};
 	int64 g_CyclesTimerFrequency = 0;
 
 #ifdef DPlatformFamily_Windows

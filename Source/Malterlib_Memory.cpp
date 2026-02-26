@@ -256,7 +256,7 @@ namespace NMib::NMemory
 
 #	if DMibConfig_Memory_Shims_EnableGlobal
 	DMibCompilerMessage("---- Global memory shims enabled");
-	constinit NAtomic::TCAtomicAggregate<CGlobalReportMemory *> g_pGlobalMemoryReporter = {0};
+	constinit NAtomic::TCAtomic<CGlobalReportMemory *> g_pGlobalMemoryReporter{0};
 #	endif
 
 #	if DMibConfig_Memory_Shims_EnableLocal

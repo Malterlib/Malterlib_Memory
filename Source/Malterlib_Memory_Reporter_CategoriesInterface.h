@@ -15,9 +15,9 @@ namespace NMib::NMemory
 
 		ch8 const *m_pName;
 		NIntrusive::TCAVLLinkAggregate<> m_Link;
-		align_cacheline NAtomic::TCAtomicAggregate<smint> m_nBytes{0};
-		align_cacheline NAtomic::TCAtomicAggregate<smint> m_nAllocations{0};
-		align_cacheline NAtomic::TCAtomicAggregate<bool> m_AddedToList{false};
+		align_cacheline NAtomic::TCAtomic<smint> m_nBytes{0};
+		align_cacheline NAtomic::TCAtomic<smint> m_nAllocations{0};
+		align_cacheline NAtomic::TCAtomic<bool> m_AddedToList{false};
 
 		class CCompare
 		{
