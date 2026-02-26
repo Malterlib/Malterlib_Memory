@@ -39,9 +39,9 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_OnNeedCleanup()
 	{
-		if (!mp_bStarted.f_Load(NAtomic::EMemoryOrder_Relaxed))
+		if (!mp_bStarted.f_Load(NAtomic::gc_MemoryOrder_Relaxed))
 		{
-			if (!g_bCanStartThreads.f_Load(NAtomic::EMemoryOrder_Relaxed)) // Cannot start thread
+			if (!g_bCanStartThreads.f_Load(NAtomic::gc_MemoryOrder_Relaxed)) // Cannot start thread
 			{
 				mp_bStarted.f_FetchOr(3); // Signal
 				return;

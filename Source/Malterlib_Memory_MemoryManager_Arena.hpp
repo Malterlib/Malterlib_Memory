@@ -43,14 +43,14 @@ namespace NMib::NMemory
 	{
 		if (_pLocalArena->m_bForcingCleanup)
 			return false;
-		return m_LockContended.f_Load(NAtomic::EMemoryOrder_Relaxed) > 0;
+		return m_LockContended.f_Load(NAtomic::gc_MemoryOrder_Relaxed) > 0;
 	}
 
 	template <typename t_CParams>
 	bool TCMemoryManagerArena<t_CParams>::f_ReturnCheckout()
 	{
 		DMibFastCheck(m_CheckoutCount.f_Load() > 0);
-		if (m_CheckoutCount.f_FetchSub(1, NAtomic::EMemoryOrder_Relaxed) == 1)
+		if (m_CheckoutCount.f_FetchSub(1, NAtomic::gc_MemoryOrder_Relaxed) == 1)
 		{
 			bool bNeedCleanup = fp_CheckCleanup();
 			m_Lock.f_UnlockNoSanitize();
@@ -265,7 +265,7 @@ namespace NMib::NMemory
 						auto &MemoryManager = *m_pMemoryManager;
 						if (MemoryManager.m_bCanDoLazyCheckout && !LocalArena.m_TemporaryReturnCheckoutCount)
 						{
-							MemoryManager.fp_CheckoutHelper(LocalArena)->m_CheckoutCount.f_FetchAdd(1, NAtomic::EMemoryOrder_Relaxed);
+							MemoryManager.fp_CheckoutHelper(LocalArena)->m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 							DMibFastCheck(fg_GetSys()->f_ThreadCreated());
 							LocalArena.m_bLazyCheckout = true;
 						}

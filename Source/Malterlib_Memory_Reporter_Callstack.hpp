@@ -330,7 +330,7 @@ namespace NMib::NMemory
 
 	void CCallstackMemoryReporter::fp_StartupThread()
 	{
-		if (mp_pThread || !g_bCanStartThreads.f_Load(NAtomic::EMemoryOrder_Relaxed) || !NTime::CSystem_Time::fs_TimeInitDone())
+		if (mp_pThread || !g_bCanStartThreads.f_Load(NAtomic::gc_MemoryOrder_Relaxed) || !NTime::CSystem_Time::fs_TimeInitDone())
 			return;
 
 		{

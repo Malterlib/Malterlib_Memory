@@ -94,7 +94,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerNumaArena<t_CParams>::f_RequestCleanupWeak(ENumaArenaCleanup _Cleanup)
 	{
-		if (!(m_RequestedCleanup.f_Load(NAtomic::EMemoryOrder_Relaxed) & _Cleanup))
+		if (!(m_RequestedCleanup.f_Load(NAtomic::gc_MemoryOrder_Relaxed) & _Cleanup))
 			f_RequestCleanup(_Cleanup);
 	}
 
@@ -433,9 +433,9 @@ namespace NMib::NMemory
 		{
 			// The other arena is checked out, we need to checkout a new arena here
 			m_pArena = _Other.m_pArena->m_pMemoryManager->fp_CheckoutHelper(*this);
-			m_pArena->m_CheckoutCount.f_Store(_Other.m_pArena->m_CheckoutCount.f_Load(NAtomic::EMemoryOrder_Relaxed), NAtomic::EMemoryOrder_Relaxed);
+			m_pArena->m_CheckoutCount.f_Store(_Other.m_pArena->m_CheckoutCount.f_Load(NAtomic::gc_MemoryOrder_Relaxed), NAtomic::gc_MemoryOrder_Relaxed);
 
-			_Other.m_pArena->m_CheckoutCount.f_Store(1, NAtomic::EMemoryOrder_Relaxed);
+			_Other.m_pArena->m_CheckoutCount.f_Store(1, NAtomic::gc_MemoryOrder_Relaxed);
 			_Other.m_pArena->f_ReturnCheckout();
 			_Other.m_pArena = nullptr;
 			DMibFastCheck(!_Other.m_bInLightCheckout);
@@ -535,8 +535,8 @@ namespace NMib::NMemory
 		auto pArena = m_pArena;
 		DMibFastCheck(pArena);
 		DMibFastCheck(m_TemporaryReturnCheckoutCount == 0);
-		m_TemporaryReturnCheckoutCount = pArena->m_CheckoutCount.f_Load(NAtomic::EMemoryOrder_Relaxed);
-		pArena->m_CheckoutCount.f_Store(1, NAtomic::EMemoryOrder_Relaxed);
+		m_TemporaryReturnCheckoutCount = pArena->m_CheckoutCount.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
+		pArena->m_CheckoutCount.f_Store(1, NAtomic::gc_MemoryOrder_Relaxed);
 		pArena->f_ReturnCheckout();
 		DMibFastCheck(!m_bInLightCheckout);
 		m_pArena = nullptr;
@@ -551,7 +551,7 @@ namespace NMib::NMemory
 		DMibFastCheck(!m_pArena);
 		m_pArena = m_pNumaArena->m_pMemoryManager->fp_CheckoutHelper(*this);
 		DMibFastCheck(m_TemporaryReturnCheckoutCount != 0);
-		m_pArena->m_CheckoutCount.f_Store(m_TemporaryReturnCheckoutCount, NAtomic::EMemoryOrder_Relaxed);
+		m_pArena->m_CheckoutCount.f_Store(m_TemporaryReturnCheckoutCount, NAtomic::gc_MemoryOrder_Relaxed);
 		m_TemporaryReturnCheckoutCount = 0;
 	}
 

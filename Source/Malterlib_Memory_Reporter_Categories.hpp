@@ -458,7 +458,7 @@ namespace NMib::NMemory
 		}
 		AllocationInfo.m_pCategory = pCurrentCategory;
 
-		if (!pCurrentCategory->m_AddedToList.f_Load(NAtomic::EMemoryOrder_Relaxed))
+		if (!pCurrentCategory->m_AddedToList.f_Load(NAtomic::gc_MemoryOrder_Relaxed))
 		{
 			if (!pCurrentCategory->m_AddedToList.f_Exchange(true))
 			{
@@ -474,7 +474,7 @@ namespace NMib::NMemory
 		pCurrentCategory->m_nBytes += _Size;
 		++pCurrentCategory->m_nAllocations;
 #if 0
-		if (g_bCanStartThreads.f_Load(NAtomic::EMemoryOrder_Relaxed) && NTime::CSystem_Time::fs_TimeInitDone())
+		if (g_bCanStartThreads.f_Load(NAtomic::gc_MemoryOrder_Relaxed) && NTime::CSystem_Time::fs_TimeInitDone())
 		{
 			int64 Cycles = NTime::NPlatform::fg_Timer_CyclesFast();
 			int64 CurrentValue = g_CyclesTimer.f_Load();

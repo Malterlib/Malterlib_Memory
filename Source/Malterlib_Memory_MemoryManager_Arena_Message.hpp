@@ -21,7 +21,7 @@ namespace NMib::NMemory
 		bool bWasEmpty = false;
 		while (1)
 		{
-			mint OldMessage = Messages.f_Load(NAtomic::EMemoryOrder_Relaxed);
+			mint OldMessage = Messages.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
 			_pMessage->m_Next = OldMessage;
 			bWasEmpty = !OldMessage;
 
@@ -274,7 +274,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_small bool TCMemoryManagerArena<t_CParams>::fp_CheckCleanup()
 	{
-		bool bNeedCleanup = m_MessagesAvailable.f_Load(NAtomic::EMemoryOrder_Relaxed) != 0;
+		bool bNeedCleanup = m_MessagesAvailable.f_Load(NAtomic::gc_MemoryOrder_Relaxed) != 0;
 		if (m_bWantCleanup)
 		{
 			m_bWantCleanup = false;
