@@ -348,14 +348,14 @@ namespace NMib::NMemory
 		if constexpr (t_CParams::mc_bRandomizeSlabHeader)
 		{
 			mint Location = (mint)_pLocation;
-			mint Shift = gc_HighestBitSetCorrect<mint, t_CParams::mc_SlabSize>;
+			mint Shift = gc_HighestBitSet<t_CParams::mc_SlabSize>;
 
 			Location >>= Shift;
 #if 0
 			const static mint FreeSpace = TCAlignDown<mint, (t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab)), alignof(TCMemoryManagerSlab)>::mc_Value;
 			uint8 *pFinalLocation = _pLocation + fg_AlignDown(Location, alignof(TCMemoryManagerSlab)) % FreeSpace;
 #else
-			mint FreeSpace = mint(1) << (gc_HighestBitSetCorrect<mint, (t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab))>);
+			mint FreeSpace = mint(1) << (gc_HighestBitSet<(t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab))>);
 			mint ToAdd = (fg_AlignDown(Location, alignof(TCMemoryManagerSlab)) & (FreeSpace - 1));
 			uint8 *pFinalLocation = _pLocation + ToAdd;
 #endif

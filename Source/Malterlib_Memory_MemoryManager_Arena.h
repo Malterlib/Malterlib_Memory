@@ -178,7 +178,7 @@ namespace NMib::NMemory
 		static constexpr bool mc_bUseSmallSizes = t_CParams::mc_bUseSmallSizes;
 		static constexpr mint mc_MinAllocSize = mc_bUseSmallSizes ? 1 : t_CParams::mc_MinNormalAllocSize;
 		static constexpr mint mc_MinAlignment = 4; // Can be 4 or 8
-		static constexpr mint mc_nSmallSizeSlabsAligned = NMib::gc_HighestBitSetCorrect<mint, mc_MinAlignment> + 1;
+		static constexpr mint mc_nSmallSizeSlabsAligned = NMib::gc_HighestBitSet<mc_MinAlignment> + 1;
 		static constexpr mint mc_nSmallSizeSlabs = mc_bUseSmallSizes ? (mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment*2) / mc_MinAlignment) : mc_MinArraySize;
 		static constexpr mint mc_nLevel0Lists = mc_bUseSmallSizes ? (32 - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment : mc_MinArraySize;
 		static constexpr mint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels-1 : t_CParams::mc_NumNormalSizeLevels;

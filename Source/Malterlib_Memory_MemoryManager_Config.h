@@ -217,7 +217,7 @@ namespace NMib::NMemory
 			)
 		;
 
-		static constexpr mint mc_SizesPerLevelShift = gc_HighestBitSetCorrect<mint, t_CParams::mc_NumSizesPerLevel>;
+		static constexpr mint mc_SizesPerLevelShift = gc_HighestBitSet<t_CParams::mc_NumSizesPerLevel>;
 
 		static constexpr mint mc_SlabSize = t_CParams::mc_SubSlabSize * 1024 * 4;			// Carefully choosen to minimize waste in different subslab types
 		static constexpr mint mc_MaxNumSubSlabs = mc_SlabSize / t_CParams::mc_SubSlabSize;
@@ -229,10 +229,10 @@ namespace NMib::NMemory
 
 		static constexpr mint mc_MaxSlabAllocSize = mc_MinHeapAllocSize - (mc_MinHeapAllocSize /2) / t_CParams::mc_NumSizesPerLevel;
 
-		static constexpr mint mc_NumSizeLevels = gc_HighestBitSetCorrect<mint, mc_MaxSlabAllocSize> + 1;
+		static constexpr mint mc_NumSizeLevels = gc_HighestBitSet<mc_MaxSlabAllocSize> + 1;
 		static constexpr mint mc_NumNormalSizeLevels = mc_NumSizeLevels - 4;
 
-		static constexpr mint mc_NumSubSlabSizeLevels = mc_NumSizeLevels - gc_HighestBitSetCorrect<mint, t_CParams::mc_SubSlabSize>;
+		static constexpr mint mc_NumSubSlabSizeLevels = mc_NumSizeLevels - gc_HighestBitSet<t_CParams::mc_SubSlabSize>;
 
 		static constexpr mint mc_MinAlignmentCalc = t_CParams::mc_bAllowUnalignedFreeList ? 16 / t_CParams::mc_NumSizesPerLevel : fg_Max(16 / t_CParams::mc_NumSizesPerLevel, sizeof(void *));
 		static constexpr mint mc_MinNormalSizeAlignment = mc_MinAlignmentCalc < 4 ? 4 : mc_MinAlignmentCalc;

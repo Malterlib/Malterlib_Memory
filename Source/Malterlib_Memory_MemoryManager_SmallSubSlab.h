@@ -48,7 +48,7 @@ namespace NMib::NMemory
 			=
 			(
 				t_AllocSize <= TCMemoryManagerArena<t_CParams>::mc_MinAlignment
-				? NMib::gc_HighestBitSetCorrect<mint, t_AllocSize>
+				? NMib::gc_HighestBitSet<t_AllocSize>
 				:
 				(
 					TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabsAligned
