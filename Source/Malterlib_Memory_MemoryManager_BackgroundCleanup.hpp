@@ -29,7 +29,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	int64 TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::f_GetTimestamp() const
 	{
-		auto Return = mp_Clock.f_GetCycles();
+		auto Return = mp_Stopwatch.f_GetCycles();
 
 		DMibFastCheck(Return != 0);;
 
@@ -109,7 +109,7 @@ namespace NMib::NMemory
 						int64 MSLifetime = t_CParams::mc_BackgroundCleanupLifetimeDecommit;
 						LifeTimeDecommit = MSLifetime * NTime::CSystem_Time::fs_CyclesFrequency() / 1000;
 					}
-					int64 NextCleanup = mp_Clock.f_GetCycles() + LifeTime;
+					int64 NextCleanup = mp_Stopwatch.f_GetCycles() + LifeTime;
 
 #ifdef DMibMemory_CleanupOnUSR1Signal
 					auto pSubscription = NSys::fg_System_RegisterForSignal
@@ -128,13 +128,13 @@ namespace NMib::NMemory
 					bool bNeedUpdate = true;
 					while (_pThread->f_GetState() != NThread::EThreadState_EventWantQuit)
 					{
-						int64 Time = mp_Clock.f_GetCycles();
+						int64 Time = mp_Stopwatch.f_GetCycles();
 
 						if (Time >= NextCleanup)
 						{
-		//					DMibTraceSafe("{}\n", mp_Clock.f_GetTime());
+		//					DMibTraceSafe("{}\n", mp_Stopwatch.f_GetTime());
 
-							int64 Now = mp_Clock.f_GetCycles();
+							int64 Now = mp_Stopwatch.f_GetCycles();
 							int64 RemoveTime = Now - LifeTime;
 							int64 RemoveTimeDecommit = Now - LifeTimeDecommit;
 							[[maybe_unused]] auto &ThreadLocal = *mp_pNumaArena->m_pMemoryManager->m_LocalArena; // Precach thread local to prevent deadlock
@@ -182,7 +182,7 @@ namespace NMib::NMemory
 		// Force initialization of time context on main thread as it uses environment which is not thread safe. In future try to remove dependency on time context here
 		NTime::CSystem_Time::fs_CyclesFrequency();
 
-		mp_Clock.f_Start(NTime::CSystem_Time::fs_CyclesFrequency() * 100);
+		mp_Stopwatch.f_Start(NTime::CSystem_Time::fs_CyclesFrequency() * 100);
 
 		if ((mp_bStarted.f_FetchAnd(~2) & (2 | 4)) == 2)
 		{

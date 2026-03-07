@@ -51,19 +51,19 @@ public:
 
 		CTestClass **TestList = DMibNew CTestClass*[NumTests];
 
-		NMib::NTime::CTimerMin Timer;
-		NMib::NTime::CTimerMin TimerDelete;
+		NMib::NTime::CPerfTimeMeasureMin Timer;
+		NMib::NTime::CPerfTimeMeasureMin TimerDelete;
 		for (aint i = 0; i < NumIter; ++i)
 		{
 			{
-				DMibScopeTimerMin(Timer);
+				DMibScopePerfTimeMeasureMin(Timer);
 				for (aint i = 0; i < NumTests; ++i)
 				{
 					TestList[i] = TestPool.f_New();
 				}
 			}
 			{
-				DMibScopeTimerMin(TimerDelete);
+				DMibScopePerfTimeMeasureMin(TimerDelete);
 				for (aint i = 0; i < NumTests; ++i)
 				{
 					TestPool.f_Delete(TestList[i]);
@@ -79,14 +79,14 @@ public:
 		for (aint i = 0; i < NumIter; ++i)
 		{
 			{
-				DMibScopeTimerMin(Timer);
+				DMibScopePerfTimeMeasureMin(Timer);
 				for (aint i = 0; i < NumTests; ++i)
 				{
 					TestList[i] = TestPoolGrowing.f_New();
 				}
 			}
 			{
-				DMibScopeTimerMin(TimerDelete);
+				DMibScopePerfTimeMeasureMin(TimerDelete);
 				for (aint i = 0; i < NumTests; ++i)
 				{
 					TestPoolGrowing.f_Delete(TestList[i]);
