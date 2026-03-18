@@ -67,12 +67,12 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = true
 		};
 
-		constexpr bool operator == (CAllocator_Heap const &_Right) const
+		constexpr bool operator == (CAllocator_Heap const &_Right) const noexcept
 		{
 			return true;
 		}
 
-		constexpr auto operator <=> (CAllocator_Heap const &_Right) const
+		constexpr auto operator <=> (CAllocator_Heap const &_Right) const noexcept
 		{
 			return COrdering_Strong::equal;
 		}
@@ -127,12 +127,12 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = true
 		};
 
-		constexpr bool operator == (CAllocator_NonTrackedHeap const &_Right) const
+		constexpr bool operator == (CAllocator_NonTrackedHeap const &_Right) const noexcept
 		{
 			return true;
 		}
 
-		constexpr auto operator <=> (CAllocator_NonTrackedHeap const &_Right) const
+		constexpr auto operator <=> (CAllocator_NonTrackedHeap const &_Right) const noexcept
 		{
 			return COrdering_Strong::equal;
 		}
@@ -202,12 +202,12 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
-		constexpr bool operator == (TCAllocator_Placement const &_Right) const
+		constexpr bool operator == (TCAllocator_Placement const &_Right) const noexcept
 		{
 			return m_pPointer == _Right.m_pPointer;
 		}
 
-		constexpr auto operator <=> (TCAllocator_Placement const &_Right) const
+		constexpr auto operator <=> (TCAllocator_Placement const &_Right) const noexcept
 		{
 			return m_pPointer <=> _Right.m_pPointer;
 		}
@@ -299,12 +299,12 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
-		constexpr bool operator == (TCAllocator_Static const &_Right) const
+		constexpr bool operator == (TCAllocator_Static const &_Right) const noexcept
 		{
 			return static_cast<t_CFallbackAllocator const &>(*this) == static_cast<t_CFallbackAllocator const &>(_Right);
 		}
 
-		constexpr auto operator <=> (TCAllocator_Static const &_Right) const
+		constexpr auto operator <=> (TCAllocator_Static const &_Right) const noexcept
 		{
 			return static_cast<t_CFallbackAllocator const &>(*this) <=> static_cast<t_CFallbackAllocator const &>(_Right);
 		}

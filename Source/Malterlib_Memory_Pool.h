@@ -748,12 +748,12 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
-		constexpr bool operator == (TCPoolAggregate const &_Right) const
+		constexpr bool operator == (TCPoolAggregate const &_Right) const noexcept
 		{
 			return this == &_Right;
 		}
 
-		constexpr auto operator <=> (TCPoolAggregate const &_Right) const
+		constexpr auto operator <=> (TCPoolAggregate const &_Right) const noexcept
 		{
 			return this <=> &_Right;
 		}
@@ -936,12 +936,12 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = true
 		};
 
-		constexpr bool operator == (TCStaticPoolAllocator const &_Right) const
+		constexpr bool operator == (TCStaticPoolAllocator const &_Right) const noexcept
 		{
 			return true;
 		}
 
-		constexpr auto operator <=> (TCStaticPoolAllocator const &_Right) const
+		constexpr auto operator <=> (TCStaticPoolAllocator const &_Right) const noexcept
 		{
 			return COrdering_Strong::equal;
 		}
@@ -1181,12 +1181,12 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
-		constexpr bool operator == (TCPoolAllocator const &_Right) const
+		constexpr bool operator == (TCPoolAllocator const &_Right) const noexcept
 		{
 			return this == &_Right;
 		}
 
-		constexpr auto operator <=> (TCPoolAllocator const &_Right) const
+		constexpr auto operator <=> (TCPoolAllocator const &_Right) const noexcept
 		{
 			return this <=> &_Right;
 		}
@@ -1391,12 +1391,12 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
-		constexpr bool operator == (TCPoolReferenceAllocator const &_Right) const
+		constexpr bool operator == (TCPoolReferenceAllocator const &_Right) const noexcept
 		{
 			return &m_Pool == &_Right.m_Pool;
 		}
 
-		constexpr auto operator <=> (TCPoolReferenceAllocator const &_Right) const
+		constexpr auto operator <=> (TCPoolReferenceAllocator const &_Right) const noexcept
 		{
 			return &m_Pool <=> &_Right.m_Pool;
 		}

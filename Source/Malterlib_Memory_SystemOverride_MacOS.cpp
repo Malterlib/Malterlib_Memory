@@ -2288,7 +2288,7 @@ namespace
 		{
 			uint32 m_Type;
 
-			bool operator == (CRegionData const &_Right) const
+			bool operator == (CRegionData const &_Right) const noexcept
 			{
 				return m_Type == _Right.m_Type;
 			}

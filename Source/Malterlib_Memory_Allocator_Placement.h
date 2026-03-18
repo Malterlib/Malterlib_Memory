@@ -17,12 +17,12 @@ namespace NMib::NMemory
 			, mc_bMethodsStatic = false
 		};
 
-		constexpr bool operator == (CAllocator_Placement const &_Right) const
+		constexpr bool operator == (CAllocator_Placement const &_Right) const noexcept
 		{
 			return true;
 		}
 
-		constexpr auto operator <=> (CAllocator_Placement const &_Right) const
+		constexpr auto operator <=> (CAllocator_Placement const &_Right) const noexcept
 		{
 			return COrdering_Strong::equal;
 		}

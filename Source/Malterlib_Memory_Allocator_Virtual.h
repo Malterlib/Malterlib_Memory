@@ -22,12 +22,12 @@ namespace NMib::NMemory
 		};
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Virtual>;
 
-		constexpr bool operator == (CAllocator_Virtual const &_Right) const
+		constexpr bool operator == (CAllocator_Virtual const &_Right) const noexcept
 		{
 			return true;
 		}
 
-		constexpr auto operator <=> (CAllocator_Virtual const &_Right) const
+		constexpr auto operator <=> (CAllocator_Virtual const &_Right) const noexcept
 		{
 			return COrdering_Strong::equal;
 		}
@@ -100,9 +100,9 @@ namespace NMib::NMemory
 		};
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_VirtualNoTracking>;
 
-		constexpr bool operator == (CAllocator_VirtualNoTracking const &_Right) const = default;
+		constexpr bool operator == (CAllocator_VirtualNoTracking const &_Right) const noexcept = default;
 
-		constexpr auto operator <=> (CAllocator_VirtualNoTracking const &_Right) const
+		constexpr auto operator <=> (CAllocator_VirtualNoTracking const &_Right) const noexcept
 		{
 			return COrdering_Strong::equal;
 		}

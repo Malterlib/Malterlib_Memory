@@ -27,7 +27,7 @@ namespace NMib::NMemory
 		template <typename tf_CStr>
 		void f_Format(tf_CStr &o_Str) const;
 
-		auto operator <=> (CSystemMemoryStatisticCharacteristics const &) const = default;
+		auto operator <=> (CSystemMemoryStatisticCharacteristics const &) const noexcept = default;
 
 		static NStr::CStr fs_UnitToStr(EMemoryStatisticUnit _Unit);
 		static NStr::CStr fs_ComparisonOperatorToStr(EMemoryStatisticComparisonOperator _Operator);
@@ -44,7 +44,7 @@ namespace NMib::NMemory
 		template <typename tf_CStr>
 		void f_Format(tf_CStr &o_Str) const;
 
-		auto operator <=> (CSystemMemoryStatistic const &) const = default;
+		auto operator <=> (CSystemMemoryStatistic const &) const noexcept = default;
 
 		uint64 m_Value = 0;
 		CSystemMemoryStatisticCharacteristics m_Characteristics;

@@ -36,7 +36,7 @@ namespace NMib::NMemory
 				return *this;
 			}
 
-			auto operator <=> (CSize const& _Other) const
+			auto operator <=> (CSize const& _Other) const noexcept
 			{
 				return _Other.m_nBytes <=> m_nBytes;
 			}
@@ -166,7 +166,7 @@ namespace NMib::NMemory
 			mint m_Allocator;
 			mint m_Address;
 
-			auto operator <=> (CAllocationKey const& _Other) const = default;
+			auto operator <=> (CAllocationKey const& _Other) const noexcept = default;
 		};
 		NContainer::TCMap<mint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_Allocators;
 

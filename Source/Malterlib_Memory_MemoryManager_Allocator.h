@@ -22,12 +22,12 @@ namespace NMib::NMemory
 
 		TCAllocator_MemoryManager(TCMemoryManager<t_CParams> *_pMemoryManager);
 
-		constexpr bool operator == (TCAllocator_MemoryManager const &_Right) const
+		constexpr bool operator == (TCAllocator_MemoryManager const &_Right) const noexcept
 		{
 			return m_pMemoryManager == _Right.m_pMemoryManager;
 		}
 
-		constexpr auto operator <=> (TCAllocator_MemoryManager const &_Right) const
+		constexpr auto operator <=> (TCAllocator_MemoryManager const &_Right) const noexcept
 		{
 			return m_pMemoryManager <=> _Right.m_pMemoryManager;
 		}
