@@ -13,7 +13,7 @@ namespace NMib::NMemory
 
 	struct CMessage
 	{
-		mint m_Next;
+		umint m_Next;
 	};
 
 	struct CMessage_FreeNormalBlock : public CMessage

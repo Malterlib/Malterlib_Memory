@@ -25,7 +25,7 @@ namespace NMib::NMemory
 	}
 
 
-	template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
+	template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 	void CPoolType_Growing::TCPool<t_CAllocator, t_DataSize, t_Alignment>::f_Destruct(ch8 const *_pTypeName)
 	{
 #if defined(DMibDebug) && !defined(DMibSanitizerEnabled_Thread)
@@ -46,7 +46,7 @@ namespace NMib::NMemory
 		m_Chunks.f_Destruct();
 	}
 
-	template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
+	template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 	void CPoolType_Freeable::TCPool<t_CAllocator, t_DataSize, t_Alignment>::f_Destruct(ch8 const *_pTypeName)
 	{
 #if defined(DMibDebug) && !defined(DMibSanitizerEnabled_Thread)
@@ -80,7 +80,7 @@ namespace NMib::NMemory
 		m_EmptyChunks.f_Destruct();
 	}
 
-	template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
+	template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 	void CPoolType_FreeableSmall::TCPool<t_CAllocator, t_DataSize, t_Alignment>::f_Destruct(ch8 const *_pTypeName)
 	{
 #if defined(DMibDebug) && !defined(DMibSanitizerEnabled_Thread)

@@ -25,56 +25,56 @@ namespace NMib::NMemory
 	{
 	public:
 
-		virtual void f_AllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName) = 0;
-		virtual void f_AllocatorDelete(mint _MemoryAllocator) = 0;
+		virtual void f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName) = 0;
+		virtual void f_AllocatorDelete(umint _MemoryAllocator) = 0;
 
-		virtual void f_ScopeEnter(mint _MemoryAllocator) = 0;
-		virtual void f_ScopeExit(mint _MemoryAllocator) = 0;
+		virtual void f_ScopeEnter(umint _MemoryAllocator) = 0;
+		virtual void f_ScopeExit(umint _MemoryAllocator) = 0;
 
 		virtual void f_Alloc
 			(
-				mint _MemoryAllocator
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				umint _MemoryAllocator
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) = 0
 		;
 		virtual void f_Resize
 			(
-				mint _MemoryAllocator
-				, mint _OldAddress
-				, mint _OldSize
+				umint _MemoryAllocator
+				, umint _OldAddress
+				, umint _OldSize
 				, void const *_pOldAllocationInfo
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) = 0
 		;
 		virtual void f_Realloc
 			(
-				mint _MemoryAllocator
-				, mint _OldAddress
-				, mint _OldSize
+				umint _MemoryAllocator
+				, umint _OldAddress
+				, umint _OldSize
 				, void const *_pOldAllocationInfo
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) = 0
 		;
-		virtual void f_Free(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) = 0;
-		virtual void f_GetSize(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) = 0;
-		virtual void f_Protect(mint _MemoryAllocator, mint _Address, mint _Size, uaint _Protect) = 0;
-		virtual void f_Commit(mint _MemoryAllocator, mint _Address, mint _Size) = 0;
-		virtual void f_Decommit(mint _MemoryAllocator, mint _Address, mint _Size) = 0;
+		virtual void f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) = 0;
+		virtual void f_GetSize(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) = 0;
+		virtual void f_Protect(umint _MemoryAllocator, umint _Address, umint _Size, uaint _Protect) = 0;
+		virtual void f_Commit(umint _MemoryAllocator, umint _Address, umint _Size) = 0;
+		virtual void f_Decommit(umint _MemoryAllocator, umint _Address, umint _Size) = 0;
 
 		virtual void f_Report(bool _bFullReport) {};
 	};
@@ -84,62 +84,62 @@ namespace NMib::NMemory
 	public:
 		virtual void f_Alloc
 			(
-				mint _MemoryAllocator
-				, mint _AllocatorDepth
+				umint _MemoryAllocator
+				, umint _AllocatorDepth
 				, ch8 const *_pAllocatorName
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) = 0
 		;
 		virtual void f_Resize
 			(
-				mint _MemoryAllocator
-				, mint _AllocatorDepth
+				umint _MemoryAllocator
+				, umint _AllocatorDepth
 				, ch8 const *_pAllocatorName
-				, mint _OldAddress
-				, mint _OldSize
+				, umint _OldAddress
+				, umint _OldSize
 				, void const *_pOldAllocationInfo
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) = 0
 		;
 		virtual void f_Realloc
 			(
-				mint _MemoryAllocator
-				, mint _AllocatorDepth
+				umint _MemoryAllocator
+				, umint _AllocatorDepth
 				, ch8 const *_pAllocatorName
-				, mint _OldAddress
-				, mint _OldSize
+				, umint _OldAddress
+				, umint _OldSize
 				, void const *_pOldAllocationInfo
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) = 0
 		;
-		virtual void f_Free(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size, void const *_pAllocationInfo) = 0;
-		virtual void f_GetSize(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size, void const *_pAllocationInfo) = 0;
-		virtual void f_Protect(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size, uaint _Protect) = 0;
-		virtual void f_Commit(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size) = 0;
-		virtual void f_Decommit(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth, mint _Address, mint _Size) = 0;
-		virtual void f_AllocatorDelete(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _AllocatorDepth) = 0;
+		virtual void f_Free(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _AllocatorDepth, umint _Address, umint _Size, void const *_pAllocationInfo) = 0;
+		virtual void f_GetSize(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _AllocatorDepth, umint _Address, umint _Size, void const *_pAllocationInfo) = 0;
+		virtual void f_Protect(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _AllocatorDepth, umint _Address, umint _Size, uaint _Protect) = 0;
+		virtual void f_Commit(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _AllocatorDepth, umint _Address, umint _Size) = 0;
+		virtual void f_Decommit(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _AllocatorDepth, umint _Address, umint _Size) = 0;
+		virtual void f_AllocatorDelete(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _AllocatorDepth) = 0;
 	};
 
 	class CReportMemoryLightweight
 	{
 	public:
-		virtual void f_Alloc(mint _ReturnedSize) = 0;
-		virtual void f_Free(mint _Size) = 0;
+		virtual void f_Alloc(umint _ReturnedSize) = 0;
+		virtual void f_Free(umint _Size) = 0;
 	};
 
 	class CAllocator_Base
@@ -157,9 +157,9 @@ namespace NMib::NMemory
 	struct CAllocator_AutoDestroy
 	{
 		void *m_pMemory;
-		mint m_Size;
+		umint m_Size;
 
-		CAllocator_AutoDestroy(void *_pMemory, mint _Size)
+		CAllocator_AutoDestroy(void *_pMemory, umint _Size)
 			: m_pMemory(_pMemory)
 			, m_Size(_Size)
 		{
@@ -199,7 +199,7 @@ namespace NMib::NMemory
 	template <typename t_CAllocator>
 	struct TCAllocator_AutoDestroyStatic : public CAllocator_AutoDestroy
 	{
-		TCAllocator_AutoDestroyStatic(void *_pMemory, mint _Size)
+		TCAllocator_AutoDestroyStatic(void *_pMemory, umint _Size)
 			: CAllocator_AutoDestroy(_pMemory, _Size)
 		{
 		}
@@ -216,7 +216,7 @@ namespace NMib::NMemory
 	template <typename t_CAllocator>
 	struct TCAllocator_AutoDestroy : public CAllocator_AutoDestroy
 	{
-		TCAllocator_AutoDestroy(void *_pMemory, mint _Size, t_CAllocator &_Allocator)
+		TCAllocator_AutoDestroy(void *_pMemory, umint _Size, t_CAllocator &_Allocator)
 			: CAllocator_AutoDestroy(_pMemory, _Size)
 			, m_Allocator(_Allocator)
 		{
@@ -241,32 +241,32 @@ namespace NMib::NMemory
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Empty>;
 
-		static inline_small mint f_GranularityAlloc(bool _bLargePages = false)
+		static inline_small umint f_GranularityAlloc(bool _bLargePages = false)
 		{
 			return 1;
 		}
 
-		static inline_small mint f_GranularityCommit(bool _bLargePages = false)
+		static inline_small umint f_GranularityCommit(bool _bLargePages = false)
 		{
 			return 1;
 		}
 
-		static inline_small mint f_GranularityProtect(bool _bLargePages = false)
+		static inline_small umint f_GranularityProtect(bool _bLargePages = false)
 		{
 			return 1;
 		}
 
-		static inline_small mint f_Size(void *_pBlock)
+		static inline_small umint f_Size(void *_pBlock)
 		{
 			return 0;
 		}
 
-		static inline_small mint f_TrySize(void *_pBlock)
+		static inline_small umint f_TrySize(void *_pBlock)
 		{
 			return 0;
 		}
 
-		static inline_small mint f_SizePadded(mint _Size)
+		static inline_small umint f_SizePadded(umint _Size)
 		{
 			return _Size;
 		}
@@ -291,87 +291,87 @@ namespace NMib::NMemory
 			return true;
 		}
 
-		static inline_small void f_Protect(void *_pMem, mint _Size, uaint _Protect)
+		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect)
 		{
 
 		}
 
-		static inline_small void *f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
-		{
-			return nullptr;
-		}
-
-		static inline_small void *f_Alloc(mint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return nullptr;
 		}
 
-		static inline_small void *f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_Alloc(umint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return nullptr;
 		}
 
-		static inline_small void *f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return nullptr;
 		}
 
-		static inline_small void *f_AllocAlignedWithSizeDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return nullptr;
 		}
 
-		static inline_small void *f_AllocAlignedDebug(mint _Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return nullptr;
 		}
 
-		static inline_small void f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
-		{
-		}
-
-		static inline_small void f_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
-		{
-		}
-
-		static inline_small void *f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
-		{
-			return nullptr;
-		}
-		static inline_small void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocAlignedDebug(umint _Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return nullptr;
 		}
 
-		static inline_small void *f_Realloc(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		{
+		}
+
+		static inline_small void f_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		{
+		}
+
+		static inline_small void *f_AllocWithSizeDebug(umint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		{
+			return nullptr;
+		}
+		static inline_small void *f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return nullptr;
 		}
 
-		static inline_small void *fs_ReallocLocation(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_Realloc(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return nullptr;
 		}
 
-		static inline_small void *f_ReallocDebug(void *_pMem, mint _Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *fs_ReallocLocation(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return nullptr;
 		}
 
-		static inline_small void *f_Resize(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_ReallocDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return nullptr;
 		}
 
-		static inline_small void f_Commit(void *_pMem, mint _Size)
+		static inline_small void *f_Resize(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		{
+			return nullptr;
+		}
+
+		static inline_small void f_Commit(void *_pMem, umint _Size)
 		{
 		}
 
-		static inline_small void f_Decommit(void *_pMem, mint _Size)
+		static inline_small void f_Decommit(void *_pMem, umint _Size)
 		{
 		}
 
-		static inline_small void f_Free(void *_pBlock, mint _Size)
+		static inline_small void f_Free(void *_pBlock, umint _Size)
 		{
 		}
 
@@ -379,16 +379,16 @@ namespace NMib::NMemory
 		{
 		}
 
-		only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return {};
 		}
-		only_parameters_aliased static CAutoDestroy f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return {};
 		}
 
-		static CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size)
+		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size)
 		{
 			return CAutoDestroy{};
 		}
@@ -409,22 +409,22 @@ namespace NMib::NMemory
 
 #	ifdef	DMibPIntrinsicMemCopy
 		template <typename t_CData1, typename t_CData2>
-		inline_small t_CData1 *fg_MemCopy(t_CData1 *_pDest, const t_CData2 *_pSource, mint _Size) noexcept
+		inline_small t_CData1 *fg_MemCopy(t_CData1 *_pDest, const t_CData2 *_pSource, umint _Size) noexcept
 		{
 			return (t_CData1 *)DMibPIntrinsicMemCopy(_pDest, _pSource, _Size);
 		}
 #	else
 		template <typename t_CData1, typename t_CData2>
-		inline_medium t_CData1 *fg_MemCopy(t_CData1 *_pDest, const t_CData2 *_pSource, mint _Size) noexcept
+		inline_medium t_CData1 *fg_MemCopy(t_CData1 *_pDest, const t_CData2 *_pSource, umint _Size) noexcept
 		{
-	/*		for (mint i = 0; i < _Size; ++i)
+	/*		for (umint i = 0; i < _Size; ++i)
 				((uint8 *)_pDest)[i] = ((uint8 *)_pSource)[i];*/
 
-			int DoLarge = _Size / sizeof(mint);
-			mint *pDest = (mint *)_pDest;
-			mint *pSrc = (mint *)_pSource;
+			int DoLarge = _Size / sizeof(umint);
+			umint *pDest = (umint *)_pDest;
+			umint *pSrc = (umint *)_pSource;
 			{
-				mint *pDestEnd = pDest + DoLarge;
+				umint *pDestEnd = pDest + DoLarge;
 
 				while ((pDestEnd - pDest))
 				{
@@ -437,7 +437,7 @@ namespace NMib::NMemory
 			{
 				uint8 *pDest2 = (uint8 *)pDest;
 				uint8 *pSrc2 = (uint8 *)pSrc;
-				uint8 *pDestEnd = pDest2 + (_Size - (DoLarge * sizeof(mint)));
+				uint8 *pDestEnd = pDest2 + (_Size - (DoLarge * sizeof(umint)));
 
 				while ((pDestEnd - pDest2))
 				{
@@ -452,23 +452,23 @@ namespace NMib::NMemory
 #	endif
 
 	template <typename t_CData1, typename t_CData2>
-	inline_medium t_CData1 *fg_ObjectCopy(t_CData1 *_pDest, t_CData2 const *_pSource, mint _nObjects) noexcept(noexcept(fg_GetType<t_CData1 &>() = fg_GetType<t_CData2 const &>()))
+	inline_medium t_CData1 *fg_ObjectCopy(t_CData1 *_pDest, t_CData2 const *_pSource, umint _nObjects) noexcept(noexcept(fg_GetType<t_CData1 &>() = fg_GetType<t_CData2 const &>()))
 	{
-		for (mint i = 0; i < _nObjects; ++i)
+		for (umint i = 0; i < _nObjects; ++i)
 			_pDest[i] = _pSource[i];
 		return _pDest;
 	}
 
-	template <typename t_CData1, mint _ListSize>
+	template <typename t_CData1, umint _ListSize>
 	inline_medium t_CData1 *fg_ObjectCopy(t_CData1 _Dest[_ListSize], t_CData1 const _Source[_ListSize]) noexcept(noexcept(fg_GetType<t_CData1 &>() = fg_GetType<t_CData1 const &>()))
 	{
-		for (mint i = 0; i < _ListSize; ++i)
+		for (umint i = 0; i < _ListSize; ++i)
 			_Dest[i] = _Source[i];
 		return _Dest;
 	}
 
 	template <typename t_CData1, typename t_CData2>
-	inline_medium t_CData1 *fg_ObjectSet(t_CData1 *_pDest, t_CData2 const _SetValue, mint _NumElements) noexcept(noexcept(fg_GetType<t_CData1 &>() = fg_GetType<t_CData2 const &>()))
+	inline_medium t_CData1 *fg_ObjectSet(t_CData1 *_pDest, t_CData2 const _SetValue, umint _NumElements) noexcept(noexcept(fg_GetType<t_CData1 &>() = fg_GetType<t_CData2 const &>()))
 	{
 		t_CData1 *pDest = _pDest;
 		t_CData1 *pEnd = pDest + _NumElements;
@@ -480,7 +480,7 @@ namespace NMib::NMemory
 
 #	ifdef	DMibPIntrinsicMemSet
 	template <typename t_CData2>
-	inline_always uint8 *fg_ObjectSet(uint8 *_pDest, t_CData2 _SetValue, mint _NumElements) noexcept
+	inline_always uint8 *fg_ObjectSet(uint8 *_pDest, t_CData2 _SetValue, umint _NumElements) noexcept
 	{
 		return (uint8 *)DMibPIntrinsicMemSet(_pDest, uint8(_SetValue), _NumElements);
 	}
@@ -488,18 +488,18 @@ namespace NMib::NMemory
 
 #ifdef	DMibPIntrinsicMemSet
 	template <typename t_CData1>
-	inline_always t_CData1 *fg_MemClear(t_CData1 *_pFirst, mint _Size) noexcept
+	inline_always t_CData1 *fg_MemClear(t_CData1 *_pFirst, umint _Size) noexcept
 	{
 		DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
 		return _pFirst;
 	}
 #else
 	template <typename t_CData1>
-	inline_large t_CData1 *fg_MemClear(t_CData1 *_pFirst, mint _Size) noexcept
+	inline_large t_CData1 *fg_MemClear(t_CData1 *_pFirst, umint _Size) noexcept
 	{
-		mint DoSize = _Size / sizeof(mint);
-		fg_ObjectSet((mint *)_pFirst, 0, DoSize);
-		fg_ObjectSet((uint8 *)_pFirst + (DoSize * sizeof(mint)), 0, _Size - (DoSize * sizeof(mint)));
+		umint DoSize = _Size / sizeof(umint);
+		fg_ObjectSet((umint *)_pFirst, 0, DoSize);
+		fg_ObjectSet((uint8 *)_pFirst + (DoSize * sizeof(umint)), 0, _Size - (DoSize * sizeof(umint)));
 		return _pFirst;
 	}
 #endif
@@ -511,7 +511,7 @@ namespace NMib::NMemory
 		return _First;
 	}
 
-	template <typename t_CData1, mint _nElem>
+	template <typename t_CData1, umint _nElem>
 	inline_always t_CData1 *fg_MemClear(t_CData1 _Data[_nElem]) noexcept
 	{
 		fg_MemClear(&_Data, sizeof(t_CData1) * _nElem);
@@ -521,7 +521,7 @@ namespace NMib::NMemory
 #	ifdef	DMibPIntrinsicMemSet
 #		ifdef DCompiler_MSVC
 			template <typename t_CData1>
-			inline_always t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, mint _Size) noexcept
+			inline_always t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, umint _Size) noexcept
 			{
 				DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
 				NAtomic::fg_CompilerFence();
@@ -529,7 +529,7 @@ namespace NMib::NMemory
 			}
 #		else
 			template <typename t_CData1>
-			inline_always t_CData1 *fg_SecureMemClear(t_CData1 *_pFirst, mint _Size) noexcept
+			inline_always t_CData1 *fg_SecureMemClear(t_CData1 *_pFirst, umint _Size) noexcept
 			{
 				DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
 				__asm__ __volatile__("" ::"r"(_pFirst): "memory");
@@ -538,11 +538,11 @@ namespace NMib::NMemory
 #		endif
 #	else
 		template <typename t_CData1>
-		inline_large t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, mint _Size) noexcept
+		inline_large t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, umint _Size) noexcept
 		{
-			mint DoSize = _Size / sizeof(mint);
-			fg_ObjectSet((mint *)_pFirst, 0, DoSize);
-			fg_ObjectSet((uint8 *)_pFirst + (DoSize * sizeof(mint)), 0, _Size - (DoSize * sizeof(mint)));
+			umint DoSize = _Size / sizeof(umint);
+			fg_ObjectSet((umint *)_pFirst, 0, DoSize);
+			fg_ObjectSet((uint8 *)_pFirst + (DoSize * sizeof(umint)), 0, _Size - (DoSize * sizeof(umint)));
 			NAtomic::fg_CompilerFence();
 			return _pFirst;
 		}
@@ -555,7 +555,7 @@ namespace NMib::NMemory
 		return _First;
 	}
 
-	template <typename t_CData1, mint _nElem>
+	template <typename t_CData1, umint _nElem>
 	inline_always t_CData1 *fg_SecureMemClear(t_CData1 _Data[_nElem]) noexcept
 	{
 		fg_SecureMemClear(&_Data, sizeof(t_CData1) * _nElem);
@@ -564,12 +564,12 @@ namespace NMib::NMemory
 
 
 #ifdef DMibPIntrinsicMemCmp
-	static inline_always aint fg_MemCmp(uint8 const *_pFirst, uint8 const *_pSecond, mint _Size) noexcept
+	static inline_always aint fg_MemCmp(uint8 const *_pFirst, uint8 const *_pSecond, umint _Size) noexcept
 	{
 		return DMibPIntrinsicMemCmp(_pFirst, _pSecond, _Size);
 	}
 #else
-	static inline_medium aint fg_MemCmp(uint8 const *_pFirst, uint8 const *_pSecond, mint _Size) noexcept
+	static inline_medium aint fg_MemCmp(uint8 const *_pFirst, uint8 const *_pSecond, umint _Size) noexcept
 	{
 		uint8 const *pFirst = _pFirst;
 		uint8 const *pSecond = _pSecond;
@@ -587,7 +587,7 @@ namespace NMib::NMemory
 	}
 #endif
 
-	static inline_medium aint fg_MemCmpOne(uint8 const *_pFirst, const uint8 _Second, mint _Size) noexcept
+	static inline_medium aint fg_MemCmpOne(uint8 const *_pFirst, const uint8 _Second, umint _Size) noexcept
 	{
 		uint8 const *pFirst = _pFirst;
 		uint8 const *pFirstEnd = pFirst + _Size;
@@ -604,13 +604,13 @@ namespace NMib::NMemory
 
 #	ifdef	DMibPIntrinsicMemMove
 		template <typename t_CData1, typename t_CData2>
-		inline_small t_CData1 *fg_MemMove(t_CData1 *_pDest, const t_CData2 *_pSource, mint _Size) noexcept
+		inline_small t_CData1 *fg_MemMove(t_CData1 *_pDest, const t_CData2 *_pSource, umint _Size) noexcept
 		{
 			return (t_CData1 *)DMibPIntrinsicMemMove(_pDest, _pSource, _Size);
 		}
 #	else
 		template <typename t_CData1, typename t_CData2>
-		inline_extralarge t_CData1 *fg_MemMove(t_CData1 *_pDest, const t_CData2 *_pSource, mint _Size) noexcept
+		inline_extralarge t_CData1 *fg_MemMove(t_CData1 *_pDest, const t_CData2 *_pSource, umint _Size) noexcept
 		{
 			uint8 *pSrc = (uint8 *)_pSource;
 			uint8 *pDest = (uint8 *)_pDest;
@@ -726,7 +726,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename tf_CType, typename tf_CCompare>
-	void fg_QSort(tf_CType *_pToSort, mint _nNumElements, const tf_CCompare &_fCompare)
+	void fg_QSort(tf_CType *_pToSort, umint _nNumElements, const tf_CCompare &_fCompare)
 	{
 		NPrivate::TCHelpQSort<tf_CType, tf_CCompare>::fpr_QuickSort(_pToSort, 0, _nNumElements-1, _fCompare);
 	}

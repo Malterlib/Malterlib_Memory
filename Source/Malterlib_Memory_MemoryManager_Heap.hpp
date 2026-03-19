@@ -17,7 +17,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	mint TCMemoryManagerArenaHeapChunk<t_CParams>::f_GetBlockSize(CMemoryManagerArenaHeapBlock const *_pBlock) const
+	umint TCMemoryManagerArenaHeapChunk<t_CParams>::f_GetBlockSize(CMemoryManagerArenaHeapBlock const *_pBlock) const
 	{
 		uint8 *pAddress = f_GetBlockAddress(_pBlock);
 		auto pNextBlock = m_Blocks.f_FindSmallestGreaterThanEqual(pAddress + 1);
@@ -47,7 +47,7 @@ namespace NMib::NMemory
 
 
 	template <typename t_CParams>
-	TCMemoryManagerArenaHeapChunk<t_CParams>::TCMemoryManagerArenaHeapChunk(mint _Size, TCMemoryManagerArenaHeap<t_CParams> *_pHeap)
+	TCMemoryManagerArenaHeapChunk<t_CParams>::TCMemoryManagerArenaHeapChunk(umint _Size, TCMemoryManagerArenaHeap<t_CParams> *_pHeap)
 		: m_Size(_Size)
 		, m_pHeap(_pHeap)
 		, m_Blocks(CAllocatorConstructTag(), _pHeap->m_pMemoryManager)
@@ -66,7 +66,7 @@ namespace NMib::NMemory
 			if (!(pBlock->m_Flags & EMemoryManagerArenaHeapBlockFlag_Allocated))
 			{
 				DMibFastCheck(pBlock->m_Link.f_IsInList());
-				mint BlockSize = f_GetBlockSize(pBlock);
+				umint BlockSize = f_GetBlockSize(pBlock);
 				auto pFreeBucket = m_pHeap->m_FreeBuckets.f_FindEqual(BlockSize);
 				DMibFastCheck(pFreeBucket);
 				pBlock->m_Link.f_UnlinkLinked();
@@ -81,7 +81,7 @@ namespace NMib::NMemory
 
 		m_Blocks.f_Clear();
 
-		mint Size = f_GetSize();
+		umint Size = f_GetSize();
 		uint8 *pAddress = f_GetAddress();
 
 		if constexpr (TCMemoryManagerArena<t_CParams>::mc_EnableCallbacks)
@@ -104,7 +104,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	mint TCMemoryManagerArenaHeapChunk<t_CParams>::f_GetSize() const
+	umint TCMemoryManagerArenaHeapChunk<t_CParams>::f_GetSize() const
 	{
 		return m_Size;
 	}
@@ -162,7 +162,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManagerArenaHeap<t_CParams>::fp_InitBlockCommit(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, mint _Size)
+	void TCMemoryManagerArenaHeap<t_CParams>::fp_InitBlockCommit(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, umint _Size)
 	{
 		// Make sure that the end of every slab is commited. This allows the free logic to work at O(1) complexity for small allocations because it can assume that the end of each
 		// slab is a valid memory address
@@ -183,12 +183,12 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManagerArenaHeap<t_CParams>::fp_CommitBlock(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, mint _Size)
+	void TCMemoryManagerArenaHeap<t_CParams>::fp_CommitBlock(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, umint _Size)
 	{
 		auto pChunkAddress = _pChunk->f_GetAddress();
 
-		mint StartBit = (_pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
-		mint nBits = _Size / t_CParams::mc_HeapBlockSize;
+		umint StartBit = (_pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
+		umint nBits = _Size / t_CParams::mc_HeapBlockSize;
 
 		if constexpr (mc_EnableCallbacks)
 		{
@@ -196,7 +196,7 @@ namespace NMib::NMemory
 
 			_pChunk->m_Committed.f_EnumSetBitRanges
 				(
-					[&](mint _Bit, mint _nBits) -> bool
+					[&](umint _Bit, umint _nBits) -> bool
 					{
 						this->f_OnCheckFree(pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize, _nBits * t_CParams::mc_HeapBlockSize, EMemoryManagerCheckFlag_Default);
 						return true;
@@ -209,7 +209,7 @@ namespace NMib::NMemory
 
 		_pChunk->m_Committed.f_EnumFreeBitRanges
 			(
-				[&](mint _Bit, mint _nBits) -> bool
+				[&](umint _Bit, umint _nBits) -> bool
 				{
 					m_pMemoryManager->m_Allocator.f_Commit(pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize, _nBits * t_CParams::mc_HeapBlockSize);
 					return true;
@@ -223,18 +223,18 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManagerArenaHeap<t_CParams>::fp_DecommitBlockForReal(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, mint _Size)
+	void TCMemoryManagerArenaHeap<t_CParams>::fp_DecommitBlockForReal(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, umint _Size)
 	{
 		auto pChunkAddress = _pChunk->f_GetAddress();
-		mint StartBit = (_pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
-		mint nBits = _Size / t_CParams::mc_HeapBlockSize;
+		umint StartBit = (_pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
+		umint nBits = _Size / t_CParams::mc_HeapBlockSize;
 
 		_pChunk->m_Committed.f_EnumSetBitRanges
 			(
-				[&](mint _Bit, mint _nBits) -> bool
+				[&](umint _Bit, umint _nBits) -> bool
 				{
 					uint8 *pStartAddress = pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize;
-					mint nBytesToDecommit = _nBits * t_CParams::mc_HeapBlockSize;
+					umint nBytesToDecommit = _nBits * t_CParams::mc_HeapBlockSize;
 					uint8 *pEndAddress = pStartAddress + nBytesToDecommit;
 					for (uint8 *pAddress = pStartAddress; pAddress < pEndAddress; )
 					{
@@ -261,11 +261,11 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManagerArenaHeap<t_CParams>::fp_DecommitBlock(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, mint _Size)
+	void TCMemoryManagerArenaHeap<t_CParams>::fp_DecommitBlock(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, umint _Size)
 	{
 		auto pChunkAddress = _pChunk->f_GetAddress();
-		mint StartBit = (_pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
-		mint nBits = _Size / t_CParams::mc_HeapBlockSize;
+		umint StartBit = (_pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
+		umint nBits = _Size / t_CParams::mc_HeapBlockSize;
 
 		if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_Commit) != 0)
 		{
@@ -273,10 +273,10 @@ namespace NMib::NMemory
 			{
 				_pChunk->m_Committed.f_EnumSetBitRanges
 					(
-						[&](mint _Bit, mint _nBits) -> bool
+						[&](umint _Bit, umint _nBits) -> bool
 						{
 							uint8 *pStartAddress = pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize;
-							mint nBytesToDecommit = _nBits * t_CParams::mc_HeapBlockSize;
+							umint nBytesToDecommit = _nBits * t_CParams::mc_HeapBlockSize;
 							uint8 *pEndAddress = pStartAddress + nBytesToDecommit;
 							for (uint8 *pAddress = pStartAddress; pAddress < pEndAddress; )
 							{
@@ -364,13 +364,13 @@ namespace NMib::NMemory
 			}
 
 			auto pChunkAddress = pChunk->f_GetAddress();
-			mint nBits = pChunk->m_Size / t_CParams::mc_HeapBlockSize;
+			umint nBits = pChunk->m_Size / t_CParams::mc_HeapBlockSize;
 			pChunk->m_DeferredDecommit.f_EnumSetBitRanges
 				(
-					[&](mint _Bit, mint _nBits) -> bool
+					[&](umint _Bit, umint _nBits) -> bool
 					{
 						uint8 *pStartAddress = pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize;
-						mint nBytesToDecommit = _nBits * t_CParams::mc_HeapBlockSize;
+						umint nBytesToDecommit = _nBits * t_CParams::mc_HeapBlockSize;
 						fp_DecommitBlockForReal(pChunk, pStartAddress, nBytesToDecommit);
 						return true;
 					}
@@ -391,7 +391,7 @@ namespace NMib::NMemory
 	{
 		DMibMemLightweightTrackDisableScope;
 
-		mint Size = t_CParams::mc_HeapChunkSize;
+		umint Size = t_CParams::mc_HeapChunkSize;
 		EAllocationFlag Flags = t_CParams::mc_AllocationFlags;
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			Flags |= EAllocationFlag_NoCommit;
@@ -424,16 +424,16 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	mint TCMemoryManagerArenaHeap<t_CParams>::fs_GetAllocSize(mint _Size)
+	umint TCMemoryManagerArenaHeap<t_CParams>::fs_GetAllocSize(umint _Size)
 	{
 		return fg_AlignUp(_Size, t_CParams::mc_HeapBlockSize);
 	}
 
 	template <typename t_CParams>
-	inline_never void *TCMemoryManagerArenaHeap<t_CParams>::f_AllocWithSize(mint &_Size)
+	inline_never void *TCMemoryManagerArenaHeap<t_CParams>::f_AllocWithSize(umint &_Size)
 	{
 		DMibLock(*this);
-		mint Size = (_Size + t_CParams::mc_HeapBlockSize - 1) & ~mint(t_CParams::mc_HeapBlockSize - 1);
+		umint Size = (_Size + t_CParams::mc_HeapBlockSize - 1) & ~umint(t_CParams::mc_HeapBlockSize - 1);
 
 		DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(Size));
 		DMibMemLightweightTrackDisableScope;
@@ -446,14 +446,14 @@ namespace NMib::NMemory
 			DMibFastCheck(pBucket);
 		}
 
-		mint FoundSize = m_FreeBuckets.fs_GetKey(pBucket);
+		umint FoundSize = m_FreeBuckets.fs_GetKey(pBucket);
 
 		auto pBlock = pBucket->f_Pop();
 
 		if (pBucket->f_IsEmpty())
 			m_FreeBuckets.f_Remove(pBucket);
 
-		mint LeftOverSize = FoundSize - Size;
+		umint LeftOverSize = FoundSize - Size;
 
 		pBlock->m_Flags |= EMemoryManagerArenaHeapBlockFlag_Allocated;
 
@@ -483,11 +483,11 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void *TCMemoryManagerArenaHeap<t_CParams>::f_AllocAlignedWithSize(mint &_Size, mint _Alignment)
+	inline_never void *TCMemoryManagerArenaHeap<t_CParams>::f_AllocAlignedWithSize(umint &_Size, umint _Alignment)
 	{
 		DMibLock(*this);
-		mint Size = fg_AlignUp(_Size, _Alignment);
-		Size = (Size + t_CParams::mc_HeapBlockSize - 1) & ~mint(t_CParams::mc_HeapBlockSize - 1);
+		umint Size = fg_AlignUp(_Size, _Alignment);
+		Size = (Size + t_CParams::mc_HeapBlockSize - 1) & ~umint(t_CParams::mc_HeapBlockSize - 1);
 
 		DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(Size));
 		DMibMemLightweightTrackDisableScope;
@@ -499,7 +499,7 @@ namespace NMib::NMemory
 		if (pBucket)
 		{
 			// First try to find an exact match in the 16 most recent free blocks for our size
-			mint nLoops = 0;
+			umint nLoops = 0;
 			CMemoryManagerArenaHeapBlock *pBlock = nullptr;
 			for (auto iFreeBlocks = pBucket->f_GetIterator(); iFreeBlocks && nLoops < 16; ++iFreeBlocks, ++nLoops)
 			{
@@ -507,7 +507,7 @@ namespace NMib::NMemory
 				TCMemoryManagerArenaHeapChunk<t_CParams> *pChunk = fg_AutoStaticCast(pFreeBlock->m_pChunk);
 
 				uint8 *pRetAddress = pChunk->f_GetBlockAddress(pFreeBlock);
-				if (!((mint)pRetAddress & (_Alignment - 1)))
+				if (!((umint)pRetAddress & (_Alignment - 1)))
 				{
 					// This block is already aligned so lets use it
 					pFreeBlock->m_Link.f_Unlink();
@@ -532,7 +532,7 @@ namespace NMib::NMemory
 
 		if (!pRetAddress)
 		{
-			mint NeededSize = Size + _Alignment - t_CParams::mc_HeapBlockSize; // Find enough for aligning pointer
+			umint NeededSize = Size + _Alignment - t_CParams::mc_HeapBlockSize; // Find enough for aligning pointer
 
 			pBucket = m_FreeBuckets.f_FindSmallestGreaterThanEqual(NeededSize);
 			if (!pBucket)
@@ -542,7 +542,7 @@ namespace NMib::NMemory
 				DMibFastCheck(pBucket);
 			}
 
-			mint FoundSize = m_FreeBuckets.fs_GetKey(pBucket);
+			umint FoundSize = m_FreeBuckets.fs_GetKey(pBucket);
 
 			auto pBlock = pBucket->f_Pop();
 
@@ -553,7 +553,7 @@ namespace NMib::NMemory
 			uint8 *pStartOfBlock = pChunk->f_GetBlockAddress(pBlock);
 			pRetAddress = fg_AlignUp(pStartOfBlock, _Alignment);
 
-			mint LeftOverSizeStart = pRetAddress - pStartOfBlock;
+			umint LeftOverSizeStart = pRetAddress - pStartOfBlock;
 
 			if (LeftOverSizeStart)
 			{
@@ -565,7 +565,7 @@ namespace NMib::NMemory
 				pBlock = &NewBlock;
 			}
 
-			mint LeftOverSize = FoundSize - Size;
+			umint LeftOverSize = FoundSize - Size;
 
 			pBlock->m_Flags |= EMemoryManagerArenaHeapBlockFlag_Allocated;
 
@@ -594,7 +594,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerArenaHeap<t_CParams>::fp_RemoveFreeBlock(CMemoryManagerArenaHeapBlock *_pBlock, TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk)
 	{
-		mint BlockSize = _pChunk->f_GetBlockSize(_pBlock);
+		umint BlockSize = _pChunk->f_GetBlockSize(_pBlock);
 
 		auto pBucket = m_FreeBuckets.f_FindEqual(BlockSize);
 
@@ -619,7 +619,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	mint TCMemoryManagerArenaHeap<t_CParams>::f_Size(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
+	umint TCMemoryManagerArenaHeap<t_CParams>::f_Size(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
 	{
 		DMibLock(fg_RemoveQualifiers(*this));
 
@@ -654,7 +654,7 @@ namespace NMib::NMemory
 		DMibFastCheck(pBlock);
 
 		fp32 OverheadPerByte = fp32(sizeof(TCMemoryManagerArenaHeapChunk<t_CParams>)) / fp32(_pChunk->m_Size);
-		mint Size = _pChunk->f_GetBlockSize(pBlock);
+		umint Size = _pChunk->f_GetBlockSize(pBlock);
 
 		return
 			fp32(Size) * OverheadPerByte
@@ -678,7 +678,7 @@ namespace NMib::NMemory
 
 		DMibFastCheck(pBlock);
 
-		mint BlockSize = _pChunk->f_GetBlockSize(pBlock);
+		umint BlockSize = _pChunk->f_GetBlockSize(pBlock);
 
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			fp_DecommitBlock(_pChunk, pMem, BlockSize);
@@ -704,7 +704,7 @@ namespace NMib::NMemory
 			_pChunk->m_Blocks.f_Remove(pNextBlock);
 		}
 
-		mint NewSize = _pChunk->f_GetBlockSize(pNewFreeBlock);
+		umint NewSize = _pChunk->f_GetBlockSize(pNewFreeBlock);
 
 		m_FreeBuckets[NewSize].f_Insert(*pNewFreeBlock);
 
@@ -724,7 +724,7 @@ namespace NMib::NMemory
 
 		for (auto iBucket = m_FreeBuckets.f_GetIterator(); iBucket; ++iBucket)
 		{
-			mint Size = iBucket.f_GetKey();
+			umint Size = iBucket.f_GetKey();
 
 			for (auto iBlock = iBucket->f_GetIterator(); iBlock; ++iBlock)
 			{
@@ -739,14 +739,14 @@ namespace NMib::NMemory
 					{
 						auto pChunkAddress = pChunk->f_GetAddress();
 
-						mint StartBit = (pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
-						mint nBits = Size / t_CParams::mc_HeapBlockSize;
+						umint StartBit = (pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
+						umint nBits = Size / t_CParams::mc_HeapBlockSize;
 
 						if constexpr (mc_EnableCallbacks)
 						{
 							pChunk->m_Committed.f_EnumSetBitRanges
 								(
-									[&](mint _Bit, mint _nBits) -> bool
+									[&](umint _Bit, umint _nBits) -> bool
 									{
 										if (this->f_OnCheckFree(pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize, _nBits * t_CParams::mc_HeapBlockSize, _Flags))
 											bError = true;

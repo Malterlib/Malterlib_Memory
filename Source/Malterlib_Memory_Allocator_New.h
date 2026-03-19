@@ -44,20 +44,20 @@ namespace NMib
 
 namespace NMib::NMemory
 {
-	DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_Alloc(mint _Size);
-	DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_AllocAligned(mint _Size, mint _Align);
-	DMibMemory_MemoryManagerExport only_parameters_aliased void fg_Free(void *_pMemory, mint _Size);
+	DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_Alloc(umint _Size);
+	DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_AllocAligned(umint _Size, umint _Align);
+	DMibMemory_MemoryManagerExport only_parameters_aliased void fg_Free(void *_pMemory, umint _Size);
 	DMibMemory_MemoryManagerExport only_parameters_aliased void fg_FreeNoSize(void *_pMemory);
 
 #	if DMibConfig_MalterlibMemoryManager_Debug
-		DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
-		DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_AllocAlignedDebug(mint _Size, mint _Align, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
+		DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
+		DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_AllocAlignedDebug(umint _Size, umint _Align, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None);
 #	else
-		only_parameters_aliased malloc_like static inline_small void *fg_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None)
+		only_parameters_aliased malloc_like static inline_small void *fg_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None)
 		{
 			return fg_Alloc(_Size);
 		}
-		only_parameters_aliased malloc_like static inline_small void *fg_AllocAlignedDebug(mint _Size, mint _Align, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None)
+		only_parameters_aliased malloc_like static inline_small void *fg_AllocAlignedDebug(umint _Size, umint _Align, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None)
 		{
 			return fg_AllocAligned(_Size, _Align);
 		}
@@ -71,7 +71,7 @@ namespace NMib::NMemory
 #ifndef __PLACEMENT_NEW_INLINE
 #	define __PLACEMENT_NEW_INLINE
 
-	only_parameters_aliased malloc_like inline_always void * operator new (mint _Size, void * variable_not_aliased _pPlacement) noexcept
+	only_parameters_aliased malloc_like inline_always void * operator new (umint _Size, void * variable_not_aliased _pPlacement) noexcept
 	{
 		return _pPlacement;
 	}
@@ -85,7 +85,7 @@ namespace NMib::NMemory
 #ifndef __PLACEMENT_VEC_NEW_INLINE
 #	define __PLACEMENT_VEC_NEW_INLINE
 
-	only_parameters_aliased malloc_like inline_always void * operator new [] (mint _Size, void * variable_not_aliased _pPlacement) noexcept
+	only_parameters_aliased malloc_like inline_always void * operator new [] (umint _Size, void * variable_not_aliased _pPlacement) noexcept
 	{
 		return _pPlacement;
 	}
@@ -99,14 +99,14 @@ namespace NMib::NMemory
 #endif
 
 
-template <mint t_ArraySize>
-only_parameters_aliased malloc_like inline_always void * operator new (mint _Size, uint8 _Placement[t_ArraySize]) noexcept
+template <umint t_ArraySize>
+only_parameters_aliased malloc_like inline_always void * operator new (umint _Size, uint8 _Placement[t_ArraySize]) noexcept
 {
 	void * variable_not_aliased pValue = _Placement;
 	return pValue;
 }
 
-template <mint t_ArraySize>
+template <umint t_ArraySize>
 only_parameters_aliased inline_always void operator delete (void *_pToDelete, uint8 _Placement[t_ArraySize]) noexcept
 {
 }
@@ -170,7 +170,7 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 
 		inline_always only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment)
 		{
-			return NMib::NMemory::fg_AllocAligned(_Size, (mint)_Alignment);
+			return NMib::NMemory::fg_AllocAligned(_Size, (umint)_Alignment);
 		}
 
 		only_parameters_aliased malloc_like void * calling_convention_c operator new(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
@@ -193,7 +193,7 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 
 		inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept
 		{
-			mint Size = NMib::fg_AlignUp(_Size, (mint)_Alignment);
+			umint Size = NMib::fg_AlignUp(_Size, (umint)_Alignment);
 			if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, Size))
 				return;
 
@@ -203,7 +203,7 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 
 		inline_always only_parameters_aliased malloc_like void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment)
 		{
-			return NMib::NMemory::fg_AllocAligned(_Size, (mint)_Alignment);
+			return NMib::NMemory::fg_AllocAligned(_Size, (umint)_Alignment);
 		}
 
 		only_parameters_aliased malloc_like void * calling_convention_c operator new[](std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
@@ -220,7 +220,7 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 
 		inline_always only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept
 		{
-			mint Size = NMib::fg_AlignUp(_Size, (mint)_Alignment);
+			umint Size = NMib::fg_AlignUp(_Size, (umint)_Alignment);
 			NMib::NMemory::fg_Free(_pMemory, Size);
 		}
 
@@ -256,12 +256,12 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 #if defined(DMibPOverrideOperatorNew) && (defined(DMalterlibUseStaticLibCxx) || defined(DCompiler_MSVC) || defined(DCompiler_clang_cl))
 	only_parameters_aliased malloc_like inline_always void * operator new (std::size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
 	{
-		return NMib::NMemory::fg_AllocAlignedDebug(_Size, (mint)_Alignment, _pFile, _Line, _Flags);
+		return NMib::NMemory::fg_AllocAlignedDebug(_Size, (umint)_Alignment, _pFile, _Line, _Flags);
 	}
 
 	only_parameters_aliased malloc_like inline_always void * operator new[] (std::size_t _Size, std::align_val_t _Alignment, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)
 	{
-		return NMib::NMemory::fg_AllocAlignedDebug(_Size, (mint)_Alignment, _pFile, _Line, _Flags);
+		return NMib::NMemory::fg_AllocAlignedDebug(_Size, (umint)_Alignment, _pFile, _Line, _Flags);
 	}
 
 	only_parameters_aliased malloc_like inline_always void * operator new (std::size_t _Size, const ch8 *_pFile, const NMib::CLineNumber &_Line, NMib::EHeapDebugFlag _Flags = NMib::EHeapDebugFlag_None)

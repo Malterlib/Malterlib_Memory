@@ -12,7 +12,7 @@ namespace
 	using namespace NMib::NTest;
 	using namespace NMib::NMemory;
 
-	constexpr mint gc_TestPageSize = gc_OsMaxPageSize;
+	constexpr umint gc_TestPageSize = gc_OsMaxPageSize;
 
 	class CBasics_Tests : public CTest
 	{
@@ -25,7 +25,7 @@ namespace
 		struct CAlloc
 		{
 			void *m_pAlloc;
-			mint m_Size;
+			umint m_Size;
 		};
 
 		void f_NonFinished()
@@ -36,16 +36,16 @@ namespace
 
 			{
 				TCMemoryManager<CParamsNoCleanup> MemoryManager;
-				mint LastSlab = 0xFFFFFFFF;
+				umint LastSlab = 0xFFFFFFFF;
 				NMib::NContainer::TCLinkedList<void *> Allocated;
 				for (int i = 0; i <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++i)
 				{
-					mint Size = (*MemoryManager.m_LocalArena).f_SizePadded(i);
+					umint Size = (*MemoryManager.m_LocalArena).f_SizePadded(i);
 					if (i < 1024)
 						Size = i;
 					if (Size != LastSlab)
 					{
-						mint SizeAlloc = Size;
+						umint SizeAlloc = Size;
 						auto pMem0 = MemoryManager.f_AllocWithSize(SizeAlloc);
 						Allocated.f_Insert(pMem0);
 						LastSlab = Size;
@@ -53,7 +53,7 @@ namespace
 				}
 				for (int i = CParamsNoCleanup::mc_MaxSlabAllocSize + 1; i <= CParamsNoCleanup::mc_MaxSlabAllocSize * 16; i += CParamsNoCleanup::mc_MaxSlabAllocSize)
 				{
-					mint Size = i;
+					umint Size = i;
 					auto pMem0 = MemoryManager.f_AllocWithSize(Size);
 					Allocated.f_Insert(pMem0);
 				}
@@ -68,12 +68,12 @@ namespace
 					{
 						for (int i = 0; i <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++i)
 						{
-							mint Size = (*MemoryManager.m_LocalArena).f_SizePadded(i);
+							umint Size = (*MemoryManager.m_LocalArena).f_SizePadded(i);
 							if (i < 1024)
 								Size = i;
 							if (Size != LastSlab)
 							{
-								mint SizeAlloc = Size;
+								umint SizeAlloc = Size;
 								auto pMem0 = MemoryManager.f_AllocWithSize(SizeAlloc);
 								Allocated.f_Insert(pMem0);
 								LastSlab = Size;
@@ -116,7 +116,7 @@ namespace
 					Allocated.f_Clear();
 				}
 
-				mint Size = 17;
+				umint Size = 17;
 				auto pMem0 = MemoryManager.f_AllocWithSize(Size);
 				Size = 11;
 				auto pMem1 = MemoryManager.f_AllocWithSize(Size);
@@ -161,17 +161,17 @@ namespace
 			static constexpr uint32 mc_BackgroundCleanupLifetimeDecommit = 1;
 		};
 
-		template <mint t_PageSize, mint t_nSizesPerLevel>
+		template <umint t_PageSize, umint t_nSizesPerLevel>
 		struct TCParams : public CDefaultMemoryManagerParams
 		{
-			static constexpr mint mc_NumSizesPerLevel = t_nSizesPerLevel;
-			static constexpr mint mc_SubSlabSize = t_PageSize;
+			static constexpr umint mc_NumSizesPerLevel = t_nSizesPerLevel;
+			static constexpr umint mc_SubSlabSize = t_PageSize;
 			static constexpr bool mc_bUseFreeBlockCounting = true;
-			static constexpr mint mc_PreventCacheConflictSize = 0;
+			static constexpr umint mc_PreventCacheConflictSize = 0;
 			static constexpr bool mc_bUseSlabFromEnd = true;
 		};
 
-		template <typename tf_CParams, mint t_PageSize>
+		template <typename tf_CParams, umint t_PageSize>
 		void f_TestMemory()
 		{
 			using CParams = TCMemoryManagerParams<tf_CParams>;
@@ -180,13 +180,13 @@ namespace
 			DMibTestSuite("Internals")
 			{
 				// Just run for checking the asserts
-				auto fCheckParams = [=]<mint tf_nSizesPerLevel>(mint _nSizesPerLevel)
+				auto fCheckParams = [=]<umint tf_nSizesPerLevel>(umint _nSizesPerLevel)
 					{
 						using CParams = TCMemoryManagerParams<TCParams<t_PageSize, tf_nSizesPerLevel>>;
 						// Just run for checking the asserts
 						for (int i = 0; i < CParams::mc_SlabSize / CParams::mc_SubSlabSize; ++i)
 						{
-							for (mint iSize = 0; iSize < _nSizesPerLevel; ++iSize)
+							for (umint iSize = 0; iSize < _nSizesPerLevel; ++iSize)
 								CParams::fs_DivideBySlabMultiplier(i, iSize);
 						}
 
@@ -245,7 +245,7 @@ namespace
 					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
 				}
 
-				auto fAligned = [](mint _Size)
+				auto fAligned = [](umint _Size)
 					{
 						if constexpr (!tf_CParams::mc_bAllowUnalignedFreeList)
 							return NMib::fg_AlignUp(_Size, sizeof(void *));
@@ -453,18 +453,18 @@ namespace
 				{
 					TCMemoryManagerTracked<TCMemoryManager<CParamsNoCleanup>> MemoryManager("Test", CMemoryManagerConfig());
 					MemoryManager.f_ForceStartCleanupThreads();
-					mint LastAlloc = 0;
+					umint LastAlloc = 0;
 					auto Checkout = MemoryManager.f_CheckoutForce();
-					for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
+					for (umint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 					{
-						mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
+						umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 						if (AllocSize != LastAlloc || MemorySize < 1024)
 						{
 							LastAlloc = AllocSize;
-							mint Size = MemorySize;
+							umint Size = MemorySize;
 							auto pMemory = MemoryManager.f_AllocWithSize(Size);
-							mint ReturnedSize = MemoryManager.f_Size(pMemory);
-							mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
+							umint ReturnedSize = MemoryManager.f_Size(pMemory);
+							umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 
 							{
 #if DMibConfig_Memory_Shims_Enable
@@ -505,21 +505,21 @@ namespace
 				{
 					TCMemoryManagerTracked<TCMemoryManager<CParamsNoCleanup>> MemoryManager("Test", CMemoryManagerConfig());
 					MemoryManager.f_ForceStartCleanupThreads();
-					mint LastAlloc = 0;
+					umint LastAlloc = 0;
 					auto Checkout = MemoryManager.f_CheckoutForce();
-					for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
+					for (umint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 					{
-						mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
+						umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 						if (AllocSize != LastAlloc || MemorySize < 1024)
 						{
 							LastAlloc = AllocSize;
-							mint Size = MemorySize;
-							mint nAllocs = 16;
+							umint Size = MemorySize;
+							umint nAllocs = 16;
 							MemoryManager.f_AllocBatch
 								(
 									Size
 									, 1
-									, [&](void * _pAlloc, mint _Size)
+									, [&](void * _pAlloc, umint _Size)
 									{
 
 										{
@@ -561,16 +561,16 @@ namespace
 			{
 				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 				auto Checkout = MemoryManager.f_CheckoutForce();
-				mint LastAlloc = 0;
-				for (mint MemorySize = CParamsNoCleanup::mc_MaxSlabAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_SlabSize * 4; MemorySize *= 2)
+				umint LastAlloc = 0;
+				for (umint MemorySize = CParamsNoCleanup::mc_MaxSlabAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_SlabSize * 4; MemorySize *= 2)
 				{
-					mint AllocSize = MemorySize;
+					umint AllocSize = MemorySize;
 					if (AllocSize != LastAlloc)
 					{
 						LastAlloc = AllocSize;
 						DMibTestPath(NMib::NStr::CStr::CFormat("{}") << AllocSize);
 
-						mint Size = AllocSize;
+						umint Size = AllocSize;
 						auto pAlloc = MemoryManager.f_AllocWithSize(Size);
 						DMibTest(DMibExpr(true));
 						MemoryManager.f_Free(pAlloc, Size);
@@ -581,28 +581,28 @@ namespace
 			DMibTestSuite("Multiple sub slabs")
 			{
 				TCMemoryManager<CParamsNoCleanup> MemoryManagerTest{CMemoryManagerConfig()};
-				mint LastAlloc = 0;
+				umint LastAlloc = 0;
 
-				for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
+				for (umint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 				{
-					mint AllocSize = MemoryManagerTest.f_SizePadded(MemorySize);
+					umint AllocSize = MemoryManagerTest.f_SizePadded(MemorySize);
 					if (AllocSize != LastAlloc)
 					{
 						LastAlloc = AllocSize;
 						DMibTestPath(NMib::NStr::CStr::CFormat("{}") << AllocSize);
 
-						mint nAlloc = (CParamsNoCleanup::mc_MaxSubSlabMultipliedSize * 3) / AllocSize;
+						umint nAlloc = (CParamsNoCleanup::mc_MaxSubSlabMultipliedSize * 3) / AllocSize;
 
 						TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 						auto Checkout = MemoryManager.f_CheckoutForce();
 						NMib::NContainer::TCVector<void *> Allocs;
 						Allocs.f_SetLen(nAlloc);
-						for (mint i = 0; i < nAlloc; ++i)
+						for (umint i = 0; i < nAlloc; ++i)
 						{
-							mint Size = AllocSize;
+							umint Size = AllocSize;
 							Allocs[i] = MemoryManager.f_AllocWithSize(Size);
 						}
-						for (mint i = 0; i < nAlloc; ++i)
+						for (umint i = 0; i < nAlloc; ++i)
 						{
 							MemoryManager.f_Free(Allocs[i], AllocSize);
 						}
@@ -615,10 +615,10 @@ namespace
 			{
 				TCMemoryManager<CParamsNoCleanup> MemoryManagerTest{CMemoryManagerConfig()};
 
-				mint LastAlloc = 0;
-				for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
+				umint LastAlloc = 0;
+				for (umint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 				{
-					mint AllocSize = MemoryManagerTest.f_SizePadded(MemorySize);
+					umint AllocSize = MemoryManagerTest.f_SizePadded(MemorySize);
 					if (AllocSize != LastAlloc)
 					{
 						LastAlloc = AllocSize;
@@ -628,15 +628,15 @@ namespace
 
 						TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 						auto Checkout = MemoryManager.f_CheckoutForce();
-						mint nAlloc = (CParamsNoCleanup::mc_SlabSize * 4) / MemorySize;
+						umint nAlloc = (CParamsNoCleanup::mc_SlabSize * 4) / MemorySize;
 						NMib::NContainer::TCVector<void *> Allocs;
 						Allocs.f_SetLen(nAlloc);
-						for (mint i = 0; i < nAlloc; ++i)
+						for (umint i = 0; i < nAlloc; ++i)
 						{
-							mint Size = AllocSize;
+							umint Size = AllocSize;
 							Allocs[i] = MemoryManager.f_AllocWithSize(Size);
 						}
-						for (mint i = 0; i < nAlloc; ++i)
+						for (umint i = 0; i < nAlloc; ++i)
 						{
 							MemoryManager.f_Free(Allocs[i], AllocSize);
 						}
@@ -647,22 +647,22 @@ namespace
 
 			DMibTestSuite("Aligned")
 			{
-				mint LastAlloc = 0;
-				mint LastAlignment = 1;
+				umint LastAlloc = 0;
+				umint LastAlignment = 1;
 				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 				auto Checkout = MemoryManager.f_CheckoutForce();
 				uint8 * pLast = nullptr;
-				for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxHeapAllocSize * 2; ++MemorySize)
+				for (umint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxHeapAllocSize * 2; ++MemorySize)
 				{
-					mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
+					umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 					if (AllocSize != LastAlloc)
 					{
-						for (mint Alignment = 1; Alignment <= CParamsNoCleanup::mc_MaxHeapAllocSize * 2; Alignment <<= 1)
+						for (umint Alignment = 1; Alignment <= CParamsNoCleanup::mc_MaxHeapAllocSize * 2; Alignment <<= 1)
 						{
 							if (pLast)
 								MemoryManager.f_Free(pLast, NMib::fg_AlignUp(LastAlloc, LastAlignment));
 
-							mint Size = AllocSize;
+							umint Size = AllocSize;
 							pLast = (uint8 *)MemoryManager.f_AllocAlignedWithSize(Size, Alignment);
 							LastAlloc = AllocSize;
 							LastAlignment = Alignment;
@@ -676,14 +676,14 @@ namespace
 
 			DMibTestSuite("Commit")
 			{
-				[[maybe_unused]] mint LastAlloc = 0;
+				[[maybe_unused]] umint LastAlloc = 0;
 				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
-				mint SlabSize = CParamsNoCleanup::mc_SlabSize;
+				umint SlabSize = CParamsNoCleanup::mc_SlabSize;
 
 				{
 					DMibTestPath("Alloc1");
 					auto Checkout = MemoryManager.f_CheckoutForce();
-					mint nAllocs = (SlabSize / 2) / 256;
+					umint nAllocs = (SlabSize / 2) / 256;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
 
 					Allocs.f_SetLen(nAllocs);
@@ -692,13 +692,13 @@ namespace
 
 					MeasureMemory.f_Start();
 
-					for (mint i = 0; i < nAllocs; ++i)
+					for (umint i = 0; i < nAllocs; ++i)
 					{
-						mint Size = 256;
+						umint Size = 256;
 						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
-					for (mint i = 0; i < nAllocs; ++i)
+					for (umint i = 0; i < nAllocs; ++i)
 						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
 
 					MeasureMemory.f_Stop(1);
@@ -707,17 +707,17 @@ namespace
 					MeasureMemory.f_GetResults(Results);
 
 #	if DMibConfig_Memory_Shims_Enable
-					mint MetaCommit = CParamsNoCleanup::fs_GetSlabTypeMetaSize(0);
+					umint MetaCommit = CParamsNoCleanup::fs_GetSlabTypeMetaSize(0);
 					DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesCommit.m_Average) == DMibExpr(SlabSize / 2 + MetaCommit));
 #	endif
 				}
-				[[maybe_unused]] mint MaxCommittedSubSlabs = 0;
+				[[maybe_unused]] umint MaxCommittedSubSlabs = 0;
 				MemoryManager.f_GarbageCollect(false);
-				[[maybe_unused]] mint PreviousWaste;
+				[[maybe_unused]] umint PreviousWaste;
 				{
 					DMibTestPath("Alloc2");
 					auto Checkout = MemoryManager.f_CheckoutForce();
-					mint nAllocs = (SlabSize / 2) / 384;
+					umint nAllocs = (SlabSize / 2) / 384;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
 
 					Allocs.f_SetLen(nAllocs);
@@ -726,13 +726,13 @@ namespace
 
 					MeasureMemory.f_Start();
 
-					for (mint i = 0; i < nAllocs; ++i)
+					for (umint i = 0; i < nAllocs; ++i)
 					{
-						mint Size = 384;
+						umint Size = 384;
 						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
-					for (mint i = 0; i < nAllocs; ++i)
+					for (umint i = 0; i < nAllocs; ++i)
 						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
 
 					MeasureMemory.f_Stop(1);
@@ -741,14 +741,14 @@ namespace
 					MeasureMemory.f_GetResults(Results);
 
 #	if DMibConfig_Memory_Shims_Enable
-					mint PreviousMetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(0) / CParamsNoCleanup::mc_SubSlabSize;
-					mint MetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(4) / CParamsNoCleanup::mc_SubSlabSize;
-					mint Multiplier = CParamsNoCleanup::mc_SlabTypeInfo[4].m_SubSlabMutiplier;
-					mint SubSlabSize = Multiplier * CParamsNoCleanup::mc_SubSlabSize;
-					mint PreviousCommittedSubSlabs = (SlabSize / 2) / CParamsNoCleanup::mc_SubSlabSize;
-					mint CommittedSubSlabs = ((PreviousCommittedSubSlabs + Multiplier - 1) / Multiplier) * Multiplier;
+					umint PreviousMetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(0) / CParamsNoCleanup::mc_SubSlabSize;
+					umint MetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(4) / CParamsNoCleanup::mc_SubSlabSize;
+					umint Multiplier = CParamsNoCleanup::mc_SlabTypeInfo[4].m_SubSlabMutiplier;
+					umint SubSlabSize = Multiplier * CParamsNoCleanup::mc_SubSlabSize;
+					umint PreviousCommittedSubSlabs = (SlabSize / 2) / CParamsNoCleanup::mc_SubSlabSize;
+					umint CommittedSubSlabs = ((PreviousCommittedSubSlabs + Multiplier - 1) / Multiplier) * Multiplier;
 					MaxCommittedSubSlabs = NMib::fg_Max(CommittedSubSlabs, MaxCommittedSubSlabs, PreviousCommittedSubSlabs);
-					mint Waste = CParamsNoCleanup::mc_SlabSize - MetaSubSlabs * CParamsNoCleanup::mc_SubSlabSize - CParamsNoCleanup::mc_NumSubSlabs[4] * SubSlabSize;
+					umint Waste = CParamsNoCleanup::mc_SlabSize - MetaSubSlabs * CParamsNoCleanup::mc_SubSlabSize - CParamsNoCleanup::mc_NumSubSlabs[4] * SubSlabSize;
 					PreviousWaste = Waste;
 					DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, Waste);
 					DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, ==, (CommittedSubSlabs - PreviousCommittedSubSlabs) * CParamsNoCleanup::mc_SubSlabSize);
@@ -758,7 +758,7 @@ namespace
 				{
 					DMibTestPath("Alloc3");
 					auto Checkout = MemoryManager.f_CheckoutForce();
-					mint nAllocs = (SlabSize / 2) / 256;
+					umint nAllocs = (SlabSize / 2) / 256;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
 
 					Allocs.f_SetLen(nAllocs);
@@ -767,13 +767,13 @@ namespace
 
 					MeasureMemory.f_Start();
 
-					for (mint i = 0; i < nAllocs; ++i)
+					for (umint i = 0; i < nAllocs; ++i)
 					{
-						mint Size = 256;
+						umint Size = 256;
 						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
-					for (mint i = 0; i < nAllocs; ++i)
+					for (umint i = 0; i < nAllocs; ++i)
 						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
 
 					MeasureMemory.f_Stop(1);
@@ -792,9 +792,9 @@ namespace
 				{
 					DMibTestPath("Alloc4");
 					auto Checkout = MemoryManager.f_CheckoutForce();
-					mint AllocSize = 256 + (258/8)*3;
-					mint nAllocs = (SlabSize / 2) / AllocSize;
-					mint nAllocBytes = nAllocs * AllocSize;
+					umint AllocSize = 256 + (258/8)*3;
+					umint nAllocs = (SlabSize / 2) / AllocSize;
+					umint nAllocBytes = nAllocs * AllocSize;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
 
 					Allocs.f_SetLen(nAllocs);
@@ -803,13 +803,13 @@ namespace
 
 					MeasureMemory.f_Start();
 
-					for (mint i = 0; i < nAllocs; ++i)
+					for (umint i = 0; i < nAllocs; ++i)
 					{
-						mint Size = AllocSize;
+						umint Size = AllocSize;
 						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
-					for (mint i = 0; i < nAllocs; ++i)
+					for (umint i = 0; i < nAllocs; ++i)
 						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
 
 					MeasureMemory.f_Stop(1);
@@ -819,10 +819,10 @@ namespace
 
 #	if DMibConfig_Memory_Shims_Enable
 					// TODO: Calculate actual start and end to get correct sizes
-					mint MetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(3) / CParamsNoCleanup::mc_SubSlabSize;
-					mint Multiplier = CParamsNoCleanup::mc_SlabTypeInfo[3].m_SubSlabMutiplier;
-					mint SubSlabSize = Multiplier * CParamsNoCleanup::mc_SubSlabSize;
-					mint Waste = CParamsNoCleanup::mc_SlabSize - MetaSubSlabs * CParamsNoCleanup::mc_SubSlabSize - CParamsNoCleanup::mc_NumSubSlabs[3] * SubSlabSize;
+					umint MetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(3) / CParamsNoCleanup::mc_SubSlabSize;
+					umint Multiplier = CParamsNoCleanup::mc_SlabTypeInfo[3].m_SubSlabMutiplier;
+					umint SubSlabSize = Multiplier * CParamsNoCleanup::mc_SubSlabSize;
+					umint Waste = CParamsNoCleanup::mc_SlabSize - MetaSubSlabs * CParamsNoCleanup::mc_SubSlabSize - CParamsNoCleanup::mc_NumSubSlabs[3] * SubSlabSize;
 					DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, Waste);
 					DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, >=, CParamsNoCleanup::mc_SubSlabSize);
 #	endif
@@ -833,11 +833,11 @@ namespace
 			{
 				DMibTestSuite("Full")
 				{
-					mint LastAlloc = 0;
+					umint LastAlloc = 0;
 					TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 					MemoryManager.f_ForceStartCleanupThreads();
 
-					for (mint i = 0; i < 2; ++i)
+					for (umint i = 0; i < 2; ++i)
 					{
 						ch8 const *pPath = "First Pass";
 						if (i == 1)
@@ -845,29 +845,29 @@ namespace
 						DMibTestPath(pPath);
 						NMib::NContainer::TCVector<CAlloc> Allocs;
 
-						for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
+						for (umint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 						{
-							mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
+							umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 							if (AllocSize != LastAlloc)
 							{
 								LastAlloc = AllocSize;
-								mint Size = MemorySize;
+								umint Size = MemorySize;
 								auto pMemory = MemoryManager.f_AllocWithSize(Size);
-								mint ReturnedSize = MemoryManager.f_Size(pMemory);
+								umint ReturnedSize = MemoryManager.f_Size(pMemory);
 								Allocs.f_Insert({pMemory, MemorySize});
-								mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
+								umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 								DMibTest(DMibExpr(AllocSize) == DMibExpr(Size))(ETestFlag_Aggregated);
 								DMibTest(DMibExpr(Size) >= DMibExpr(MemorySize))(ETestFlag_Aggregated);
 								DMibTest(DMibExpr(ReturnedSize) == DMibExpr(Size))(ETestFlag_Aggregated);
 							}
 						}
-						for (mint MemorySize = CParamsNoCleanup::mc_MaxSlabAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_SlabSize * 4; MemorySize *= 2)
+						for (umint MemorySize = CParamsNoCleanup::mc_MaxSlabAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_SlabSize * 4; MemorySize *= 2)
 						{
-							mint AllocSize = MemorySize;
+							umint AllocSize = MemorySize;
 							if (AllocSize != LastAlloc)
 							{
 								LastAlloc = AllocSize;
-								mint Size = AllocSize;
+								umint Size = AllocSize;
 								auto pAlloc = MemoryManager.f_AllocWithSize(Size);
 								Allocs.f_Insert({pAlloc, AllocSize});
 							}
@@ -898,11 +898,11 @@ namespace
 
 				DMibTestSuite("Partial")
 				{
-					mint LastAlloc = 0;
+					umint LastAlloc = 0;
 					TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 					MemoryManager.f_ForceStartCleanupThreads();
 
-					for (mint i = 0; i < 2; ++i)
+					for (umint i = 0; i < 2; ++i)
 					{
 						ch8 const *pPath = "First Pass";
 						if (i == 1)
@@ -911,29 +911,29 @@ namespace
 						NMib::NContainer::TCVector<CAlloc> Allocs;
 						NMib::NContainer::TCVector<CAlloc> BigAllocs;
 
-						for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
+						for (umint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 						{
-							mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
+							umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 							if (AllocSize != LastAlloc)
 							{
 								LastAlloc = AllocSize;
-								mint Size = MemorySize;
+								umint Size = MemorySize;
 								auto pMemory = MemoryManager.f_AllocWithSize(Size);
-								mint ReturnedSize = MemoryManager.f_Size(pMemory);
+								umint ReturnedSize = MemoryManager.f_Size(pMemory);
 								Allocs.f_Insert({pMemory, MemorySize});
-								mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
+								umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 								DMibTest(DMibExpr(AllocSize) == DMibExpr(Size))(ETestFlag_Aggregated);
 								DMibTest(DMibExpr(Size) >= DMibExpr(MemorySize))(ETestFlag_Aggregated);
 								DMibTest(DMibExpr(ReturnedSize) == DMibExpr(Size))(ETestFlag_Aggregated);
 							}
 						}
-						for (mint MemorySize = CParamsNoCleanup::mc_MaxSlabAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_SlabSize * 4; MemorySize *= 2)
+						for (umint MemorySize = CParamsNoCleanup::mc_MaxSlabAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_SlabSize * 4; MemorySize *= 2)
 						{
-							mint AllocSize = MemorySize;
+							umint AllocSize = MemorySize;
 							if (AllocSize != LastAlloc)
 							{
 								LastAlloc = AllocSize;
-								mint Size = AllocSize;
+								umint Size = AllocSize;
 								auto pAlloc = MemoryManager.f_AllocWithSize(Size);
 								BigAllocs.f_Insert({pAlloc, AllocSize});
 							}
@@ -942,7 +942,7 @@ namespace
 						DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) > DMibExpr(2u));
 						DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) == DMibExpr(0));
 
-						for (mint i = 1; i < Allocs.f_GetLen(); ++i)
+						for (umint i = 1; i < Allocs.f_GetLen(); ++i)
 							MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
 
 						{
@@ -957,7 +957,7 @@ namespace
 #	endif
 						}
 
-						for (mint i = 0; i < BigAllocs.f_GetLen(); ++i)
+						for (umint i = 0; i < BigAllocs.f_GetLen(); ++i)
 							MemoryManager.f_Free(BigAllocs[i].m_pAlloc, BigAllocs[i].m_Size);
 
 						CTestMemoryMeasure MeasureMemory("Alloc");
@@ -971,7 +971,7 @@ namespace
 #	if DMibConfig_Memory_Shims_Enable
 						DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesDecommit.m_Average) > DMibExpr(0) && DMibExpr("Second"));
 #	endif
-						mint nSlabs = MemoryManager.f_GetNumUsedSlabs();
+						umint nSlabs = MemoryManager.f_GetNumUsedSlabs();
 
 						DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(1u));
 						DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) == DMibExpr(1u));
@@ -1001,11 +1001,11 @@ namespace
 					MeasureMemory.f_Stop(1);
 				}
 
-				mint nThreads = 16;
+				umint nThreads = 16;
 #if DMibPPtrBits <= 32
 				nThreads = 4;
 #endif
-				for (mint i = 0; i < nThreads; ++i)
+				for (umint i = 0; i < nThreads; ++i)
 				{
 					StartedThreads.f_Insert
 						(
@@ -1021,38 +1021,38 @@ namespace
 										NMib::NContainer::TCVector<CAlloc> BigAllocs;
 										NMib::NContainer::TCVector<CAlloc> HugeAllocs;
 										auto Checkout = MemoryManager.f_CheckoutForce();
-										mint LastAlloc = 0;
-										for (mint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
+										umint LastAlloc = 0;
+										for (umint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
 										{
-											mint AllocSize = MemoryManager.f_SizePadded(MemorySize);
+											umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 											if (AllocSize != LastAlloc || MemorySize < 1024)
 											{
 												LastAlloc = AllocSize;
-												mint Size = MemorySize;
+												umint Size = MemorySize;
 												auto pMemory = MemoryManager.f_AllocWithSize(Size);
 												Allocs.f_Insert({pMemory, MemorySize});
 											}
 										}
 
-										for (mint MemorySize = CParamsNoCleanup::mc_MaxSlabAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_MaxHeapAllocSize; MemorySize *= 2)
+										for (umint MemorySize = CParamsNoCleanup::mc_MaxSlabAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_MaxHeapAllocSize; MemorySize *= 2)
 										{
-											mint AllocSize = MemorySize;
+											umint AllocSize = MemorySize;
 											if (AllocSize != LastAlloc)
 											{
 												LastAlloc = AllocSize;
-												mint Size = AllocSize;
+												umint Size = AllocSize;
 												auto pAlloc = MemoryManager.f_AllocWithSize(Size);
 												BigAllocs.f_Insert({pAlloc, AllocSize});
 											}
 										}
 
-										for (mint MemorySize = CParamsNoCleanup::mc_MaxHeapAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_SlabSize * 4; MemorySize *= 2)
+										for (umint MemorySize = CParamsNoCleanup::mc_MaxHeapAllocSize * 2; MemorySize <= CParamsNoCleanup::mc_SlabSize * 4; MemorySize *= 2)
 										{
-											mint AllocSize = MemorySize;
+											umint AllocSize = MemorySize;
 											if (AllocSize != LastAlloc)
 											{
 												LastAlloc = AllocSize;
-												mint Size = AllocSize;
+												umint Size = AllocSize;
 												auto pAlloc = MemoryManager.f_AllocWithSize(Size);
 												HugeAllocs.f_Insert({pAlloc, AllocSize});
 											}
@@ -1104,7 +1104,7 @@ namespace
 #endif
 		}
 
-		template <mint t_PageSize>
+		template <umint t_PageSize>
 		struct TCTestParamsNoSmallSize : public TCParams<t_PageSize, 8>
 		{
 			static constexpr bool mc_bUseSmallSizes = false;

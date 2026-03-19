@@ -72,7 +72,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManagerArena<t_CParams>::fp_GarbageCollectPerform(mint _SlabType)
+	bool TCMemoryManagerArena<t_CParams>::fp_GarbageCollectPerform(umint _SlabType)
 	{
 		DMibFastCheck(_SlabType < t_CParams::mc_NumSizesPerLevel);
 
@@ -81,7 +81,7 @@ namespace NMib::NMemory
 			bool bAborted = false;
 			pSlab->f_EnumPendingBits
 				(
-					[&](mint _Bit) -> bool
+					[&](umint _Bit) -> bool
 					{
 						if (fp_FreeSubSlab(pSlab, _Bit))
 						{
@@ -115,7 +115,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	int64 TCMemoryManagerArena<t_CParams>::fp_GarbageCollectPerform(mint _SlabType, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
+	int64 TCMemoryManagerArena<t_CParams>::fp_GarbageCollectPerform(umint _SlabType, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
 	{
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 		DMibFastCheck(_SlabType < t_CParams::mc_NumSizesPerLevel);
@@ -146,7 +146,7 @@ namespace NMib::NMemory
 
 			pSlab->f_EnumPendingBits
 				(
-					[this, &Params](mint _Bit) -> bool
+					[this, &Params](umint _Bit) -> bool
 					{
 						if (fp_FreeSubSlab(Params.m_pSlab, _Bit))
 						{
@@ -193,7 +193,7 @@ namespace NMib::NMemory
 	{
 		fp_CheckMessages();
 
-		for (mint i = 0; i < t_CParams::mc_NumSizesPerLevel; ++i)
+		for (umint i = 0; i < t_CParams::mc_NumSizesPerLevel; ++i)
 		{
 			for (auto iSlab = m_SlabsToGarbageCollect[i].f_GetIterator(); iSlab; )
 			{
@@ -203,7 +203,7 @@ namespace NMib::NMemory
 				bool bAborted = false;
 				pSlab->f_EnumPendingBits
 					(
-						[&](mint _Bit) -> bool
+						[&](umint _Bit) -> bool
 						{
 							if (fp_FreeSubSlab(pSlab, _Bit))
 							{
@@ -235,7 +235,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManagerArena<t_CParams>::fp_GarbageCollect(mint _SlabType)
+	bool TCMemoryManagerArena<t_CParams>::fp_GarbageCollect(umint _SlabType)
 	{
 		fp_CheckMessages();
 

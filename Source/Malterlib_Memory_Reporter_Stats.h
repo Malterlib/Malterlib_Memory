@@ -23,9 +23,9 @@ namespace NMib::NMemory
 			zuint64 m_Cycles;
 			zuint64 m_CyclesFree;
 			DMibListLinkDS_Link(CSize, m_Link);
-			mint f_GetSize() const
+			umint f_GetSize() const
 			{
-				return NContainer::TCMap<mint, CSize, CSort_Default, CAllocator_NonTrackedHeap>::fs_GetKey(*this);
+				return NContainer::TCMap<umint, CSize, CSort_Default, CAllocator_NonTrackedHeap>::fs_GetKey(*this);
 			}
 
 			CSize & operator += (CSize const& _Other)
@@ -46,56 +46,56 @@ namespace NMib::NMemory
 		CStatsMemoryReporter();
 		~CStatsMemoryReporter();
 
-		void f_AllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName) override;
-		void f_AllocatorDelete(mint _MemoryAllocator) override;
-		void f_ScopeEnter(mint _MemoryAllocator) override;
-		void f_ScopeExit(mint _MemoryAllocator) override;
+		void f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName) override;
+		void f_AllocatorDelete(umint _MemoryAllocator) override;
+		void f_ScopeEnter(umint _MemoryAllocator) override;
+		void f_ScopeExit(umint _MemoryAllocator) override;
 		void f_Alloc
 			(
-				mint _MemoryAllocator
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				umint _MemoryAllocator
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) override
 		;
 		void f_Resize
 			(
-				mint _MemoryAllocator
-				, mint _OldAddress
-				, mint _OldSize
+				umint _MemoryAllocator
+				, umint _OldAddress
+				, umint _OldSize
 				, void const *_pOldAllocationInfo
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) override
 		;
 		void f_Realloc
 			(
-				mint _MemoryAllocator
-				, mint _OldAddress
-				, mint _OldSize
+				umint _MemoryAllocator
+				, umint _OldAddress
+				, umint _OldSize
 				, void const *_pOldAllocationInfo
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) override
 		;
 
-		void f_Free(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) override;
+		void f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) override;
 
-		void f_GetSize(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) override;
-		void f_Protect(mint _MemoryAllocator, mint _Address, mint _Size, uaint _Protect) override;
-		void f_Commit(mint _MemoryAllocator, mint _Address, mint _Size) override;
-		void f_Decommit(mint _MemoryAllocator, mint _Address, mint _Size) override;
+		void f_GetSize(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) override;
+		void f_Protect(umint _MemoryAllocator, umint _Address, umint _Size, uaint _Protect) override;
+		void f_Commit(umint _MemoryAllocator, umint _Address, umint _Size) override;
+		void f_Decommit(umint _MemoryAllocator, umint _Address, umint _Size) override;
 
 	private:
 		struct CAllocator
@@ -104,14 +104,14 @@ namespace NMib::NMemory
 
 			CSize m_Total;
 
-			NContainer::TCMap<mint, CSize, CSort_Default, CAllocator_NonTrackedHeap> m_Sizes;
+			NContainer::TCMap<umint, CSize, CSort_Default, CAllocator_NonTrackedHeap> m_Sizes;
 		};
 
 		struct CThreadLocal
 		{
-			mint m_CyclesDepth;
+			umint m_CyclesDepth;
 			uint64 m_CyclesStart[16]; // 16 should be more than enough
-			NContainer::TCMap<mint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_Allocators;
+			NContainer::TCMap<umint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_Allocators;
 			CThreadLocal()
 				: m_CyclesDepth(0)
 			{
@@ -123,6 +123,6 @@ namespace NMib::NMemory
 		NThread::TCThreadLocal<CThreadLocal, NMemory::CAllocator_NonTrackedHeap, NThread::EThreadLocalFlag_FastThreadLocal> m_ThreadLocal;
 
 		NThread::CMutual m_Lock;
-		NContainer::TCMap<mint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_GlobalAllocators;
+		NContainer::TCMap<umint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_GlobalAllocators;
 	};
 }

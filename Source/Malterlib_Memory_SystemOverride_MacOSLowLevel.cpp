@@ -26,7 +26,7 @@ bool fg_MalterlibSystem_InitMacOS1060()
 	// This path is taken os OXS 10.6
 
 	Dl_info Info;
-	if (!dladdr((void *)(mint)pLibSystemInfo, &Info))
+	if (!dladdr((void *)(umint)pLibSystemInfo, &Info))
 	{
 		DMibTraceSafe("No dladdr for __Libsystem_version found, malloc override not enabled!\n", 0);
 		return false;
@@ -36,12 +36,12 @@ bool fg_MalterlibSystem_InitMacOS1060()
 
 	uint8 *pStartAddress = (uint8 *)Info.dli_fbase;
 	uint8 *pEndAddress = pStartAddress + 8*1024; // Go through 8 KB at max
-	mint nLoop = 0;
+	umint nLoop = 0;
 	while (pStartAddress < pEndAddress)
 	{
 		++nLoop;
 		Dl_info Info;
-		if (dladdr((void *)(mint)pStartAddress, &Info))
+		if (dladdr((void *)(umint)pStartAddress, &Info))
 		{
 			if (Info.dli_sname && NMib::NStr::fg_StrCmp(Info.dli_sname, "pthread_init") == 0)
 			{

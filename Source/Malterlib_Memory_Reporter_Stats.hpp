@@ -19,7 +19,7 @@ namespace NMib::NMemory
 		fg_ReportMemoryGloballyTo(this);
 	}
 
-	void fg_ReportSize(mint _Tabs, CStatsMemoryReporter::CSize const &_Size)
+	void fg_ReportSize(umint _Tabs, CStatsMemoryReporter::CSize const &_Size)
 	{
 		fp64 OverheadPercent = (_Size.m_nBytesOverhead / fp64(_Size.m_nBytes)) * 100.0;
 		fp64 OverheadPerAlloc = (_Size.m_nBytesOverhead / fp64(_Size.m_nAllocations));
@@ -97,7 +97,7 @@ namespace NMib::NMemory
 		}
 	}
 
-	void CStatsMemoryReporter::f_AllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName)
+	void CStatsMemoryReporter::f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName)
 	{
 		auto &ThreadLocal = *m_ThreadLocal;
 
@@ -105,11 +105,11 @@ namespace NMib::NMemory
 		Allocator.m_Name = _pAllocatorName;
 	}
 
-	void CStatsMemoryReporter::f_AllocatorDelete(mint _MemoryAllocator)
+	void CStatsMemoryReporter::f_AllocatorDelete(umint _MemoryAllocator)
 	{
 	}
 
-	void CStatsMemoryReporter::f_ScopeEnter(mint _MemoryAllocator)
+	void CStatsMemoryReporter::f_ScopeEnter(umint _MemoryAllocator)
 	{
 		auto &ThreadLocal = *m_ThreadLocal;
 		if (ThreadLocal.m_CyclesDepth >= 16)
@@ -118,7 +118,7 @@ namespace NMib::NMemory
 		++ThreadLocal.m_CyclesDepth;
 	}
 
-	void CStatsMemoryReporter::f_ScopeExit(mint _MemoryAllocator)
+	void CStatsMemoryReporter::f_ScopeExit(umint _MemoryAllocator)
 	{
 		auto &ThreadLocal = *m_ThreadLocal;
 		--ThreadLocal.m_CyclesDepth;
@@ -126,11 +126,11 @@ namespace NMib::NMemory
 
 	void CStatsMemoryReporter::f_Alloc
 		(
-			mint _MemoryAllocator
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			umint _MemoryAllocator
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -158,14 +158,14 @@ namespace NMib::NMemory
 
 	void CStatsMemoryReporter::f_Resize
 		(
-			mint _MemoryAllocator
-			, mint _OldAddress
-			, mint _OldSize
+			umint _MemoryAllocator
+			, umint _OldAddress
+			, umint _OldSize
 			, void const *_pOldAllocationInfo
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -194,14 +194,14 @@ namespace NMib::NMemory
 
 	void CStatsMemoryReporter::f_Realloc
 		(
-			mint _MemoryAllocator
-			, mint _OldAddress
-			, mint _OldSize
+			umint _MemoryAllocator
+			, umint _OldAddress
+			, umint _OldSize
 			, void const *_pOldAllocationInfo
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -228,7 +228,7 @@ namespace NMib::NMemory
 		}
 	}
 
-	void CStatsMemoryReporter::f_Free(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo)
+	void CStatsMemoryReporter::f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo)
 	{
 		uint64 CyclesEnd = NTime::NPlatform::fg_Timer_CyclesFast();
 		auto &ThreadLocal = *m_ThreadLocal;
@@ -239,19 +239,19 @@ namespace NMib::NMemory
 		Size.m_CyclesFree += nCycles;
 	}
 
-	void CStatsMemoryReporter::f_GetSize(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo)
+	void CStatsMemoryReporter::f_GetSize(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo)
 	{
 	}
 
-	void CStatsMemoryReporter::f_Protect(mint _MemoryAllocator, mint _Address, mint _Size, uaint _Protect)
+	void CStatsMemoryReporter::f_Protect(umint _MemoryAllocator, umint _Address, umint _Size, uaint _Protect)
 	{
 	}
 
-	void CStatsMemoryReporter::f_Commit(mint _MemoryAllocator, mint _Address, mint _Size)
+	void CStatsMemoryReporter::f_Commit(umint _MemoryAllocator, umint _Address, umint _Size)
 	{
 	}
 
-	void CStatsMemoryReporter::f_Decommit(mint _MemoryAllocator, mint _Address, mint _Size)
+	void CStatsMemoryReporter::f_Decommit(umint _MemoryAllocator, umint _Address, umint _Size)
 	{
 	}
 }

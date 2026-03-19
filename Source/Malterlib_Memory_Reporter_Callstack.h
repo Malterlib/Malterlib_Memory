@@ -24,9 +24,9 @@ namespace NMib::NMemory
 			zuint64 m_nAllocations;
 			zuint64 m_nBytes;
 
-			mint f_GetSize() const
+			umint f_GetSize() const
 			{
-				return NContainer::TCMap<mint, CSize, CSort_Default, CAllocator_NonTrackedHeap>::fs_GetKey(*this);
+				return NContainer::TCMap<umint, CSize, CSort_Default, CAllocator_NonTrackedHeap>::fs_GetKey(*this);
 			}
 
 			CSize & operator += (CSize const& _Other)
@@ -47,56 +47,56 @@ namespace NMib::NMemory
 		CCallstackMemoryReporter();
 		~CCallstackMemoryReporter();
 
-		void f_AllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName) override;
-		void f_AllocatorDelete(mint _MemoryAllocator) override;
-		void f_ScopeEnter(mint _MemoryAllocator) override;
-		void f_ScopeExit(mint _MemoryAllocator) override;
+		void f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName) override;
+		void f_AllocatorDelete(umint _MemoryAllocator) override;
+		void f_ScopeEnter(umint _MemoryAllocator) override;
+		void f_ScopeExit(umint _MemoryAllocator) override;
 		void f_Alloc
 			(
-				mint _MemoryAllocator
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				umint _MemoryAllocator
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) override
 		;
 		void f_Resize
 			(
-				mint _MemoryAllocator
-				, mint _OldAddress
-				, mint _OldSize
+				umint _MemoryAllocator
+				, umint _OldAddress
+				, umint _OldSize
 				, void const *_pOldAllocationInfo
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) override
 		;
 		void f_Realloc
 			(
-				mint _MemoryAllocator
-				, mint _OldAddress
-				, mint _OldSize
+				umint _MemoryAllocator
+				, umint _OldAddress
+				, umint _OldSize
 				, void const *_pOldAllocationInfo
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) override
 		;
 
-		void f_Free(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) override;
+		void f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) override;
 
-		void f_GetSize(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) override;
-		void f_Protect(mint _MemoryAllocator, mint _Address, mint _Size, uaint _Protect) override;
-		void f_Commit(mint _MemoryAllocator, mint _Address, mint _Size) override;
-		void f_Decommit(mint _MemoryAllocator, mint _Address, mint _Size) override;
+		void f_GetSize(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) override;
+		void f_Protect(umint _MemoryAllocator, umint _Address, umint _Size, uaint _Protect) override;
+		void f_Commit(umint _MemoryAllocator, umint _Address, umint _Size) override;
+		void f_Decommit(umint _MemoryAllocator, umint _Address, umint _Size) override;
 
 		void f_Report(bool _bFullReport) override;
 
@@ -121,9 +121,9 @@ namespace NMib::NMemory
 
 		struct COperation
 		{
-			mint m_MemoryAllocator;
-			mint m_Address;
-			mint m_Size;
+			umint m_MemoryAllocator;
+			umint m_Address;
+			umint m_Size;
 
 			enum EOpType
 			{
@@ -139,13 +139,13 @@ namespace NMib::NMemory
 			struct Callstack
 			{
 				CMibCodeAddress m_Callstack[EMaxStackTraceDepth];
-				mint m_nCallstack;
+				umint m_nCallstack;
 			} m_Callstack;
 
 			struct OldAlloc
 			{
-				mint m_Address;
-				mint m_Size;
+				umint m_Address;
+				umint m_Size;
 			} m_OldAlloc;
 
 			NStr::CStrNonTracked m_AllocatorName;
@@ -157,26 +157,26 @@ namespace NMib::NMemory
 
 		struct CAllocationKey
 		{
-			CAllocationKey(mint _MemoryAllocator, mint _Address)
+			CAllocationKey(umint _MemoryAllocator, umint _Address)
 				: m_Allocator(_MemoryAllocator)
 				, m_Address(_Address)
 			{
 			}
 
-			mint m_Allocator;
-			mint m_Address;
+			umint m_Allocator;
+			umint m_Address;
 
 			auto operator <=> (CAllocationKey const& _Other) const noexcept = default;
 		};
-		NContainer::TCMap<mint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_Allocators;
+		NContainer::TCMap<umint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_Allocators;
 
 		NThread::CMutual m_Lock;
-		NAtomic::TCAtomic<mint> m_LockRequests;
+		NAtomic::TCAtomic<umint> m_LockRequests;
 
-		NAtomic::TCAtomic<mint> m_QueueSize;
+		NAtomic::TCAtomic<umint> m_QueueSize;
 		NThread::CEvent m_QueueEvent;
 
-		mint m_nReports = 0;
+		umint m_nReports = 0;
 
 	private:
 		// Thread related
@@ -188,7 +188,7 @@ namespace NMib::NMemory
 		{
 			CCallstack() {};
 
-			CCallstack(uint64 _Hash, CMibCodeAddress *_lStack, mint _nStack, mint _MemoryAllocator)
+			CCallstack(uint64 _Hash, CMibCodeAddress *_lStack, umint _nStack, umint _MemoryAllocator)
 				: m_Hash(_Hash)
 				, m_nCallStack(_nStack)
 				, m_Allocator(_MemoryAllocator)
@@ -199,9 +199,9 @@ namespace NMib::NMemory
 			uint64 m_Hash;
 
 			CMibCodeAddress m_CallStack[EMaxStackTraceDepth];
-			mint m_nCallStack;
+			umint m_nCallStack;
 
-			mint m_Allocator;
+			umint m_Allocator;
 			CAllocator* m_pAllocator;
 
 			CSize m_Total;
@@ -209,25 +209,25 @@ namespace NMib::NMemory
 		NContainer::TCMap<uint64, CCallstack, CSort_Default, CAllocator_NonTrackedHeap> m_Callstacks;
 		NContainer::TCVector<CCallstack, NMemory::CAllocator_NonTrackedHeap> m_Errors;
 
-		CCallstack& fp_GetCallstack(mint _MemoryAllocator, mint _Hash, CMibCodeAddress *_pStack, mint _nStack);
-		static NCryptography::CHashDigest_MD5 fsp_GetStackFingerprint(CMibCodeAddress *_pStack, mint _nStack);
+		CCallstack& fp_GetCallstack(umint _MemoryAllocator, umint _Hash, CMibCodeAddress *_pStack, umint _nStack);
+		static NCryptography::CHashDigest_MD5 fsp_GetStackFingerprint(CMibCodeAddress *_pStack, umint _nStack);
 
 
 		struct CAllocation
 		{
-			CAllocation(mint _Size, CCallstack* _pCallstack)
+			CAllocation(umint _Size, CCallstack* _pCallstack)
 				: m_Size(_Size)
 				, m_pCallstack(_pCallstack)
 			{
 			}
 
-			mint m_Size;
+			umint m_Size;
 			CCallstack* m_pCallstack;
-			mint m_nIgnoreFree = 0;
+			umint m_nIgnoreFree = 0;
 		};
 		NContainer::TCMap<CAllocationKey, CAllocation, CSort_Default, CAllocator_NonTrackedHeap> m_Allocations;
-		bool fp_RegisterAllocation(mint _MemoryAllocator, mint _Address, mint _Size, CCallstack* _pCallstack);
-		CCallstack* fp_RemoveAllocation(mint _MemoryAllocator, mint _Address);
+		bool fp_RegisterAllocation(umint _MemoryAllocator, umint _Address, umint _Size, CCallstack* _pCallstack);
+		CCallstack* fp_RemoveAllocation(umint _MemoryAllocator, umint _Address);
 
 
 		void fp_StartupThread();

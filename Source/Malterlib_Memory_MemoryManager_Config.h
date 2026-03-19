@@ -55,12 +55,12 @@ namespace NMib::NMemory
 
 			CArena(CGlobal *_pGlobal);
 
-			void f_OnAlloc(uint8 *_pMemory, mint _nBytes);
+			void f_OnAlloc(uint8 *_pMemory, umint _nBytes);
 			void f_OnFree(uint8 *_pMemory);
 			void f_OnFreeOtherThread(uint8 *_pMemory);
 
-			void f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
-			bool f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
+			void f_OnFillFree(uint8 *_pMemory, umint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
+			bool f_OnCheckFree(uint8 *_pUntouchedMemory, umint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
 		};
 
 		struct CHeap
@@ -74,11 +74,11 @@ namespace NMib::NMemory
 
 			CHeap(CGlobal *_pGlobal);
 
-			void f_OnAlloc(uint8 *_pMemory, mint _nBytes);
+			void f_OnAlloc(uint8 *_pMemory, umint _nBytes);
 			void f_OnFree(uint8 *_pMemory);
 
-			void f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
-			bool f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
+			void f_OnFillFree(uint8 *_pMemory, umint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
+			bool f_OnCheckFree(uint8 *_pUntouchedMemory, umint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
 		};
 
 		struct CGlobal
@@ -93,24 +93,24 @@ namespace NMib::NMemory
 			template <typename tf_CMemoryManager>
 			CGlobal(tf_CMemoryManager & _MemMan);
 
-			void f_OnAlloc(uint8 *_pMemory, mint _nBytes);
+			void f_OnAlloc(uint8 *_pMemory, umint _nBytes);
 			void f_OnFree(uint8 *_pMemory);
 
-			void f_OnCommit(uint8 *_pMemory, mint _nBytes);
-			void f_OnDecommit(uint8 *_pMemory, mint _nBytes);
+			void f_OnCommit(uint8 *_pMemory, umint _nBytes);
+			void f_OnDecommit(uint8 *_pMemory, umint _nBytes);
 		};
 	};
 
 #if defined(DPlatformFamily_macOS)
-	static constexpr mint gc_OsMaxPageSize = 16*1024;
+	static constexpr umint gc_OsMaxPageSize = 16*1024;
 #else
-	static constexpr mint gc_OsMaxPageSize = 4*1024;
+	static constexpr umint gc_OsMaxPageSize = 4*1024;
 #endif
 
 	struct CDefaultMemoryManagerParams
 	{
-		static constexpr mint mc_NumSizesPerLevel = 8;
-		static constexpr mint mc_SubSlabSize = gc_OsMaxPageSize;						// Should be the page size
+		static constexpr umint mc_NumSizesPerLevel = 8;
+		static constexpr umint mc_SubSlabSize = gc_OsMaxPageSize;						// Should be the page size
 		static constexpr bool mc_bRandomizeSlabHeader = false;
 		static constexpr bool mc_bBackgroundCleanup = true;
 		static constexpr EDeferCleanup mc_DeferCleanup = (EDeferCleanup)(EDeferCleanup_Allocs | EDeferCleanup_Commit | EDeferCleanup_OneSizeBlocks);
@@ -139,19 +139,19 @@ namespace NMib::NMemory
 		static constexpr bool mc_bUseSlabFromEnd = false;
 
 #if (defined(DArchitecture_arm64) || defined(DArchitecture_arm64e)) && defined(DPlatformFamily_macOS)
-		static constexpr mint mc_PreventCacheConflictSize = 64 * 1024 * 8 / 4;
+		static constexpr umint mc_PreventCacheConflictSize = 64 * 1024 * 8 / 4;
 #else
-		static constexpr mint mc_PreventCacheConflictSize = 32 * 1024 * 8 / 4; // Use 0 to disable. Default = 32 KB 8-way / 4
+		static constexpr umint mc_PreventCacheConflictSize = 32 * 1024 * 8 / 4; // Use 0 to disable. Default = 32 KB 8-way / 4
 #endif
-		static constexpr mint mc_PreventCacheConflictSizeMaxOverhead = 32; // 1 / x maximum overhead
+		static constexpr umint mc_PreventCacheConflictSizeMaxOverhead = 32; // 1 / x maximum overhead
 
-		static constexpr mint mc_MaxPendingSubSlabs = 0;
+		static constexpr umint mc_MaxPendingSubSlabs = 0;
 
 		using CAllocator = CAllocator_Virtual;
 		using CNotifier = CDefaultMemoryManagerNotifier;
 	};
 
-	template <mint t_nSizesPerLevel>
+	template <umint t_nSizesPerLevel>
 	struct TCMemoryManagerParamsSizesPerLevel;
 
 	template <>
@@ -201,7 +201,7 @@ namespace NMib::NMemory
 	{
 	};
 
-	template <typename t_CParams, mint ...tp_Indices>
+	template <typename t_CParams, umint ...tp_Indices>
 	struct TCMemoryManagerParams<t_CParams, NMeta::TCIndices<tp_Indices...>> : public t_CParams, TCMemoryManagerParamsSizesPerLevel<t_CParams::mc_NumSizesPerLevel>, CMemoryManagerParamsBase
 	{
 		static_assert(!NTraits::cIsBaseOf<t_CParams, CMemoryManagerParamsBase>, "You shouldn't override TCMemoryManagerParams directly");
@@ -217,38 +217,38 @@ namespace NMib::NMemory
 			)
 		;
 
-		static constexpr mint mc_SizesPerLevelShift = gc_HighestBitSet<t_CParams::mc_NumSizesPerLevel>;
+		static constexpr umint mc_SizesPerLevelShift = gc_HighestBitSet<t_CParams::mc_NumSizesPerLevel>;
 
-		static constexpr mint mc_SlabSize = t_CParams::mc_SubSlabSize * 1024 * 4;			// Carefully choosen to minimize waste in different subslab types
-		static constexpr mint mc_MaxNumSubSlabs = mc_SlabSize / t_CParams::mc_SubSlabSize;
+		static constexpr umint mc_SlabSize = t_CParams::mc_SubSlabSize * 1024 * 4;			// Carefully choosen to minimize waste in different subslab types
+		static constexpr umint mc_MaxNumSubSlabs = mc_SlabSize / t_CParams::mc_SubSlabSize;
 
-		static constexpr mint mc_MaxHeapAllocSize = mc_SlabSize;
-		static constexpr mint mc_MinHeapAllocSize = sizeof(void *) == 4 ? mc_SlabSize / 32 : fg_MinConstexpr(mc_SlabSize / 8, 2u * 1024u * 1024u); // Max 8,57% virtual space fragmentation
-		static constexpr mint mc_HeapChunkSize = mc_SlabSize * 2;
-		static constexpr mint mc_HeapBlockSize = mc_MinHeapAllocSize / t_CParams::mc_NumSizesPerLevel;
+		static constexpr umint mc_MaxHeapAllocSize = mc_SlabSize;
+		static constexpr umint mc_MinHeapAllocSize = sizeof(void *) == 4 ? mc_SlabSize / 32 : fg_MinConstexpr(mc_SlabSize / 8, 2u * 1024u * 1024u); // Max 8,57% virtual space fragmentation
+		static constexpr umint mc_HeapChunkSize = mc_SlabSize * 2;
+		static constexpr umint mc_HeapBlockSize = mc_MinHeapAllocSize / t_CParams::mc_NumSizesPerLevel;
 
-		static constexpr mint mc_MaxSlabAllocSize = mc_MinHeapAllocSize - (mc_MinHeapAllocSize /2) / t_CParams::mc_NumSizesPerLevel;
+		static constexpr umint mc_MaxSlabAllocSize = mc_MinHeapAllocSize - (mc_MinHeapAllocSize /2) / t_CParams::mc_NumSizesPerLevel;
 
-		static constexpr mint mc_NumSizeLevels = gc_HighestBitSet<mc_MaxSlabAllocSize> + 1;
-		static constexpr mint mc_NumNormalSizeLevels = mc_NumSizeLevels - 4;
+		static constexpr umint mc_NumSizeLevels = gc_HighestBitSet<mc_MaxSlabAllocSize> + 1;
+		static constexpr umint mc_NumNormalSizeLevels = mc_NumSizeLevels - 4;
 
-		static constexpr mint mc_NumSubSlabSizeLevels = mc_NumSizeLevels - gc_HighestBitSet<t_CParams::mc_SubSlabSize>;
+		static constexpr umint mc_NumSubSlabSizeLevels = mc_NumSizeLevels - gc_HighestBitSet<t_CParams::mc_SubSlabSize>;
 
-		static constexpr mint mc_MinAlignmentCalc = t_CParams::mc_bAllowUnalignedFreeList ? 16 / t_CParams::mc_NumSizesPerLevel : fg_Max(16 / t_CParams::mc_NumSizesPerLevel, sizeof(void *));
-		static constexpr mint mc_MinNormalSizeAlignment = mc_MinAlignmentCalc < 4 ? 4 : mc_MinAlignmentCalc;
+		static constexpr umint mc_MinAlignmentCalc = t_CParams::mc_bAllowUnalignedFreeList ? 16 / t_CParams::mc_NumSizesPerLevel : fg_Max(16 / t_CParams::mc_NumSizesPerLevel, sizeof(void *));
+		static constexpr umint mc_MinNormalSizeAlignment = mc_MinAlignmentCalc < 4 ? 4 : mc_MinAlignmentCalc;
 
-		static constexpr mint mc_SmallSizeSlabsLargestSize = t_CParams::mc_bUseSmallSizes ? (t_CParams::mc_bUseFreeBlockCounting ? 16 : 12) : 0;
+		static constexpr umint mc_SmallSizeSlabsLargestSize = t_CParams::mc_bUseSmallSizes ? (t_CParams::mc_bUseFreeBlockCounting ? 16 : 12) : 0;
 
-		static constexpr mint mc_PreventCacheConflictSizeMaxBlockSize = t_CParams::mc_PreventCacheConflictSize / t_CParams::mc_PreventCacheConflictSizeMaxOverhead; // 1 / x maximum overhead
+		static constexpr umint mc_PreventCacheConflictSizeMaxBlockSize = t_CParams::mc_PreventCacheConflictSize / t_CParams::mc_PreventCacheConflictSizeMaxOverhead; // 1 / x maximum overhead
 
-		static constexpr mint mc_MinNormalAllocSizeAfterSmallSize =
+		static constexpr umint mc_MinNormalAllocSizeAfterSmallSize =
 			fg_AlignUpConstExpr
 			(
 				mc_SmallSizeSlabsLargestSize + (fg_RoundPowerOfTwoDown(mc_SmallSizeSlabsLargestSize) / t_CParams::mc_NumSizesPerLevel)
 				, mc_MinNormalSizeAlignment
 			)
 		;
-		static constexpr mint mc_MinNormalAllocSize = fg_MaxConstexpr
+		static constexpr umint mc_MinNormalAllocSize = fg_MaxConstexpr
 			(
 				fg_AlignUpConstExpr(t_CParams::mc_bUseFreeBlockCounting ? (sizeof(void *) * 2 + 4) : sizeof(void *) * 2, mc_MinNormalSizeAlignment)
 				, mc_MinNormalAllocSizeAfterSmallSize
@@ -257,34 +257,34 @@ namespace NMib::NMemory
 
 		using CSubSlabIndex = NTraits::TCUnsigned<NTraits::TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(mc_MaxNumSubSlabs - 1) + 1 + 7) / 8>>;
 
-		static constexpr mint fs_CalculateNumAllocsPerSubSlab(mint _Index)
+		static constexpr umint fs_CalculateNumAllocsPerSubSlab(umint _Index)
 			{
 				if (_Index == 0)
 					return t_CParams::mc_SubSlabSize;
 
-				mint LowestBitSet = fg_GetLowestBitSetNoZero(_Index);
-				mint SizesPerLevelBits = fg_GetHighestBitSetNoZero(t_CParams::mc_NumSizesPerLevel);
-				return t_CParams::mc_SubSlabSize * (mint(1) << (SizesPerLevelBits - LowestBitSet));
+				umint LowestBitSet = fg_GetLowestBitSetNoZero(_Index);
+				umint SizesPerLevelBits = fg_GetHighestBitSetNoZero(t_CParams::mc_NumSizesPerLevel);
+				return t_CParams::mc_SubSlabSize * (umint(1) << (SizesPerLevelBits - LowestBitSet));
 			}
 		;
 
-		static constexpr mint mc_MinNormalSlabBucket = NMib::fg_GetHighestBitSetNoZero(mc_MinNormalAllocSize);
+		static constexpr umint mc_MinNormalSlabBucket = NMib::fg_GetHighestBitSetNoZero(mc_MinNormalAllocSize);
 
-		static constexpr mint mc_MaxAllocsPerSubSlab = []
+		static constexpr umint mc_MaxAllocsPerSubSlab = []
 			{
 				return fg_MaxConstexpr((fs_CalculateNumAllocsPerSubSlab(tp_Indices) >> mc_MinNormalSlabBucket)...);
 			}
 			()
 		;
 
-		static constexpr mint mc_MaxAllocsPerSubSlabActual = []
+		static constexpr umint mc_MaxAllocsPerSubSlabActual = []
 			{
 				return fg_MaxConstexpr((fs_CalculateNumAllocsPerSubSlab(tp_Indices) >> (tp_Indices == 0 ? mc_MinNormalSlabBucket : mc_MinNormalSlabBucket + 1))...);
 			}
 			()
 		;
 
-		static constexpr mint mc_MaxSubSlabMultipliedSize = []
+		static constexpr umint mc_MaxSubSlabMultipliedSize = []
 			{
 				return fg_MaxConstexpr((TCMemoryManagerParamsSizesPerLevel<t_CParams::mc_NumSizesPerLevel>::mc_SlabTypeInfo[tp_Indices].m_SubSlabMutiplier * t_CParams::mc_SubSlabSize)...);
 			}

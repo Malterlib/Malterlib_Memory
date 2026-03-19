@@ -16,63 +16,63 @@ namespace NMib::NMemory
 		CCategoriesMemoryReporter();
 		~CCategoriesMemoryReporter();
 
-		void f_AllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName) override;
-		void f_AllocatorDelete(mint _MemoryAllocator) override;
-		void f_ScopeEnter(mint _MemoryAllocator) override;
-		void f_ScopeExit(mint _MemoryAllocator) override;
+		void f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName) override;
+		void f_AllocatorDelete(umint _MemoryAllocator) override;
+		void f_ScopeEnter(umint _MemoryAllocator) override;
+		void f_ScopeExit(umint _MemoryAllocator) override;
 		void f_Alloc
 			(
-				mint _MemoryAllocator
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				umint _MemoryAllocator
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) override
 		;
 		void f_Resize
 			(
-				mint _MemoryAllocator
-				, mint _OldAddress
-				, mint _OldSize
+				umint _MemoryAllocator
+				, umint _OldAddress
+				, umint _OldSize
 				, void const *_pOldAllocationInfo
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) override
 		;
 		void f_Realloc
 			(
-				mint _MemoryAllocator
-				, mint _OldAddress
-				, mint _OldSize
+				umint _MemoryAllocator
+				, umint _OldAddress
+				, umint _OldSize
 				, void const *_pOldAllocationInfo
-				, mint _Address
-				, mint _RequestedAlignment
-				, mint _RequestedSize
-				, mint _ReturnedSize
+				, umint _Address
+				, umint _RequestedAlignment
+				, umint _RequestedSize
+				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
 			) override
 		;
 
-		void f_Free(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) override;
+		void f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) override;
 
-		void f_GetSize(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo) override;
-		void f_Protect(mint _MemoryAllocator, mint _Address, mint _Size, uaint _Protect) override;
-		void f_Commit(mint _MemoryAllocator, mint _Address, mint _Size) override;
-		void f_Decommit(mint _MemoryAllocator, mint _Address, mint _Size) override;
+		void f_GetSize(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) override;
+		void f_Protect(umint _MemoryAllocator, umint _Address, umint _Size, uaint _Protect) override;
+		void f_Commit(umint _MemoryAllocator, umint _Address, umint _Size) override;
+		void f_Decommit(umint _MemoryAllocator, umint _Address, umint _Size) override;
 
 		void f_Report(bool _bFullReport) override;
 
 	public:
 
-		void fp_ReportAlloc(mint _Size, void *_pAllocationInfo);
-		void fp_ReportFree(mint _Size, void const *_pAllocationInfo);
+		void fp_ReportAlloc(umint _Size, void *_pAllocationInfo);
+		void fp_ReportFree(umint _Size, void const *_pAllocationInfo);
 
 		struct CThreadLocal
 		{

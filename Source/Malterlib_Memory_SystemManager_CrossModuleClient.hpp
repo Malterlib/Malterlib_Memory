@@ -32,28 +32,28 @@ namespace NMib
 
 			if (NMemory::g_CrossModule.m_Version < 0x103)
 			{
-				NMemory::g_CrossModule.m_fAlloc = [](CMemoryManagerCrossModule *_pModule, mint _Size) DMibSuppressUndefinedSanitizer -> void *
+				NMemory::g_CrossModule.m_fAlloc = [](CMemoryManagerCrossModule *_pModule, umint _Size) DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fAllocWithSize(&g_CrossModule, _Size);
 					}
 				;
-				NMemory::g_CrossModule.m_fAllocInitZero = [](CMemoryManagerCrossModule *_pModule, mint _Size) DMibSuppressUndefinedSanitizer -> void *
+				NMemory::g_CrossModule.m_fAllocInitZero = [](CMemoryManagerCrossModule *_pModule, umint _Size) DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fAllocInitZeroWithSize(&g_CrossModule, _Size);
 					}
 				;
-				NMemory::g_CrossModule.m_fAllocAligned = [](CMemoryManagerCrossModule *_pModule, mint _Size, mint _Align) DMibSuppressUndefinedSanitizer -> void *
+				NMemory::g_CrossModule.m_fAllocAligned = [](CMemoryManagerCrossModule *_pModule, umint _Size, umint _Align) DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fAllocAlignedWithSize(&g_CrossModule, _Size, _Align);
 					}
 				;
 
-				NMemory::g_CrossModule.m_fNonTracked_Alloc = [](CMemoryManagerCrossModule *_pModule, mint _Size) DMibSuppressUndefinedSanitizer -> void *
+				NMemory::g_CrossModule.m_fNonTracked_Alloc = [](CMemoryManagerCrossModule *_pModule, umint _Size) DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fNonTracked_AllocWithSize(&g_CrossModule, _Size);
 					}
 				;
-				NMemory::g_CrossModule.m_fNonTracked_AllocAligned = [](CMemoryManagerCrossModule *_pModule, mint _Size, mint _Alignment) DMibSuppressUndefinedSanitizer -> void *
+				NMemory::g_CrossModule.m_fNonTracked_AllocAligned = [](CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment) DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fNonTracked_AllocAlignedWithSize(&g_CrossModule, _Size, _Alignment);
 					}
@@ -63,8 +63,8 @@ namespace NMib
 					(
 						CMemoryManagerCrossModule *_pModule
 						, void *_pMemory
-						 , mint &_Size
-						 , mint _OldSize
+						 , umint &_Size
+						 , umint _OldSize
 						 , const ch8 *_pFile
 						 , aint _Line
 						 , EHeapDebugFlag _Flags
@@ -78,8 +78,8 @@ namespace NMib
 					(
 						CMemoryManagerCrossModule *_pModule
 						, void *_pMemory
-						, mint &_Size
-						, mint _OldSize
+						, umint &_Size
+						, umint _OldSize
 						, const ch8 *_pFile
 						, aint _Line
 						, EHeapDebugFlag _Flags
@@ -89,27 +89,27 @@ namespace NMib
 						return NMemory::g_CrossModule.m_fResizeNoOldDebug(&g_CrossModule, _pMemory, _Size, _pFile, _Line, _Flags);
 					}
 				;
-				NMemory::g_CrossModule.m_fRealloc = [](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
+				NMemory::g_CrossModule.m_fRealloc = [](CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 					DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fReallocNoOld(&g_CrossModule, _pMemory, _Size);
 					}
 				;
-				NMemory::g_CrossModule.m_fResize = [](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
+				NMemory::g_CrossModule.m_fResize = [](CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 					DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fResizeNoOld(&g_CrossModule, _pMemory, _Size);
 					}
 				;
 
-				NMemory::g_CrossModule.m_fNonTracked_Realloc = [](CMemoryManagerCrossModule *_pModule, void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
+				NMemory::g_CrossModule.m_fNonTracked_Realloc = [](CMemoryManagerCrossModule *_pModule, void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 					DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fNonTracked_ReallocNoOld(&g_CrossModule, _pMem, _Size);
 					}
 				;
 
-				NMemory::g_CrossModule.m_fNonTracked_Resize = [](CMemoryManagerCrossModule *_pModule, void *_pMem, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
+				NMemory::g_CrossModule.m_fNonTracked_Resize = [](CMemoryManagerCrossModule *_pModule, void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 					DMibSuppressUndefinedSanitizer -> void *
 					{
 						return NMemory::g_CrossModule.m_fNonTracked_ResizeNoOld(&g_CrossModule, _pMem, _Size);
@@ -120,8 +120,8 @@ namespace NMib
 					(
 						CMemoryManagerCrossModule *_pModule
 						, void *_pMem
-						, mint &_Size
-						, mint _OldSize
+						, umint &_Size
+						, umint _OldSize
 						, const ch8 *_pFile
 						, aint _Line
 						, EHeapDebugFlag _Flags
@@ -136,8 +136,8 @@ namespace NMib
 					(
 						CMemoryManagerCrossModule *_pModule
 						, void *_pMem
-						, mint &_Size
-						, mint _OldSize
+						, umint &_Size
+						, umint _OldSize
 						, const ch8 *_pFile
 						, aint _Line
 						, EHeapDebugFlag _Flags
@@ -148,13 +148,13 @@ namespace NMib
 					}
 				;
 
-				NMemory::g_CrossModule.m_fFree = [](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size) DMibSuppressUndefinedSanitizer
+				NMemory::g_CrossModule.m_fFree = [](CMemoryManagerCrossModule *_pModule, void *_pMemory, umint _Size) DMibSuppressUndefinedSanitizer
 					{
 						return NMemory::g_CrossModule.m_fFreeNoSize(&g_CrossModule, _pMemory);
 					}
 				;
 
-				NMemory::g_CrossModule.m_fNonTracked_Free = [](CMemoryManagerCrossModule *_pModule, void *_pMemory, mint _Size) DMibSuppressUndefinedSanitizer
+				NMemory::g_CrossModule.m_fNonTracked_Free = [](CMemoryManagerCrossModule *_pModule, void *_pMemory, umint _Size) DMibSuppressUndefinedSanitizer
 					{
 						return NMemory::g_CrossModule.m_fNonTracked_FreeNoSize(&g_CrossModule, _pMemory);
 					}
@@ -250,7 +250,7 @@ namespace NMib
 		return NMemory::g_CrossModule.m_fMemoryManager_SetNumaNode(&NMemory::g_CrossModule, _NumaNode);
 	}
 
-	DMibSuppressUndefinedSanitizer void CSystem::f_MemoryManager_OnThreadCreated(mint _ThreadID, mint _ParentID)
+	DMibSuppressUndefinedSanitizer void CSystem::f_MemoryManager_OnThreadCreated(umint _ThreadID, umint _ParentID)
 	{
 		return NMemory::g_CrossModule.m_fMemoryManager_OnThreadCreated(&NMemory::g_CrossModule, _ThreadID, _ParentID);
 	}
@@ -258,43 +258,43 @@ namespace NMib
 
 namespace NMib::NMemory
 {
-	DMibSuppressUndefinedSanitizer void *fg_AllocWithSize(mint &_Size)
+	DMibSuppressUndefinedSanitizer void *fg_AllocWithSize(umint &_Size)
 	{
 		return g_CrossModule.m_fAllocWithSize(&g_CrossModule, _Size);
 	}
 
-	DMibSuppressUndefinedSanitizer void *fg_Alloc(mint _Size)
+	DMibSuppressUndefinedSanitizer void *fg_Alloc(umint _Size)
 	{
 		return g_CrossModule.m_fAlloc(&g_CrossModule, _Size);
 	}
 
-	DMibSuppressUndefinedSanitizer void *fg_AllocInitZeroWithSize(mint &_Size)
+	DMibSuppressUndefinedSanitizer void *fg_AllocInitZeroWithSize(umint &_Size)
 	{
 		return g_CrossModule.m_fAllocInitZeroWithSize(&g_CrossModule, _Size);
 	}
 
-	DMibSuppressUndefinedSanitizer void *fg_AllocInitZero(mint _Size)
+	DMibSuppressUndefinedSanitizer void *fg_AllocInitZero(umint _Size)
 	{
 		return g_CrossModule.m_fAllocInitZero(&g_CrossModule, _Size);
 	}
 
-	DMibSuppressUndefinedSanitizer void *fg_AllocAlignedWithSize(mint &_Size, mint _Alignment)
+	DMibSuppressUndefinedSanitizer void *fg_AllocAlignedWithSize(umint &_Size, umint _Alignment)
 	{
 		return g_CrossModule.m_fAllocAlignedWithSize(&g_CrossModule, _Size, _Alignment);
 	}
 
-	DMibSuppressUndefinedSanitizer void *fg_AllocAligned(mint _Size, mint _Alignment)
+	DMibSuppressUndefinedSanitizer void *fg_AllocAligned(umint _Size, umint _Alignment)
 	{
 		return g_CrossModule.m_fAllocAligned(&g_CrossModule, _Size, _Alignment);
 	}
 
-	bool DMibCrossmoduleAPI fg_CallBatchFunctor(void *_pContext, void * _pAlloc, mint _Size)
+	bool DMibCrossmoduleAPI fg_CallBatchFunctor(void *_pContext, void * _pAlloc, umint _Size)
 	{
-		NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const *pFunctor = fg_AutoStaticCast(_pContext);
+		NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const *pFunctor = fg_AutoStaticCast(_pContext);
 		return (*pFunctor)(_pAlloc, _Size);
 	}
 
-	DMibSuppressUndefinedSanitizer void fg_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
+	DMibSuppressUndefinedSanitizer void fg_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
 	{
 		return g_CrossModule.m_fAllocBatch(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_Functor);
 	}
@@ -309,44 +309,44 @@ namespace NMib::NMemory
 		return g_CrossModule.m_fMemoryManagerFeatures(&g_CrossModule);
 	}
 
-	DMibSuppressUndefinedSanitizer void fg_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+	DMibSuppressUndefinedSanitizer void fg_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 	{
 		return g_CrossModule.m_fAllocBatchDebug(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_Functor, _pFile, _Line, _Flags);
 	}
 
 #	if DMibConfig_MalterlibMemoryManager_Debug
-		DMibSuppressUndefinedSanitizer void *fg_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		DMibSuppressUndefinedSanitizer void *fg_AllocWithSizeDebug(umint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
 			return g_CrossModule.m_fAllocWithSizeDebug(&g_CrossModule, _Size, _pFile, _Line, _Flags);
 		}
-		DMibSuppressUndefinedSanitizer void *fg_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		DMibSuppressUndefinedSanitizer void *fg_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
 			return g_CrossModule.m_fAllocWithSizeDebug(&g_CrossModule, _Size, _pFile, _Line, _Flags);
 		}
-		DMibSuppressUndefinedSanitizer void *fg_AllocAlignedWithSizeDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		DMibSuppressUndefinedSanitizer void *fg_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
 			return g_CrossModule.m_fAllocAlignedWithSizeDebug(&g_CrossModule, _Size, _Alignment, _pFile, _Line, _Flags);
 		}
-		DMibSuppressUndefinedSanitizer void *fg_AllocAlignedDebug(mint _Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		DMibSuppressUndefinedSanitizer void *fg_AllocAlignedDebug(umint _Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
 			return g_CrossModule.m_fAllocAlignedWithSizeDebug(&g_CrossModule, _Size, _Alignment, _pFile, _Line, _Flags);
 		}
-		DMibSuppressUndefinedSanitizer void *fg_ReallocDebug(void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
+		DMibSuppressUndefinedSanitizer void *fg_ReallocDebug(void *_pMemory, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
 		{
 			return g_CrossModule.m_fReallocDebug(&g_CrossModule, _pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 		}
-		DMibSuppressUndefinedSanitizer void *fg_ResizeDebug(void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
+		DMibSuppressUndefinedSanitizer void *fg_ResizeDebug(void *_pMemory, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
 		{
 			return g_CrossModule.m_fResizeDebug(&g_CrossModule, _pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 		}
 #	endif
 
-	DMibSuppressUndefinedSanitizer void *fg_Realloc(void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
+	DMibSuppressUndefinedSanitizer void *fg_Realloc(void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 	{
 		return g_CrossModule.m_fRealloc(&g_CrossModule, _pMemory, _Size, _OldSize, _AllocFlags);
 	}
 
-	DMibSuppressUndefinedSanitizer void *fg_Resize(void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags)
+	DMibSuppressUndefinedSanitizer void *fg_Resize(void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 	{
 		return g_CrossModule.m_fResize(&g_CrossModule, _pMemory, _Size, _OldSize, _AllocFlags);
 	}
@@ -356,22 +356,22 @@ namespace NMib::NMemory
 		return g_CrossModule.m_fFreeNoSize(&g_CrossModule, _pMemory);
 	}
 
-	DMibSuppressUndefinedSanitizer void fg_Free(void *_pMemory, mint _Size)
+	DMibSuppressUndefinedSanitizer void fg_Free(void *_pMemory, umint _Size)
 	{
 		return g_CrossModule.m_fFree(&g_CrossModule, _pMemory, _Size);
 	}
 
-	DMibSuppressUndefinedSanitizer mint fg_Size(const void *_pMemory)
+	DMibSuppressUndefinedSanitizer umint fg_Size(const void *_pMemory)
 	{
 		return g_CrossModule.m_fSize(&g_CrossModule, _pMemory);
 	}
 
-	DMibSuppressUndefinedSanitizer mint fg_TrySize(const void *_pMemory)
+	DMibSuppressUndefinedSanitizer umint fg_TrySize(const void *_pMemory)
 	{
 		return g_CrossModule.m_fTrySize(&g_CrossModule, _pMemory);
 	}
 
-	DMibSuppressUndefinedSanitizer mint fg_SizePadded(mint _Size)
+	DMibSuppressUndefinedSanitizer umint fg_SizePadded(umint _Size)
 	{
 		return g_CrossModule.m_fSizePadded(&g_CrossModule, _Size);
 	}
@@ -381,7 +381,7 @@ namespace NMib::NMemory
 		return g_CrossModule.m_fOverhead(&g_CrossModule, _pMemory);
 	}
 
-	DMibSuppressUndefinedSanitizer mint fg_Granularity()
+	DMibSuppressUndefinedSanitizer umint fg_Granularity()
 	{
 		return g_CrossModule.m_fGranularity(&g_CrossModule);
 	}
@@ -404,22 +404,22 @@ namespace NMib::NMemory
 
 namespace NMib::NMemory
 {
-	DMibSuppressUndefinedSanitizer mint CAllocator_NonTrackedHeap::f_GranularityAlloc(bool _bLargePages)
+	DMibSuppressUndefinedSanitizer umint CAllocator_NonTrackedHeap::f_GranularityAlloc(bool _bLargePages)
 	{
 		return g_CrossModule.m_fNonTracked_Granularity(&g_CrossModule);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased mint CAllocator_NonTrackedHeap::f_Size(void *_pMemory)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased umint CAllocator_NonTrackedHeap::f_Size(void *_pMemory)
 	{
 		return g_CrossModule.m_fNonTracked_Size(&g_CrossModule, _pMemory);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased mint CAllocator_NonTrackedHeap::f_TrySize(void *_pMemory)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased umint CAllocator_NonTrackedHeap::f_TrySize(void *_pMemory)
 	{
 		return g_CrossModule.m_fNonTracked_TrySize(&g_CrossModule, _pMemory);
 	}
 
-	DMibSuppressUndefinedSanitizer mint CAllocator_NonTrackedHeap::f_SizePadded(mint _Size)
+	DMibSuppressUndefinedSanitizer umint CAllocator_NonTrackedHeap::f_SizePadded(umint _Size)
 	{
 		return g_CrossModule.m_fNonTracked_SizePadded(&g_CrossModule, _Size);
 	}
@@ -429,67 +429,67 @@ namespace NMib::NMemory
 		return g_CrossModule.m_fNonTracked_Overhead(&g_CrossModule, _pMemory);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocWithSizeDebug(mint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocWithSizeDebug(umint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_AllocWithSizeDebug(&g_CrossModule, _Size, _pFile, _Line, _Flags);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_ReallocDebug(void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_ReallocDebug(void *_pMemory, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_ReallocDebug(&g_CrossModule, _pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_ResizeDebug(void *_pMemory, mint &_Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_ResizeDebug(void *_pMemory, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_ResizeDebug(&g_CrossModule, _pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocAlignedWithSizeDebug(mint &_Size, mint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_AllocAlignedWithSizeDebug(&g_CrossModule, _Size, _Alignment, _pFile, _Line, _Flags);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_AllocWithSize(&g_CrossModule, _Size);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_Alloc(mint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_Alloc(umint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_Alloc(&g_CrossModule, _Size);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocAlignedWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocAlignedWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_AllocAlignedWithSize(&g_CrossModule, _Size, _Alignment);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_AllocAligned(&g_CrossModule, _Size, _Alignment);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased void CAllocator_NonTrackedHeap::f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased void CAllocator_NonTrackedHeap::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_AllocBatch(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_Functor);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased void CAllocator_NonTrackedHeap::f_AllocBatchDebug(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased void CAllocator_NonTrackedHeap::f_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_AllocBatchDebug(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_Functor, _pFile, _Line, _Flags);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_Realloc(void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_Realloc(void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_Realloc(&g_CrossModule, _pMemory, _Size, _OldSize, _AllocFlags);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased void *CAllocator_NonTrackedHeap::f_Resize(void *_pMemory, mint &_Size, mint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased void *CAllocator_NonTrackedHeap::f_Resize(void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		return g_CrossModule.m_fNonTracked_Resize(&g_CrossModule, _pMemory, _Size, _OldSize, _AllocFlags);
 	}
 
-	DMibSuppressUndefinedSanitizer only_parameters_aliased void CAllocator_NonTrackedHeap::f_Free(void *_pMemory, mint _Size)
+	DMibSuppressUndefinedSanitizer only_parameters_aliased void CAllocator_NonTrackedHeap::f_Free(void *_pMemory, umint _Size)
 	{
 		return g_CrossModule.m_fNonTracked_Free(&g_CrossModule, _pMemory, _Size);
 	}

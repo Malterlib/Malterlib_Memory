@@ -6,9 +6,9 @@
 namespace NMib::NMemory
 {
 	template <typename t_CParams>
-	inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocSmallSize(mint &_Size)
+	inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocSmallSize(umint &_Size)
 	{
-		mint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
+		umint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
 		DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(_Size));
 		if (iSlab == 0) [[unlikely]]
 			return fsp_AllocSmall<1>(this);
@@ -16,7 +16,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocSmallSizeBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
+	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
 	{
 		DMibMemLightweightTrack
 			(
@@ -24,7 +24,7 @@ namespace NMib::NMemory
 			)
 		;
 
-		mint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
+		umint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
 		if (iSlab == 0) [[unlikely]]
 		{
 			while (true)
@@ -63,11 +63,11 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManagerArena<t_CParams>::fp_FreeSmall(void *_pMemory, TCMemoryManagerSlab<t_CParams, 0> *_pSlab, mint _SlabType)
+	inline_never void TCMemoryManagerArena<t_CParams>::fp_FreeSmall(void *_pMemory, TCMemoryManagerSlab<t_CParams, 0> *_pSlab, umint _SlabType)
 	{
 		// Small slabs
 		ESmallState SmallState;
-		mint Index;
+		umint Index;
 		TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *pSubSlab = fg_AlignDown((TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *)_pMemory, t_CParams::mc_SubSlabSize);
 
 		if (_SlabType == 0) [[unlikely]]
@@ -83,8 +83,8 @@ namespace NMib::NMemory
 			if constexpr (mc_EnableCallbacks)
 				pSubSlab->f_OnFree(*this, _pMemory);
 
-			mint Offset = (uint8 *)_pMemory - pSubSlab->f_GetArray();
-			mint iAlloc;
+			umint Offset = (uint8 *)_pMemory - pSubSlab->f_GetArray();
+			umint iAlloc;
 			switch (_SlabType)
 			{
 			case 1:
@@ -120,7 +120,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	mint TCMemoryManagerArena<t_CParams>::fp_SizeSmall(void const * _pMemory, TCMemoryManagerSlab<t_CParams, 0> const * _pSlab, mint _SlabType) const
+	umint TCMemoryManagerArena<t_CParams>::fp_SizeSmall(void const * _pMemory, TCMemoryManagerSlab<t_CParams, 0> const * _pSlab, umint _SlabType) const
 	{
 		switch (_SlabType)
 		{
@@ -148,7 +148,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	fp32 TCMemoryManagerArena<t_CParams>::fp_OverheadSmall(void const * _pMemory, TCMemoryManagerSlab<t_CParams, 0> const * _pSlab, mint _SlabType) const
+	fp32 TCMemoryManagerArena<t_CParams>::fp_OverheadSmall(void const * _pMemory, TCMemoryManagerSlab<t_CParams, 0> const * _pSlab, umint _SlabType) const
 	{
 		switch (_SlabType)
 		{
@@ -176,10 +176,10 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_small mint TCMemoryManagerArena<t_CParams>::fsp_GetSlabTypeFromSizeSmall(mint &o_Size)
+	inline_small umint TCMemoryManagerArena<t_CParams>::fsp_GetSlabTypeFromSizeSmall(umint &o_Size)
 	{
-		mint Size = o_Size;
-		mint iSlab;
+		umint Size = o_Size;
+		umint iSlab;
 		if (Size < 2)
 			iSlab = 0;
 		else if (Size <= TCMemoryManagerArena<t_CParams>::mc_MinAlignment)
@@ -231,7 +231,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_always void *TCMemoryManagerArena<t_CParams>::fsp_AllocSmallShared(TCMemoryManagerArena *_pThis, mint _Index)
+	inline_always void *TCMemoryManagerArena<t_CParams>::fsp_AllocSmallShared(TCMemoryManagerArena *_pThis, umint _Index)
 	{
 		using CSubSlab = TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>;
 		auto &Slabs = _pThis->m_SmallSizeSlabs[_Index];
@@ -257,7 +257,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	template <mint tf_Size>
+	template <umint tf_Size>
 	inline_never void *TCMemoryManagerArena<t_CParams>::fsp_AllocSmall(TCMemoryManagerArena *_pThis)
 	{
 		using CSubSlab = TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size>;
@@ -285,7 +285,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	template <mint tf_Size>
+	template <umint tf_Size>
 	inline_never TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> *TCMemoryManagerArena<t_CParams>::fp_AllocSmallNoSlab()
 	{
 		using CSubSlab = TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size>;
@@ -305,7 +305,7 @@ namespace NMib::NMemory
 			--pFreeSlab->m_nFreeSubSlabs;
 
 			pSlabAddress = (uint8 *)pExistingSlab;
-			iAlloc = mint((uint8 *)pSlabAddress - pFreeSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
+			iAlloc = umint((uint8 *)pSlabAddress - pFreeSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
 		}
 		else
 		{
@@ -316,7 +316,7 @@ namespace NMib::NMemory
 		}
 		++pFreeSlab->m_nAllocatedSubSlabs;
 
-		mint SlabIndex = CSubSlab::mc_SmallSlabIndex;
+		umint SlabIndex = CSubSlab::mc_SmallSlabIndex;
 		static_assert(CSubSlab::mc_SmallSlabIndex <= TCMemoryManagerSubSlabDataType<t_CParams>::mc_MaxType);
 
 		pFreeSlab->m_SubSlabDataType[iAlloc].m_Type = SlabIndex;
@@ -340,7 +340,7 @@ namespace NMib::NMemory
 		(
 			TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *_pSubSlab
 			, TCMemoryManagerSlab<t_CParams, 0> *_pSlab
-			, mint _Index
+			, umint _Index
 			, ESmallState _SmallState
 		)
 	{
@@ -370,7 +370,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	template <mint tf_Size>
+	template <umint tf_Size>
 	bool TCMemoryManagerArena<t_CParams>::fp_CheckFreeSmall(EMemoryManagerCheckFlag _Flags)
 	{
 		bool bError = false;

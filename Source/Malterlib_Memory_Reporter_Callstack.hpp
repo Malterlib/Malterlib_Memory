@@ -104,9 +104,9 @@ namespace NMib::NMemory
 		;
 
 		Allocators.f_SetLen(m_Allocators.f_GetLen());
-		NContainer::TCMap<mint, CAllocator *, CSort_Default, CAllocator_NonTrackedHeap> AllocatorMap;
+		NContainer::TCMap<umint, CAllocator *, CSort_Default, CAllocator_NonTrackedHeap> AllocatorMap;
 
-		mint iRow = 0;
+		umint iRow = 0;
 		for (auto iAllocator = m_Allocators.f_GetIterator(); iAllocator; ++iAllocator, ++iRow)
 		{
 			auto & Dest = Allocators[iRow];
@@ -118,7 +118,7 @@ namespace NMib::NMemory
 			Callstack.m_pAllocator = AllocatorMap[Callstack.m_Allocator];
 
 		NMib::NContainer::TCVector<void*, NMemory::CAllocator_NonTrackedHeap> Locations;
-		NMib::NContainer::TCVector<mint, NMib::NMemory::CAllocator_NonTrackedHeap> Sizes;
+		NMib::NContainer::TCVector<umint, NMib::NMemory::CAllocator_NonTrackedHeap> Sizes;
 
 		Locations.f_Insert(Callstacks.f_GetArray());
 		Sizes.f_Insert(Callstacks.f_GetLen() * sizeof(CCallstack));
@@ -158,7 +158,7 @@ namespace NMib::NMemory
 		ms_pThis = nullptr;
 	}
 
-	void CCallstackMemoryReporter::f_AllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName)
+	void CCallstackMemoryReporter::f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName)
 	{
 		COperation Allocator;
 		Allocator.m_OpType = COperation::EOpType_Allocator;
@@ -169,25 +169,25 @@ namespace NMib::NMemory
 		fp_PushToQueue(Allocator);
 	}
 
-	void CCallstackMemoryReporter::f_AllocatorDelete(mint _MemoryAllocator)
+	void CCallstackMemoryReporter::f_AllocatorDelete(umint _MemoryAllocator)
 	{
 	}
 
-	void CCallstackMemoryReporter::f_ScopeEnter(mint _MemoryAllocator)
+	void CCallstackMemoryReporter::f_ScopeEnter(umint _MemoryAllocator)
 	{
 	}
 
-	void CCallstackMemoryReporter::f_ScopeExit(mint _MemoryAllocator)
+	void CCallstackMemoryReporter::f_ScopeExit(umint _MemoryAllocator)
 	{
 	}
 
 	void CCallstackMemoryReporter::f_Alloc
 		(
-			mint _MemoryAllocator
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			umint _MemoryAllocator
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -204,14 +204,14 @@ namespace NMib::NMemory
 
 	void CCallstackMemoryReporter::f_Resize
 		(
-			mint _MemoryAllocator
-			, mint _OldAddress
-			, mint _OldSize
+			umint _MemoryAllocator
+			, umint _OldAddress
+			, umint _OldSize
 			, void const *_pOldAllocationInfo
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -230,14 +230,14 @@ namespace NMib::NMemory
 
 	void CCallstackMemoryReporter::f_Realloc
 		(
-			mint _MemoryAllocator
-			, mint _OldAddress
-			, mint _OldSize
+			umint _MemoryAllocator
+			, umint _OldAddress
+			, umint _OldSize
 			, void const *_pOldAllocationInfo
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -254,7 +254,7 @@ namespace NMib::NMemory
 		fp_PushToQueue(Realloc);
 	}
 
-	void CCallstackMemoryReporter::f_Free(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo)
+	void CCallstackMemoryReporter::f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo)
 	{
 		COperation Free;
 		Free.m_MemoryAllocator = _MemoryAllocator;
@@ -268,13 +268,13 @@ namespace NMib::NMemory
 		fp_PushToQueue(Free);
 	}
 
-	static mint const gc_QueueBitReset = mint(1) << (sizeof(mint*) * 8 - 1);
-	static mint const gc_QueueBitResetFinished = mint(1) << (sizeof(mint*) * 8 - 2);
-	static mint const gc_QueueBitInv = ~(gc_QueueBitReset | gc_QueueBitResetFinished);
+	static umint const gc_QueueBitReset = umint(1) << (sizeof(umint*) * 8 - 1);
+	static umint const gc_QueueBitResetFinished = umint(1) << (sizeof(umint*) * 8 - 2);
+	static umint const gc_QueueBitInv = ~(gc_QueueBitReset | gc_QueueBitResetFinished);
 	void CCallstackMemoryReporter::fp_PushToQueue(COperation const& _Op)
 	{
-		mint QueueSize = ++m_QueueSize;
-		mint SizeAnd = QueueSize & gc_QueueBitInv;
+		umint QueueSize = ++m_QueueSize;
+		umint SizeAnd = QueueSize & gc_QueueBitInv;
 
 		if (SizeAnd == EProcessQueueSize)
 		{
@@ -312,19 +312,19 @@ namespace NMib::NMemory
 
 	}
 
-	void CCallstackMemoryReporter::f_GetSize(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo)
+	void CCallstackMemoryReporter::f_GetSize(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo)
 	{
 	}
 
-	void CCallstackMemoryReporter::f_Protect(mint _MemoryAllocator, mint _Address, mint _Size, uaint _Protect)
+	void CCallstackMemoryReporter::f_Protect(umint _MemoryAllocator, umint _Address, umint _Size, uaint _Protect)
 	{
 	}
 
-	void CCallstackMemoryReporter::f_Commit(mint _MemoryAllocator, mint _Address, mint _Size)
+	void CCallstackMemoryReporter::f_Commit(umint _MemoryAllocator, umint _Address, umint _Size)
 	{
 	}
 
-	void CCallstackMemoryReporter::f_Decommit(mint _MemoryAllocator, mint _Address, mint _Size)
+	void CCallstackMemoryReporter::f_Decommit(umint _MemoryAllocator, umint _Address, umint _Size)
 	{
 	}
 
@@ -358,11 +358,11 @@ namespace NMib::NMemory
 	void CCallstackMemoryReporter::fp_ProcessQueue()
 	{
 		DMibLock(ms_pThis->m_Lock);
-		mint nProcessed = 0;
+		umint nProcessed = 0;
 		while (auto Entry = m_OperationQueue.f_Pop())
 		{
-			mint QueueSize = --m_QueueSize;
-			mint SizeAnd = QueueSize & gc_QueueBitInv;
+			umint QueueSize = --m_QueueSize;
+			umint SizeAnd = QueueSize & gc_QueueBitInv;
 
 			if (SizeAnd <= EProcessQueueThreshold && (QueueSize & gc_QueueBitReset))
 			{
@@ -452,13 +452,13 @@ namespace NMib::NMemory
 		}
 	}
 
-	CCallstackMemoryReporter::CCallstack& CCallstackMemoryReporter::fp_GetCallstack(mint _MemoryAllocator, mint _Hash, CMibCodeAddress *_pStack, mint _nStack)
+	CCallstackMemoryReporter::CCallstack& CCallstackMemoryReporter::fp_GetCallstack(umint _MemoryAllocator, umint _Hash, CMibCodeAddress *_pStack, umint _nStack)
 	{
 		auto &CallStack = m_Callstacks[_Hash, _Hash, _pStack, _nStack, _MemoryAllocator];
 		return CallStack;
 	}
 
-	NCryptography::CHashDigest_MD5 CCallstackMemoryReporter::fsp_GetStackFingerprint(CMibCodeAddress *_pStack, mint _nStack)
+	NCryptography::CHashDigest_MD5 CCallstackMemoryReporter::fsp_GetStackFingerprint(CMibCodeAddress *_pStack, umint _nStack)
 	{
 		NCryptography::CHash_MD5 Digest;
 		NCryptography::TCBinaryStreamHashRef<NCryptography::CHash_MD5> Stream;
@@ -467,7 +467,7 @@ namespace NMib::NMemory
 		return Stream.f_GetDigest();
 	}
 
-	bool CCallstackMemoryReporter::fp_RegisterAllocation(mint _MemoryAllocator, mint _Address, mint _Size, CCallstack* _pCallstack)
+	bool CCallstackMemoryReporter::fp_RegisterAllocation(umint _MemoryAllocator, umint _Address, umint _Size, CCallstack* _pCallstack)
 	{
 		auto MapResult = m_Allocations(CAllocationKey(_MemoryAllocator, _Address), _Size, _pCallstack);
 		CAllocation &Allocation = *MapResult;
@@ -489,7 +489,7 @@ namespace NMib::NMemory
 		return bCreated;
 	}
 
-	CCallstackMemoryReporter::CCallstack* CCallstackMemoryReporter::fp_RemoveAllocation(mint _MemoryAllocator, mint _Address)
+	CCallstackMemoryReporter::CCallstack* CCallstackMemoryReporter::fp_RemoveAllocation(umint _MemoryAllocator, umint _Address)
 	{
 		CAllocationKey Key(_MemoryAllocator, _Address);
 		auto pAllocation = m_Allocations.f_FindEqual(Key);

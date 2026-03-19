@@ -9,9 +9,9 @@ namespace NMib::NMemory
 	inline_never void TCMemoryManagerArena<t_CParams>::f_AddMessage(CMessage *_pMessage, EMessageType _MessageType, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
 	{
 		DMibFastCheck(_pMessage);
-		DMibFastCheck(!((mint)_pMessage & mint(3)));
+		DMibFastCheck(!((umint)_pMessage & umint(3)));
 
-		mint RandomIndex;
+		umint RandomIndex;
 		if (_pLocalArena)
 			RandomIndex = _pLocalArena->m_RandomIndex & (mc_MessagesSpread - 1);
 		else
@@ -21,11 +21,11 @@ namespace NMib::NMemory
 		bool bWasEmpty = false;
 		while (1)
 		{
-			mint OldMessage = Messages.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
+			umint OldMessage = Messages.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
 			_pMessage->m_Next = OldMessage;
 			bWasEmpty = !OldMessage;
 
-			mint Message = (mint)_pMessage | mint(_MessageType);
+			umint Message = (umint)_pMessage | umint(_MessageType);
 			if (Messages.f_CompareExchangeWeak(OldMessage, Message))
 				break;
 
@@ -42,19 +42,19 @@ namespace NMib::NMemory
 	template <bool tf_bAbortable, bool tf_bFreeList>
 	inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessageList
 		(
-			mint &o_MessageList
+			umint &o_MessageList
 			, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena
  			, CMemoryManagerSubSlab_NormalFreeList *_pFreeList
 			, smint &_nToProcess
 		)
 	{
-		mint Messages = o_MessageList;
+		umint Messages = o_MessageList;
 
 		while (Messages)
 		{
 			EMessageType FreeLinkType = (EMessageType)(Messages & 3);
-			CMessage *pFreeBlock = (CMessage *)(Messages & (~mint(3)));
-			mint NextMessage = pFreeBlock->m_Next;
+			CMessage *pFreeBlock = (CMessage *)(Messages & (~umint(3)));
+			umint NextMessage = pFreeBlock->m_Next;
 
 			NAtomic::fg_CompilerFence();
 
@@ -139,7 +139,7 @@ namespace NMib::NMemory
 
 		if (m_MessagesAvailable.f_Exchange(0))
 		{
-			mint iMessages = 0;
+			umint iMessages = 0;
 			for (auto &Messages : m_SpreadMessages)
 			{
 				m_DeferredMessages[iMessages] = Messages.m_Messages.f_Exchange(0);
@@ -202,7 +202,7 @@ namespace NMib::NMemory
 					}
 				;
 
-				mint iMessages = 0;
+				umint iMessages = 0;
 				for (auto &Messages : m_SpreadMessages)
 				{
 					m_DeferredMessages[iMessages] = Messages.m_Messages.f_Exchange(0);

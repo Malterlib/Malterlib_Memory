@@ -11,14 +11,14 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_OnAlloc(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc)
 	{
-		mint AllocSize = m_Params.m_AllocSize;
+		umint AllocSize = m_Params.m_AllocSize;
 		_Arena.f_OnAlloc((uint8 *)_pAlloc, AllocSize);
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_OnFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc)
 	{
-		mint AllocSize = m_Params.m_AllocSize;
+		umint AllocSize = m_Params.m_AllocSize;
 		_Arena.f_OnFree((uint8 *)_pAlloc);
 		_Arena.f_OnFillFree((uint8 *)_pAlloc + sizeof(uint16), AllocSize - sizeof(uint16));
 	}
@@ -26,14 +26,14 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_OnFillFree(TCMemoryManagerArena<t_CParams> &_Arena)
 	{
-		mint AllocSize = m_Params.m_AllocSize;
+		umint AllocSize = m_Params.m_AllocSize;
 		if (AllocSize <= sizeof(uint16))
 			return; // All bytes are used, so no bytes to check
 
 		uint8 *pArray = f_GetArray();
 
-		mint NumAllocs = (t_CParams::mc_SubSlabSize - fg_AlignUp(sizeof(CParams), m_Params.m_Alignment)) / AllocSize;
-		mint AllocSizeUint16 = AllocSize / sizeof(uint16);
+		umint NumAllocs = (t_CParams::mc_SubSlabSize - fg_AlignUp(sizeof(CParams), m_Params.m_Alignment)) / AllocSize;
+		umint AllocSizeUint16 = AllocSize / sizeof(uint16);
 
 		uint16 *pAlloc = (uint16 *)pArray;
 		uint16 *pAllocEnd = pAlloc + AllocSizeUint16 * NumAllocs;
@@ -44,7 +44,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	bool TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, EMemoryManagerCheckFlag _Flags)
 	{
-		mint AllocSize = m_Params.m_AllocSize;
+		umint AllocSize = m_Params.m_AllocSize;
 		return _Arena.f_OnCheckFree((uint8 *)_pAlloc + sizeof(uint16), AllocSize - sizeof(uint16), _Flags);
 	}
 
@@ -71,7 +71,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::TCMemoryManagerSubSlab_SmallSizeShared(mint _AllocSize)
+	TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::TCMemoryManagerSubSlab_SmallSizeShared(umint _AllocSize)
 	{
 		m_Params.m_FirstFreeList = 0;
 		m_Params.m_nAllocated = 0;
@@ -80,9 +80,9 @@ namespace NMib::NMemory
 
 		uint8 *pArray = f_GetArray();
 
-		mint NumAllocs = (t_CParams::mc_SubSlabSize - fg_AlignUp(sizeof(CParams), m_Params.m_Alignment)) / _AllocSize;
+		umint NumAllocs = (t_CParams::mc_SubSlabSize - fg_AlignUp(sizeof(CParams), m_Params.m_Alignment)) / _AllocSize;
 
-		mint AllocSizeUint16 = _AllocSize / sizeof(uint16);
+		umint AllocSizeUint16 = _AllocSize / sizeof(uint16);
 
 		uint16 *pAlloc = (uint16 *)pArray;
 		uint16 *pAllocEnd = pAlloc + AllocSizeUint16 * (NumAllocs - 1);
@@ -113,7 +113,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_small ESmallState TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_Free(void *_pAlloc, mint _iAlloc)
+	inline_small ESmallState TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::f_Free(void *_pAlloc, umint _iAlloc)
 	{
 		uint16 iAlloc = m_Params.m_FirstFreeList;
 		ESmallState SmallState;
@@ -136,7 +136,7 @@ namespace NMib::NMemory
 	// Small -> 2 byte
 
 
-	template <typename t_CParams, mint t_AllocSize>
+	template <typename t_CParams, umint t_AllocSize>
 	TCMemoryManagerSubSlab_SmallSize<t_CParams, t_AllocSize>::TCMemoryManagerSubSlab_SmallSize() : TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>(t_AllocSize)
 	{
 	}
@@ -181,21 +181,21 @@ namespace NMib::NMemory
 
 		m_Params.m_FirstFreeList = 0;
 		m_Params.m_nAllocated = 0;
-		for (mint i = 0; i < mc_NumAllocRegions - 1; ++i)
+		for (umint i = 0; i < mc_NumAllocRegions - 1; ++i)
 		{
 			m_Params.m_FreeListsNext[i] = i + 1;
 			m_Params.m_FreeLists[i] = 0;
 			uint8 *pAlloc = pArray + i * 255;
-			for (mint i = 0; i < 254; ++i)
+			for (umint i = 0; i < 254; ++i)
 				pAlloc[i] = i + 1;
 			pAlloc[254] = 0xFF;
 		}
 		{
-			mint nAllocs = mc_NumAllocs - (mc_NumAllocRegions - 1) * 255;
+			umint nAllocs = mc_NumAllocs - (mc_NumAllocRegions - 1) * 255;
 			m_Params.m_FreeListsNext[mc_NumAllocRegions - 1] = 0xFF;
 			m_Params.m_FreeLists[mc_NumAllocRegions - 1] = 0;
 			uint8 *pAlloc = pArray + (mc_NumAllocRegions - 1) * 255;
-			for (mint i = 0; i < nAllocs - 1; ++i)
+			for (umint i = 0; i < nAllocs - 1; ++i)
 				pAlloc[i] = i + 1;
 			pAlloc[nAllocs - 1] = 0xFF;
 		}
@@ -236,7 +236,7 @@ namespace NMib::NMemory
 	inline_small ESmallState TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>::f_Free(void *_pAlloc)
 	{
 		uint8 *pArray = f_GetArray();
-		mint Offset = (uint8 *)_pAlloc - pArray;
+		umint Offset = (uint8 *)_pAlloc - pArray;
 		uint8 iAllocRegion = Offset / 255;
 		uint16 iAllocNext = m_Params.m_FirstFreeList;
 
@@ -248,7 +248,7 @@ namespace NMib::NMemory
 		else
 			SmallState = ESmallState_None;
 
-		mint iAlloc2 = Offset - iAllocRegion * 255;
+		umint iAlloc2 = Offset - iAllocRegion * 255;
 		DMibFastCheck(iAlloc2 < 255);
 		uint8 *pAlloc = (uint8 *)(_pAlloc);
 		*pAlloc = m_Params.m_FreeLists[iAllocRegion];

@@ -46,7 +46,7 @@ namespace NMib::NMemory
 		template <typename t_CParams2>
 		friend class TCMemoryManagerArenaHeap;
 
-		mint m_Size;
+		umint m_Size;
 		TCMemoryManagerArenaHeap<t_CParams> *m_pHeap;
 		NContainer::TCBitArrayHierarchical<t_CParams::mc_HeapChunkSize / t_CParams::mc_HeapBlockSize> m_Committed;
 		NContainer::TCBitArrayHierarchical<t_CParams::mc_HeapChunkSize / t_CParams::mc_HeapBlockSize> m_DeferredDecommit;
@@ -64,15 +64,15 @@ namespace NMib::NMemory
 
 	public:
 
-		TCMemoryManagerArenaHeapChunk(mint _Size, TCMemoryManagerArenaHeap<t_CParams> *_pHeap);
+		TCMemoryManagerArenaHeapChunk(umint _Size, TCMemoryManagerArenaHeap<t_CParams> *_pHeap);
 		~TCMemoryManagerArenaHeapChunk();
 
 		uint8 *f_GetBlockAddress(CMemoryManagerArenaHeapBlock const *_pBlock) const;
-		mint f_GetBlockSize(CMemoryManagerArenaHeapBlock const *_pBlock) const;
+		umint f_GetBlockSize(CMemoryManagerArenaHeapBlock const *_pBlock) const;
 
 		uint8 *f_GetAddress() const;
 		uint8 *f_GetEndAddress() const;
-		mint f_GetSize() const;
+		umint f_GetSize() const;
 		TCMemoryManagerArenaHeap<t_CParams> *f_GetHeap() const;
 
 		bool f_IsEmpty();
@@ -91,7 +91,7 @@ namespace NMib::NMemory
 		TCMemoryManager<t_CParams> *m_pMemoryManager;
 		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
 
-		NContainer::TCMap<mint, DMibListLinkDS_List_FromTemplate(CMemoryManagerArenaHeapBlock, m_Link), NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_FreeBuckets;
+		NContainer::TCMap<umint, DMibListLinkDS_List_FromTemplate(CMemoryManagerArenaHeapBlock, m_Link), NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_FreeBuckets;
 
 		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArenaHeapChunk<t_CParams>, m_HeapLink) m_Chunks;
 		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArenaHeapChunk<t_CParams>, m_CleanupLink) m_ChunksNeedingCleanup;
@@ -100,10 +100,10 @@ namespace NMib::NMemory
 
 		void fp_AddNewChunk();
 
-		void fp_InitBlockCommit(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, mint _Size);
-		void fp_CommitBlock(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, mint _Size);
-		void fp_DecommitBlockForReal(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, mint _Size);
-		void fp_DecommitBlock(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, mint _Size);
+		void fp_InitBlockCommit(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, umint _Size);
+		void fp_CommitBlock(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, umint _Size);
+		void fp_DecommitBlockForReal(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, umint _Size);
+		void fp_DecommitBlock(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, uint8 *_pAddress, umint _Size);
 
 		void fp_TraceBlocks(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk);
 
@@ -115,12 +115,12 @@ namespace NMib::NMemory
 
 		void f_Destroy();
 
-		void *f_AllocWithSize(mint &_Size);
-		void *f_AllocAlignedWithSize(mint &_Size, mint _Alignment);
+		void *f_AllocWithSize(umint &_Size);
+		void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment);
 		void f_Free(void *_pMem, TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk);
-		mint f_Size(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
+		umint f_Size(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
 		fp32 f_Overhead(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
-		static mint fs_GetAllocSize(mint _Size);
+		static umint fs_GetAllocSize(umint _Size);
 
 		void f_Lock();
 		void f_Unlock();

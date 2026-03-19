@@ -25,9 +25,9 @@ namespace NMib::NMemory
 		{
 		public:
 			uint8 *m_pStart;
-			mint m_RealSize;
-			mint m_AllocSize;
-			mint m_OriginalSize;
+			umint m_RealSize;
+			umint m_AllocSize;
+			umint m_OriginalSize;
 
 			uint8 *f_GetUserAddress() const
 			{
@@ -36,7 +36,7 @@ namespace NMib::NMemory
 
 		};
 
-		mint m_Sequence;
+		umint m_Sequence;
 		NContainer::TCMapWithPool
 			<
 				uint8 *
@@ -50,17 +50,17 @@ namespace NMib::NMemory
 
 		NContainer::TCMapWithPool
 			<
-				mint
+				umint
 				, CMemoryBlock
 				, NMib::CSort_Default
 				, NMib::NMemory::CAllocator_VirtualNoTrackingNoCommit
-				, (2*1024*1024) / (sizeof(CMemoryBlock) + sizeof(mint))
+				, (2*1024*1024) / (sizeof(CMemoryBlock) + sizeof(umint))
 				, NMib::NMemory::CPoolType_Growing
 			> m_FreeBlocks
 		;
-		mint m_nFreeBlocks;
-		mint m_nFreeMemBytes;
-		mint m_nMaxFreeMemory;
+		umint m_nFreeBlocks;
+		umint m_nFreeMemBytes;
+		umint m_nMaxFreeMemory;
 
 		bool m_bCheckUpper;
 
@@ -73,10 +73,10 @@ namespace NMib::NMemory
 		{
 //#ifdef DPlatformFamily_macOS
 			// macOS needs 16 byte alignment to handle SSE
-			EMemoryManagerAlignmentCalc = gc_HighestBitSet<sizeof(mint) * 2>
+			EMemoryManagerAlignmentCalc = gc_HighestBitSet<sizeof(umint) * 2>
 			, EMemoryManagerAlignment = EMemoryManagerAlignmentCalc < 4 ? 4 : EMemoryManagerAlignmentCalc
 //#else
-//			EMemoryManagerAlignment = gc_HighestBitSet<sizeof(mint) * 2>
+//			EMemoryManagerAlignment = gc_HighestBitSet<sizeof(umint) * 2>
 //#endif
 		};
 
@@ -126,7 +126,7 @@ namespace NMib::NMemory
 			//m_nMaxFreeMemory = NMib::NSys::fg_Process_GetPhysicalMemory() / 5;
 
 #if DMibPPtrBits == 32
-			m_nMaxFreeMemory = mint(128)*uint64(1024)*uint64(1024);
+			m_nMaxFreeMemory = umint(128)*uint64(1024)*uint64(1024);
 #else
 			m_nMaxFreeMemory = uint64(4)*uint64(1024)*uint64(1024)*uint64(1024);
 #endif
@@ -153,11 +153,11 @@ namespace NMib::NMemory
 
 		void fp_RemoveFreeBlock()
 		{
-			mint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
+			umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
 
 			--m_nFreeBlocks;
 			CMemoryBlock *pMemBlock = m_FreeBlocks.f_FindSmallest();
-			mint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
+			umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
 			m_nFreeMemBytes -= pMemBlock->m_RealSize;
 
 			uint8 *pBlock = pMemBlock->m_pStart;
@@ -165,7 +165,7 @@ namespace NMib::NMemory
 			if (!m_bProtectOnDemand || m_bProtectionDemanded)
 				NSys::fg_Mem_VirtualProtect(pBlockStart, GranularityProtect*2 + UserNeededSize, EProtect_ReadWrite);
 
-			mint Size = pMemBlock->m_RealSize;
+			umint Size = pMemBlock->m_RealSize;
 
 			m_FreeBlocks.f_Remove(pMemBlock);
 
@@ -183,17 +183,17 @@ namespace NMib::NMemory
 #if DMibConfig_Memory_Shims_Lightweight
 		EMemoryReportLightweightScopeFlag f_GetLightweightScopeFlags()
 		{
-			return (EMemoryReportLightweightScopeFlag)(mint)m_Heap.f_GetCustomThreadLocal(1);
+			return (EMemoryReportLightweightScopeFlag)(umint)m_Heap.f_GetCustomThreadLocal(1);
 		}
 
 		EMemoryReportLightweightScopeFlag f_SetLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags)
 		{
-			return (EMemoryReportLightweightScopeFlag)(mint)m_Heap.f_SetCustomThreadLocal(1, (void *)(mint)_Flags);
+			return (EMemoryReportLightweightScopeFlag)(umint)m_Heap.f_SetCustomThreadLocal(1, (void *)(umint)_Flags);
 		}
 
 		EMemoryReportLightweightScopeFlag f_AddLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags)
 		{
-			return (EMemoryReportLightweightScopeFlag)(mint)m_Heap.f_SetCustomThreadLocal(1, (void *)(mint)(f_GetLightweightScopeFlags() | _Flags));
+			return (EMemoryReportLightweightScopeFlag)(umint)m_Heap.f_SetCustomThreadLocal(1, (void *)(umint)(f_GetLightweightScopeFlags() | _Flags));
 		}
 #endif
 
@@ -202,16 +202,16 @@ namespace NMib::NMemory
 			return m_Lock;
 		}
 
-		void *f_AllocWithSize(mint &_Size, mint _Alignment)
+		void *f_AllocWithSize(umint &_Size, umint _Alignment)
 		{
-			_Alignment = fg_Max(mint(1 << EMemoryManagerAlignment), _Alignment);
-			mint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
+			_Alignment = fg_Max(umint(1 << EMemoryManagerAlignment), _Alignment);
+			umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
 			if (_Size == 0)
 				_Size = 1;
 
 			_Size = fg_AlignUp(_Size, _Alignment);
-			mint UserNeededSize = fg_AlignUp(_Size, GranularityProtect);
-			mint NeededSize = UserNeededSize + GranularityProtect*3;
+			umint UserNeededSize = fg_AlignUp(_Size, GranularityProtect);
+			umint NeededSize = UserNeededSize + GranularityProtect*3;
 
 			uint8 *pBlock = (uint8 *)m_Heap.f_AllocAlignedWithSize(NeededSize, _Alignment);
 
@@ -221,7 +221,7 @@ namespace NMib::NMemory
 			if (pReporter)
 				pReporter->f_Alloc(_Size);
 
-			mint OriginalSize = _Size;
+			umint OriginalSize = _Size;
 
 			uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
 			uint8 *pRetBlock = pBlockStart + GranularityProtect;
@@ -245,7 +245,7 @@ namespace NMib::NMemory
 			return pRetBlock;
 		}
 
-		void f_Free(void *_pBlock, mint _Size)
+		void f_Free(void *_pBlock, umint _Size)
 		{
 			if (!_pBlock)
 				return;
@@ -253,7 +253,7 @@ namespace NMib::NMemory
 			if (!_Size)
 				DMibPDebugBreak;
 
-			_Size = fg_AlignUp(_Size, mint(1 << EMemoryManagerAlignment));
+			_Size = fg_AlignUp(_Size, umint(1 << EMemoryManagerAlignment));
 			return fp_Free(_pBlock, _Size);
 		}
 		void f_FreeNoSize(void *_pBlock)
@@ -261,7 +261,7 @@ namespace NMib::NMemory
 			fp_Free(_pBlock, 0);
 		}
 
-		void fp_Free(void *_pBlock, mint _Size)
+		void fp_Free(void *_pBlock, umint _Size)
 		{
 			if (!_pBlock)
 				return;
@@ -279,9 +279,9 @@ namespace NMib::NMemory
 			if (pReporter)
 				pReporter->f_Free(_Size);
 
-			mint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
+			umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
 
-			mint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
+			umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
 
 			m_FreeBlocks[m_Sequence++] = *pMemBlock;
 			++m_nFreeBlocks;
@@ -300,7 +300,7 @@ namespace NMib::NMemory
 				fp_RemoveFreeBlock();
 		}
 
-		mint f_Size(const void *_pBlock) const
+		umint f_Size(const void *_pBlock) const
 		{
 			if (!_pBlock)
 				return 0;
@@ -313,7 +313,7 @@ namespace NMib::NMemory
 			return pMemBlock->m_AllocSize;
 		}
 
-		mint f_TrySize(const void *_pBlock) const
+		umint f_TrySize(const void *_pBlock) const
 		{
 			if (!_pBlock)
 				return 0;
@@ -325,18 +325,18 @@ namespace NMib::NMemory
 			return 0;
 		}
 
-		mint f_Overhead(const void *_pBlock) const
+		umint f_Overhead(const void *_pBlock) const
 		{
 			if (!_pBlock)
 				return 0;
 			DMibLock(m_Lock);
-			mint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
+			umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
 			uint8 *pBlock = (uint8 *)_pBlock;
 			CMemoryBlock const *pMemBlock = m_Blocks.f_FindEqual(pBlock);
 			if (!pMemBlock)
 				DMibPDebugBreak;
 
-			mint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
+			umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
 
 			return UserNeededSize - pMemBlock->m_AllocSize + GranularityProtect * 2;
 		}
@@ -354,7 +354,7 @@ namespace NMib::NMemory
 
 			if (m_bProtectOnDemand && !m_bProtectionDemanded)
 			{
-				mint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
+				umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
 
 				for (auto BIter = m_Blocks.f_GetIterator()
 					;BIter
@@ -366,7 +366,7 @@ namespace NMib::NMemory
 					uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
 					uint8 *pRetBlock = pBlockStart + GranularityProtect;
 
-					mint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
+					umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
 
 					NSys::fg_Mem_VirtualProtect(pBlockStart, GranularityProtect, EProtect_Exec);
 					NSys::fg_Mem_VirtualProtect(pRetBlock + UserNeededSize, GranularityProtect, EProtect_Exec);
@@ -378,7 +378,7 @@ namespace NMib::NMemory
 				{
 					CMemoryBlock* pMemBlock = FIter;
 
-					mint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
+					umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
 
 					uint8 *pBlock = pMemBlock->m_pStart;
 					uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);

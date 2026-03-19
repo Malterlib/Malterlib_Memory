@@ -147,7 +147,7 @@ extern "C"
 	MemDeclNaR void * DDefaultCallingConv calloc (size_t nelem, size_t elsize)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		mint Size = nelem * elsize;
+		umint Size = nelem * elsize;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Alloc(Size);
 		memset (addr, 0, nelem * elsize);
@@ -156,7 +156,7 @@ extern "C"
 	void * DDefaultCallingConv _calloc_dbg (size_t nelem, size_t elsize, int BlockType, const char *Filename, int Line)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		mint Size = nelem * elsize;
+		umint Size = nelem * elsize;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_AllocDebug(Size, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 		memset (addr, 0, nelem * elsize);
@@ -173,7 +173,7 @@ extern "C"
 		)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		mint Size = nNum * nSize;
+		umint Size = nNum * nSize;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_AllocDebug(Size, szFileName, nLine, (nBlockUse == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 		memset (addr, 0, nNum * nSize);
@@ -184,7 +184,7 @@ extern "C"
 	void * DDefaultCallingConv _calloc_impl (size_t nelem, size_t elsize, int * errno_tmp)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		mint Size = nelem * elsize;
+		umint Size = nelem * elsize;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Alloc(Size);
 		memset (addr, 0, nelem * elsize);
@@ -194,7 +194,7 @@ extern "C"
 	void * DDefaultCallingConv _calloc_base (size_t nelem, size_t elsize)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		mint Size = nelem * elsize;
+		umint Size = nelem * elsize;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Alloc(Size);
 		memset (addr, 0, nelem * elsize);
@@ -212,7 +212,7 @@ extern "C"
 	_CRTIMP void * __cdecl _calloc_crt(size_t count, size_t size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		mint Size = count * size;
+		umint Size = count * size;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Alloc(Size);
 		memset (addr, 0, count * size);
@@ -228,7 +228,7 @@ extern "C"
 	_CRTIMP __checkReturn __bcount_opt(_Size*_Count) void * __cdecl _recalloc_crt(__inout_opt void *_Ptr, __in size_t _Count, __in size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		mint Size = _Count * _Size;
+		umint Size = _Count * _Size;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
 		return addr;
@@ -239,7 +239,7 @@ extern "C"
 	void * __cdecl _recalloc_base(_Pre_maybenull_ _Post_invalid_ void *_Ptr, _In_ size_t _Count, _In_ size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		mint Size = _Count * _Size;
+		umint Size = _Count * _Size;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
 		return addr;
@@ -312,7 +312,7 @@ extern "C"
 	MemDeclNaR void * DDefaultCallingConv _recalloc(void * memblock,size_t count,size_t size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		mint Size = size * count;
+		umint Size = size * count;
 		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
 		return NMib::NMemory::fg_Resize(memblock, Size, 0, EAllocationFlag_SizeNotNeeded);
 
@@ -346,17 +346,17 @@ extern "C"
 |__________________________________________________________________________________________________
 \*************************************************************************************************/
 
-	mint DDefaultCallingConv _msize(void *mem)
+	umint DDefaultCallingConv _msize(void *mem)
 	{
 		return NMib::NMemory::fg_Size(mem);
 	}
 
-	mint DDefaultCallingConv _msize_base(void *mem) _CRT_NOEXCEPT
+	umint DDefaultCallingConv _msize_base(void *mem) _CRT_NOEXCEPT
 	{
 		return NMib::NMemory::fg_Size(mem);
 	}
 
-	mint DDefaultCallingConv _msize_dbg (void * mem, int blockType)
+	umint DDefaultCallingConv _msize_dbg (void * mem, int blockType)
 	{
 		return NMib::NMemory::fg_Size(mem);
 	}
@@ -381,7 +381,7 @@ extern "C"
 		return mem;
 	}
 
-	void* DDefaultCallingConv _expand_dbg(void *userData, mint newSize, int blockType, const char *filename, int linenumber)
+	void* DDefaultCallingConv _expand_dbg(void *userData, umint newSize, int blockType, const char *filename, int linenumber)
 	{
 		// Just fail :P
 		DMibPDebugBreak;
@@ -399,12 +399,12 @@ extern "C"
 		return malloc (_Size);
 	}
 
-	void * DDefaultCallingConv _nh_malloc_base (mint nSize,int nhFlag)
+	void * DDefaultCallingConv _nh_malloc_base (umint nSize,int nhFlag)
 	{
 		return malloc (nSize);
 	}
 
-	void * DDefaultCallingConv _nh_malloc_dbg (mint nSize,int nhFlag,int nBlockUse,const char * szFileName,int nLine)
+	void * DDefaultCallingConv _nh_malloc_dbg (umint nSize,int nhFlag,int nBlockUse,const char * szFileName,int nLine)
 	{
 		return _malloc_dbg (nSize, nBlockUse, szFileName, nLine);
 	}
@@ -420,12 +420,12 @@ extern "C"
 		return malloc (_Size);
 	}
 
-	void * DDefaultCallingConv _heap_alloc_base(mint nSize)
+	void * DDefaultCallingConv _heap_alloc_base(umint nSize)
 	{
 		return malloc (nSize);
 	}
 
-	void * DDefaultCallingConv _heap_alloc_dbg(mint nSize,int nBlockUse,const char * szFileName,int nLine)
+	void * DDefaultCallingConv _heap_alloc_dbg(umint nSize,int nBlockUse,const char * szFileName,int nLine)
 	{
 		return _malloc_dbg (nSize, nBlockUse, szFileName, nLine);
 	}
@@ -481,7 +481,7 @@ extern "C"
 	{
 	}
 
-	typedef int (DDefaultCallingConv * _CRT_ALLOC_HOOK)(int, void *, mint, int, long, const unsigned char *, int);
+	typedef int (DDefaultCallingConv * _CRT_ALLOC_HOOK)(int, void *, umint, int, long, const unsigned char *, int);
 
 	_CRT_ALLOC_HOOK DDefaultCallingConv _CrtSetAllocHook(_CRT_ALLOC_HOOK pfnNewHook)
 	{
@@ -489,7 +489,7 @@ extern "C"
 	}
 
 
-	int DDefaultCallingConv CheckBytes(unsigned char * pb,unsigned char bCheck,mint nSize)
+	int DDefaultCallingConv CheckBytes(unsigned char * pb,unsigned char bCheck,umint nSize)
 	{
 		// We actually need to do this (not just return 1) since both positive and negative returns are used :-)
 		unsigned char *pEnd = pb + nSize;
@@ -540,7 +540,7 @@ extern "C"
 	}
 
 
-	typedef void (DDefaultCallingConv * _CRT_DUMP_CLIENT)(void *, mint);
+	typedef void (DDefaultCallingConv * _CRT_DUMP_CLIENT)(void *, umint);
 
 	_CRT_DUMP_CLIENT DDefaultCallingConv _CrtSetDumpClient(_CRT_DUMP_CLIENT pfnNewDump)
 	{

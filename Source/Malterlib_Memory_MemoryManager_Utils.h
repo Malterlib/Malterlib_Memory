@@ -7,7 +7,7 @@ namespace NMib::NMemory::NPrivate
 {
 	inline_always uint64 fg_CalcMagic(void *_pAddress, uint64 _Magic)
 	{
-		uint64 Magic = _Magic ^ ((uint64)(mint)_pAddress);
+		uint64 Magic = _Magic ^ ((uint64)(umint)_pAddress);
 		return Magic;
 	}
 }

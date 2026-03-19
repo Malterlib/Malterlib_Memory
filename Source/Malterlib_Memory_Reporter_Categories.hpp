@@ -422,23 +422,23 @@ namespace NMib::NMemory
 		ms_pThis = nullptr;
 	}
 
-	void CCategoriesMemoryReporter::f_AllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName)
+	void CCategoriesMemoryReporter::f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName)
 	{
 	}
 
-	void CCategoriesMemoryReporter::f_AllocatorDelete(mint _MemoryAllocator)
+	void CCategoriesMemoryReporter::f_AllocatorDelete(umint _MemoryAllocator)
 	{
 	}
 
-	void CCategoriesMemoryReporter::f_ScopeEnter(mint _MemoryAllocator)
+	void CCategoriesMemoryReporter::f_ScopeEnter(umint _MemoryAllocator)
 	{
 	}
 
-	void CCategoriesMemoryReporter::f_ScopeExit(mint _MemoryAllocator)
+	void CCategoriesMemoryReporter::f_ScopeExit(umint _MemoryAllocator)
 	{
 	}
 
-	void CCategoriesMemoryReporter::fp_ReportAlloc(mint _Size, void *_pAllocationInfo)
+	void CCategoriesMemoryReporter::fp_ReportAlloc(umint _Size, void *_pAllocationInfo)
 	{
 		if (!_pAllocationInfo)
 		{
@@ -494,7 +494,7 @@ namespace NMib::NMemory
 #endif
 	}
 
-	void CCategoriesMemoryReporter::fp_ReportFree(mint _Size, void const *_pAllocationInfo)
+	void CCategoriesMemoryReporter::fp_ReportFree(umint _Size, void const *_pAllocationInfo)
 	{
 		if (!_pAllocationInfo)
 		{
@@ -513,11 +513,11 @@ namespace NMib::NMemory
 
 	void CCategoriesMemoryReporter::f_Alloc
 		(
-			mint _MemoryAllocator
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			umint _MemoryAllocator
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -527,14 +527,14 @@ namespace NMib::NMemory
 
 	void CCategoriesMemoryReporter::f_Resize
 		(
-			mint _MemoryAllocator
-			, mint _OldAddress
-			, mint _OldSize
+			umint _MemoryAllocator
+			, umint _OldAddress
+			, umint _OldSize
 			, void const *_pOldAllocationInfo
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -545,14 +545,14 @@ namespace NMib::NMemory
 
 	void CCategoriesMemoryReporter::f_Realloc
 		(
-			mint _MemoryAllocator
-			, mint _OldAddress
-			, mint _OldSize
+			umint _MemoryAllocator
+			, umint _OldAddress
+			, umint _OldSize
 			, void const *_pOldAllocationInfo
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -561,24 +561,24 @@ namespace NMib::NMemory
 		fp_ReportAlloc(_ReturnedSize, _pAllocationInfo);
 	}
 
-	void CCategoriesMemoryReporter::f_Free(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo)
+	void CCategoriesMemoryReporter::f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo)
 	{
 		fp_ReportFree(_Size, _pAllocationInfo);
 	}
 
-	void CCategoriesMemoryReporter::f_GetSize(mint _MemoryAllocator, mint _Address, mint _Size, void const *_pAllocationInfo)
+	void CCategoriesMemoryReporter::f_GetSize(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo)
 	{
 	}
 
-	void CCategoriesMemoryReporter::f_Protect(mint _MemoryAllocator, mint _Address, mint _Size, uaint _Protect)
+	void CCategoriesMemoryReporter::f_Protect(umint _MemoryAllocator, umint _Address, umint _Size, uaint _Protect)
 	{
 	}
 
-	void CCategoriesMemoryReporter::f_Commit(mint _MemoryAllocator, mint _Address, mint _Size)
+	void CCategoriesMemoryReporter::f_Commit(umint _MemoryAllocator, umint _Address, umint _Size)
 	{
 	}
 
-	void CCategoriesMemoryReporter::f_Decommit(mint _MemoryAllocator, mint _Address, mint _Size)
+	void CCategoriesMemoryReporter::f_Decommit(umint _MemoryAllocator, umint _Address, umint _Size)
 	{
 	}
 }

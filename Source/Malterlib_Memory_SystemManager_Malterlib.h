@@ -22,7 +22,7 @@ namespace NMib
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	struct CMemoryManagerParamsSmallOverrides : NMemory::CDefaultMemoryManagerParams
 	{
-		static constexpr mint mc_SubSlabSize = 4096;
+		static constexpr umint mc_SubSlabSize = 4096;
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 		using CAllocator = CMainHeapVirtualAllocator;
 	};

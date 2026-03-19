@@ -13,15 +13,15 @@ extern "C"
 	struct CAlloc
 	{
 		void *m_pAlloc;
-		mint m_Size;
+		umint m_Size;
 	};
 	module_export void calling_convention_c fg_TestMemory()
 	{
 		*g_ThreadLocal = NMib::NStr::CStr::fs_ToStr(NMib::NSys::fg_Thread_GetCurrentUID());
 
-		mint nThreads = 16;
+		umint nThreads = 16;
 
-		mint MinSizeDifference = 1;
+		umint MinSizeDifference = 1;
 
 #ifdef DMibSanitizerEnabled_Address
 		nThreads = 2; // Runs out of resources otherwise
@@ -30,7 +30,7 @@ extern "C"
 
 		NMib::NContainer::TCVector<NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject>> StartedThreads;
 
-		for (mint i = 0; i < nThreads; ++i)
+		for (umint i = 0; i < nThreads; ++i)
 		{
 			StartedThreads.f_Insert
 				(
@@ -46,38 +46,38 @@ extern "C"
 								NMib::NContainer::TCVector<CAlloc> BigAllocs;
 								NMib::NContainer::TCVector<CAlloc> HugeAllocs;
 								auto Checkout = NMib::fg_GetSys()->f_MemoryManager_Checkout();
-								mint LastAlloc = 0;
-								for (mint MemorySize = 1; MemorySize <= 512*1024; MemorySize += MinSizeDifference)
+								umint LastAlloc = 0;
+								for (umint MemorySize = 1; MemorySize <= 512*1024; MemorySize += MinSizeDifference)
 								{
-									mint AllocSize = NMib::NMemory::fg_SizePadded(MemorySize);
+									umint AllocSize = NMib::NMemory::fg_SizePadded(MemorySize);
 									if (AllocSize != LastAlloc || MemorySize < 1024)
 									{
 										LastAlloc = AllocSize;
-										mint Size = MemorySize;
+										umint Size = MemorySize;
 										auto pMemory = NMib::NMemory::fg_AllocWithSize(Size);
 										Allocs.f_Insert({pMemory, Size});
 									}
 								}
 
-								for (mint MemorySize = 512*1024 * 2; MemorySize <= 16*1024*1024; MemorySize *= 2)
+								for (umint MemorySize = 512*1024 * 2; MemorySize <= 16*1024*1024; MemorySize *= 2)
 								{
-									mint AllocSize = MemorySize;
+									umint AllocSize = MemorySize;
 									if (AllocSize != LastAlloc)
 									{
 										LastAlloc = AllocSize;
-										mint Size = AllocSize;
+										umint Size = AllocSize;
 										auto pAlloc = NMib::NMemory::fg_AllocWithSize(Size);
 										BigAllocs.f_Insert({pAlloc, Size});
 									}
 								}
 
-								for (mint MemorySize = 16*1024*1024 * 2; MemorySize <= 16*1024*1024 * 4; MemorySize *= 2)
+								for (umint MemorySize = 16*1024*1024 * 2; MemorySize <= 16*1024*1024 * 4; MemorySize *= 2)
 								{
-									mint AllocSize = MemorySize;
+									umint AllocSize = MemorySize;
 									if (AllocSize != LastAlloc)
 									{
 										LastAlloc = AllocSize;
-										mint Size = AllocSize;
+										umint Size = AllocSize;
 										auto pAlloc = NMib::NMemory::fg_AllocWithSize(Size);
 										HugeAllocs.f_Insert({pAlloc, Size});
 									}

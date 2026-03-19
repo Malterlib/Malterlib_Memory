@@ -259,9 +259,9 @@ namespace
 			return NSys::fg_Thread_SetLocal(m_iThreadLocal, _pBuffer);
 		}
 
-		mint f_GetRentrant()
+		umint f_GetRentrant()
 		{
-			return (mint)NSys::fg_Thread_GetLocal(m_iThreadLocalReentrant);
+			return (umint)NSys::fg_Thread_GetLocal(m_iThreadLocalReentrant);
 		}
 
 		void f_IncRentrant()
@@ -274,13 +274,13 @@ namespace
 			NSys::fg_Thread_SetLocal(m_iThreadLocalReentrant, (void *)(f_GetRentrant() - 1));
 		}
 
-		mint m_iThreadLocal;
-		mint m_iThreadLocalReentrant;
+		umint m_iThreadLocal;
+		umint m_iThreadLocalReentrant;
 	};
 
 	constinit NStorage::TCAggregateSimple<CLowLevelGlobalState> g_LowLevelGlobalState = {DAggregateInit};
 
-	constexpr mint gc_TypeCounts = 32;
+	constexpr umint gc_TypeCounts = 32;
 
 	struct CExceptionParameters
 	{
@@ -327,10 +327,10 @@ namespace
 		DMibListLinkDS_List(CMemoryManagerZoneMax, m_Link) m_ZoneListMax;
 		NContainer::TCVector<malloc_zone_t_known_version *> m_ForeignZones;
 		malloc_zone_t_known_version **m_pForeignZones = nullptr;
-		mint m_nForeignZones = 0;
+		umint m_nForeignZones = 0;
 #ifdef DMemoryManagerIsSame
 		NMib::NThread::CMutualAggregate m_ForkLock;
-		mint m_ForkedCount = 0;
+		umint m_ForkedCount = 0;
 		bool m_Unforked = false;
 		sigset_t m_ForkSigMask;
 #endif
@@ -385,8 +385,8 @@ extern "C"
 	bool g_MalterlibMallocBeforeMallocCalled = false;
 	bool g_MalterlibMallocAfterMallocCalled = false;
 
-	mint g_nMallocZonesBeforeMallocInit = 0;
-	mint g_nMallocZonesAfterMallocInit = 0;
+	umint g_nMallocZonesBeforeMallocInit = 0;
+	umint g_nMallocZonesAfterMallocInit = 0;
 
 #ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
 	void fg_InterposeOverride();
@@ -628,7 +628,7 @@ extern "C"
 
 		if (envp)
 		{
-			for (mint i = 0; envp[i]; ++i)
+			for (umint i = 0; envp[i]; ++i)
 			{
 				if (NStr::fg_StrStartsWith(envp[i], "DYLD_INSERT_LIBRARIES"))
 				{
@@ -764,7 +764,7 @@ void fg_HandleCrashSignalSegv(int signal)
 }
 
 #ifdef DEmulateCrash
-mint g_bInstalled = 0;
+umint g_bInstalled = 0;
 #endif
 
 void fg_MalterlibMallocOverrideInit_ReinstallHandler()
@@ -814,7 +814,7 @@ extern "C"
 		if (!g_MalterlibMallocOveriddenInstalled)
 			return true;
 
-		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((mint)_pThread, g_LowLevelGlobalState->m_iThreadLocal);
+		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((umint)_pThread, g_LowLevelGlobalState->m_iThreadLocal);
 		if (pJumpBuffer)
 			return false;
 		else
@@ -902,7 +902,7 @@ void fg_Malterlib_zone_free_definite_size(malloc_zone_t_known_version *_pZone, v
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
 	uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-	mint Size = DAlignSizeMacOS(_Size);
+	umint Size = DAlignSizeMacOS(_Size);
 
 #ifdef DMemoryManagerIsSame
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -961,7 +961,7 @@ void *fg_Malterlib_zone_malloc(malloc_zone_t_known_version *_pZone, size_t _Size
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
 
-	mint Size = DAlignSizeMacOS(_Size);
+	umint Size = DAlignSizeMacOS(_Size);
 
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
@@ -998,9 +998,9 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 	if (_nRequested)
 		return 0;
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-	mint Size = DAlignSizeMacOS(_Size);
+	umint Size = DAlignSizeMacOS(_Size);
 
-	mint nAllocated = 0;
+	umint nAllocated = 0;
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -1010,7 +1010,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 			(
 				Size
 				, 1
-				, [&](void *_pAlloc, mint _Size) -> bool
+				, [&](void *_pAlloc, umint _Size) -> bool
 				{
 					_pResults[nAllocated] = _pAlloc;
 					++nAllocated;
@@ -1029,7 +1029,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 			(
 				Size
 				, 1
-				, [&](void *_pAlloc, mint _Size) -> bool
+				, [&](void *_pAlloc, umint _Size) -> bool
 				{
 					_pResults[nAllocated] = _pAlloc;
 					++nAllocated;
@@ -1049,7 +1049,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 			(
 				Size
 				, 1
-				, [&](void *_pAlloc, mint _Size) -> bool
+				, [&](void *_pAlloc, umint _Size) -> bool
 				{
 					_pResults[nAllocated] = _pAlloc;
 					++nAllocated;
@@ -1065,7 +1065,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 			(
 				Size
 				, 1
-				, [&](void *_pAlloc, mint _Size) -> bool
+				, [&](void *_pAlloc, umint _Size) -> bool
 				{
 					_pResults[nAllocated] = _pAlloc;
 					++nAllocated;
@@ -1081,7 +1081,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 		(
 			Size
 			, 1
-			, [&](void *_pAlloc, mint _Size) -> bool
+			, [&](void *_pAlloc, umint _Size) -> bool
 			{
 				_pResults[nAllocated] = _pAlloc;
 				++nAllocated;
@@ -1097,7 +1097,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 		(
 			Size
 			, 1
-			, [&](void *_pAlloc, mint _Size) -> bool
+			, [&](void *_pAlloc, umint _Size) -> bool
 			{
 				_pResults[nAllocated] = _pAlloc;
 				++nAllocated;
@@ -1123,7 +1123,7 @@ void fg_Malterlib_zone_batch_free(malloc_zone_t_known_version *_pZone, void **to
 	{
 		auto &MainHeap = *DMainHeapSmall;
 		auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
-		for (mint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
+		for (umint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
 			return MainHeap.f_FreeNoSize(to_be_freed[iToFree]);
 	}
 	else
@@ -1131,12 +1131,12 @@ void fg_Malterlib_zone_batch_free(malloc_zone_t_known_version *_pZone, void **to
 	{
 		auto &MainHeap = *DMainHeapMax;
 		auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
-		for (mint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
+		for (umint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
 			return MainHeap.f_FreeNoSize(to_be_freed[iToFree]);
 	}
 #else
 	auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
-	for (mint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
+	for (umint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
 		fg_FreeNoSize(to_be_freed[iToFree]);
 #endif
 }
@@ -1145,7 +1145,7 @@ void *fg_Malterlib_zone_calloc(malloc_zone_t_known_version *_pZone, size_t num_i
 {
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
-	mint Size = DAlignSizeMacOS(_Size * num_items);
+	umint Size = DAlignSizeMacOS(_Size * num_items);
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc;
@@ -1182,7 +1182,7 @@ void *fg_Malterlib_zone_memalign(malloc_zone_t_known_version *_pZone, size_t _Al
 
 	_Alignment = DAlignAligmentMacOS(_Alignment);
 
-	mint Size = _Size;
+	umint Size = _Size;
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc;
@@ -1217,8 +1217,8 @@ void *fg_Malterlib_zone_valloc(malloc_zone_t_known_version *_pZone, size_t _Size
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
 
-	mint Alignment = NSys::NPrivate::g_PageSize;
-	mint Size = fg_AlignUp(fg_Max(_Size, 1), Alignment);
+	umint Alignment = NSys::NPrivate::g_PageSize;
+	umint Size = fg_AlignUp(fg_Max(_Size, 1), Alignment);
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc;
@@ -1256,7 +1256,7 @@ void *fg_Malterlib_zone_realloc(malloc_zone_t_known_version *_pZone, void *_pMem
 
 	uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 
-	mint Size = DAlignSizeMacOS(_Size);
+	umint Size = DAlignSizeMacOS(_Size);
 
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
@@ -1666,7 +1666,7 @@ extern "C"
 		if (!g_MalterlibMallocOveriddenInstalled)
 			return KERN_FAILURE;
 
-		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((mint)pThread, g_LowLevelGlobalState->m_iThreadLocal);
+		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((umint)pThread, g_LowLevelGlobalState->m_iThreadLocal);
 		if (pJumpBuffer)
 		{
 			if (*_pFlavor != gc_StateFlavor)
@@ -1681,17 +1681,17 @@ extern "C"
 			*_pNewStateCount = gc_StateCount;
 
 #if defined(DArchitecture_arm64e)
-			pNewState->__x[0] = (mint)(void *)*pJumpBuffer;
+			pNewState->__x[0] = (umint)(void *)*pJumpBuffer;
 			pNewState->__x[1] = 1;
 			__darwin_arm_thread_state64_set_pc_fptr(*pNewState, (void *)&_longjmp);
 #elif defined(DArchitecture_arm64)
-			pNewState->__x[0] = (mint)(void *)*pJumpBuffer;
+			pNewState->__x[0] = (umint)(void *)*pJumpBuffer;
 			pNewState->__x[1] = 1;
-			pNewState->__pc = (mint)(void *)&_longjmp;
+			pNewState->__pc = (umint)(void *)&_longjmp;
 #elif defined(DArchitecture_x64)
-			pNewState->__rdi = (mint)(void *)*pJumpBuffer;
+			pNewState->__rdi = (umint)(void *)*pJumpBuffer;
 			pNewState->__rsi = 1;
-			pNewState->__rip = (mint)(void *)&_longjmp;
+			pNewState->__rip = (umint)(void *)&_longjmp;
 #else
 #	error "Implement this"
 #endif
@@ -1706,7 +1706,7 @@ extern "C"
 		auto &ExceptionHandlingState = *State.m_pExceptionHandlingState;
 
 		smint iNextHandler = -1;
-		for (mint i = 0; i < ExceptionHandlingState.m_PreviousParams.m_nTypes; ++i)
+		for (umint i = 0; i < ExceptionHandlingState.m_PreviousParams.m_nTypes; ++i)
 		{
 			if (ExceptionHandlingState.m_PreviousParams.m_Masks[i] & (1 << _Exception))
 			{
@@ -1853,7 +1853,7 @@ namespace
 		mach_port_t CurrentTask = mach_task_self();
 		bool bReturn = true;
 
-		for (mint i = 0; i < m_PreviousParams.m_nTypes; ++i)
+		for (umint i = 0; i < m_PreviousParams.m_nTypes; ++i)
 		{
 			kern_return_t Result = task_set_exception_ports
 				(
@@ -2294,9 +2294,9 @@ namespace
 			}
 		};
 
-		using CRegionAllocator = TCStaticPoolAllocator<NContainer::TCMapNode<mint, NContainer::TCRegionData<mint, CRegionData>>, 128, CAllocator_VirtualNoTracking>;
+		using CRegionAllocator = TCStaticPoolAllocator<NContainer::TCMapNode<umint, NContainer::TCRegionData<umint, CRegionData>>, 128, CAllocator_VirtualNoTracking>;
 
-		NContainer::TCRegions<mint, CRegionData, CRegionAllocator> m_Regions;
+		NContainer::TCRegions<umint, CRegionData, CRegionAllocator> m_Regions;
 	};
 
 	constinit NStorage::TCAggregate<NThread::TCThreadLocal<CInvalidRegionCacheThreadLocal>> g_InvalidRegionCache = {DAggregateInit};
@@ -2314,7 +2314,7 @@ namespace
 			return false;
 
 		auto &Cache = **g_InvalidRegionCache;
-		vm_address_t Address = (mint)_pMemory;
+		vm_address_t Address = (umint)_pMemory;
 		auto pData = Cache.m_Regions.f_GetData(Address);
 		if (pData)
 			return pData->m_Type < 240 || pData->m_Type > 255;
@@ -2409,7 +2409,7 @@ namespace
 	}
 
 	template <typename tf_CMemoryManagerZone>
-	mint fg_Malterlib_Safe_GetSize(tf_CMemoryManagerZone *_pZone, const void *_pMemory)
+	umint fg_Malterlib_Safe_GetSize(tf_CMemoryManagerZone *_pZone, const void *_pMemory)
 	{
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 
@@ -2610,15 +2610,15 @@ extern "C"
 #endif
 	}
 
-	malloc_zone_t_known_version *fg_GetForeignZone(void const *_pMemory, mint *_pSize = nullptr)
+	malloc_zone_t_known_version *fg_GetForeignZone(void const *_pMemory, umint *_pSize = nullptr)
 	{
 		auto &State = *g_GlobalState;
-		for (mint iZone = 0; iZone < State.m_nForeignZones; ++iZone)
+		for (umint iZone = 0; iZone < State.m_nForeignZones; ++iZone)
 		{
 			auto *pZone = State.m_pForeignZones[iZone];
 			if (!pZone)
 				continue;
-			if (mint Size = pZone->size(pZone, _pMemory))
+			if (umint Size = pZone->size(pZone, _pMemory))
 			{
 				if (_pSize)
 					*_pSize = Size;
@@ -2631,7 +2631,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc(size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 #if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -2659,8 +2659,8 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_valloc(size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Alignment = NSys::NPrivate::g_PageSize;
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Alignment = NSys::NPrivate::g_PageSize;
+		umint Size = DAlignSizeMacOS(_Size);
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -2688,7 +2688,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_calloc(size_t _NumItems, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = DAlignSizeMacOS(_Size * _NumItems);
+		umint Size = DAlignSizeMacOS(_Size * _NumItems);
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -2720,7 +2720,7 @@ extern "C"
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.realloc(_pMemory, _Size);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 		if (g_bOnlyDefaultZone || !_pMemory)
 		{
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
@@ -2807,7 +2807,7 @@ extern "C"
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.reallocf(_pMemory, _Size);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 		if (g_bOnlyDefaultZone || !_pMemory)
 		{
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
@@ -3055,7 +3055,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport int fg_Malterlib_posix_memalign(void **_pOutput, size_t _Alignment, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 		_Alignment = DAlignAligmentMacOS(_Alignment);
 
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
@@ -3086,7 +3086,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_aligned_alloc(size_t _Alignment, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 		_Alignment = DAlignAligmentMacOS(_Alignment);
 
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
@@ -3185,7 +3185,7 @@ extern "C"
 	// operator new[](unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__Znam(size_t _Size)
 	{
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -3213,7 +3213,7 @@ extern "C"
 	// operator new(unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__Znwm(size_t _Size)
 	{
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -3241,7 +3241,7 @@ extern "C"
 	// operator new(unsigned long, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnwmRKSt9nothrow_t(size_t _Size)
 	{
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -3269,8 +3269,8 @@ extern "C"
 	// operator new(unsigned long, std::align_val_t)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnwmSt11align_val_t(size_t _Size, size_t _Alignment)
 	{
-		mint Alignment = DAlignAligmentMacOS(_Alignment);
-		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+		umint Alignment = DAlignAligmentMacOS(_Alignment);
+		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
 
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
@@ -3299,8 +3299,8 @@ extern "C"
 	// operator new(unsigned long, std::align_val_t, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnwmSt11align_val_tRKSt9nothrow_t(size_t _Size, size_t _Alignment)
 	{
-		mint Alignment = DAlignAligmentMacOS(_Alignment);
-		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+		umint Alignment = DAlignAligmentMacOS(_Alignment);
+		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
 
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
@@ -3329,7 +3329,7 @@ extern "C"
 	// operator new[](unsigned long, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnamRKSt9nothrow_t(size_t _Size)
 	{
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -3357,8 +3357,8 @@ extern "C"
 	// operator new[](unsigned long, std::align_val_t)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnamSt11align_val_t(size_t _Size, size_t _Alignment)
 	{
-		mint Alignment = DAlignAligmentMacOS(_Alignment);
-		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+		umint Alignment = DAlignAligmentMacOS(_Alignment);
+		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
 
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
@@ -3387,8 +3387,8 @@ extern "C"
 	// operator new[](unsigned long, std::align_val_t, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnamSt11align_val_tRKSt9nothrow_t(size_t _Size, size_t _Alignment)
 	{
-		mint Alignment = DAlignAligmentMacOS(_Alignment);
-		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+		umint Alignment = DAlignAligmentMacOS(_Alignment);
+		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
 
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
@@ -3507,7 +3507,7 @@ extern "C"
 	// operator delete[](void*, unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdaPvm(void *_pMemory, size_t _Size)
 	{
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
@@ -3526,8 +3526,8 @@ extern "C"
 	// operator delete[](void*, unsigned long, std::align_val_t)
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdaPvmSt11align_val_t(void *_pMemory, size_t _Size, size_t _Alignment)
 	{
-		mint Alignment = DAlignAligmentMacOS(_Alignment);
-		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+		umint Alignment = DAlignAligmentMacOS(_Alignment);
+		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
 
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
@@ -3601,7 +3601,7 @@ extern "C"
 	// operator delete(void*, unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdlPvm(void *_pMemory, size_t _Size)
 	{
-		mint Size = DAlignSizeMacOS(_Size);
+		umint Size = DAlignSizeMacOS(_Size);
 
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
@@ -3621,8 +3621,8 @@ extern "C"
 	// operator delete(void*, unsigned long, std::align_val_t)
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdlPvmSt11align_val_t(void *_pMemory, size_t _Size, size_t _Alignment)
 	{
-		mint Alignment = DAlignAligmentMacOS(_Alignment);
-		mint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+		umint Alignment = DAlignAligmentMacOS(_Alignment);
+		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
 
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
@@ -3676,7 +3676,7 @@ extern "C"
 				pMemoryManager = fg_Malterlib_Safe_GetMemoryManager<CMemoryManagerSmall>(_pMemory);
 				if (!pMemoryManager)
 				{
-					mint Size;
+					umint Size;
 					auto pZone = fg_GetForeignZone(_pMemory, &Size);
 					if (!pZone)
 						return 0;
@@ -3702,7 +3702,7 @@ extern "C"
 				pMemoryManager = fg_Malterlib_Safe_GetMemoryManager<CMemoryManagerMax>(_pMemory);
 				if (!pMemoryManager)
 				{
-					mint Size;
+					umint Size;
 					auto pZone = fg_GetForeignZone(_pMemory, &Size);
 					if (!pZone)
 						return 0;
@@ -3847,7 +3847,7 @@ extern "C"
 						, .malloc = [](malloc_zone_t_known_version *_pZone, size_t _Size) -> void * // malloc
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							mint Size = DAlignSizeMacOS(_Size);
+							umint Size = DAlignSizeMacOS(_Size);
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 							return pMalterlibAlloc;
@@ -3855,7 +3855,7 @@ extern "C"
 						, .calloc = [](malloc_zone_t_known_version *_pZone, size_t _nItems, size_t _Size) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							mint Size = DAlignSizeMacOS(_Size * _nItems);
+							umint Size = DAlignSizeMacOS(_Size * _nItems);
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 							fg_MemClear(pMalterlibAlloc, Size);
@@ -3864,7 +3864,7 @@ extern "C"
 						, .valloc = [](malloc_zone_t_known_version *_pZone, size_t _Size) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							mint Size = fg_AlignUp(fg_Max(_Size, 1), NSys::NPrivate::g_PageSize);
+							umint Size = fg_AlignUp(fg_Max(_Size, 1), NSys::NPrivate::g_PageSize);
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, NSys::NPrivate::g_PageSize);
 							fg_MemClear(pMalterlibAlloc, Size);
@@ -3881,7 +3881,7 @@ extern "C"
 						, .realloc = [](malloc_zone_t_known_version *_pZone, void *_pMemory, size_t _Size) -> void *
 						{
 							uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-							mint Size = DAlignSizeMacOS(_Size);
+							umint Size = DAlignSizeMacOS(_Size);
 							auto *pZone = (tf_CZone *)_pZone;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_Resize(pMalterlibAlloc, Size, 0);
@@ -3916,17 +3916,17 @@ extern "C"
 						{
 							if (_nRequested)
 								return 0;
-							mint Size = DAlignSizeMacOS(_Size);
+							umint Size = DAlignSizeMacOS(_Size);
 							auto *pZone = (tf_CZone *)_pZone;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 
-							mint nAllocated = 0;
+							umint nAllocated = 0;
 						#if DEnableDebugMemoryManager
 							pZone->m_MemoryManager.f_AllocBatchDebug
 								(
 									Size
 									, 1
-									, [&](void *_pAlloc, mint _Size) -> bool
+									, [&](void *_pAlloc, umint _Size) -> bool
 									{
 										_pResults[nAllocated] = _pAlloc;
 										++nAllocated;
@@ -3942,7 +3942,7 @@ extern "C"
 								(
 									Size
 									, 1
-									, [&](void *_pAlloc, mint _Size) -> bool
+									, [&](void *_pAlloc, umint _Size) -> bool
 									{
 										_pResults[nAllocated] = _pAlloc;
 										++nAllocated;
@@ -3961,7 +3961,7 @@ extern "C"
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							auto *pZone = (tf_CZone *)_pZone;
 							auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
-							for (mint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
+							for (umint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
 								pZone->m_MemoryManager.f_FreeNoSize(to_be_freed[iToFree]);
 						}
 						, .introspect = &g_MalterlibMallocZoneZoneIntrospection
@@ -3969,7 +3969,7 @@ extern "C"
 						, .memalign = [](malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							mint Size = _Size;
+							umint Size = _Size;
 							_Alignment = DAlignAligmentMacOS(_Alignment);
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 						#if DEnableDebugMemoryManager
@@ -3986,7 +3986,7 @@ extern "C"
 								return;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 
-							mint Size = DAlignSizeMacOS(_Size);
+							umint Size = DAlignSizeMacOS(_Size);
 
 							auto *pZone = (tf_CZone *)_pZone;
 							uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
@@ -4015,7 +4015,7 @@ extern "C"
 						, .malloc_with_options = [](malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							mint Size = _Size;
+							umint Size = _Size;
 							_Align = DAlignAligmentMacOS(_Align);
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 						#if DEnableDebugMemoryManager
@@ -4032,7 +4032,7 @@ extern "C"
 						, .malloc_type_malloc = [](malloc_zone_t_known_version *_pZone, size_t _Size, malloc_type_id_t _TypeId) -> void * // malloc
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							mint Size = DAlignSizeMacOS(_Size);
+							umint Size = DAlignSizeMacOS(_Size);
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 							return pMalterlibAlloc;
@@ -4040,7 +4040,7 @@ extern "C"
 						, .malloc_type_calloc = [](malloc_zone_t_known_version *_pZone, size_t _nItems, size_t _Size, malloc_type_id_t _TypeId) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							mint Size = DAlignSizeMacOS(_Size * _nItems);
+							umint Size = DAlignSizeMacOS(_Size * _nItems);
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 							fg_MemClear(pMalterlibAlloc, Size);
@@ -4049,7 +4049,7 @@ extern "C"
 						, .malloc_type_realloc = [](malloc_zone_t_known_version *_pZone, void *_pMemory, size_t _Size, malloc_type_id_t _TypeId) -> void *
 						{
 							uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-							mint Size = DAlignSizeMacOS(_Size);
+							umint Size = DAlignSizeMacOS(_Size);
 							auto *pZone = (tf_CZone *)_pZone;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_Resize(pMalterlibAlloc, Size, 0);
@@ -4058,7 +4058,7 @@ extern "C"
 						, .malloc_type_memalign = [](malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size, malloc_type_id_t _TypeId) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							mint Size = _Size;
+							umint Size = _Size;
 							_Alignment = DAlignAligmentMacOS(_Alignment);
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 						#if DEnableDebugMemoryManager
@@ -4072,7 +4072,7 @@ extern "C"
 						, .malloc_type_malloc_with_options = [](malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options, malloc_type_id_t _TypeId) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							mint Size = _Size;
+							umint Size = _Size;
 							_Align = DAlignAligmentMacOS(_Align);
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 						#if DEnableDebugMemoryManager
@@ -4340,7 +4340,7 @@ extern "C"
 		DMibOverrideTrace("FOREIGN zone registered\n");
 
 		NMib::NAtomic::fg_MemoryFence();
-		mint iNextZone = State.m_nForeignZones;
+		umint iNextZone = State.m_nForeignZones;
 		NMib::NAtomic::fg_MemoryFence();
 		State.m_pForeignZones[iNextZone] = _pZone;
 		NMib::NAtomic::fg_MemoryFence();
@@ -4366,8 +4366,8 @@ extern "C"
 		if (!g_bHasForeignZones)
 			return;
 
-		mint iFoundZone = TCLimitsInt<mint>::mc_Max;
-		for (mint iZone = 0; iZone < State.m_nForeignZones; ++iZone)
+		umint iFoundZone = TCLimitsInt<umint>::mc_Max;
+		for (umint iZone = 0; iZone < State.m_nForeignZones; ++iZone)
 		{
 			if (State.m_pForeignZones[iZone] == _pZone)
 			{
@@ -4375,7 +4375,7 @@ extern "C"
 				break;
 			}
 		}
-		if (iFoundZone == TCLimitsInt<mint>::mc_Max)
+		if (iFoundZone == TCLimitsInt<umint>::mc_Max)
 			return;
 
 		if (State.m_nForeignZones == 1)
@@ -4392,7 +4392,7 @@ extern "C"
 			return ;
 		}
 
-		mint iLastZone = State.m_nForeignZones - 1;
+		umint iLastZone = State.m_nForeignZones - 1;
 		NMib::NAtomic::fg_MemoryFence();
 		State.m_pForeignZones[iFoundZone] = State.m_pForeignZones[iLastZone];
 		NMib::NAtomic::fg_MemoryFence();
@@ -4748,7 +4748,7 @@ extern "C"
 #endif
 	}
 
-	constinit NAtomic::TCAtomic<mint> g_Sequence = {DAggregateInit};
+	constinit NAtomic::TCAtomic<umint> g_Sequence = {DAggregateInit};
 
 	assure_used mach_msg_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_mach_msg
 		(

@@ -26,11 +26,11 @@ namespace NMib::NMemory
 
 		CParams m_Params;
 
-		TCMemoryManagerSubSlab_SmallSizeShared(mint _AllocSize);
+		TCMemoryManagerSubSlab_SmallSizeShared(umint _AllocSize);
 
 		uint8 *f_GetArray();
 		void *f_Alloc(bool &_bFull);
-		ESmallState f_Free(void *_pAlloc, mint _iAlloc);
+		ESmallState f_Free(void *_pAlloc, umint _iAlloc);
 		void f_OnAlloc(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
 		void f_OnFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc);
 		void f_OnFillFree(TCMemoryManagerArena<t_CParams> &_Arena);
@@ -38,13 +38,13 @@ namespace NMib::NMemory
 		bool f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, EMemoryManagerCheckFlag _Flags);
 	};
 
-	template <typename t_CParams, mint t_AllocSize>
+	template <typename t_CParams, umint t_AllocSize>
 	struct TCMemoryManagerSubSlab_SmallSize : TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>
 	{
 		using typename TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::CParams;
-		static constexpr mint mc_Alignment = 1 << gc_LowestBitSet<t_AllocSize>;
-		static constexpr mint mc_NumAllocs = (t_CParams::mc_SubSlabSize - TCAlignUp<mint, sizeof(CParams), mc_Alignment>::mc_Value) / t_AllocSize;
-		static constexpr mint mc_SmallSlabIndex
+		static constexpr umint mc_Alignment = 1 << gc_LowestBitSet<t_AllocSize>;
+		static constexpr umint mc_NumAllocs = (t_CParams::mc_SubSlabSize - TCAlignUp<umint, sizeof(CParams), mc_Alignment>::mc_Value) / t_AllocSize;
+		static constexpr umint mc_SmallSlabIndex
 			=
 			(
 				t_AllocSize <= TCMemoryManagerArena<t_CParams>::mc_MinAlignment
@@ -83,9 +83,9 @@ namespace NMib::NMemory
 
 		CParams m_Params;
 
-		static constexpr mint mc_NumAllocs = (t_CParams::mc_SubSlabSize - sizeof(CParams));
-		static constexpr mint mc_NumAllocRegions = (mc_NumAllocs + 254) / 255;
-		static constexpr mint mc_SmallSlabIndex = 0;
+		static constexpr umint mc_NumAllocs = (t_CParams::mc_SubSlabSize - sizeof(CParams));
+		static constexpr umint mc_NumAllocRegions = (mc_NumAllocs + 254) / 255;
+		static constexpr umint mc_SmallSlabIndex = 0;
 		static_assert(mc_NumAllocRegions < 256, "Out of bounds");
 
 		TCMemoryManagerSubSlab_SmallSize();

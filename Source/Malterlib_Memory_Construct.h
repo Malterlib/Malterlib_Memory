@@ -40,7 +40,7 @@ namespace NMib
 		else
 #endif
 		{
-			mint Size = sizeof(tf_CObjectType);
+			umint Size = sizeof(tf_CObjectType);
 			auto Memory = fg_Forward<tf_CAllocator>(_Allocator).f_AllocSafe(Size, alignof(tf_CObjectType));
 			auto pReturn = new(Memory.f_Get()) tf_CObjectType(fg_Forward<tfp_CParams>(p_Params)...);
 			Memory.f_Claim();
@@ -65,7 +65,7 @@ namespace NMib
 				static_assert(!NTraits::cHasOperatorDelete<tf_CObjectType>);
 				if constexpr (NMib::NPrivate::cHas_m_VirtualAllocSize<tf_CObjectType>)
 				{
-					mint DeleteSize = _pObject->m_VirtualAllocSize;
+					umint DeleteSize = _pObject->m_VirtualAllocSize;
 					_pObject->~tf_CObjectType();
 
 					fg_Forward<tf_CAllocator>(_Allocator).f_Free(_pObject, DeleteSize);
@@ -113,7 +113,7 @@ namespace NMib
 	}
 
 	template <typename tf_CObjectType, typename tf_CAllocator>
-	void fg_DeleteObjectDefiniteType(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject, mint _Alignment)
+	void fg_DeleteObjectDefiniteType(tf_CAllocator &&_Allocator, tf_CObjectType *_pObject, umint _Alignment)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
 		static_assert(!NTraits::cIsAbstract<tf_CObjectType> || NTraits::cHasVirtualDestructor<tf_CObjectType>);
@@ -145,7 +145,7 @@ namespace NMib
 	template <typename t_CType = void, typename... tp_CParams>
 	class TCConstruct
 	{
-		template <typename tf_CType, typename tf_CAllocator, mint... tp_Indices>
+		template <typename tf_CType, typename tf_CAllocator, umint... tp_Indices>
 		typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType *fp_Create(tf_CAllocator &&_Allocator, NMeta::TCIndices<tp_Indices...> const& _IndexSequnce)
 		{
 			return fg_ConstructObject<typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType>

@@ -108,33 +108,33 @@ namespace NMib::NMemory
 		void f_CanDoLazyCheckout();
 
 		void f_SetNumaNode(ENumaNode _NumaNode);
-		void *f_AllocWithSize(mint &_Size);
-		void *f_AllocWithSizeInline(mint &_Size);
-		void *f_Alloc(mint _Size);
-		void *f_AllocInline(mint _Size);
-		void *f_AllocAlignedWithSize(mint &_Size, mint _Alignment);
-		void *f_AllocAlignedWithSizeInline(mint &_Size, mint _Alignment);
-		inline_never void *f_AllocAligned(mint _Size, mint _Alignment);
-		void *f_AllocAlignedInline(mint _Size, mint _Alignment);
-		void f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
-		void *f_Realloc(void * _pMemory, mint &_Size, mint _OldSize);
-		void *f_ReallocInline(void * _pMemory, mint &_Size, mint _OldSize);
-		void *f_Resize(void * _pMemory, mint &_Size, mint _OldSize);
-		void *f_ResizeInline(void * _pMemory, mint &_Size, mint _OldSize);
-		mint f_Size(void const * _pMemory) const;
-		mint f_TrySize(void const * _pMemory) const; // Warning, this function will cause can cause an access violatino if _pMemory is not part of this heap, it's up to the caller to handle this exception
-		mint f_SizeInline(void const * _pMemory) const;
+		void *f_AllocWithSize(umint &_Size);
+		void *f_AllocWithSizeInline(umint &_Size);
+		void *f_Alloc(umint _Size);
+		void *f_AllocInline(umint _Size);
+		void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment);
+		void *f_AllocAlignedWithSizeInline(umint &_Size, umint _Alignment);
+		inline_never void *f_AllocAligned(umint _Size, umint _Alignment);
+		void *f_AllocAlignedInline(umint _Size, umint _Alignment);
+		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
+		void *f_Realloc(void * _pMemory, umint &_Size, umint _OldSize);
+		void *f_ReallocInline(void * _pMemory, umint &_Size, umint _OldSize);
+		void *f_Resize(void * _pMemory, umint &_Size, umint _OldSize);
+		void *f_ResizeInline(void * _pMemory, umint &_Size, umint _OldSize);
+		umint f_Size(void const * _pMemory) const;
+		umint f_TrySize(void const * _pMemory) const; // Warning, this function will cause can cause an access violatino if _pMemory is not part of this heap, it's up to the caller to handle this exception
+		umint f_SizeInline(void const * _pMemory) const;
 		fp32 f_Overhead(void const * _pMemory);
 		bool f_ContainsBlock(void const * _pMemory);
 
 		uint64 f_GetMagic() const;
 		TCMemoryManager *f_GetMemoryManager(void const *_pMemory); // Will only work between managers that share the same magic
 
-		void f_Free(void * _pMemory, mint _Size);
+		void f_Free(void * _pMemory, umint _Size);
 		void f_FreeNoSize(void * _pMemory);
-		void f_FreeInline(void * _pMemory, mint _Size);
+		void f_FreeInline(void * _pMemory, umint _Size);
 		void f_FreeNoSizeInline(void * _pMemory);
-		mint f_SizePadded(mint _Size);
+		umint f_SizePadded(umint _Size);
 
 		void f_PrepareFork();
 		void f_ForkedChild();
@@ -153,16 +153,16 @@ namespace NMib::NMemory
 		void f_DestroyCleanupThreads();
 		void f_ForceStartCleanupThreads();
 
-		mint f_GetNumUsedSlabs();
-		mint f_GetNumFreeSlabs();
+		umint f_GetNumUsedSlabs();
+		umint f_GetNumFreeSlabs();
 
 		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 
 		void f_DestroyThreadLocals();
 
 #if DMibConfig_Memory_CustomThreadLocal
-		void *f_GetCustomThreadLocal(mint _Index);
-		void *f_SetCustomThreadLocal(mint _Index, void *_pCustom);
+		void *f_GetCustomThreadLocal(umint _Index);
+		void *f_SetCustomThreadLocal(umint _Index, void *_pCustom);
 #endif
 
 #if DMibConfig_Memory_Shims_Lightweight
@@ -173,10 +173,10 @@ namespace NMib::NMemory
 #endif
 
 	private:
-		void *fp_AllocAlignedSlowPath(mint &_Size, mint _Alignment);
-		void fp_AllocBatchSlowPath(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
+		void *fp_AllocAlignedSlowPath(umint &_Size, umint _Alignment);
+		void fp_AllocBatchSlowPath(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
 
-		void fp_FreeSlowPath(void * _pMemory, mint _Size);
+		void fp_FreeSlowPath(void * _pMemory, umint _Size);
 
 		TCMemoryManagerNumaArena<t_CParams> *fp_GetAnyNumaArena();
 
@@ -185,11 +185,11 @@ namespace NMib::NMemory
 
 		TCMemoryManagerCheckoutLight<t_CParams> fp_Checkout(TCMemoryManagerThreadLocal<t_CParams> &_ThreadLocal);
 
-		void *fp_AllocWithCheckout(mint &_Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena);
-		void *fp_AllocWithTempCheckout(mint &_Size);
+		void *fp_AllocWithCheckout(umint &_Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena);
+		void *fp_AllocWithTempCheckout(umint &_Size);
 
-		void fp_AllocBatchWithCheckout(mint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
-		void fp_AllocBatchWithTempCheckout(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
+		void fp_AllocBatchWithCheckout(umint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
+		void fp_AllocBatchWithTempCheckout(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
 
 		void fp_ProcessArenaMessages();
 
@@ -197,7 +197,7 @@ namespace NMib::NMemory
 		void fp_EnumHeaps(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArenaHeap<t_CParams> *)> const &_Functor);
 
 #if DMibConfig_Memory_Shims_Lightweight
-		inline_always void fp_TrackAlloc(mint _Size);
+		inline_always void fp_TrackAlloc(umint _Size);
 		inline_always static bool fsp_ShouldTrackAlloc(TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 #endif
 

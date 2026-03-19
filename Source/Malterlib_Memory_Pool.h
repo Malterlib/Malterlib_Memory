@@ -20,13 +20,13 @@ namespace NMib::NMemory
 			DMibListLinkAllocatorSA_Link(TCBlock, m_FreeLink, t_CAllocator);
 		};
 
-		template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
+		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		class TCChunk
 		{
 		public:
 			using CChunk = TCChunk;
 			DMibListLinkAllocatorS_Link(CChunk, m_Link, t_CAllocator);
-			mint m_Size;
+			umint m_Size;
 
 			enum
 			{
@@ -34,13 +34,13 @@ namespace NMib::NMemory
 				, EDataSize = (EBlockSize + t_Alignment - 1) & (~(t_Alignment - 1))
 			};
 
-			inline_large TCChunk(DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) &_Blocks, mint _Size)
+			inline_large TCChunk(DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) &_Blocks, umint _Size)
 			{
 				m_Size = _Size;
 
 				uint8 *pStart = fg_AlignUp((uint8 *)(this + 1), t_Alignment);
 				uint8 *pEnd = (uint8 *)this + _Size;
-				mint nBlocks = (pEnd - pStart) / EDataSize;
+				umint nBlocks = (pEnd - pStart) / EDataSize;
 
 				uint8 *pEndBlock = pStart;
 				uint8 *pCurrentBlock = pStart + (nBlocks - 1) * EDataSize;
@@ -59,7 +59,7 @@ namespace NMib::NMemory
 		};
 
 
-		template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
+		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		class TCPool
 		{
 		public:
@@ -87,14 +87,14 @@ namespace NMib::NMemory
 				aint m_NumUsed;
 #				endif
 			ENumaNode m_NumaNode;
-			mint m_GrowSize;
+			umint m_GrowSize;
 
 			enum
 			{
 				EDataSize = CChunk::EDataSize
 			};
 
-			void f_Construct(ENumaNode _NumaNode, mint _GrowSize)
+			void f_Construct(ENumaNode _NumaNode, umint _GrowSize)
 			{
 				m_NumaNode = _NumaNode;
 				m_GrowSize = _GrowSize;
@@ -107,7 +107,7 @@ namespace NMib::NMemory
 
 			void f_Destruct(ch8 const *_pTypeName);
 
-			void fp_AddChunk(void *_pMem, mint _Size)
+			void fp_AddChunk(void *_pMem, umint _Size)
 			{
 				CChunk *pNewChunk = new(_pMem) CChunk(m_FreeBlocks, _Size);
 				m_Chunks.f_Insert(pNewChunk);
@@ -127,7 +127,7 @@ namespace NMib::NMemory
 				else
 				{
 
-					mint Size = ((((sizeof(CChunk) + m_GrowSize * EDataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
+					umint Size = ((((sizeof(CChunk) + m_GrowSize * EDataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
 					void *pMem = t_CAllocator::f_AllocWithSize(Size, EAllocationFlag_WillFreeWithSize, m_NumaNode);
 
 					if (pMem)
@@ -194,7 +194,7 @@ namespace NMib::NMemory
 			DMibListLinkS_Trans(TCBlock, m_FreeLink);
 		};
 
-		template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
+		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		class TCChunk
 		{
 		public:
@@ -203,7 +203,7 @@ namespace NMib::NMemory
 			DMibListLinkAllocatorD_Link(CChunk, m_Link, t_CAllocator);
 			DMibListLinkAllocatorS_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
 			aint m_NumUsed;
-			mint m_Size;
+			umint m_Size;
 
 			enum
 			{
@@ -211,7 +211,7 @@ namespace NMib::NMemory
 				, EDataSize = ((EBlockSize + t_DataSize) + t_Alignment - 1) & (~(t_Alignment - 1))
 			};
 
-			inline_large TCChunk(mint _Size)
+			inline_large TCChunk(umint _Size)
 			{
 
 				m_Size = _Size;
@@ -219,7 +219,7 @@ namespace NMib::NMemory
 
 				uint8 *pStart = fg_AlignUp((uint8 *)(this + 1), t_Alignment);
 				uint8 *pEnd = (uint8 *)this + _Size;
-				mint nBlocks = (pEnd - pStart) / EDataSize;
+				umint nBlocks = (pEnd - pStart) / EDataSize;
 
 				uint8 *pEndBlock = pStart;
 				uint8 *pCurrentBlock = pStart + (nBlocks - 1) * EDataSize;
@@ -240,7 +240,7 @@ namespace NMib::NMemory
 		};
 
 
-		template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
+		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		class TCPool
 		{
 		public:
@@ -264,7 +264,7 @@ namespace NMib::NMemory
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
 			ENumaNode m_NumaNode;
-			mint m_GrowSize;
+			umint m_GrowSize;
 
 			enum
 			{
@@ -272,7 +272,7 @@ namespace NMib::NMemory
 				, EBlockSize = CChunk::EBlockSize
 			};
 
-			void f_Construct(ENumaNode _NumaNode, mint _GrowSize)
+			void f_Construct(ENumaNode _NumaNode, umint _GrowSize)
 			{
 				m_NumaNode = _NumaNode;
 				m_GrowSize = _GrowSize;
@@ -287,12 +287,12 @@ namespace NMib::NMemory
 			{
 				DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *lLists[] = {&m_Chunks, &m_FreeChunks, &m_EmptyChunks};
 
-				for (mint i = 0; i < sizeof(lLists) / sizeof(DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *); ++i)
+				for (umint i = 0; i < sizeof(lLists) / sizeof(DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *); ++i)
 				{
 					DMibListLinkAllocatorD_Iter_FromTemplate(CChunk, m_Link, t_CAllocator) Iter = *lLists[i];
 					while (Iter)
 					{
-						if ((mint)_pBlock >= (mint)(CChunk *)Iter && (mint)_pBlock < (mint)(CChunk *)Iter + Iter->m_Size)
+						if ((umint)_pBlock >= (umint)(CChunk *)Iter && (umint)_pBlock < (umint)(CChunk *)Iter + Iter->m_Size)
 							return true;
 						++Iter;
 					}
@@ -335,7 +335,7 @@ namespace NMib::NMemory
 				}
 				else
 				{
-					mint Size = ((((sizeof(CChunk) + m_GrowSize * EDataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
+					umint Size = ((((sizeof(CChunk) + m_GrowSize * EDataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
 					void *pMem = t_CAllocator::f_AllocWithSize(Size, EAllocationFlag_WillFreeWithSize, m_NumaNode);
 
 					if (pMem)
@@ -420,7 +420,7 @@ namespace NMib::NMemory
 			DMibListLinkS_Trans(TCBlock, m_FreeLink);
 		};
 
-		template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
+		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		class TCChunk
 		{
 		public:
@@ -439,7 +439,7 @@ namespace NMib::NMemory
 			DMibListLinkAllocatorD_Link(CChunk, m_Link, t_CAllocator); // 2
 			DMibListLinkAllocatorS_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks; // 1
 			aint m_NumUsed; // 1
-			mint m_Size;
+			umint m_Size;
 
 			enum
 			{
@@ -447,14 +447,14 @@ namespace NMib::NMemory
 				, EDataSize = (EBlockSize + t_Alignment - 1) & (~(t_Alignment - 1))
 			};
 
-			inline_large TCChunk(mint _Size)
+			inline_large TCChunk(umint _Size)
 			{
 				m_Size = _Size;
 				m_NumUsed = 0;
 
 				uint8 *pStart = fg_AlignUp((uint8 *)(this + 1), t_Alignment);
 				uint8 *pEnd = (uint8 *)this + _Size;
-				mint nBlocks = (pEnd - pStart) / EDataSize;
+				umint nBlocks = (pEnd - pStart) / EDataSize;
 
 				uint8 *pEndBlock = pStart;
 				uint8 *pCurrentBlock = pStart + (nBlocks - 1) * EDataSize;
@@ -475,7 +475,7 @@ namespace NMib::NMemory
 		};
 
 
-		template <typename t_CAllocator, mint t_DataSize, mint t_Alignment>
+		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		class TCPool
 		{
 		public:
@@ -502,14 +502,14 @@ namespace NMib::NMemory
 			NIntrusive::TCAVLTree<&CChunk::m_TreeLink, typename CChunk::CCompare> m_ChunkTree;
 
 			ENumaNode m_NumaNode;
-			mint m_GrowSize;
+			umint m_GrowSize;
 
 			enum
 			{
 				EDataSize = CChunk::EDataSize
 			};
 
-			void f_Construct(ENumaNode _NumaNode, mint _GrowSize)
+			void f_Construct(ENumaNode _NumaNode, umint _GrowSize)
 			{
 				m_NumaNode = _NumaNode;
 				m_GrowSize = _GrowSize;
@@ -524,12 +524,12 @@ namespace NMib::NMemory
 			{
 				DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *lLists[] = {&m_Chunks, &m_FreeChunks, &m_EmptyChunks};
 
-				for (mint i = 0; i < sizeof(lLists) / sizeof(DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *); ++i)
+				for (umint i = 0; i < sizeof(lLists) / sizeof(DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *); ++i)
 				{
 					DMibListLinkAllocatorD_Iter_FromTemplate(CChunk, m_Link, t_CAllocator) Iter = *lLists[i];
 					while (Iter)
 					{
-						if ((mint)_pBlock >= (mint)(CChunk *)Iter && (mint)_pBlock < (mint)(CChunk *)Iter + Iter->m_Size)
+						if ((umint)_pBlock >= (umint)(CChunk *)Iter && (umint)_pBlock < (umint)(CChunk *)Iter + Iter->m_Size)
 							return true;
 						++Iter;
 					}
@@ -584,7 +584,7 @@ namespace NMib::NMemory
 				}
 				else
 				{
-					mint Size = ((((sizeof(CChunk) + m_GrowSize * EDataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
+					umint Size = ((((sizeof(CChunk) + m_GrowSize * EDataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
 					void *pMem = t_CAllocator::f_AllocWithSize(Size, EAllocationFlag_WillFreeWithSize, m_NumaNode);
 
 					if (pMem)
@@ -617,7 +617,7 @@ namespace NMib::NMemory
 			{
 				TCBlock<t_CAllocator> *pBlock = (TCBlock<t_CAllocator> *)_pBlock;
 				CChunk *pChunk = m_ChunkTree.f_FindLargestLessThanEqual(_pBlock);
-				DMibFastCheck(pChunk && (mint)_pBlock < (mint)pChunk + pChunk->m_Size); // Must be part of pool
+				DMibFastCheck(pChunk && (umint)_pBlock < (umint)pChunk + pChunk->m_Size); // Must be part of pool
 				if (pChunk->m_FreeBlocks.f_IsEmpty())
 				{
 					// We are adding to a full block
@@ -663,7 +663,7 @@ namespace NMib::NMemory
 		{
 		}
 
-		mint m_bDoneInit;
+		umint m_bDoneInit;
 
 		inline_small void f_Construct()
 		{
@@ -834,7 +834,7 @@ namespace NMib::NMemory
 		}
 	};
 
-	template <typename t_CData, mint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CPoolType = CPoolType_Freeable, typename t_CAllocator = CAllocator_Virtual>
+	template <typename t_CData, umint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CPoolType = CPoolType_Freeable, typename t_CAllocator = CAllocator_Virtual>
 	class TCPool : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, t_CPoolType, t_CAllocator, TCNoAggregateData<t_CLock> >
 	{
 	public:
@@ -848,7 +848,7 @@ namespace NMib::NMemory
 		}
 	};
 
-	template <typename t_CData, mint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CAllocator = CAllocator_Virtual>
+	template <typename t_CData, umint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CAllocator = CAllocator_Virtual>
 	class TCPoolSmall : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_FreeableSmall, t_CAllocator, TCNoAggregateData<t_CLock> >
 	{
 	public:
@@ -862,7 +862,7 @@ namespace NMib::NMemory
 		}
 	};
 
-	template <typename t_CData, mint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CAllocator = CAllocator_Virtual>
+	template <typename t_CData, umint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CAllocator = CAllocator_Virtual>
 	class TCPoolGrowing : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_Growing, t_CAllocator, TCNoAggregateData<t_CLock> >
 	{
 	public:
@@ -889,7 +889,7 @@ namespace NMib::NMemory
 	class TBCPool
 	{
 	public:
-		void * operator new(mint _NumBytes, const t_CPool &_Pool)
+		void * operator new(umint _NumBytes, const t_CPool &_Pool)
 		{
 			return _Pool.f_GetBlock(_NumBytes);
 		}
@@ -910,7 +910,7 @@ namespace NMib::NMemory
 	template
 	<
 		typename t_CType
-		, mint t_GrowSize = 128
+		, umint t_GrowSize = 128
 		, typename t_CAllocator = NMib::NMemory::CAllocator_Virtual
 		, typename t_CPoolType = NMib::NMemory::CPoolType_FreeableSmall
 		, typename t_CLockType = typename NMib::NThread::CMutual
@@ -920,7 +920,7 @@ namespace NMib::NMemory
 	template
 	<
 		typename t_CType
-		, mint t_GrowSize = 128
+		, umint t_GrowSize = 128
 		, typename t_CAllocator = NMib::NMemory::CAllocator_Virtual
 		, typename t_CPoolType = NMib::NMemory::CPoolType_FreeableSmall
 		, typename t_CLockType = typename NMib::NThread::CMutual
@@ -949,38 +949,38 @@ namespace NMib::NMemory
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<TCStaticPoolAllocator>;
 		using CStaticPool = TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>;
 
-		static inline_small mint f_StaticAddresses()
+		static inline_small umint f_StaticAddresses()
 		{
 			return 0;
 		}
 
-		static inline_small mint f_GranularityAlloc(bool _bLargePages = false)
+		static inline_small umint f_GranularityAlloc(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_GranularityCommit(bool _bLargePages = false)
+		static inline_small umint f_GranularityCommit(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_GranularityProtect(bool _bLargePages = false)
+		static inline_small umint f_GranularityProtect(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_Size(void *_pBlock)
+		static inline_small umint f_Size(void *_pBlock)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_TrySize(void *_pBlock)
+		static inline_small umint f_TrySize(void *_pBlock)
 		{
 			DMibPDebugBreak; // Not supported
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_SizePadded(mint _Size)
+		static inline_small umint f_SizePadded(umint _Size)
 		{
 			return sizeof(t_CType);
 		}
@@ -1000,53 +1000,53 @@ namespace NMib::NMemory
 			return true;
 		}
 
-		static inline_small void f_Protect(void *_pMem, mint _Size, uaint _Protect)
+		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect)
 		{
 
 		}
 
-		static inline_small void *f_AllocWithSizeDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
-		{
-			DMibFastCheck(_Size == sizeof(t_CType));
-			return CStaticPool::ms_Pool->f_GetBlock();
-		}
-
-		static inline_small void *f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocWithSizeDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void *f_AllocAlignedWithSize(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocAlignedWithSize(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void *f_Alloc(mint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void *f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_Alloc(umint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		{
+			DMibFastCheck(_Size == sizeof(t_CType));
+			return CStaticPool::ms_Pool->f_GetBlock();
+		}
+
+		static inline_small void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			while (true)
 			{
-				mint Size = _Size;
+				umint Size = _Size;
 				void * pMem = CStaticPool::ms_Pool->f_GetBlock();
 				if (!_Functor(pMem, Size))
 					break;
@@ -1054,7 +1054,7 @@ namespace NMib::NMemory
 		}
 
 
-		static inline_small void *f_Realloc(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_Realloc(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1063,7 +1063,7 @@ namespace NMib::NMemory
 				return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void *f_ReallocDebug(void *_pMem, mint _Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_ReallocDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1072,7 +1072,7 @@ namespace NMib::NMemory
 				return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void *f_Resize(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_Resize(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1081,7 +1081,7 @@ namespace NMib::NMemory
 				return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void *f_ResizeDebug(void *_pMem, mint _Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_ResizeDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1090,15 +1090,15 @@ namespace NMib::NMemory
 				return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void f_Commit(void *_pMem, mint _Size)
+		static inline_small void f_Commit(void *_pMem, umint _Size)
 		{
 		}
 
-		static inline_small void f_Decommit(void *_pMem, mint _Size)
+		static inline_small void f_Decommit(void *_pMem, umint _Size)
 		{
 		}
 
-		static inline_small void f_Free(void *_pBlock, mint _Size)
+		static inline_small void f_Free(void *_pBlock, umint _Size)
 		{
 			return CStaticPool::ms_Pool->f_ReturnBlock(_pBlock);
 		}
@@ -1112,7 +1112,7 @@ namespace NMib::NMemory
 		{
 			return CStaticPool::ms_Pool->f_Overhead(_pBlock);
 		}
-		only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy;
 			AutoDestroy.m_pMemory = f_AllocAlignedWithSize(_Size, _Alignment, _AllocFlags, _NumaNode);
@@ -1120,7 +1120,7 @@ namespace NMib::NMemory
 
 			return fg_Move(AutoDestroy);
 		}
-		only_parameters_aliased static CAutoDestroy f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy;
 			AutoDestroy.m_pMemory = f_AllocAligned(_Size, _Alignment, _AllocFlags, _NumaNode);
@@ -1129,13 +1129,13 @@ namespace NMib::NMemory
 			return fg_Move(AutoDestroy);
 		}
 
-		static CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size)
+		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size)
 		{
 			return CAutoDestroy{_pMemory, _Size};
 		}
 	};
 
-	template <typename t_CType, mint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
+	template <typename t_CType, umint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
 	class TCStaticPool
 	{
 	public:
@@ -1146,7 +1146,7 @@ namespace NMib::NMemory
 		using CAllocator = TCStaticPoolAllocator<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>;
 	};
 
-	template <typename t_CType, mint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
+	template <typename t_CType, umint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
 	constinit NStorage::TCAggregate<typename TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>::CPoolType, 16>
 		TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>::ms_Pool = {DAggregateInit}
 	;
@@ -1166,7 +1166,7 @@ namespace NMib::NMemory
 	template
 	<
 		typename t_CType
-		, mint t_GrowSize = 128
+		, umint t_GrowSize = 128
 		, typename t_CAllocator = NMib::NMemory::CAllocator_Virtual
 		, typename t_CPoolType = NMib::NMemory::CPoolType_FreeableSmall
 		, typename t_CLockType = NMib::NThread::CNoLock
@@ -1195,38 +1195,38 @@ namespace NMib::NMemory
 
 		TCPool<t_CType, t_GrowSize, t_CLockType, t_CPoolType, t_CAllocator> m_Pool;
 
-		static inline_small mint f_StaticAddresses()
+		static inline_small umint f_StaticAddresses()
 		{
 			return 0;
 		}
 
-		static inline_small mint f_GranularityAlloc(bool _bLargePages = false)
+		static inline_small umint f_GranularityAlloc(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_GranularityCommit(bool _bLargePages = false)
+		static inline_small umint f_GranularityCommit(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_GranularityProtect(bool _bLargePages = false)
+		static inline_small umint f_GranularityProtect(bool _bLargePages = false)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_Size(void *_pBlock)
+		static inline_small umint f_Size(void *_pBlock)
 		{
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_TrySize(void *_pBlock)
+		static inline_small umint f_TrySize(void *_pBlock)
 		{
 			DMibPDebugBreak; // Not supported
 			return sizeof(t_CType);
 		}
 
-		static inline_small mint f_SizePadded(mint _Size)
+		static inline_small umint f_SizePadded(umint _Size)
 		{
 			return sizeof(t_CType);
 		}
@@ -1246,60 +1246,60 @@ namespace NMib::NMemory
 			return true;
 		}
 
-		static inline_small void f_Protect(void *_pMem, mint _Size, uaint _Protect)
+		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect)
 		{
 
 		}
 
-		inline_small void *f_AllocWithSizeDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
-		{
-			DMibFastCheck(_Size == sizeof(t_CType));
-			return m_Pool.f_GetBlock();
-		}
-
-		inline_small void *f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocWithSizeDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_AllocAlignedWithSize(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocAlignedWithSize(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_Alloc(mint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_Alloc(umint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return m_Pool.f_GetBlock();
 		}
 
-		only_parameters_aliased inline_small void f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		{
+			DMibFastCheck(_Size == sizeof(t_CType));
+			return m_Pool.f_GetBlock();
+		}
+
+		only_parameters_aliased inline_small void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			while (true)
 			{
-				mint Size = _Size;
+				umint Size = _Size;
 				void * pMem = m_Pool.f_GetBlock();
 				if (!_Functor(pMem, Size))
 					break;
 			}
 		}
 
-		inline_small void *f_Realloc(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_Realloc(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1308,7 +1308,7 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_ReallocDebug(void *_pMem, mint _Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_ReallocDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1317,7 +1317,7 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_Resize(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_Resize(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1326,7 +1326,7 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_ResizeDebug(void *_pMem, mint _Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_ResizeDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1335,15 +1335,15 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		static inline_small void f_Commit(void *_pMem, mint _Size)
+		static inline_small void f_Commit(void *_pMem, umint _Size)
 		{
 		}
 
-		static inline_small void f_Decommit(void *_pMem, mint _Size)
+		static inline_small void f_Decommit(void *_pMem, umint _Size)
 		{
 		}
 
-		inline_small void f_Free(void *_pBlock, mint _Size)
+		inline_small void f_Free(void *_pBlock, umint _Size)
 		{
 			return m_Pool.f_ReturnBlock(_pBlock);
 		}
@@ -1357,7 +1357,7 @@ namespace NMib::NMemory
 		{
 			return m_Pool.f_Overhead(_pBlock);
 		}
-		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy{*this};
 			AutoDestroy.m_pMemory = f_AllocAlignedWithSize(_Size, _Alignment, _AllocFlags, _NumaNode);
@@ -1365,7 +1365,7 @@ namespace NMib::NMemory
 
 			return fg_Move(AutoDestroy);
 		}
-		only_parameters_aliased CAutoDestroy f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy{*this};
 			AutoDestroy.m_pMemory = f_AllocAligned(_Size, _Alignment, _AllocFlags, _NumaNode);
@@ -1374,7 +1374,7 @@ namespace NMib::NMemory
 			return fg_Move(AutoDestroy);
 		}
 
-		CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size)
+		CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size)
 		{
 			return CAutoDestroy{_pMemory, _Size, *this};
 		}
@@ -1411,38 +1411,38 @@ namespace NMib::NMemory
 		{
 		}
 
-		static inline_small mint f_StaticAddresses()
+		static inline_small umint f_StaticAddresses()
 		{
 			return 0;
 		}
 
-		static inline_small mint f_GranularityAlloc(bool _bLargePages = false)
+		static inline_small umint f_GranularityAlloc(bool _bLargePages = false)
 		{
 			return sizeof(CData);
 		}
 
-		static inline_small mint f_GranularityCommit(bool _bLargePages = false)
+		static inline_small umint f_GranularityCommit(bool _bLargePages = false)
 		{
 			return sizeof(CData);
 		}
 
-		static inline_small mint f_GranularityProtect(bool _bLargePages = false)
+		static inline_small umint f_GranularityProtect(bool _bLargePages = false)
 		{
 			return sizeof(CData);
 		}
 
-		static inline_small mint f_Size(void *_pBlock)
+		static inline_small umint f_Size(void *_pBlock)
 		{
 			return sizeof(CData);
 		}
 
-		static inline_small mint f_TrySize(void *_pBlock)
+		static inline_small umint f_TrySize(void *_pBlock)
 		{
 			DMibPDebugBreak; // Not supported
 			return sizeof(CData);
 		}
 
-		static inline_small mint f_SizePadded(mint _Size)
+		static inline_small umint f_SizePadded(umint _Size)
 		{
 			return sizeof(CData);
 		}
@@ -1462,60 +1462,60 @@ namespace NMib::NMemory
 			return true;
 		}
 
-		static inline_small void f_Protect(void *_pMem, mint _Size, uaint _Protect)
+		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect)
 		{
 
 		}
 
-		inline_small void *f_AllocWithSizeDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
-		{
-			DMibFastCheck(_Size == sizeof(CData));
-			return m_Pool.f_GetBlock();
-		}
-
-		inline_small void *f_AllocWithSize(mint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocWithSizeDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_AllocAlignedWithSize(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_AllocDebug(mint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocAlignedWithSize(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_Alloc(mint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_AllocAligned(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_Alloc(umint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			return m_Pool.f_GetBlock();
 		}
 
-		only_parameters_aliased inline_small void f_AllocBatch(mint _Size, mint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		{
+			DMibFastCheck(_Size == sizeof(CData));
+			return m_Pool.f_GetBlock();
+		}
+
+		only_parameters_aliased inline_small void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			while (true)
 			{
-				mint Size = _Size;
+				umint Size = _Size;
 				void * pMem = m_Pool.f_GetBlock();
 				if (!_Functor(pMem, Size))
 					break;
 			}
 		}
 
-		inline_small void *f_Realloc(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_Realloc(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			if (_pMem)
@@ -1524,7 +1524,7 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_ReallocDebug(void *_pMem, mint _Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_ReallocDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			if (_pMem)
@@ -1533,7 +1533,7 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_Resize(void *_pMem, mint _Size, mint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_Resize(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			if (_pMem)
@@ -1542,7 +1542,7 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_ResizeDebug(void *_pMem, mint _Size, mint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_ResizeDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			if (_pMem)
@@ -1551,15 +1551,15 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		static inline_small void f_Commit(void *_pMem, mint _Size)
+		static inline_small void f_Commit(void *_pMem, umint _Size)
 		{
 		}
 
-		static inline_small void f_Decommit(void *_pMem, mint _Size)
+		static inline_small void f_Decommit(void *_pMem, umint _Size)
 		{
 		}
 
-		inline_small void f_Free(void *_pBlock, mint _Size)
+		inline_small void f_Free(void *_pBlock, umint _Size)
 		{
 			return m_Pool.f_ReturnBlock(_pBlock);
 		}
@@ -1573,7 +1573,7 @@ namespace NMib::NMemory
 		{
 			return m_Pool.f_Overhead(_pBlock);
 		}
-		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(mint &_Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy{*this};
 			AutoDestroy.m_pMemory = f_AllocAlignedWithSize(_Size, _Alignment, _AllocFlags, _NumaNode);
@@ -1581,7 +1581,7 @@ namespace NMib::NMemory
 
 			return fg_Move(AutoDestroy);
 		}
-		only_parameters_aliased CAutoDestroy f_AllocSafe(mint _Size, mint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy{*this};
 			AutoDestroy.m_pMemory = f_AllocAligned(_Size, _Alignment, _AllocFlags, _NumaNode);
@@ -1590,7 +1590,7 @@ namespace NMib::NMemory
 			return fg_Move(AutoDestroy);
 		}
 
-		CAutoDestroy f_MakeSafe(void *_pMemory, mint _Size)
+		CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size)
 		{
 			return CAutoDestroy{_pMemory, _Size, *this};
 		}

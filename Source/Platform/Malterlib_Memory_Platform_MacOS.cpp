@@ -14,7 +14,7 @@ using namespace NMib;
 
 namespace NMib::NSys::NPrivate
 {
-	extern mint g_PageSize;
+	extern umint g_PageSize;
 }
 
 namespace
@@ -31,7 +31,7 @@ namespace
 		return 0;
 	}
 
-	mint fg_SysCtl_mint(ch8 const *_pName)
+	umint fg_SysCtl_mint(ch8 const *_pName)
 	{
 		size_t Value = 0;
 		size_t DataSize = sizeof(Value);

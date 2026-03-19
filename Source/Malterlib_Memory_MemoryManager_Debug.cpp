@@ -18,13 +18,13 @@ namespace NMib::NMemory::NPrivate
 	bool fg_ReportLeak
 		(
 			uint8 *_pMemory
-			, mint _Size
+			, umint _Size
 			, CMibCodeAddress *_pStackTrace
-			, mint _nStackTrace
+			, umint _nStackTrace
 			, ch8 const *_pFile
 			, uint32 _Line
 			, EHeapDebugFlag _Flags
-			, mint _ThreadID
+			, umint _ThreadID
 			, bool _bCanAllocateNonTracked
 		)
 	{
@@ -32,16 +32,16 @@ namespace NMib::NMemory::NPrivate
 			return false;
 
 		// Do this now, rather than when reporting the stacktrace, so we can see if we should ignore this report.
-		mint LongestSource = 0;
-		mint LongestModule = 0;
-		mint LongestFunction = 0;
-		mint nStackTrace = fg_Min(_nStackTrace, mint(256));
+		umint LongestSource = 0;
+		umint LongestModule = 0;
+		umint LongestFunction = 0;
+		umint nStackTrace = fg_Min(_nStackTrace, umint(256));
 
 		CStackTraceInfo StackTraceInfos[256] = {};
 
 		auto StackTraceCleanup = g_OnScopeExit / [&]
 			{
-				for (mint i = 0; i < nStackTrace; ++i)
+				for (umint i = 0; i < nStackTrace; ++i)
 				{
 					if (StackTraceInfos[i].m_pContext)
 						NSys::fg_Debug_ReleaseStackTraceInfo(&StackTraceInfos[i]);
@@ -63,7 +63,7 @@ namespace NMib::NMemory::NPrivate
 
 		{
 			bool bCanSkip = true;
-			for (mint i = 0; i < nStackTrace; ++i)
+			for (umint i = 0; i < nStackTrace; ++i)
 			{
 				auto &TraceInfo = StackTraceInfos[i];
 				if (NSys::fg_Debug_AquireStackTraceInfo(TraceInfo, _pStackTrace[i], _bCanAllocateNonTracked))
@@ -121,10 +121,10 @@ namespace NMib::NMemory::NPrivate
 		CFStr TempStr;
 		TempStr = CFStr::CFormat(DMibPFileLineFormat " ") << pFile << _Line;
 
-		mint BlockSize = _Size;
+		umint BlockSize = _Size;
 		TempStr += (CFStr::CFormat("Memory Leak, Flags = 0b{sj4,sf0,nfb}, Address = 0x{sj*4,sf0,nh}, Size = 0x{sj*4,sf0,nh}, Thread = {}{\n}")
 			<< _Flags
-			<< (mint)pCurrentBlock
+			<< (umint)pCurrentBlock
 			<< BlockSize
 			<< _ThreadID
 			<< sizeof(void *)*2
@@ -132,7 +132,7 @@ namespace NMib::NMemory::NPrivate
 		;
 
 		NSys::fg_DebugOutput(TempStr.f_GetStr());
-		uint32 nBytes = fg_Min(BlockSize, (mint)128);
+		uint32 nBytes = fg_Min(BlockSize, (umint)128);
 		NSys::fg_DebugOutput((CFStr::CFormat("Displaying first {} bytes of block{\n}") << nBytes).f_GetStr().f_GetStr());
 
 		CFStr TraceString = "0x";
@@ -157,8 +157,8 @@ namespace NMib::NMemory::NPrivate
 		LongestFunction = fg_Min(LongestFunction, 100u);
 
 		bool bCanSkip = true;
-		mint nSkipped = 0;
-		for (mint i = 0; i < nStackTrace; ++i)
+		umint nSkipped = 0;
+		for (umint i = 0; i < nStackTrace; ++i)
 		{
 			CStackTraceInfo &TraceInfo = StackTraceInfos[i];
 			CMibCodeAddress pAddress = _pStackTrace[i];

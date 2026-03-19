@@ -33,13 +33,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	mint TCMemoryManagerSlabShared<t_CParams>::f_GetNumSubSlabs() const
+	umint TCMemoryManagerSlabShared<t_CParams>::f_GetNumSubSlabs() const
 	{
 		return t_CParams::mc_NumSubSlabs[m_SlabType];
 	}
 
 	template <typename t_CParams>
-	mint TCMemoryManagerSlabShared<t_CParams>::f_GetSubSlabMultiplier() const
+	umint TCMemoryManagerSlabShared<t_CParams>::f_GetSubSlabMultiplier() const
 	{
 		return t_CParams::mc_SlabTypeInfo[m_SlabType].m_SubSlabMultiplier;
 	}
@@ -115,9 +115,9 @@ namespace NMib::NMemory
 
 		DMibFastCheck(this->f_GetNumSubSlabs() == mc_nSubSlabs);
 
-		for (mint i = 0; i < mc_nSubSlabs; ++i)
+		for (umint i = 0; i < mc_nSubSlabs; ++i)
 			m_SubSlabDataType[i].m_Type = 0;
-		for (mint i = 0; i < mc_nSubSlabs; ++i)
+		for (umint i = 0; i < mc_nSubSlabs; ++i)
 			m_SubSlabDataAlloc[i].m_nAllocs = 0;
 		this->m_pSubSlabDataAlloc = m_SubSlabDataAlloc;
 
@@ -136,16 +136,16 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_SetPendingBit(mint _Bit)
+	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_SetPendingBit(umint _Bit)
 	{
 		m_PendingFree.template f_SetBit<true>(_Bit);
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	mint TCMemoryManagerSlab<t_CParams, t_SlabType>::f_GetNumPendingBits()
+	umint TCMemoryManagerSlab<t_CParams, t_SlabType>::f_GetNumPendingBits()
 	{
-		mint nBitsSet = 0;
-		for (mint iSlab = 0; iSlab < mc_nSubSlabs; ++iSlab)
+		umint nBitsSet = 0;
+		for (umint iSlab = 0; iSlab < mc_nSubSlabs; ++iSlab)
 		{
 			if (m_PendingFree.f_GetBit(iSlab))
 				++nBitsSet;
@@ -160,7 +160,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	bool TCMemoryManagerSlab<t_CParams, t_SlabType>::f_ClearPendingBit(mint _Bit)
+	bool TCMemoryManagerSlab<t_CParams, t_SlabType>::f_ClearPendingBit(umint _Bit)
 	{
 		bool bRet = m_PendingFree.f_GetBit(_Bit);
 		m_PendingFree.template f_SetBit<false>(_Bit);
@@ -168,7 +168,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (mint _Bit)> const& _fCallback)
+	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (umint _Bit)> const& _fCallback)
 	{
 		m_PendingFree.f_EnumSetBits(_fCallback, 0);
 	}
@@ -193,7 +193,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	bool TCMemoryManagerSlab<t_CParams, t_SlabType>::f_SetBitFree(mint _Level, mint _Bit)
+	bool TCMemoryManagerSlab<t_CParams, t_SlabType>::f_SetBitFree(umint _Level, umint _Bit)
 	{
 		DMibFastCheck(m_Allocated.f_GetBit(_Level, _Bit));
 		m_Allocated.template f_SetBit<false>(_Level, _Bit);
@@ -251,7 +251,7 @@ namespace NMib::NMemory
 		else if (this->m_FullySetLevel == t_CParams::mc_NumSubSlabSizeLevels - 1)
 			return false;
 
-		mint iNewLevel = this->m_FullySetLevel;
+		umint iNewLevel = this->m_FullySetLevel;
 		while (iNewLevel < t_CParams::mc_NumSubSlabSizeLevels - 1 && !m_Allocated.f_IsFullySet(iNewLevel + 1))
 			++iNewLevel;
 
@@ -278,10 +278,10 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	mint TCMemoryManagerSlab<t_CParams, t_SlabType>::f_GetNumSetBits(mint _Level)
+	umint TCMemoryManagerSlab<t_CParams, t_SlabType>::f_GetNumSetBits(umint _Level)
 	{
-		mint nBitsSet = 0;
-		for (mint iSlab = 0; iSlab < mc_nSubSlabs; ++iSlab)
+		umint nBitsSet = 0;
+		for (umint iSlab = 0; iSlab < mc_nSubSlabs; ++iSlab)
 		{
 			if (m_Allocated.f_GetBit(_Level, iSlab))
 				++nBitsSet;
@@ -290,13 +290,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	bool TCMemoryManagerSlab<t_CParams, t_SlabType>::f_HasFreeBit(mint _Level)
+	bool TCMemoryManagerSlab<t_CParams, t_SlabType>::f_HasFreeBit(umint _Level)
 	{
 		return m_Allocated.f_FindFreeBit(_Level) >= 0;
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	aint TCMemoryManagerSlab<t_CParams, t_SlabType>::f_FindFreeBitAndSet(mint _Level)
+	aint TCMemoryManagerSlab<t_CParams, t_SlabType>::f_FindFreeBitAndSet(umint _Level)
 	{
 		aint Ret;
 		if constexpr (t_CParams::mc_bUseSlabFromEnd)
@@ -347,16 +347,16 @@ namespace NMib::NMemory
 	{
 		if constexpr (t_CParams::mc_bRandomizeSlabHeader)
 		{
-			mint Location = (mint)_pLocation;
-			mint Shift = gc_HighestBitSet<t_CParams::mc_SlabSize>;
+			umint Location = (umint)_pLocation;
+			umint Shift = gc_HighestBitSet<t_CParams::mc_SlabSize>;
 
 			Location >>= Shift;
 #if 0
-			const static mint FreeSpace = TCAlignDown<mint, (t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab)), alignof(TCMemoryManagerSlab)>::mc_Value;
+			const static umint FreeSpace = TCAlignDown<umint, (t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab)), alignof(TCMemoryManagerSlab)>::mc_Value;
 			uint8 *pFinalLocation = _pLocation + fg_AlignDown(Location, alignof(TCMemoryManagerSlab)) % FreeSpace;
 #else
-			mint FreeSpace = mint(1) << (gc_HighestBitSet<(t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab))>);
-			mint ToAdd = (fg_AlignDown(Location, alignof(TCMemoryManagerSlab)) & (FreeSpace - 1));
+			umint FreeSpace = umint(1) << (gc_HighestBitSet<(t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab))>);
+			umint ToAdd = (fg_AlignDown(Location, alignof(TCMemoryManagerSlab)) & (FreeSpace - 1));
 			uint8 *pFinalLocation = _pLocation + ToAdd;
 #endif
 			return (TCMemoryManagerSlab *)pFinalLocation;

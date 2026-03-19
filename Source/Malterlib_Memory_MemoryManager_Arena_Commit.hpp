@@ -6,7 +6,7 @@
 namespace NMib::NMemory
 {
 	template <typename t_CParams, uint32 t_SlabType>
-	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_OnCommitSubSlabs(mint _iSubSlab, mint _nSubSlabs)
+	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_OnCommitSubSlabs(umint _iSubSlab, umint _nSubSlabs)
 	{
 		if constexpr (mc_EnableCallbacks && t_CParams::CAllocator::f_CanCommit())
 		{
@@ -16,7 +16,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_CommitSubSlabs(mint _iSubSlab, mint _nSubSlabs)
+	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_CommitSubSlabs(umint _iSubSlab, umint _nSubSlabs)
 	{
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 		{
@@ -26,7 +26,7 @@ namespace NMib::NMemory
 
 			m_CommittedSubSlabs.f_EnumFreeBitRanges
 				(
-					[&](mint _Bit, mint _nBits) -> bool
+					[&](umint _Bit, umint _nBits) -> bool
 					{
 						this->m_pMemoryManager->m_Allocator.f_Commit(pMemory + _Bit * t_CParams::mc_SubSlabSize * mc_SlabMultiplier, _nBits * t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
 
@@ -50,7 +50,7 @@ namespace NMib::NMemory
 
 
 	template <typename t_CParams, uint32 t_SlabType>
-	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_DecommitSubSlabs(mint _iSubSlab, mint _nSubSlabs)
+	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_DecommitSubSlabs(umint _iSubSlab, umint _nSubSlabs)
 	{
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 		{
@@ -68,7 +68,7 @@ namespace NMib::NMemory
 				auto * pMemory = this->f_GetSlabStart();
 				m_CommittedSubSlabs.f_EnumSetBitRanges
 					(
-						[&](mint _Bit, mint _nBits) -> bool
+						[&](umint _Bit, umint _nBits) -> bool
 						{
 							this->m_pMemoryManager->m_Allocator.f_Decommit
 								(
@@ -103,7 +103,7 @@ namespace NMib::NMemory
 	{
 		m_CommittedSubSlabs.f_EnumSetBitRanges
 			(
-				[&](mint _Bit, mint _nBits) -> bool
+				[&](umint _Bit, umint _nBits) -> bool
 				{
 					_Comitted.template f_SetBitRange<true>(_Bit * mc_SlabMultiplier, _nBits * mc_SlabMultiplier);
 					return true;
@@ -120,20 +120,20 @@ namespace NMib::NMemory
 		auto * pMemory = this->f_GetSlabStart();
 		_Comitted.f_EnumSetBitRanges
 			(
-				[&](mint _Bit, mint _nBits) -> bool
+				[&](umint _Bit, umint _nBits) -> bool
 				{
-					mint StartBit = (_Bit) / mc_SlabMultiplier;
-					mint EndBit = (_Bit + _nBits + mc_SlabMultiplier - 1) / mc_SlabMultiplier;
+					umint StartBit = (_Bit) / mc_SlabMultiplier;
+					umint EndBit = (_Bit + _nBits + mc_SlabMultiplier - 1) / mc_SlabMultiplier;
 					DMibFastCheck(c_bHasWaste || EndBit <= mc_nSubSlabs);
 					if constexpr (c_bHasWaste)
 					{
 						if (EndBit > mc_nSubSlabs)
 						{
-							mint StartCommit = fg_Max(_Bit, mc_nSubSlabs * mc_SlabMultiplier);
-							mint EndCommit = _Bit + _nBits;
+							umint StartCommit = fg_Max(_Bit, mc_nSubSlabs * mc_SlabMultiplier);
+							umint EndCommit = _Bit + _nBits;
 							if (StartCommit < EndCommit)
 							{
-								mint nToCommit = EndCommit - StartCommit;
+								umint nToCommit = EndCommit - StartCommit;
 								this->m_pMemoryManager->m_Allocator.f_Decommit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (nToCommit) * t_CParams::mc_SubSlabSize);
 								if constexpr (mc_EnableCallbacks)
 									this->m_pMemoryManager->f_OnDecommit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (nToCommit) * t_CParams::mc_SubSlabSize);
@@ -145,8 +145,8 @@ namespace NMib::NMemory
 						}
 					}
 					{
-						mint StartCommit = StartBit * mc_SlabMultiplier;
-						mint EndCommit = _Bit;
+						umint StartCommit = StartBit * mc_SlabMultiplier;
+						umint EndCommit = _Bit;
 						if (StartCommit < EndCommit)
 						{
 							this->m_pMemoryManager->m_Allocator.f_Commit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (EndCommit - StartCommit) * t_CParams::mc_SubSlabSize);
@@ -155,8 +155,8 @@ namespace NMib::NMemory
 						}
 					}
 					{
-						mint StartCommit = _Bit + _nBits;
-						mint EndCommit = EndBit * mc_SlabMultiplier;
+						umint StartCommit = _Bit + _nBits;
+						umint EndCommit = EndBit * mc_SlabMultiplier;
 						if (StartCommit < EndCommit)
 						{
 							this->m_pMemoryManager->m_Allocator.f_Commit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (EndCommit - StartCommit) * t_CParams::mc_SubSlabSize);
@@ -199,7 +199,7 @@ namespace NMib::NMemory
 
 		m_DeferredDecommitSubSlabs.f_EnumSetBitRanges
 			(
-				[&](mint _Bit, mint _nBits) -> bool
+				[&](umint _Bit, umint _nBits) -> bool
 				{
 					m_CommittedSubSlabs.template f_SetBitRange<false>(_Bit, _nBits);
 					this->m_pMemoryManager->m_Allocator.f_Decommit(pMemory + _Bit * t_CParams::mc_SubSlabSize * mc_SlabMultiplier, _nBits * t_CParams::mc_SubSlabSize * mc_SlabMultiplier);

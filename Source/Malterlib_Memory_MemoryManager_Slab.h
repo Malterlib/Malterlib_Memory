@@ -36,8 +36,8 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct TCMemoryManagerSubSlabDataAlloc
 	{
-		static constexpr mint mc_nAllocBits = NMib::fg_GetHighestBitSetNoZero(t_CParams::mc_MaxAllocsPerSubSlabActual) + 1;
-		static constexpr mint mc_MaxAllocs = DMibBit(mc_nAllocBits) - 1;
+		static constexpr umint mc_nAllocBits = NMib::fg_GetHighestBitSetNoZero(t_CParams::mc_MaxAllocsPerSubSlabActual) + 1;
+		static constexpr umint mc_MaxAllocs = DMibBit(mc_nAllocBits) - 1;
 
 		using CStorageType = NTraits::TCUnsigned<NTraits::TCIntFromSizeLarger<(mc_nAllocBits + 7) / 8>>;
 
@@ -47,8 +47,8 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct TCMemoryManagerSubSlabDataType
 	{
-		static constexpr mint mc_nTypeBits = NMib::fg_GetHighestBitSetNoZero(t_CParams::mc_NumSizeLevels + 3) + 1;
-		static constexpr mint mc_MaxType = DMibBit(mc_nTypeBits) - 1;
+		static constexpr umint mc_nTypeBits = NMib::fg_GetHighestBitSetNoZero(t_CParams::mc_NumSizeLevels + 3) + 1;
+		static constexpr umint mc_MaxType = DMibBit(mc_nTypeBits) - 1;
 
 		using CStorageType = NTraits::TCUnsigned<NTraits::TCIntFromSizeLarger<(mc_nTypeBits + 7) / 8>>;
 
@@ -89,29 +89,29 @@ namespace NMib::NMemory
 
 		TCMemoryManagerSubSlabDataAlloc<t_CParams> *m_pSubSlabDataAlloc;
 
-		virtual aint f_FindFreeBitAndSet(mint _Level) = 0;
-		[[nodiscard]] virtual bool f_SetBitFree(mint _Level, mint _Bit) = 0;
-		virtual bool f_HasFreeBit(mint _Level) = 0;
-		virtual mint f_GetNumSetBits(mint _Level) = 0;
+		virtual aint f_FindFreeBitAndSet(umint _Level) = 0;
+		[[nodiscard]] virtual bool f_SetBitFree(umint _Level, umint _Bit) = 0;
+		virtual bool f_HasFreeBit(umint _Level) = 0;
+		virtual umint f_GetNumSetBits(umint _Level) = 0;
 		virtual bool f_IsFullyFree() = 0;
 
-		virtual void f_SetPendingBit(mint _Bit) = 0;
-		virtual bool f_ClearPendingBit(mint _Bit) = 0;
+		virtual void f_SetPendingBit(umint _Bit) = 0;
+		virtual bool f_ClearPendingBit(umint _Bit) = 0;
 		virtual bool f_HasPendingBit() = 0;
-		virtual mint f_GetNumPendingBits() = 0;
-		virtual void f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (mint _Bit)> const& _fCallback) = 0;
+		virtual umint f_GetNumPendingBits() = 0;
+		virtual void f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (umint _Bit)> const& _fCallback) = 0;
 
 		virtual fp32 f_OverheadPerByte() const = 0;
 
-		virtual void f_CommitSubSlabs(mint _iSubSlab, mint _nSubSlabs) = 0;
-		virtual void f_OnCommitSubSlabs(mint _iSubSlab, mint _nSubSlabs) = 0;
-		virtual void f_DecommitSubSlabs(mint _iSubSlab, mint _nSubSlabs) = 0;
+		virtual void f_CommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) = 0;
+		virtual void f_OnCommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) = 0;
+		virtual void f_DecommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) = 0;
 		virtual void f_DecommitDeferred() = 0;
 		virtual void f_GetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> & _Comitted) = 0;
 		virtual void f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> const& _Comitted) = 0;
 
-		mint f_GetNumSubSlabs() const;
-		mint f_GetSubSlabMultiplier() const;
+		umint f_GetNumSubSlabs() const;
+		umint f_GetSubSlabMultiplier() const;
 		uint8 * f_GetSlabStart();
 		TCMemoryManagerSubSlabDataType<t_CParams> *f_GetSubSlabDataType();
 		TCMemoryManagerSubSlabDataAlloc<t_CParams> *f_GetSubSlabDataAlloc();
@@ -120,10 +120,10 @@ namespace NMib::NMemory
 		TCMemoryManagerSubSlabDataType<t_CParams> const *f_GetSubSlabDataType() const;
 		TCMemoryManagerSubSlabDataAlloc<t_CParams> const *f_GetSubSlabDataAlloc() const;
 
-		template <mint t_SlabMultiplier>
-		static constexpr mint fs_CalculateSubSlabs()
+		template <umint t_SlabMultiplier>
+		static constexpr umint fs_CalculateSubSlabs()
 		{
-			constexpr mint c_TheoreticalSubSlabs = (t_CParams::mc_SlabSize - 1) / (t_CParams::mc_SubSlabSize * t_SlabMultiplier);
+			constexpr umint c_TheoreticalSubSlabs = (t_CParams::mc_SlabSize - 1) / (t_CParams::mc_SubSlabSize * t_SlabMultiplier);
 			return
 				(
 					t_CParams::mc_SlabSize
@@ -146,8 +146,8 @@ namespace NMib::NMemory
 	template <typename t_CParams, uint32 t_SlabType>
 	struct alignas(16) TCMemoryManagerSlab : public TCMemoryManagerSlabShared<t_CParams>
 	{
-		static constexpr mint mc_SlabMultiplier = t_CParams::mc_SlabTypeInfo[t_SlabType].m_SubSlabMutiplier;
-		static constexpr mint mc_nSubSlabs = TCMemoryManagerSlabShared<t_CParams>::template fs_CalculateSubSlabs<mc_SlabMultiplier>();
+		static constexpr umint mc_SlabMultiplier = t_CParams::mc_SlabTypeInfo[t_SlabType].m_SubSlabMutiplier;
+		static constexpr umint mc_nSubSlabs = TCMemoryManagerSlabShared<t_CParams>::template fs_CalculateSubSlabs<mc_SlabMultiplier>();
 		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CArena::mc_EnableCallbacks;
 
 		alignas(16) TCMemoryManagerSubSlabDataType<t_CParams> m_SubSlabDataType[mc_nSubSlabs]; // This one has to stay first
@@ -170,22 +170,22 @@ namespace NMib::NMemory
 		TCMemoryManagerSlab(uint64 _Magic, TCMemoryManagerArena<t_CParams> * _pArena, uint8 _nCommittedHeaderSubSlabs);
 		~TCMemoryManagerSlab() override;
 
-		aint f_FindFreeBitAndSet(mint _Level) override;
-		bool f_SetBitFree(mint _Level, mint _Bit) override;
-		bool f_HasFreeBit(mint _Level) override;
-		mint f_GetNumSetBits(mint _Level) override;
+		aint f_FindFreeBitAndSet(umint _Level) override;
+		bool f_SetBitFree(umint _Level, umint _Bit) override;
+		bool f_HasFreeBit(umint _Level) override;
+		umint f_GetNumSetBits(umint _Level) override;
 		bool f_IsFullyFree() override;
 
 
-		void f_SetPendingBit(mint _Bit) override;
-		bool f_ClearPendingBit(mint _Bit) override;
+		void f_SetPendingBit(umint _Bit) override;
+		bool f_ClearPendingBit(umint _Bit) override;
 		bool f_HasPendingBit() override;
-		mint f_GetNumPendingBits() override;
-		void f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (mint _Bit)> const& _fCallback) override;
+		umint f_GetNumPendingBits() override;
+		void f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (umint _Bit)> const& _fCallback) override;
 
-		void f_CommitSubSlabs(mint _iSubSlab, mint _nSubSlabs) override;
-		void f_OnCommitSubSlabs(mint _iSubSlab, mint _nSubSlabs) override;
-		void f_DecommitSubSlabs(mint _iSubSlab, mint _nSubSlabs) override;
+		void f_CommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) override;
+		void f_OnCommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) override;
+		void f_DecommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) override;
 		void f_DecommitDeferred() override;
 		void f_GetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> & _Comitted) override;
 		void f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> const& _Comitted) override;
@@ -195,8 +195,8 @@ namespace NMib::NMemory
 		static TCMemoryManagerSlab *fs_CalcSlabLocation(uint8 * _pLocation);
 	};
 
-	template <typename t_CParams, mint t_Index>
-	static constexpr mint fg_MemoryManagerSlabSize()
+	template <typename t_CParams, umint t_Index>
+	static constexpr umint fg_MemoryManagerSlabSize()
 	{
 		return sizeof(TCMemoryManagerSlab<t_CParams, t_Index>);
 	}

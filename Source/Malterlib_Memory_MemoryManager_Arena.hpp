@@ -28,8 +28,8 @@ namespace NMib::NMemory
 		, m_pNumaArena(_pNumaArena)
 		, m_bLimitedArenas(_bLimitedArenas)
 	{
-		DMibFastCheck((uint8 *)&m_Lock == fg_AlignUp((uint8 *)&m_Lock, mint(DMibPMemoryCacheLineSize)));
-		DMibFastCheck((uint8 *)&m_MessagesAvailable == fg_AlignUp((uint8 *)&m_MessagesAvailable, mint(DMibPMemoryCacheLineSize)));
+		DMibFastCheck((uint8 *)&m_Lock == fg_AlignUp((uint8 *)&m_Lock, umint(DMibPMemoryCacheLineSize)));
+		DMibFastCheck((uint8 *)&m_MessagesAvailable == fg_AlignUp((uint8 *)&m_MessagesAvailable, umint(DMibPMemoryCacheLineSize)));
 	}
 
 	template <typename t_CParams>
@@ -87,18 +87,18 @@ namespace NMib::NMemory
 	TCMemoryManagerArena<t_CParams>::~TCMemoryManagerArena()
 	{
 		{
-			for (mint iSlab = 0; iSlab < mc_nSmallSizeSlabs; ++iSlab)
+			for (umint iSlab = 0; iSlab < mc_nSmallSizeSlabs; ++iSlab)
 				m_SmallSizeSlabs[iSlab].f_Clear();
 		}
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			for (mint iSlab = 0; iSlab < mc_nLevel0Lists; ++iSlab)
+			for (umint iSlab = 0; iSlab < mc_nLevel0Lists; ++iSlab)
 				m_NormalSizeSlabsLevel0[iSlab].f_Clear();
 		}
 		{
-			for (mint iSlab2 = 0; iSlab2 < t_CParams::mc_NumSizesPerLevel; ++iSlab2)
+			for (umint iSlab2 = 0; iSlab2 < t_CParams::mc_NumSizesPerLevel; ++iSlab2)
 			{
-				for (mint iSlab = 0; iSlab < mc_nNormalSizeLists; ++iSlab)
+				for (umint iSlab = 0; iSlab < mc_nNormalSizeLists; ++iSlab)
 					m_NormalSizeSlabs[iSlab2][iSlab].f_Clear();
 			}
 		}
@@ -114,9 +114,9 @@ namespace NMib::NMemory
 		}
 
 		{
-			for (mint iSlab = 0; iSlab < t_CParams::mc_NumSizesPerLevel; ++iSlab)
+			for (umint iSlab = 0; iSlab < t_CParams::mc_NumSizesPerLevel; ++iSlab)
 			{
-				for (mint iLevel = 0; iLevel < t_CParams::mc_NumSubSlabSizeLevels; ++iLevel)
+				for (umint iLevel = 0; iLevel < t_CParams::mc_NumSubSlabSizeLevels; ++iLevel)
 				{
 					while (auto pSlab = m_PartiallyFreeSlabs[iSlab][iLevel].f_Pop())
 					{
@@ -152,7 +152,7 @@ namespace NMib::NMemory
 			--_pSlab->m_nFreeSubSlabs;
 			pSubSlab->~CMemoryManagerSubSlab_Free();
 			auto pSlabAddress = (uint8 *)pSubSlab;
-			auto iAlloc = mint(pSlabAddress - _pSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
+			auto iAlloc = umint(pSlabAddress - _pSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
 			iAlloc = t_CParams::fs_DivideBySlabMultiplier(iAlloc, SlabType);
 			_pSlab->f_DecommitSubSlabs(iAlloc, 1);
 			if (_pSlab->f_SetBitFree(0, iAlloc))
@@ -165,7 +165,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_small void *TCMemoryManagerArena<t_CParams>::f_AllocWithSize(mint &_Size)
+	inline_small void *TCMemoryManagerArena<t_CParams>::f_AllocWithSize(umint &_Size)
 	{
 		void * pAlloc;
 		if constexpr (t_CParams::mc_bUseSmallSizes)
@@ -184,7 +184,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManagerArena<t_CParams>::f_AllocBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor)
+	void TCMemoryManagerArena<t_CParams>::f_AllocBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
 	{
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
@@ -223,7 +223,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void TCMemoryManagerArena<t_CParams>::fp_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
 	{
-		mint SlabType = _pSlab->m_SlabType;
+		umint SlabType = _pSlab->m_SlabType;
 
 		CMessage *pFreeLink = (CMessage *)_pMemory;
 		EMessageType FreeLinkType = EMessageType_FreeNormalBlock;
@@ -235,15 +235,15 @@ namespace NMib::NMemory
 			if (SlabType == 0)
 			{
 				auto pData = _pSlab->f_GetSubSlabDataType();
-				auto SubSlab = mint((uint8 *)_pMemory - _pSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
+				auto SubSlab = umint((uint8 *)_pMemory - _pSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
 
-				mint iSubSlab = SubSlab;
-				mint SlabBucket = pData[iSubSlab].m_Type;
+				umint iSubSlab = SubSlab;
+				umint SlabBucket = pData[iSubSlab].m_Type;
 
 #if DMibPPtrBits == 32
-				constexpr mint c_TooSmallBucket = 1;
+				constexpr umint c_TooSmallBucket = 1;
 #elif DMibPPtrBits == 64
-				constexpr mint c_TooSmallBucket = 2;
+				constexpr umint c_TooSmallBucket = 2;
 #else
 #error "Implement this"
 #endif
@@ -254,7 +254,7 @@ namespace NMib::NMemory
 						||
 						(
 							!t_CParams::mc_bAllowUnalignedFreeList
-							&& ((mint)_pMemory & (sizeof(void *) - 1))
+							&& ((umint)_pMemory & (sizeof(void *) - 1))
 						)
 					) [[unlikely]]
 				{
@@ -293,16 +293,16 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_small mint TCMemoryManagerArena<t_CParams>::fs_GetAllocSize(mint _Size)
+	inline_small umint TCMemoryManagerArena<t_CParams>::fs_GetAllocSize(umint _Size)
 	{
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
 			if (_Size > t_CParams::mc_SmallSizeSlabsLargestSize) [[likely]]
 			{
-				mint Size = fg_AlignUp(_Size, t_CParams::mc_MinNormalSizeAlignment);
+				umint Size = fg_AlignUp(_Size, t_CParams::mc_MinNormalSizeAlignment);
 				DMibFastCheck(Size >= sizeof(void *) * 2);
-				mint SlabBucket = NMib::fg_GetHighestBitSetNoZero(Size);
-				mint SlabBucketGranularity = (mint(1) << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
+				umint SlabBucket = NMib::fg_GetHighestBitSetNoZero(Size);
+				umint SlabBucketGranularity = (umint(1) << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
 				return fg_AlignUp(Size, SlabBucketGranularity);
 			}
 			else
@@ -313,9 +313,9 @@ namespace NMib::NMemory
 		}
 		else
 		{
-			mint Size = fg_AlignUp(fg_Max(_Size, mc_MinAllocSize), t_CParams::mc_MinNormalSizeAlignment);
-			mint SlabBucket = NMib::fg_GetHighestBitSetNoZero(Size);
-			mint SlabBucketGranularity = (mint(1) << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
+			umint Size = fg_AlignUp(fg_Max(_Size, mc_MinAllocSize), t_CParams::mc_MinNormalSizeAlignment);
+			umint SlabBucket = NMib::fg_GetHighestBitSetNoZero(Size);
+			umint SlabBucketGranularity = (umint(1) << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
 			return fg_AlignUp(Size, SlabBucketGranularity);
 		}
 		return 0;
@@ -326,21 +326,21 @@ namespace NMib::NMemory
 	{
 		auto pData = _pSlab->f_GetSubSlabDataType();
 		auto pSlabData = _pSlab->f_GetSlabStart();
-		mint SlabType = _pSlab->m_SlabType;
+		umint SlabType = _pSlab->m_SlabType;
 
 		DMibFastCheck(_iSubSlab < _pSlab->f_GetNumSubSlabs());
 
-		mint SlabBucket = pData[_iSubSlab].m_Type - 2;
+		umint SlabBucket = pData[_iSubSlab].m_Type - 2;
 
 		DMibFastCheck(SlabBucket < t_CParams::mc_NumSizeLevels);
 		DMibFastCheck(_pSlab->f_GetSubSlabDataAlloc()[_iSubSlab].m_nAllocs == 0);
 
-		mint AlignedSize;
+		umint AlignedSize;
 
-		mint SubSlabMultiplier = t_CParams::mc_SlabTypeInfo[SlabType].m_SubSlabMutiplier;
-		mint MinSize = SubSlabMultiplier * t_CParams::mc_SubSlabSize;
+		umint SubSlabMultiplier = t_CParams::mc_SlabTypeInfo[SlabType].m_SubSlabMutiplier;
+		umint MinSize = SubSlabMultiplier * t_CParams::mc_SubSlabSize;
 
-		mint SlabBucketStart = mint(1) << SlabBucket;
+		umint SlabBucketStart = umint(1) << SlabBucket;
 		AlignedSize = SlabBucketStart + (SlabType << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
 
 		uint32 nSubSlabs = 1;
@@ -354,7 +354,7 @@ namespace NMib::NMemory
 		{
 			uint32 nBlocks = fg_Max(t_CParams::mc_NumAllocsPerSubSlab[SlabType] >> (SlabBucket - t_CParams::mc_MinNormalSlabBucket), 1);
 
-			if (((mint)pStartRemove & (mint)(t_CParams::mc_PreventCacheConflictSize - 1)) == 0 && AlignedSize <= t_CParams::mc_PreventCacheConflictSizeMaxBlockSize && nBlocks > 1)
+			if (((umint)pStartRemove & (umint)(t_CParams::mc_PreventCacheConflictSize - 1)) == 0 && AlignedSize <= t_CParams::mc_PreventCacheConflictSizeMaxBlockSize && nBlocks > 1)
 			{
 				--nBlocks;
 				smint ToRemove = DMibPMemoryCacheLineSize;
@@ -383,7 +383,7 @@ namespace NMib::NMemory
 			{
 				_pSlab->f_DecommitSubSlabs(_iSubSlab, nSubSlabs);
 
-				mint Level = NMib::fg_GetHighestBitSetNoZero(nSubSlabs);
+				umint Level = NMib::fg_GetHighestBitSetNoZero(nSubSlabs);
 
 				DMibFastCheck(((_iSubSlab >> Level) << Level) == _iSubSlab);
 				if (_pSlab->f_SetBitFree(Level, _iSubSlab >> Level))
@@ -402,7 +402,7 @@ namespace NMib::NMemory
 		{
 			_pSlab->f_DecommitSubSlabs(_iSubSlab, nSubSlabs);
 
-			mint Level = NMib::fg_GetHighestBitSetNoZero(nSubSlabs);
+			umint Level = NMib::fg_GetHighestBitSetNoZero(nSubSlabs);
 
 			DMibFastCheck(((_iSubSlab >> Level) << Level) == _iSubSlab);
 			if (_pSlab->f_SetBitFree(Level, _iSubSlab >> Level))
@@ -415,9 +415,9 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	mint TCMemoryManagerArena<t_CParams>::f_GetNumFreeSlabs()
+	umint TCMemoryManagerArena<t_CParams>::f_GetNumFreeSlabs()
 	{
-		mint nSlabs = 0;
+		umint nSlabs = 0;
 
 		nSlabs += m_FreeSlabs.f_GetLen();
 
@@ -425,12 +425,12 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	mint TCMemoryManagerArena<t_CParams>::f_GetNumUsedSlabs()
+	umint TCMemoryManagerArena<t_CParams>::f_GetNumUsedSlabs()
 	{
-		mint nSlabs = 0;
-		for (mint iSlabType = 0; iSlabType < t_CParams::mc_NumSizesPerLevel; ++iSlabType)
+		umint nSlabs = 0;
+		for (umint iSlabType = 0; iSlabType < t_CParams::mc_NumSizesPerLevel; ++iSlabType)
 		{
-			for (mint i = 0; i < t_CParams::mc_NumSubSlabSizeLevels; ++i)
+			for (umint i = 0; i < t_CParams::mc_NumSubSlabSizeLevels; ++i)
 				nSlabs += m_PartiallyFreeSlabs[iSlabType][i].f_GetLen();
 		}
 
@@ -445,7 +445,7 @@ namespace NMib::NMemory
 		bool bError = false;
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
-			for (mint i = 0; i < mc_nLevel0Lists; ++i)
+			for (umint i = 0; i < mc_nLevel0Lists; ++i)
 			{
 				for (auto iAlloc = m_NormalSizeSlabsLevel0[i].f_GetIterator(); iAlloc; ++iAlloc)
 				{
@@ -455,9 +455,9 @@ namespace NMib::NMemory
 				}
 			}
 		}
-		for (mint j = 0; j < t_CParams::mc_NumSizesPerLevel; ++j)
+		for (umint j = 0; j < t_CParams::mc_NumSizesPerLevel; ++j)
 		{
-			for (mint i = 0; i < mc_nNormalSizeLists; ++i)
+			for (umint i = 0; i < mc_nNormalSizeLists; ++i)
 			{
 				for (auto iAlloc = m_NormalSizeSlabs[j][i].f_GetIterator(); iAlloc; ++iAlloc)
 				{

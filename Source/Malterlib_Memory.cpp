@@ -274,7 +274,7 @@ namespace NMib::NMemory
 
 		mutable NThread::CMutual m_Lock;
 		CReportMemory *m_pReportTo = nullptr;
-		mint m_ReportDepth = 0;
+		umint m_ReportDepth = 0;
 	};
 
 	constinit NStorage::TCAggregate
@@ -315,12 +315,12 @@ namespace NMib::NMemory
 
 	void fg_ReportMemoryAlloc
 		(
-			mint _MemoryAllocator
+			umint _MemoryAllocator
 			, ch8 const *_pAllocatorName
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -358,15 +358,15 @@ namespace NMib::NMemory
 
 	void fg_ReportMemoryResize
 		(
-			mint _MemoryAllocator
+			umint _MemoryAllocator
 			, ch8 const *_pAllocatorName
-			, mint _OldAddress
-			, mint _OldSize
+			, umint _OldAddress
+			, umint _OldSize
 			, void const *_pOldAllocationInfo
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -405,15 +405,15 @@ namespace NMib::NMemory
 
 	void fg_ReportMemoryRealloc
 		(
-			mint _MemoryAllocator
+			umint _MemoryAllocator
 			, ch8 const *_pAllocatorName
-			, mint _OldAddress
-			, mint _OldSize
+			, umint _OldAddress
+			, umint _OldSize
 			, void const *_pOldAllocationInfo
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
@@ -449,7 +449,7 @@ namespace NMib::NMemory
 #	endif
 	}
 
-	void fg_ReportMemoryFree(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _Address, mint _Size, void const *_pAllocationInfo)
+	void fg_ReportMemoryFree(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _Address, umint _Size, void const *_pAllocationInfo)
 	{
 #if DEnableMemoryTrace
 		DMibTraceSafe
@@ -476,7 +476,7 @@ namespace NMib::NMemory
 #endif
 	}
 
-	void fg_ReportMemoryGetSize(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _Address, mint _Size, void const *_pAllocationInfo)
+	void fg_ReportMemoryGetSize(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _Address, umint _Size, void const *_pAllocationInfo)
 	{
 #if DEnableMemoryTrace
 		DMibTraceSafe
@@ -504,7 +504,7 @@ namespace NMib::NMemory
 #endif
 	}
 
-	void fg_ReportMemoryCommit(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _Address, mint _Size)
+	void fg_ReportMemoryCommit(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _Address, umint _Size)
 	{
 #if DEnableMemoryTrace
 		DMibTraceSafe
@@ -532,7 +532,7 @@ namespace NMib::NMemory
 #endif
 	}
 
-	void fg_ReportMemoryDecommit(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _Address, mint _Size)
+	void fg_ReportMemoryDecommit(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _Address, umint _Size)
 	{
 #if DEnableMemoryTrace
 		DMibTraceSafe
@@ -560,7 +560,7 @@ namespace NMib::NMemory
 #endif
 	}
 
-	void fg_ReportMemoryAllocatorDelete(mint _MemoryAllocator, ch8 const *_pAllocatorName)
+	void fg_ReportMemoryAllocatorDelete(umint _MemoryAllocator, ch8 const *_pAllocatorName)
 	{
 #if DEnableMemoryTrace
 		DMibTraceSafe
@@ -587,7 +587,7 @@ namespace NMib::NMemory
 	}
 
 
-	void fg_ReportMemoryAllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName)
+	void fg_ReportMemoryAllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName)
 	{
 #if DEnableMemoryTrace
 		DMibTraceSafe
@@ -605,7 +605,7 @@ namespace NMib::NMemory
 #	endif
 	}
 
-	void fg_ReportMemoryGoingToReportEnter(mint _MemoryAllocator)
+	void fg_ReportMemoryGoingToReportEnter(umint _MemoryAllocator)
 	{
 #	if DMibConfig_Memory_Shims_EnableGlobal
 		if (g_pGlobalMemoryReporter)
@@ -622,7 +622,7 @@ namespace NMib::NMemory
 #endif
 	}
 
-	void fg_ReportMemoryGoingToReportExit(mint _MemoryAllocator)
+	void fg_ReportMemoryGoingToReportExit(umint _MemoryAllocator)
 	{
 #		if DMibConfig_Memory_Shims_EnableLocal
 		if (!g_MemoryReporter.f_WasDestructed() && g_MemoryReporter.f_IsConstructed() && !fg_GetSys()->f_ThreadDestroyed())

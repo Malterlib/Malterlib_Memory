@@ -11,13 +11,13 @@ using namespace NMib::NMemory;
 
 namespace NMib
 {
-	extern mint g_bCreatedSystem;
+	extern umint g_bCreatedSystem;
 	namespace NSys
 	{
 		void fg_CreateSystem();
 		namespace NPrivate
 		{
-			extern mint g_PageSize;
+			extern umint g_PageSize;
 		}
 	}
 }
@@ -49,7 +49,7 @@ extern "C"
 #endif
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
-		mint Size = _nMembers * _Size;
+		umint Size = _nMembers * _Size;
 		Size = NMib::fg_AlignUp(Size, 16);
 #		if DMibConfig_MalterlibMemoryManager_Debug
 			auto pRet = NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
@@ -132,22 +132,22 @@ extern "C"
 		if (_Size == 0)
 			_Size = 1;
 
-		mint MaxMembers = NMib::TCLimitsInt<mint>::mc_Max / _Size;
+		umint MaxMembers = NMib::TCLimitsInt<umint>::mc_Max / _Size;
 		if (_nMembers > MaxMembers)
 		{
 			errno = ENOMEM;
 			return nullptr;
 		}
 
-		mint UnalignedSize = mint(_nMembers) * mint(_Size);
+		umint UnalignedSize = umint(_nMembers) * umint(_Size);
 
-		if ((NMib::TCLimitsInt<mint>::mc_Max - UnalignedSize) <= 16)
+		if ((NMib::TCLimitsInt<umint>::mc_Max - UnalignedSize) <= 16)
 		{
 			errno = ENOMEM;
 			return nullptr;
 		}
 
-		mint Size = NMib::fg_AlignUp(UnalignedSize, 16);
+		umint Size = NMib::fg_AlignUp(UnalignedSize, 16);
 #		if DMibConfig_MalterlibMemoryManager_Debug
 			return NMib::NMemory::CAllocator_NonTrackedHeap::f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
 #		else

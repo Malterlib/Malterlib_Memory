@@ -16,14 +16,14 @@ namespace
 				NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_None> TestManager;
 
 				void *pMem[10000];
-				for (mint i = 0; i < 10000; ++i)
+				for (umint i = 0; i < 10000; ++i)
 				{
-					mint Size = i;
+					umint Size = i;
 					pMem[i] = TestManager.f_AllocWithSize(Size, 1);
 				}
-				for (mint i = 0; i < 10000; ++i)
+				for (umint i = 0; i < 10000; ++i)
 				{
-					mint Size = NMib::fg_Max(i, 1u);
+					umint Size = NMib::fg_Max(i, 1u);
 					TestManager.f_Free(pMem[i], Size);
 				}
 				return "";

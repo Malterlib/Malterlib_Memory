@@ -14,7 +14,7 @@ namespace NMib::NMemory
 	{
 	}
 
-	inline void CDefaultMemoryManagerNotifier::CGlobal::f_OnAlloc(uint8 *_pMemory, mint _nBytes)
+	inline void CDefaultMemoryManagerNotifier::CGlobal::f_OnAlloc(uint8 *_pMemory, umint _nBytes)
 	{
 	}
 
@@ -22,11 +22,11 @@ namespace NMib::NMemory
 	{
 	}
 
-	inline void CDefaultMemoryManagerNotifier::CGlobal::f_OnCommit(uint8 *_pMemory, mint _nBytes)
+	inline void CDefaultMemoryManagerNotifier::CGlobal::f_OnCommit(uint8 *_pMemory, umint _nBytes)
 	{
 	}
 
-	inline void CDefaultMemoryManagerNotifier::CGlobal::f_OnDecommit(uint8 *_pMemory, mint _nBytes)
+	inline void CDefaultMemoryManagerNotifier::CGlobal::f_OnDecommit(uint8 *_pMemory, umint _nBytes)
 	{
 	}
 
@@ -38,7 +38,7 @@ namespace NMib::NMemory
 	{
 	}
 
-	inline void CDefaultMemoryManagerNotifier::CArena::f_OnAlloc(uint8 *_pMemory, mint _nBytes)
+	inline void CDefaultMemoryManagerNotifier::CArena::f_OnAlloc(uint8 *_pMemory, umint _nBytes)
 	{
 	}
 
@@ -50,11 +50,11 @@ namespace NMib::NMemory
 	{
 	}
 
-	inline void CDefaultMemoryManagerNotifier::CArena::f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags)
+	inline void CDefaultMemoryManagerNotifier::CArena::f_OnFillFree(uint8 *_pMemory, umint _nBytes, EMemoryManagerCheckFlag _Flags)
 	{
 	}
 
-	inline bool CDefaultMemoryManagerNotifier::CArena::f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags)
+	inline bool CDefaultMemoryManagerNotifier::CArena::f_OnCheckFree(uint8 *_pUntouchedMemory, umint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags)
 	{
 		return false;
 	}
@@ -67,7 +67,7 @@ namespace NMib::NMemory
 	{
 	}
 
-	inline void CDefaultMemoryManagerNotifier::CHeap::f_OnAlloc(uint8 *_pMemory, mint _nBytes)
+	inline void CDefaultMemoryManagerNotifier::CHeap::f_OnAlloc(uint8 *_pMemory, umint _nBytes)
 	{
 	}
 
@@ -75,17 +75,17 @@ namespace NMib::NMemory
 	{
 	}
 
-	inline void CDefaultMemoryManagerNotifier::CHeap::f_OnFillFree(uint8 *_pMemory, mint _nBytes, EMemoryManagerCheckFlag _Flags)
+	inline void CDefaultMemoryManagerNotifier::CHeap::f_OnFillFree(uint8 *_pMemory, umint _nBytes, EMemoryManagerCheckFlag _Flags)
 	{
 	}
 
-	inline bool CDefaultMemoryManagerNotifier::CHeap::f_OnCheckFree(uint8 *_pUntouchedMemory, mint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags)
+	inline bool CDefaultMemoryManagerNotifier::CHeap::f_OnCheckFree(uint8 *_pUntouchedMemory, umint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags)
 	{
 		return false;
 	}
 
 #ifndef DDocumentation_Doxygen
-	template <typename t_CParams, mint ...tp_Indices>
+	template <typename t_CParams, umint ...tp_Indices>
 	uint32 TCMemoryManagerParams<t_CParams, NMeta::TCIndices<tp_Indices...>>::fs_DivideBySlabMultiplier(uint32 _Offset, uint32 _SlabMultiplier)
 	{
 		using CConstants = TCMemoryManagerParamsSizesPerLevel<t_CParams::mc_NumSizesPerLevel>;
@@ -96,10 +96,10 @@ namespace NMib::NMemory
 		return Return;
 	}
 
-	template <typename t_CParams, mint ...tp_Indices>
+	template <typename t_CParams, umint ...tp_Indices>
 	uint32 TCMemoryManagerParams<t_CParams, NMeta::TCIndices<tp_Indices...>>::fs_GetSlabTypeMetaSize(uint32 _SlabType)
 	{
-		static constexpr mint c_MaxMetadataBlockSize = []
+		static constexpr umint c_MaxMetadataBlockSize = []
 			{
 				return fg_MaxConstexpr(fg_MemoryManagerSlabSize<TCMemoryManagerParams, tp_Indices>()...);
 			}

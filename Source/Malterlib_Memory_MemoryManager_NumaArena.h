@@ -38,9 +38,9 @@ namespace NMib::NMemory
 	struct align_cacheline TCMemoryManagerThreadLocal
 	{
 		TCMemoryManagerArena<t_CParams> *m_pArena = nullptr;
-		mint m_Reentrant = 0;
+		umint m_Reentrant = 0;
 		TCMemoryManagerArena<t_CParams> *m_pPreferredArena = nullptr;
-		mint m_TemporaryReturnCheckoutCount = 0;
+		umint m_TemporaryReturnCheckoutCount = 0;
 		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
 		bool m_bLazyCheckout = false;
 		bool m_bLimited = false;
@@ -89,8 +89,8 @@ namespace NMib::NMemory
 		void f_GarbageCollectLocalArena(bool _bDecommit);
 
 #if DMibConfig_Memory_Shims_Lightweight
-		inline_never void f_TrackAlloc(mint _Size);
-		inline_never void f_TrackFree(mint _Size);
+		inline_never void f_TrackAlloc(umint _Size);
+		inline_never void f_TrackFree(umint _Size);
 #endif
 	};
 

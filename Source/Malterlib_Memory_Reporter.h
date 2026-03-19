@@ -100,56 +100,56 @@ namespace NMib::NMemory
 
 	void fg_ReportMemoryAlloc
 		(
-			mint _MemoryAllocator
+			umint _MemoryAllocator
 			, ch8 const *_pAllocatorName
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
 	;
 	void fg_ReportMemoryResize
 		(
-			mint _MemoryAllocator
+			umint _MemoryAllocator
 			, ch8 const *_pAllocatorName
-			, mint _OldAddress
-			, mint _OldSize
+			, umint _OldAddress
+			, umint _OldSize
 			, void const *_pOldAllocationInfo
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
 	;
 	void fg_ReportMemoryRealloc
 		(
-			mint _MemoryAllocator
+			umint _MemoryAllocator
 			, ch8 const *_pAllocatorName
-			, mint _OldAddress
-			, mint _OldSize
+			, umint _OldAddress
+			, umint _OldSize
 			, void const *_pOldAllocationInfo
-			, mint _Address
-			, mint _RequestedAlignment
-			, mint _RequestedSize
-			, mint _ReturnedSize
+			, umint _Address
+			, umint _RequestedAlignment
+			, umint _RequestedSize
+			, umint _ReturnedSize
 			, fp32 _nBytesOverhead
 			, void *_pAllocationInfo
 		)
 	;
-	void fg_ReportMemoryFree(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _Address, mint _Size, void const *_pAllocationInfo);
+	void fg_ReportMemoryFree(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _Address, umint _Size, void const *_pAllocationInfo);
 
-	void fg_ReportMemoryGetSize(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _Address, mint _Size, void const *_pAllocationInfo);
-	void fg_ReportMemoryProtect(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _Address, mint _Size, uaint _Protect);
-	void fg_ReportMemoryCommit(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _Address, mint _Size);
-	void fg_ReportMemoryDecommit(mint _MemoryAllocator, ch8 const *_pAllocatorName, mint _Address, mint _Size);
-	void fg_ReportMemoryAllocatorDelete(mint _MemoryAllocator, ch8 const *_pAllocatorName);
-	void fg_ReportMemoryGoingToReportEnter(mint _MemoryAllocator);
-	void fg_ReportMemoryGoingToReportExit(mint _MemoryAllocator);
-	void fg_ReportMemoryAllocatorName(mint _MemoryAllocator, ch8 const* _pAllocatorName);
+	void fg_ReportMemoryGetSize(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _Address, umint _Size, void const *_pAllocationInfo);
+	void fg_ReportMemoryProtect(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _Address, umint _Size, uaint _Protect);
+	void fg_ReportMemoryCommit(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _Address, umint _Size);
+	void fg_ReportMemoryDecommit(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _Address, umint _Size);
+	void fg_ReportMemoryAllocatorDelete(umint _MemoryAllocator, ch8 const *_pAllocatorName);
+	void fg_ReportMemoryGoingToReportEnter(umint _MemoryAllocator);
+	void fg_ReportMemoryGoingToReportExit(umint _MemoryAllocator);
+	void fg_ReportMemoryAllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName);
 	void fg_ReportMemoryReportStatistics(bool _bFullReport);
 
 	CReportMemory *fg_ReportMemoryTo(CReportMemory *_pMemoryReporter);
@@ -203,10 +203,10 @@ namespace NMib::NMemory
 
 	class CMemoryReportGoingToReportScope
 	{
-		mint m_Allocator;
+		umint m_Allocator;
 		bool m_bReport;
 	public:
-		CMemoryReportGoingToReportScope(mint _Allocator, bool _bReport)
+		CMemoryReportGoingToReportScope(umint _Allocator, bool _bReport)
 			: m_Allocator(_Allocator)
 			, m_bReport(_bReport)
 		{
@@ -220,29 +220,29 @@ namespace NMib::NMemory
 		}
 	};
 
-#	define DMibMemoryGoingToReportScope(d_MemoryAllocator, d_bReport) CMemoryReportGoingToReportScope MalterlibMemoryReportScope((mint)d_MemoryAllocator, d_bReport);
+#	define DMibMemoryGoingToReportScope(d_MemoryAllocator, d_bReport) CMemoryReportGoingToReportScope MalterlibMemoryReportScope((umint)d_MemoryAllocator, d_bReport);
 #	define DMibMemoryReportSaveVar(d_Name, d_Value) auto d_Name = d_Value
 #	define DMibMemoryReportExpression(d_Expression) d_Expression
 #	define DMibMemoryReportAlloc(d_MemoryAllocator, d_AllocatorName, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
-		fg_ReportMemoryAlloc((mint)d_MemoryAllocator, d_AllocatorName, (mint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+		fg_ReportMemoryAlloc((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
 #	define DMibMemoryReportResize(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
-		fg_ReportMemoryResize((mint)d_MemoryAllocator, d_AllocatorName, (mint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (mint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+		fg_ReportMemoryResize((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (umint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
 #	define DMibMemoryReportRealloc(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
-		fg_ReportMemoryRealloc((mint)d_MemoryAllocator, d_AllocatorName, (mint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (mint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+		fg_ReportMemoryRealloc((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (umint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
 #	define DMibMemoryReportFree(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_pAllocationInfo) \
-		fg_ReportMemoryFree((mint)d_MemoryAllocator, d_AllocatorName, (mint)d_Address, d_Size, d_pAllocationInfo)
+		fg_ReportMemoryFree((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_Address, d_Size, d_pAllocationInfo)
 #	define DMibMemoryReportGetSize(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_pAllocationInfo) \
-		fg_ReportMemoryGetSize((mint)d_MemoryAllocator, d_AllocatorName, (mint)d_Address, d_Size, d_pAllocationInfo)
+		fg_ReportMemoryGetSize((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_Address, d_Size, d_pAllocationInfo)
 #	define DMibMemoryReportCommit(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size) \
-		fg_ReportMemoryCommit((mint)d_MemoryAllocator, d_AllocatorName, (mint)d_Address, d_Size)
+		fg_ReportMemoryCommit((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_Address, d_Size)
 #	define DMibMemoryReportProtect(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_Protect) \
-		fg_ReportMemoryProtect((mint)d_MemoryAllocator, d_AllocatorName, (mint)d_Address, d_Size, d_Protect)
+		fg_ReportMemoryProtect((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_Address, d_Size, d_Protect)
 #	define DMibMemoryReportDecommit(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size) \
-		fg_ReportMemoryDecommit((mint)d_MemoryAllocator, d_AllocatorName, (mint)d_Address, d_Size)
+		fg_ReportMemoryDecommit((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_Address, d_Size)
 #	define DMibMemoryReportAllocatorDelete(d_MemoryAllocator, d_AllocatorName) \
-		fg_ReportMemoryAllocatorDelete((mint)d_MemoryAllocator, d_AllocatorName)
+		fg_ReportMemoryAllocatorDelete((umint)d_MemoryAllocator, d_AllocatorName)
 #	define DMibMemoryReportAllocatorName(d_MemoryAllocator, d_AllocatorName) \
-		fg_ReportMemoryAllocatorName((mint)d_MemoryAllocator, d_AllocatorName)
+		fg_ReportMemoryAllocatorName((umint)d_MemoryAllocator, d_AllocatorName)
 
 #else
 #	define DMibMemoryGoingToReportScope(d_MemoryAllocator, d_bReport)

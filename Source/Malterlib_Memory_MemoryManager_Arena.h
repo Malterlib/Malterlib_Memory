@@ -38,16 +38,16 @@ namespace NMib::NMemory
 
 		void f_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 		void f_FreeThisThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab);
-		mint f_Size(void const *_pMemory, TCMemoryManagerSlabShared<t_CParams> const *_pSlab);
+		umint f_Size(void const *_pMemory, TCMemoryManagerSlabShared<t_CParams> const *_pSlab);
 		fp32 f_Overhead(void const *_pMemory, TCMemoryManagerSlabShared<t_CParams> const *_pSlab);
 
-		void *f_AllocWithSize(mint &_Size);
-		void f_AllocBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
+		void *f_AllocWithSize(umint &_Size);
+		void f_AllocBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
 
 		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 
-		mint f_GetNumUsedSlabs();
-		mint f_GetNumFreeSlabs();
+		umint f_GetNumUsedSlabs();
+		umint f_GetNumFreeSlabs();
 
 		bool f_ReturnCheckout();
 		void f_ReturnCheckoutLight();
@@ -104,49 +104,49 @@ namespace NMib::NMemory
 		TCMemoryManagerSlabShared<t_CParams> *fp_NewSlab(uint32 _SlabType, uint32 _SizeType);
 
 
-		template <mint tf_Size>
+		template <umint tf_Size>
 		TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> *fp_AllocSmallNoSlab();
 
-		template <mint tf_Size>
+		template <umint tf_Size>
 		static void *fsp_AllocSmall(TCMemoryManagerArena *_pThis);
 
-		static void *fsp_AllocSmallShared(TCMemoryManagerArena *_pThis, mint _Index);
+		static void *fsp_AllocSmallShared(TCMemoryManagerArena *_pThis, umint _Index);
 
-		template <mint tf_Size>
+		template <umint tf_Size>
 		bool fp_CheckFreeSmall(EMemoryManagerCheckFlag _Flags);
 
 		bool fp_FreeSmallSubSlabs(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 
-		void fp_FreeSmallShared(TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *_pSubSlab, TCMemoryManagerSlab<t_CParams, 0> *_pSlab, mint _Index, ESmallState _SmallState);
+		void fp_FreeSmallShared(TCMemoryManagerSubSlab_SmallSizeShared<t_CParams> *_pSubSlab, TCMemoryManagerSlab<t_CParams, 0> *_pSlab, umint _Index, ESmallState _SmallState);
 
-		static mint fsp_GetSlabTypeFromSizeSmall(mint &o_Size);
+		static umint fsp_GetSlabTypeFromSizeSmall(umint &o_Size);
 
-		void *fp_AllocSmallSize(mint &_Size);
+		void *fp_AllocSmallSize(umint &_Size);
 
-		void fp_AllocSmallSizeBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
+		void fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
 
-		void *fp_AllocNormalUncached(CMemoryManagerSubSlab_NormalFreeList *_pList, mint _AlignedSize, mint _SubIndex, mint _SlabBucket);
-		void *fp_AllocNormal(mint &_Size);
+		void *fp_AllocNormalUncached(CMemoryManagerSubSlab_NormalFreeList *_pList, umint _AlignedSize, umint _SubIndex, umint _SlabBucket);
+		void *fp_AllocNormal(umint &_Size);
 
-		void fp_AllocNormalBatch(mint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, mint _Size)> const &_Functor);
+		void fp_AllocNormalBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
 
 		void fp_SlabHasGarbageInline(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 		void fp_SlabHasGarbage(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 		void fp_CheckSlabNoLongerGarbage(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 		void fp_SubSlabNoLongerPending(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab);
 
-		int64 fp_GarbageCollectPerform(mint _SlabType, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
-		bool fp_GarbageCollectPerform(mint _SlabType);
-		bool fp_GarbageCollect(mint _SlabType);
+		int64 fp_GarbageCollectPerform(umint _SlabType, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
+		bool fp_GarbageCollectPerform(umint _SlabType);
+		bool fp_GarbageCollect(umint _SlabType);
 		void fp_GarbageCollectFull();
 
-		static mint fs_GetAllocSize(mint _Size);
+		static umint fs_GetAllocSize(umint _Size);
 
 		[[nodiscard]] bool fp_FreeSubSlab(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab);
 
-		void fp_FreeSmall(void *_pMemory, TCMemoryManagerSlab<t_CParams, 0> *_pSlab, mint _SlabType);
-		mint fp_SizeSmall(void const *_pMemory, TCMemoryManagerSlab<t_CParams, 0> const *_pSlab, mint _SlabType) const;
-		fp32 fp_OverheadSmall(void const *_pMemory, TCMemoryManagerSlab<t_CParams, 0> const *_pSlab, mint _SlabType) const;
+		void fp_FreeSmall(void *_pMemory, TCMemoryManagerSlab<t_CParams, 0> *_pSlab, umint _SlabType);
+		umint fp_SizeSmall(void const *_pMemory, TCMemoryManagerSlab<t_CParams, 0> const *_pSlab, umint _SlabType) const;
+		fp32 fp_OverheadSmall(void const *_pMemory, TCMemoryManagerSlab<t_CParams, 0> const *_pSlab, umint _SlabType) const;
 
 		void fp_Free(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 		void fp_FreeInline(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab);
@@ -156,7 +156,7 @@ namespace NMib::NMemory
 		bool fp_ProcessMessages(CMemoryManagerSubSlab_NormalFreeList *_pFreeList);
 		bool fp_ProcessMessagesAbortable(bool &o_bAborted, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 		template <bool tf_bAbortable, bool tf_bFreeList>
-		inline_never bool fp_ProcessMessageList(mint &o_MessageList, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena, CMemoryManagerSubSlab_NormalFreeList *_pFreeList, smint &_nToProcess);
+		inline_never bool fp_ProcessMessageList(umint &o_MessageList, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena, CMemoryManagerSubSlab_NormalFreeList *_pFreeList, smint &_nToProcess);
 
 		void fp_CheckMessages();
 		bool fp_CheckCleanup();
@@ -176,24 +176,24 @@ namespace NMib::NMemory
 		static constexpr bool mc_bUseFreeBlockCounting = t_CParams::mc_bUseFreeBlockCounting;
 		static constexpr bool mc_bSpecialCaseSlabType0 = t_CParams::mc_bSpecialCaseSlabType0;
 		static constexpr bool mc_bUseSmallSizes = t_CParams::mc_bUseSmallSizes;
-		static constexpr mint mc_MinAllocSize = mc_bUseSmallSizes ? 1 : t_CParams::mc_MinNormalAllocSize;
-		static constexpr mint mc_MinAlignment = 4; // Can be 4 or 8
-		static constexpr mint mc_nSmallSizeSlabsAligned = NMib::gc_HighestBitSet<mc_MinAlignment> + 1;
-		static constexpr mint mc_nSmallSizeSlabs = mc_bUseSmallSizes ? (mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment*2) / mc_MinAlignment) : mc_MinArraySize;
-		static constexpr mint mc_nLevel0Lists = mc_bUseSmallSizes ? (32 - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment : mc_MinArraySize;
-		static constexpr mint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels-1 : t_CParams::mc_NumNormalSizeLevels;
-		static constexpr mint mc_Level0SmallestSize = 32 - t_CParams::mc_MinNormalSizeAlignment;
+		static constexpr umint mc_MinAllocSize = mc_bUseSmallSizes ? 1 : t_CParams::mc_MinNormalAllocSize;
+		static constexpr umint mc_MinAlignment = 4; // Can be 4 or 8
+		static constexpr umint mc_nSmallSizeSlabsAligned = NMib::gc_HighestBitSet<mc_MinAlignment> + 1;
+		static constexpr umint mc_nSmallSizeSlabs = mc_bUseSmallSizes ? (mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment*2) / mc_MinAlignment) : mc_MinArraySize;
+		static constexpr umint mc_nLevel0Lists = mc_bUseSmallSizes ? (32 - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment : mc_MinArraySize;
+		static constexpr umint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels-1 : t_CParams::mc_NumNormalSizeLevels;
+		static constexpr umint mc_Level0SmallestSize = 32 - t_CParams::mc_MinNormalSizeAlignment;
 		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CArena::mc_EnableCallbacks;
 #if defined(DArchitecture_arm64) || defined(DArchitecture_arm64e)
-		static constexpr mint mc_MessagesSpread = 16;
+		static constexpr umint mc_MessagesSpread = 16;
 #else
-		static constexpr mint mc_MessagesSpread = 1;
+		static constexpr umint mc_MessagesSpread = 1;
 #endif
 
 		static_assert(mc_bUseSmallSizes || sizeof(void *) > 4, "Not supported on 32 bit");
 
 	private:
-		static constexpr mint mc_SmallAllocCategoryJumpTableSize = mc_bUseSmallSizes ? (t_CParams::mc_SmallSizeSlabsLargestSize == 16 ? 6 : 5) : 1;
+		static constexpr umint mc_SmallAllocCategoryJumpTableSize = mc_bUseSmallSizes ? (t_CParams::mc_SmallSizeSlabsLargestSize == 16 ? 6 : 5) : 1;
 
 		using FSmallAllocJump = void *(*)(TCMemoryManagerArena *);
 		struct CSmallAllocJumbTable
@@ -250,18 +250,18 @@ namespace NMib::NMemory
 		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkNeedDecommit) m_SlabsNeedingDecommit;
 
 		align_cacheline NThread::CLowLevelLock m_Lock;
-		align_cacheline NAtomic::TCAtomic<mint> m_LockContended;
-		align_cacheline NAtomic::TCAtomic<mint> m_MessagesAvailable = 0;
+		align_cacheline NAtomic::TCAtomic<umint> m_LockContended;
+		align_cacheline NAtomic::TCAtomic<umint> m_MessagesAvailable = 0;
 		struct CSpreadMessage
 		{
-			align_cacheline NAtomic::TCAtomic<mint> m_Messages = 0;
+			align_cacheline NAtomic::TCAtomic<umint> m_Messages = 0;
 		};
 		CSpreadMessage m_SpreadMessages[mc_MessagesSpread];
-		mint m_DeferredMessages[mc_MessagesSpread] = {};
+		umint m_DeferredMessages[mc_MessagesSpread] = {};
 
 		uint64 m_Magic = 0;
 
-		NAtomic::TCAtomic<mint> m_CheckoutCount = 0;
+		NAtomic::TCAtomic<umint> m_CheckoutCount = 0;
 
 		DMibMemoryManagerList(CMemoryManagerSubSlab_SmallSizeLink, m_Link) m_SmallSizeSlabsFull;
 		DMibMemoryManagerList(CMemoryManagerSubSlab_SmallSizeLink, m_Link) m_SmallSizeSlabs[mc_nSmallSizeSlabs];

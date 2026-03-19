@@ -10,11 +10,11 @@ namespace NMib::NMemory
 	TCMemoryManagerSlabShared<t_CParams> *TCMemoryManagerArena<t_CParams>::fp_CreateSlab(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab)
 	{
 		uint8 *pMemory = (uint8 *)_pMemory;
-		mint AlignedSize = fg_AlignUp(sizeof(TCMemoryManagerSlab<t_CParams, t_SlabType>), t_CParams::mc_SubSlabSize);
+		umint AlignedSize = fg_AlignUp(sizeof(TCMemoryManagerSlab<t_CParams, t_SlabType>), t_CParams::mc_SubSlabSize);
 		TCMemoryManagerSlab<t_CParams, t_SlabType> *pSlabMem = TCMemoryManagerSlab<t_CParams, t_SlabType>::fs_CalcSlabLocation((uint8 *)(pMemory + t_CParams::mc_SlabSize - AlignedSize));
 
-		mint iSubSlab = ((uint8 *)pSlabMem - pMemory) / t_CParams::mc_SubSlabSize;
-		mint nSubSlabs = AlignedSize / t_CParams::mc_SubSlabSize;
+		umint iSubSlab = ((uint8 *)pSlabMem - pMemory) / t_CParams::mc_SubSlabSize;
+		umint nSubSlabs = AlignedSize / t_CParams::mc_SubSlabSize;
 
 		TCMemoryManagerSlab<t_CParams, t_SlabType> *pSlab;
 
@@ -23,18 +23,18 @@ namespace NMib::NMemory
 			DMibFastCheck(_pOldSlab->f_IsFullyFree());
 			NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> OldCommitted;
 			_pOldSlab->f_GetCommitted(OldCommitted);
-			mint nCommittedHeaderSubSlabs = _pOldSlab->m_nCommittedHeaderSubSlabs;
+			umint nCommittedHeaderSubSlabs = _pOldSlab->m_nCommittedHeaderSubSlabs;
 
 			DMibFastCheck(nSubSlabs < 256);
 
 			if (nSubSlabs > nCommittedHeaderSubSlabs)
 			{
-				mint nToCommit = nSubSlabs - nCommittedHeaderSubSlabs;
+				umint nToCommit = nSubSlabs - nCommittedHeaderSubSlabs;
 				if constexpr (mc_EnableCallbacks)
 					m_pMemoryManager->f_OnCommit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nToCommit * t_CParams::mc_SubSlabSize);
 				OldCommitted.f_EnumFreeBitRanges
 					(
-						[&](mint _iSubSlab, mint _nSubSlabs)
+						[&](umint _iSubSlab, umint _nSubSlabs)
 						{
 							m_pMemoryManager->m_Allocator.f_Commit(pMemory + _iSubSlab * t_CParams::mc_SubSlabSize, _nSubSlabs * t_CParams::mc_SubSlabSize);
 							return true;
@@ -47,7 +47,7 @@ namespace NMib::NMemory
 			}
 			else if (nSubSlabs < nCommittedHeaderSubSlabs)
 			{
-				mint nAlreadyCommitted = nCommittedHeaderSubSlabs - nSubSlabs;
+				umint nAlreadyCommitted = nCommittedHeaderSubSlabs - nSubSlabs;
 				OldCommitted.template f_SetBitRange<true>(iSubSlab - nAlreadyCommitted, nAlreadyCommitted);
 			}
 			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, t_SlabType>(m_Magic, this, nSubSlabs);
