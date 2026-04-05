@@ -1,9 +1,39 @@
-// Copyright © 2015 Hansoft AB
-// Distributed under the MIT license, see license text in LICENSE.Malterlib
+// Copyright © Unbroken AB
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 Import "../Core/Malterlib_Core.MHeader"
 Import "../Core/Lib_Malterlib.MTarget"
 Import "Apps/*/*.MHeader"
+
+Repository
+{
+	!!MalterlibRepoName "Malterlib_Memory.git"
+
+	MalterlibRepoReusePaths =+ [
+		"Documentation/*.ai"
+		, "Documentation/*.xlsx"
+		, "Source/*.rc"
+	]
+
+	License #<CommentStyles> =+ {
+		Path: ["Source/*.defs"]
+		, LinePrefix: "// "
+	}
+
+	License #<ReuseAnnotations> =+ [{
+			Path: ["Source/Mig/*"]
+			, CopyrightText: "Apple Inc."
+			, LicenseIdentifier: "APSL-2.0"
+			, Precedence: "override"
+		}
+		, {
+			Path: ["Source/TCMalloc/*"]
+			, CopyrightText: "Google Inc."
+			, LicenseIdentifier: "BSD-3-Clause"
+			, Precedence: "override"
+		}
+	]
+}
 
 %Repository "mimalloc"
 {

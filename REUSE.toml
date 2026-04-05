@@ -1,0 +1,19 @@
+version = 1
+
+[[annotations]]
+path = ["ImportCache/**", "**/ImportCache/**", "IC/**", "**/IC/**", "**.MRepo", ".gitignore", "**/.gitignore", "**.md", "Documentation/**.ai", "Documentation/**.xlsx", "Source/**.rc"]
+precedence = "override"
+SPDX-FileCopyrightText = "Unbroken AB"
+SPDX-License-Identifier = "Apache-2.0 WITH LLVM-exception"
+
+[[annotations]]
+path = "Source/Mig/**"
+precedence = "override"
+SPDX-FileCopyrightText = "Apple Inc."
+SPDX-License-Identifier = "APSL-2.0"
+
+[[annotations]]
+path = "Source/TCMalloc/**"
+precedence = "override"
+SPDX-FileCopyrightText = "Google Inc."
+SPDX-License-Identifier = "BSD-3-Clause"
