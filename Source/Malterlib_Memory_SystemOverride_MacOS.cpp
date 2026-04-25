@@ -5,10 +5,14 @@
 
 #include "Malterlib_Memory_SystemOverride_MacOSInterpose.h"
 
+#include <Mib/Container/Regions>
 #include <Mib/Core/Core>
 #include <Mib/Core/System>
-#include <Mib/Instrumentation/FunctionHook>
 #include <Mib/Memory/Pool>
+
+#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
+#include <Mib/Instrumentation/FunctionHook>
+#endif
 
 #include <malloc/malloc.h>
 #include <stdlib.h>
