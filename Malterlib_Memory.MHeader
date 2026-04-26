@@ -48,6 +48,9 @@ Repository
 		Type "External"
 		DefaultUpstreamBranch "main"
 		Remotes =+ {Name: "upstream", URL: "https://github.com/microsoft/mimalloc.git"}
+		{
+			!!MalterlibAddUpstreams true
+		}
 	}
 }
 
@@ -63,6 +66,9 @@ Repository
 	{
 		Type "External"
 		Remotes =+ {Name: "upstream", URL: "https://github.com/gperftools/gperftools.git"}
+		{
+			!!MalterlibAddUpstreams true
+		}
 	}
 }
 
