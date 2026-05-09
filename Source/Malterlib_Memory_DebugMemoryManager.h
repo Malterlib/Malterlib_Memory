@@ -209,9 +209,10 @@ namespace NMib::NMemory
 			if (_Size == 0)
 				_Size = 1;
 
-			_Size = fg_AlignUp(_Size, _Alignment);
-			umint UserNeededSize = fg_AlignUp(_Size, GranularityProtect);
-			umint NeededSize = UserNeededSize + GranularityProtect*3;
+			_Size = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, _Alignment);
+			umint UserNeededSize = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, GranularityProtect);
+			umint GuardSize = NPrivate::fg_AddAllocationSizeOrThrow(GranularityProtect, NPrivate::fg_AddAllocationSizeOrThrow(GranularityProtect, GranularityProtect));
+			umint NeededSize = NPrivate::fg_AddAllocationSizeOrThrow(UserNeededSize, GuardSize);
 
 			uint8 *pBlock = (uint8 *)m_Heap.f_AllocAlignedWithSize(NeededSize, _Alignment);
 
@@ -253,7 +254,7 @@ namespace NMib::NMemory
 			if (!_Size)
 				DMibPDebugBreak;
 
-			_Size = fg_AlignUp(_Size, umint(1 << EMemoryManagerAlignment));
+			_Size = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, umint(1 << EMemoryManagerAlignment));
 			return fp_Free(_pBlock, _Size);
 		}
 		void f_FreeNoSize(void *_pBlock)

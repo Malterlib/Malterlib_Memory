@@ -193,7 +193,15 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 
 		inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept
 		{
-			umint Size = NMib::fg_AlignUp(_Size, (umint)_Alignment);
+			umint Size = _Size;
+			umint Alignment = (umint)_Alignment;
+#	if DMibEnableSafeCheck > 0
+			umint AlignmentMask = Alignment - 1;
+#endif
+			DMibFastCheck(Alignment != 0);
+			DMibFastCheck((Alignment & AlignmentMask) == 0);
+			DMibFastCheck(Size <= NMib::TCLimitsInt<umint>::mc_Max - AlignmentMask);
+			Size = NMib::fg_AlignUp(Size, Alignment);
 			if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, Size))
 				return;
 
@@ -220,7 +228,15 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 
 		inline_always only_parameters_aliased void calling_convention_c operator delete[](void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept
 		{
-			umint Size = NMib::fg_AlignUp(_Size, (umint)_Alignment);
+			umint Size = _Size;
+			umint Alignment = (umint)_Alignment;
+#	if DMibEnableSafeCheck > 0
+			umint AlignmentMask = Alignment - 1;
+#endif
+			DMibFastCheck(Alignment != 0);
+			DMibFastCheck((Alignment & AlignmentMask) == 0);
+			DMibFastCheck(Size <= NMib::TCLimitsInt<umint>::mc_Max - AlignmentMask);
+			Size = NMib::fg_AlignUp(Size, Alignment);
 			NMib::NMemory::fg_Free(_pMemory, Size);
 		}
 

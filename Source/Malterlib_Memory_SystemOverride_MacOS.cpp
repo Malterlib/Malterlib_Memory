@@ -9,6 +9,7 @@
 #include <Mib/Core/Core>
 #include <Mib/Core/System>
 #include <Mib/Memory/Pool>
+#include "Malterlib_Memory_MemoryManager_Utils.h"
 
 #ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
 #include <Mib/Instrumentation/FunctionHook>
@@ -109,11 +110,6 @@ using namespace NMib::NMemory;
 #define DOptimizeSetJmp
 #define DFullArenasForSecondary
 
-#define DAlignSizeMacOS(d_Size) fg_AlignUp(fg_Max(d_Size, 1), 16)
-//#define DAlignSizeMacOS(d_Size) d_Size
-
-#define DAlignAligmentMacOS(d_Alignment) fg_Max(d_Alignment, 16)
-
 extern "C"
 {
 #ifdef DMibMemoryOverrideDll
@@ -193,6 +189,77 @@ bool fg_MalterlibSystem_InitMacOS10110(void *_pPThreadInit, char const* envp[], 
 
 namespace
 {
+	inline_always bool fg_TryAlignMacOSAllocationSize(size_t _Size, umint &o_Size, umint _Alignment = 16)
+	{
+		o_Size = fg_Max(umint(_Size), umint(1));
+		if (!NMib::NMemory::NPrivate::fg_TryAlignAllocationSize(o_Size, _Alignment))
+		{
+			errno = ENOMEM;
+			return false;
+		}
+
+		return true;
+	}
+
+	inline_always bool fg_TryMultiplyMacOSAllocationSize(size_t _Count, size_t _Size, umint &o_Size, umint _Alignment = 16)
+	{
+		if (NMib::fg_MultiplyOverflow(umint(_Count), umint(_Size), o_Size))
+		{
+			errno = ENOMEM;
+			return false;
+		}
+
+		o_Size = fg_Max(o_Size, umint(1));
+		if (!NMib::NMemory::NPrivate::fg_TryAlignAllocationSize(o_Size, _Alignment))
+		{
+			errno = ENOMEM;
+			return false;
+		}
+
+		return true;
+	}
+
+	inline_always umint fg_AlignMacOSAllocationSizeOrThrow(size_t _Size, umint _Alignment = 16)
+	{
+		return NMib::NMemory::NPrivate::fg_AlignAllocationSizeOrThrow(fg_Max(umint(_Size), umint(1)), _Alignment);
+	}
+
+	inline_always umint fg_AlignMacOSAllocationSizeForDelete(size_t _Size, umint _Alignment = 16)
+	{
+		umint Size = fg_Max(umint(_Size), umint(1));
+		DMibFastCheck(NMib::NMemory::NPrivate::fg_TryAlignAllocationSize(Size, _Alignment));
+		return Size;
+	}
+
+	inline_always umint fg_AlignMacOSAllocationAlignmentOrAssert(size_t _Alignment)
+	{
+		umint Alignment = fg_Max(umint(_Alignment), umint(16));
+		DMibFastCheck(NMib::NMemory::NPrivate::fg_IsAllocationAlignmentValid(Alignment));
+		return Alignment;
+	}
+
+	template <bool tf_bPosix>
+	inline_always bool fg_TryAlignMacOSAllocationAlignment(size_t _Alignment, umint &o_Alignment)
+	{
+		if constexpr (tf_bPosix)
+		{
+			if (_Alignment < sizeof(void *))
+			{
+				errno = EINVAL;
+				return false;
+			}
+		}
+
+		o_Alignment = fg_Max(umint(_Alignment), umint(16));
+		if (!NMib::NMemory::NPrivate::fg_IsAllocationAlignmentValid(o_Alignment))
+		{
+			errno = EINVAL;
+			return false;
+		}
+
+		return true;
+	}
+
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	struct CMemoryManagerZoneSmall
 	{
@@ -906,7 +973,9 @@ void fg_Malterlib_zone_free_definite_size(malloc_zone_t_known_version *_pZone, v
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
 	uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-	umint Size = DAlignSizeMacOS(_Size);
+	umint Size;
+	if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+		return;
 
 #ifdef DMemoryManagerIsSame
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -955,7 +1024,7 @@ void *fg_Malterlib_zone_memalign(malloc_zone_t_known_version *_pZone, size_t _Al
 void *fg_Malterlib_zone_malloc_with_options(malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options)
 {
 	auto pRet = fg_Malterlib_zone_memalign(_pZone, _Align, _Size);
-	if (_Options & 1)
+	if (pRet && (_Options & 1))
 		fg_MemClear(pRet, _Size);
 	return pRet;
 }
@@ -965,7 +1034,9 @@ void *fg_Malterlib_zone_malloc(malloc_zone_t_known_version *_pZone, size_t _Size
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
 
-	umint Size = DAlignSizeMacOS(_Size);
+	umint Size;
+	if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+		return nullptr;
 
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
@@ -1002,7 +1073,9 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 	if (_nRequested)
 		return 0;
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-	umint Size = DAlignSizeMacOS(_Size);
+	umint Size;
+	if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+		return 0;
 
 	umint nAllocated = 0;
 #ifdef DMemoryManagerIsSame
@@ -1149,7 +1222,9 @@ void *fg_Malterlib_zone_calloc(malloc_zone_t_known_version *_pZone, size_t num_i
 {
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
-	umint Size = DAlignSizeMacOS(_Size * num_items);
+	umint Size;
+	if (!fg_TryMultiplyMacOSAllocationSize(num_items, _Size, Size))
+		return nullptr;
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc;
@@ -1184,32 +1259,36 @@ void *fg_Malterlib_zone_memalign(malloc_zone_t_known_version *_pZone, size_t _Al
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
 
-	_Alignment = DAlignAligmentMacOS(_Alignment);
+	umint Alignment;
+	if (!fg_TryAlignMacOSAllocationAlignment<false>(_Alignment, Alignment))
+		return nullptr;
 
-	umint Size = _Size;
+	umint Size;
+	if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
+		return nullptr;
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
-		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	else
 #endif
-		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 #else
 	uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
-		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, _Alignment);
+		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 	else
 #endif
-		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, _Alignment);
+		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
 #endif
 #else
 #if DEnableDebugMemoryManager
-	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 #else
-	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, _Alignment);
+	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, Alignment);
 #endif
 #endif
 
@@ -1222,7 +1301,9 @@ void *fg_Malterlib_zone_valloc(malloc_zone_t_known_version *_pZone, size_t _Size
 	DMibMacOSOverrideZoneCheck(_pZone);
 
 	umint Alignment = NSys::NPrivate::g_PageSize;
-	umint Size = fg_AlignUp(fg_Max(_Size, 1), Alignment);
+	umint Size;
+	if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
+		return nullptr;
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc;
@@ -1260,7 +1341,9 @@ void *fg_Malterlib_zone_realloc(malloc_zone_t_known_version *_pZone, void *_pMem
 
 	uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 
-	umint Size = DAlignSizeMacOS(_Size);
+	umint Size;
+	if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+		return nullptr;
 
 #ifdef DMemoryManagerIsSame
 #if DEnableDebugMemoryManager
@@ -2635,7 +2718,9 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_malloc(size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		umint Size = DAlignSizeMacOS(_Size);
+		umint Size;
+		if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+			return nullptr;
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 #if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -2664,7 +2749,9 @@ extern "C"
 	{
 #ifdef DMemoryManagerIsSame
 		umint Alignment = NSys::NPrivate::g_PageSize;
-		umint Size = DAlignSizeMacOS(_Size);
+		umint Size;
+		if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
+			return nullptr;
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -2692,7 +2779,9 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_calloc(size_t _NumItems, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		umint Size = DAlignSizeMacOS(_Size * _NumItems);
+		umint Size;
+		if (!fg_TryMultiplyMacOSAllocationSize(_NumItems, _Size, Size))
+			return nullptr;
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -2724,7 +2813,9 @@ extern "C"
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.realloc(_pMemory, _Size);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		umint Size = DAlignSizeMacOS(_Size);
+		umint Size;
+		if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+			return nullptr;
 		if (g_bOnlyDefaultZone || !_pMemory)
 		{
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
@@ -2811,7 +2902,12 @@ extern "C"
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.reallocf(_pMemory, _Size);
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-		umint Size = DAlignSizeMacOS(_Size);
+		umint Size;
+		if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+		{
+			fg_Malterlib_free(_pMemory);
+			return nullptr;
+		}
 		if (g_bOnlyDefaultZone || !_pMemory)
 		{
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
@@ -3059,27 +3155,31 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport int fg_Malterlib_posix_memalign(void **_pOutput, size_t _Alignment, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		umint Size = DAlignSizeMacOS(_Size);
-		_Alignment = DAlignAligmentMacOS(_Alignment);
+		umint Alignment;
+		if (!fg_TryAlignMacOSAllocationAlignment<true>(_Alignment, Alignment))
+			return EINVAL;
+		umint Size;
+		if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
+			return ENOMEM;
 
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
-			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
 #endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
 		uint8 *pMalterlibAlloc;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
-			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, _Alignment);
+			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
 #endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, _Alignment);
-	#endif
+			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
+#endif
 		*_pOutput = pMalterlibAlloc;
 		return 0;
 #else
@@ -3090,24 +3190,28 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib_aligned_alloc(size_t _Alignment, size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-		umint Size = DAlignSizeMacOS(_Size);
-		_Alignment = DAlignAligmentMacOS(_Alignment);
+		umint Alignment;
+		if (!fg_TryAlignMacOSAllocationAlignment<false>(_Alignment, Alignment))
+			return nullptr;
+		umint Size;
+		if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
+			return nullptr;
 
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	#if DEnableDebugMemoryManager
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
-			return DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			return DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
 #endif
-			return DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+			return DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	#else
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
-			return DMainHeapSmall->f_AllocAligned(Size, _Alignment);
+			return DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
 #endif
-			return DMainHeapMax->f_AllocAligned(Size, _Alignment);
+			return DMainHeapMax->f_AllocAligned(Size, Alignment);
 	#endif
 #else
 		return g_OriginalFunctions.aligned_alloc(_Alignment, _Size);
@@ -3189,7 +3293,7 @@ extern "C"
 	// operator new[](unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__Znam(size_t _Size)
 	{
-		umint Size = DAlignSizeMacOS(_Size);
+		umint Size = fg_AlignMacOSAllocationSizeOrThrow(_Size);
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -3217,7 +3321,7 @@ extern "C"
 	// operator new(unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__Znwm(size_t _Size)
 	{
-		umint Size = DAlignSizeMacOS(_Size);
+		umint Size = fg_AlignMacOSAllocationSizeOrThrow(_Size);
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -3245,7 +3349,9 @@ extern "C"
 	// operator new(unsigned long, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnwmRKSt9nothrow_t(size_t _Size)
 	{
-		umint Size = DAlignSizeMacOS(_Size);
+		umint Size;
+		if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+			return nullptr;
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -3273,8 +3379,8 @@ extern "C"
 	// operator new(unsigned long, std::align_val_t)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnwmSt11align_val_t(size_t _Size, size_t _Alignment)
 	{
-		umint Alignment = DAlignAligmentMacOS(_Alignment);
-		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+		umint Alignment = fg_AlignMacOSAllocationAlignmentOrAssert(_Alignment);
+		umint Size = fg_AlignMacOSAllocationSizeOrThrow(_Size, Alignment);
 
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
@@ -3303,8 +3409,12 @@ extern "C"
 	// operator new(unsigned long, std::align_val_t, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnwmSt11align_val_tRKSt9nothrow_t(size_t _Size, size_t _Alignment)
 	{
-		umint Alignment = DAlignAligmentMacOS(_Alignment);
-		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+		umint Alignment;
+		if (!fg_TryAlignMacOSAllocationAlignment<false>(_Alignment, Alignment))
+			return nullptr;
+		umint Size;
+		if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
+			return nullptr;
 
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
@@ -3333,7 +3443,9 @@ extern "C"
 	// operator new[](unsigned long, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnamRKSt9nothrow_t(size_t _Size)
 	{
-		umint Size = DAlignSizeMacOS(_Size);
+		umint Size;
+		if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+			return nullptr;
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
@@ -3361,8 +3473,8 @@ extern "C"
 	// operator new[](unsigned long, std::align_val_t)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnamSt11align_val_t(size_t _Size, size_t _Alignment)
 	{
-		umint Alignment = DAlignAligmentMacOS(_Alignment);
-		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+		umint Alignment = fg_AlignMacOSAllocationAlignmentOrAssert(_Alignment);
+		umint Size = fg_AlignMacOSAllocationSizeOrThrow(_Size, Alignment);
 
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
@@ -3391,8 +3503,12 @@ extern "C"
 	// operator new[](unsigned long, std::align_val_t, std::nothrow_t const&)
 	assure_used DMibMalterlibOverrideMallocExport void *fg_Malterlib__ZnamSt11align_val_tRKSt9nothrow_t(size_t _Size, size_t _Alignment)
 	{
-		umint Alignment = DAlignAligmentMacOS(_Alignment);
-		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
+		umint Alignment;
+		if (!fg_TryAlignMacOSAllocationAlignment<false>(_Alignment, Alignment))
+			return nullptr;
+		umint Size;
+		if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
+			return nullptr;
 
 #ifdef DMemoryManagerIsSame
 	#if DEnableDebugMemoryManager
@@ -3511,10 +3627,10 @@ extern "C"
 	// operator delete[](void*, unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdaPvm(void *_pMemory, size_t _Size)
 	{
-		umint Size = DAlignSizeMacOS(_Size);
-#ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
+		umint Size = fg_AlignMacOSAllocationSizeForDelete(_Size);
+#ifdef DMemoryManagerIsSame
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
@@ -3530,12 +3646,12 @@ extern "C"
 	// operator delete[](void*, unsigned long, std::align_val_t)
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdaPvmSt11align_val_t(void *_pMemory, size_t _Size, size_t _Alignment)
 	{
-		umint Alignment = DAlignAligmentMacOS(_Alignment);
-		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
-
-#ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
+		umint Alignment = fg_AlignMacOSAllocationAlignmentOrAssert(_Alignment);
+		umint Size = fg_AlignMacOSAllocationSizeForDelete(_Size, Alignment);
+
+#ifdef DMemoryManagerIsSame
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
@@ -3605,11 +3721,11 @@ extern "C"
 	// operator delete(void*, unsigned long)
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdlPvm(void *_pMemory, size_t _Size)
 	{
-		umint Size = DAlignSizeMacOS(_Size);
-
-#ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
+		umint Size = fg_AlignMacOSAllocationSizeForDelete(_Size);
+
+#ifdef DMemoryManagerIsSame
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
@@ -3625,12 +3741,12 @@ extern "C"
 	// operator delete(void*, unsigned long, std::align_val_t)
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib__ZdlPvmSt11align_val_t(void *_pMemory, size_t _Size, size_t _Alignment)
 	{
-		umint Alignment = DAlignAligmentMacOS(_Alignment);
-		umint Size = fg_AlignUp(DAlignSizeMacOS(_Size), Alignment);
-
-#ifdef DMemoryManagerIsSame
 		if (!_pMemory)
 			return;
+		umint Alignment = fg_AlignMacOSAllocationAlignmentOrAssert(_Alignment);
+		umint Size = fg_AlignMacOSAllocationSizeForDelete(_Size, Alignment);
+
+#ifdef DMemoryManagerIsSame
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
@@ -3851,7 +3967,9 @@ extern "C"
 						, .malloc = [](malloc_zone_t_known_version *_pZone, size_t _Size) -> void * // malloc
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							umint Size = DAlignSizeMacOS(_Size);
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 							return pMalterlibAlloc;
@@ -3859,7 +3977,9 @@ extern "C"
 						, .calloc = [](malloc_zone_t_known_version *_pZone, size_t _nItems, size_t _Size) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							umint Size = DAlignSizeMacOS(_Size * _nItems);
+							umint Size;
+							if (!fg_TryMultiplyMacOSAllocationSize(_nItems, _Size, Size))
+								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 							fg_MemClear(pMalterlibAlloc, Size);
@@ -3868,7 +3988,9 @@ extern "C"
 						, .valloc = [](malloc_zone_t_known_version *_pZone, size_t _Size) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							umint Size = fg_AlignUp(fg_Max(_Size, 1), NSys::NPrivate::g_PageSize);
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size, NSys::NPrivate::g_PageSize))
+								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, NSys::NPrivate::g_PageSize);
 							fg_MemClear(pMalterlibAlloc, Size);
@@ -3885,7 +4007,9 @@ extern "C"
 						, .realloc = [](malloc_zone_t_known_version *_pZone, void *_pMemory, size_t _Size) -> void *
 						{
 							uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-							umint Size = DAlignSizeMacOS(_Size);
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+								return nullptr;
 							auto *pZone = (tf_CZone *)_pZone;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_Resize(pMalterlibAlloc, Size, 0);
@@ -3920,7 +4044,9 @@ extern "C"
 						{
 							if (_nRequested)
 								return 0;
-							umint Size = DAlignSizeMacOS(_Size);
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+								return 0;
 							auto *pZone = (tf_CZone *)_pZone;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 
@@ -3973,13 +4099,17 @@ extern "C"
 						, .memalign = [](malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							umint Size = _Size;
-							_Alignment = DAlignAligmentMacOS(_Alignment);
+							umint Alignment;
+							if (!fg_TryAlignMacOSAllocationAlignment<false>(_Alignment, Alignment))
+								return nullptr;
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
+								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 						#if DEnableDebugMemoryManager
-							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 						#else
-							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, _Alignment);
+							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, Alignment);
 						#endif
 
 							return pMalterlibAlloc;
@@ -3990,7 +4120,9 @@ extern "C"
 								return;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 
-							umint Size = DAlignSizeMacOS(_Size);
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+								return;
 
 							auto *pZone = (tf_CZone *)_pZone;
 							uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
@@ -4019,16 +4151,20 @@ extern "C"
 						, .malloc_with_options = [](malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							umint Size = _Size;
-							_Align = DAlignAligmentMacOS(_Align);
+							umint Align;
+							if (!fg_TryAlignMacOSAllocationAlignment<false>(_Align, Align))
+								return nullptr;
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Align))
+								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 						#if DEnableDebugMemoryManager
-							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, _Align, DMibPFile, DMibPLine, g_DebugFlags);
+							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, Align, DMibPFile, DMibPLine, g_DebugFlags);
 						#else
-							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, _Align);
+							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, Align);
 						#endif
 
-							if (_Options & 1)
+							if (pMalterlibAlloc && (_Options & 1))
 								fg_MemClear(pMalterlibAlloc, _Size);
 
 							return pMalterlibAlloc;
@@ -4036,7 +4172,9 @@ extern "C"
 						, .malloc_type_malloc = [](malloc_zone_t_known_version *_pZone, size_t _Size, malloc_type_id_t _TypeId) -> void * // malloc
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							umint Size = DAlignSizeMacOS(_Size);
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 							return pMalterlibAlloc;
@@ -4044,7 +4182,9 @@ extern "C"
 						, .malloc_type_calloc = [](malloc_zone_t_known_version *_pZone, size_t _nItems, size_t _Size, malloc_type_id_t _TypeId) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							umint Size = DAlignSizeMacOS(_Size * _nItems);
+							umint Size;
+							if (!fg_TryMultiplyMacOSAllocationSize(_nItems, _Size, Size))
+								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, 1);
 							fg_MemClear(pMalterlibAlloc, Size);
@@ -4053,7 +4193,9 @@ extern "C"
 						, .malloc_type_realloc = [](malloc_zone_t_known_version *_pZone, void *_pMemory, size_t _Size, malloc_type_id_t _TypeId) -> void *
 						{
 							uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-							umint Size = DAlignSizeMacOS(_Size);
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
+								return nullptr;
 							auto *pZone = (tf_CZone *)_pZone;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_Resize(pMalterlibAlloc, Size, 0);
@@ -4062,13 +4204,17 @@ extern "C"
 						, .malloc_type_memalign = [](malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size, malloc_type_id_t _TypeId) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							umint Size = _Size;
-							_Alignment = DAlignAligmentMacOS(_Alignment);
+							umint Alignment;
+							if (!fg_TryAlignMacOSAllocationAlignment<false>(_Alignment, Alignment))
+								return nullptr;
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
+								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 						#if DEnableDebugMemoryManager
-							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, _Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 						#else
-							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, _Alignment);
+							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, Alignment);
 						#endif
 
 							return pMalterlibAlloc;
@@ -4076,16 +4222,20 @@ extern "C"
 						, .malloc_type_malloc_with_options = [](malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options, malloc_type_id_t _TypeId) -> void *
 						{
 							auto *pZone = (tf_CZone *)_pZone;
-							umint Size = _Size;
-							_Align = DAlignAligmentMacOS(_Align);
+							umint Align;
+							if (!fg_TryAlignMacOSAllocationAlignment<false>(_Align, Align))
+								return nullptr;
+							umint Size;
+							if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Align))
+								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 						#if DEnableDebugMemoryManager
-							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, _Align, DMibPFile, DMibPLine, g_DebugFlags);
+							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, Align, DMibPFile, DMibPLine, g_DebugFlags);
 						#else
-							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, _Align);
+							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, Align);
 						#endif
 
-							if (_Options & 1)
+							if (pMalterlibAlloc && (_Options & 1))
 								fg_MemClear(pMalterlibAlloc, _Size);
 
 							return pMalterlibAlloc;

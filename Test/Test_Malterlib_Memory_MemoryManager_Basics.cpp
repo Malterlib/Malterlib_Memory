@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <Mib/Test/Memory>
+#include <Mib/Test/Exception>
 
 #include "../../Memory/Source/Malterlib_Memory_MemoryManager.h"
 #include "../../Memory/Source/Malterlib_Memory_MemoryManager.hpp"
@@ -252,6 +253,14 @@ namespace
 						return _Size;
 					}
 				;
+
+				{
+					DMibTestPath("Aligned allocation overflow");
+					TCMemoryManager<CParams> Manager{CMemoryManagerConfig()};
+
+					umint OverflowSize = NMib::TCLimitsInt<umint>::mc_Max;
+					DMibExpectExceptionType(Manager.f_AllocAlignedWithSize(OverflowSize, 16), NMib::NException::CExceptionMemory);
+				}
 
 				{
 					DMibTestPath("Sizes 8");
@@ -1172,4 +1181,3 @@ namespace
 	DMibTestRegister(CBasics_Tests, Malterlib::Memory::MemoryManager);
 
 }
-

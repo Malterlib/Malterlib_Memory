@@ -443,7 +443,8 @@ namespace NMib::NMemory
 		{
 			umint PreBytes = sizeof(CPreBlock);
 			umint PostBytes = t_COptions::mc_nPostGuardBytes;
-			umint Size = fg_AlignUp(_Size + PreBytes + PostBytes, mc_PreBlockAlignment);
+			umint GuardBytes = NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, GuardBytes, mc_PreBlockAlignment);
 			uint8 * pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, mc_PreBlockAlignment);
 
 			umint RequestedSize = _Size;
@@ -529,9 +530,9 @@ namespace NMib::NMemory
 			Options.m_Alignment = _Alignment;
 			Options.m_RequestedSize = _Size;
 
-			umint PreBytes = fg_AlignUp(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), _Alignment);
-			umint PostBytes = fg_AlignUp(t_COptions::mc_nPostGuardBytes, _Alignment);
-			umint Size = fg_AlignUp(_Size + PreBytes + PostBytes, _Alignment);
+			umint PreBytes = NPrivate::fg_AlignAllocationSizeOrThrow(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), _Alignment);
+			umint PostBytes = NPrivate::fg_AlignAllocationSizeOrThrow(t_COptions::mc_nPostGuardBytes, _Alignment);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes), _Alignment);
 
 			CSuper::f_AllocBatch
 				(
@@ -539,8 +540,8 @@ namespace NMib::NMemory
 					, _Alignment
 					, [&Options](void * _pAlloc, umint _Size)
 					{
-						umint PreBytes = fg_AlignUp(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), Options.m_Alignment);
-						umint PostBytes = fg_AlignUp(t_COptions::mc_nPostGuardBytes, Options.m_Alignment);
+						umint PreBytes = NPrivate::fg_AlignAllocationSizeOrThrow(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), Options.m_Alignment);
+						umint PostBytes = NPrivate::fg_AlignAllocationSizeOrThrow(t_COptions::mc_nPostGuardBytes, Options.m_Alignment);
 						uint8 * pMemory = (uint8 *)_pAlloc;
 
 						umint RetSize = Options.m_RequestedSize;
@@ -612,12 +613,12 @@ namespace NMib::NMemory
 		if constexpr ((t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes) != 0)
 		{
 			umint Alignment = fg_Max(_Alignment, mc_PreBlockAlignment);
-			umint PreBytes = fg_AlignUp(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), Alignment);
-			umint PostBytes = fg_AlignUp(t_COptions::mc_nPostGuardBytes, Alignment);
-			umint Size = fg_AlignUp(_Size + PreBytes + PostBytes, mc_PreBlockAlignment);
+			umint PreBytes = NPrivate::fg_AlignAllocationSizeOrThrow(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), Alignment);
+			umint PostBytes = NPrivate::fg_AlignAllocationSizeOrThrow(t_COptions::mc_nPostGuardBytes, Alignment);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes), mc_PreBlockAlignment);
 			uint8 * pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, Alignment);
 
-			umint RequestedSize = fg_AlignUp(_Size, _Alignment);
+			umint RequestedSize = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, _Alignment);
 
 			CPreBlock *pPreBlock = (CPreBlock *)(pMemory + PreBytes - sizeof(CPreBlock));
 
@@ -719,13 +720,14 @@ namespace NMib::NMemory
 
 			umint PreBytes = pOldPreBlock->m_PreCheck;
 			umint PostBytes = t_COptions::mc_nPostGuardBytes;
-			umint Size = fg_AlignUp(_Size + PreBytes + PostBytes, mc_PreBlockAlignment);
+			umint GuardBytes = NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, GuardBytes, mc_PreBlockAlignment);
 
 			umint OldPaddedSize = 0;
 			if (_OldSize)
 			{
 				DMibFastCheck(_OldSize == pOldPreBlock->m_Size || _OldSize == pOldPreBlock->m_RequestedSize);
-				OldPaddedSize = fg_AlignUp(_OldSize + PreBytes + PostBytes, mc_PreBlockAlignment);
+				OldPaddedSize = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_OldSize, GuardBytes, mc_PreBlockAlignment);
 			}
 
 			uint8 * pMemory = (uint8 *)CSuper::f_Realloc(pOldMemory, Size, OldPaddedSize);
@@ -792,13 +794,14 @@ namespace NMib::NMemory
 
 			umint PreBytes = pOldPreBlock->m_PreCheck;
 			umint PostBytes = t_COptions::mc_nPostGuardBytes;
-			umint Size = fg_AlignUp(_Size + PreBytes + PostBytes, mc_PreBlockAlignment);
+			umint GuardBytes = NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, GuardBytes, mc_PreBlockAlignment);
 
 			umint OldPaddedSize = 0;
 			if (_OldSize)
 			{
 				DMibFastCheck(_OldSize == pOldPreBlock->m_Size || _OldSize == pOldPreBlock->m_RequestedSize);
-				OldPaddedSize = fg_AlignUp(_OldSize + PreBytes + PostBytes, mc_PreBlockAlignment);
+				OldPaddedSize = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_OldSize, GuardBytes, mc_PreBlockAlignment);
 			}
 
 			uint8 * pMemory = (uint8 *)CSuper::f_Resize(pOldMemory, Size, OldPaddedSize);
@@ -952,7 +955,7 @@ namespace NMib::NMemory
 
 			umint PreBytes = pPreBlock->m_PreCheck;
 			umint PostBytes = t_COptions::mc_nPostGuardBytes;
-			umint Size = fg_AlignUp(_Size + PreBytes + PostBytes, mc_PreBlockAlignment);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes), mc_PreBlockAlignment);
 
 			DMibFastCheck(_Size == pPreBlock->m_Size || _Size == pPreBlock->m_RequestedSize);
 			CSuper::f_Free(pOldMemory, Size);
@@ -1002,9 +1005,10 @@ namespace NMib::NMemory
 			umint PreBytes = sizeof(CPreBlock);
 			umint PostBytes = t_COptions::mc_nPostGuardBytes;
 
-			umint Size = CSuper::f_SizePadded(_Size + PreBytes + PostBytes);
+			umint GuardBytes = NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes);
+			umint Size = CSuper::f_SizePadded(NPrivate::fg_AddAllocationSizeOrThrow(_Size, GuardBytes));
 
-			return Size - (PreBytes + PostBytes);
+			return Size - GuardBytes;
 		}
 		return CSuper::f_SizePadded(_Size);
 	}

@@ -344,7 +344,8 @@ namespace NMib::NMemory
 
 		_Alignment = fg_Max(_Alignment, sizeof(void *) * 2, alignof(CPreBlockData));
 
-		umint NeededSize = fg_AlignUp(_Size, _Alignment) + fg_AlignUp(sizeof(CPreBlockData), _Alignment);
+		umint HeaderSize = NPrivate::fg_AlignAllocationSizeOrThrow(sizeof(CPreBlockData), _Alignment);
+		umint NeededSize = NPrivate::fg_AddAllocationSizeOrThrow(NPrivate::fg_AlignAllocationSizeOrThrow(_Size, _Alignment), HeaderSize);
 		uint8 *pAlloc = (uint8 *)t_CSuper::f_AllocAlignedWithSize(NeededSize, _Alignment);
 		uint8 *pRet = pAlloc;
 		pRet += sizeof(CPreBlockData);
@@ -376,7 +377,8 @@ namespace NMib::NMemory
 		_Alignment = fg_Max(_Alignment, sizeof(void *) * 2, alignof(CPreBlockData));
 
 		Options.m_pFunctor = &_Functor;
-		Options.m_RequestedSize = fg_AlignUp(_Size, _Alignment) + fg_AlignUp(sizeof(CPreBlockData), _Alignment);
+		umint HeaderSize = NPrivate::fg_AlignAllocationSizeOrThrow(sizeof(CPreBlockData), _Alignment);
+		Options.m_RequestedSize = NPrivate::fg_AddAllocationSizeOrThrow(NPrivate::fg_AlignAllocationSizeOrThrow(_Size, _Alignment), HeaderSize);
 		Options.m_Alignment = _Alignment;
 
 		t_CSuper::f_AllocBatch
@@ -441,7 +443,7 @@ namespace NMib::NMemory
 			pOldMemory = (uint8 *)_pMemory - pOldPreBlock->m_HeaderSize;
 			Size = _OldSize ? t_CSuper::f_SizePadded(_OldSize) : (t_CSuper::f_Size(pOldMemory) - pOldPreBlock->m_HeaderSize);
 			if (_OldSize)
-				OldSize = _OldSize + pOldPreBlock->m_HeaderSize;
+				OldSize = NPrivate::fg_AddAllocationSizeOrThrow(_OldSize, pOldPreBlock->m_HeaderSize);
 			OldInfo = pOldPreBlock->m_AllocationInfo;
 			pOldInfo = &OldInfo;
 		}
@@ -452,7 +454,8 @@ namespace NMib::NMemory
 		{
 			umint Alignment = fg_Max(sizeof(void *) * 2, alignof(CPreBlockData));
 
-			umint NeededSize = fg_AlignUp(_Size, Alignment) + fg_AlignUp(sizeof(CPreBlockData), Alignment);
+			umint HeaderSize = NPrivate::fg_AlignAllocationSizeOrThrow(sizeof(CPreBlockData), Alignment);
+			umint NeededSize = NPrivate::fg_AddAllocationSizeOrThrow(NPrivate::fg_AlignAllocationSizeOrThrow(_Size, Alignment), HeaderSize);
 			pAlloc = (uint8 *)t_CSuper::f_Realloc(pOldMemory, NeededSize, OldSize);
 			pRet = pAlloc;
 			pRet += sizeof(CPreBlockData);
@@ -499,7 +502,7 @@ namespace NMib::NMemory
 			pOldMemory = (uint8 *)_pMemory - pOldPreBlock->m_HeaderSize;
 			Size = _OldSize ? t_CSuper::f_SizePadded(_OldSize) : (t_CSuper::f_Size(pOldMemory) - pOldPreBlock->m_HeaderSize);
 			if (_OldSize)
-				OldSize = _OldSize + pOldPreBlock->m_HeaderSize;
+				OldSize = NPrivate::fg_AddAllocationSizeOrThrow(_OldSize, pOldPreBlock->m_HeaderSize);
 			OldInfo = pOldPreBlock->m_AllocationInfo;
 			pOldInfo = &OldInfo;
 		}
@@ -510,7 +513,8 @@ namespace NMib::NMemory
 		{
 			umint Alignment = fg_Max(sizeof(void *) * 2, alignof(CPreBlockData));
 
-			umint NeededSize = fg_AlignUp(_Size, Alignment) + fg_AlignUp(sizeof(CPreBlockData), Alignment);
+			umint HeaderSize = NPrivate::fg_AlignAllocationSizeOrThrow(sizeof(CPreBlockData), Alignment);
+			umint NeededSize = NPrivate::fg_AddAllocationSizeOrThrow(NPrivate::fg_AlignAllocationSizeOrThrow(_Size, Alignment), HeaderSize);
 			pAlloc = (uint8 *)t_CSuper::f_Resize(pOldMemory, NeededSize, OldSize);
 			pRet = pAlloc;
 			pRet += sizeof(CPreBlockData);
@@ -609,9 +613,9 @@ namespace NMib::NMemory
 	{
 		umint Alignment = sizeof(void *) * 2;
 
-		umint NeededSize = fg_AlignUp(_Size, Alignment) + fg_AlignUp(sizeof(CPreBlockData), Alignment);
+		umint HeaderSize = NPrivate::fg_AlignAllocationSizeOrThrow(sizeof(CPreBlockData), Alignment);
+		umint NeededSize = NPrivate::fg_AddAllocationSizeOrThrow(NPrivate::fg_AlignAllocationSizeOrThrow(_Size, Alignment), HeaderSize);
 		umint SizePadded = t_CSuper::f_SizePadded(NeededSize);
-		umint HeaderSize = fg_AlignUp(sizeof(CPreBlockData), Alignment);
 
 		return SizePadded - HeaderSize;
 	}

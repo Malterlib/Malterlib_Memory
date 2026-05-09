@@ -4,7 +4,9 @@
 #ifdef DMibConfig_OverrideSystemMalloc
 
 #include <Mib/Core/Core>
+#include "Malterlib_Memory_MemoryManager_Utils.h"
 #include <windows.h>
+#include <errno.h>
 
 #ifdef DArchitecture_x86
 #define DDefaultCallingConv __cdecl
@@ -94,6 +96,45 @@
 using namespace NMib;
 using namespace NMib::NMemory;
 
+namespace
+{
+	inline_always bool fg_TryAlignWindowsAllocationSize(umint &o_Size, umint _Alignment = DMibSystemAlignment)
+	{
+		if (!NMib::NMemory::NPrivate::fg_TryAlignAllocationSize(o_Size, _Alignment))
+		{
+			errno = ENOMEM;
+			return false;
+		}
+
+		return true;
+	}
+
+	inline_always bool fg_TryMultiplyWindowsAllocationSize(size_t _Count, size_t _Size, umint &o_Size, int *o_pErrno = nullptr)
+	{
+		if (NMib::fg_MultiplyOverflow(umint(_Count), umint(_Size), o_Size))
+		{
+			errno = ENOMEM;
+			if (o_pErrno)
+				*o_pErrno = ENOMEM;
+			return false;
+		}
+
+		return true;
+	}
+
+	[[maybe_unused]] inline_always bool fg_TryAddWindowsAllocationSize(size_t _Size, size_t _Extra, size_t &o_Size)
+	{
+		if (_Size > NMib::TCLimitsInt<size_t>::mc_Max - _Extra)
+		{
+			errno = ENOMEM;
+			return false;
+		}
+
+		o_Size = _Size + _Extra;
+		return true;
+	}
+}
+
 extern "C"
 {
 #if _MSC_VER >= 1400
@@ -120,21 +161,24 @@ extern "C"
 	MemDeclNaR void * DDefaultCallingConv malloc (size_t sz)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
+		if (!fg_TryAlignWindowsAllocationSize(sz))
+			return nullptr;
 		return NMib::NMemory::fg_Alloc(sz);
 	}
 
 	void * DDefaultCallingConv _malloc_base (size_t sz)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
+		if (!fg_TryAlignWindowsAllocationSize(sz))
+			return nullptr;
 		return NMib::NMemory::fg_Alloc(sz);
 	}
 
 	void * DDefaultCallingConv _malloc_dbg (size_t sz, int BlockType, const char *Filename, int Line)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
+		if (!fg_TryAlignWindowsAllocationSize(sz))
+			return nullptr;
 		return NMib::NMemory::fg_AllocDebug(sz, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 	}
 
@@ -147,19 +191,27 @@ extern "C"
 	MemDeclNaR void * DDefaultCallingConv calloc (size_t nelem, size_t elsize)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		umint Size = nelem * elsize;
-		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
+		umint UnalignedSize;
+		if (!fg_TryMultiplyWindowsAllocationSize(nelem, elsize, UnalignedSize))
+			return nullptr;
+		umint Size = UnalignedSize;
+		if (!fg_TryAlignWindowsAllocationSize(Size))
+			return nullptr;
 		void * addr = NMib::NMemory::fg_Alloc(Size);
-		memset (addr, 0, nelem * elsize);
+		memset (addr, 0, UnalignedSize);
 		return addr;
 	}
 	void * DDefaultCallingConv _calloc_dbg (size_t nelem, size_t elsize, int BlockType, const char *Filename, int Line)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		umint Size = nelem * elsize;
-		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
+		umint UnalignedSize;
+		if (!fg_TryMultiplyWindowsAllocationSize(nelem, elsize, UnalignedSize))
+			return nullptr;
+		umint Size = UnalignedSize;
+		if (!fg_TryAlignWindowsAllocationSize(Size))
+			return nullptr;
 		void * addr = NMib::NMemory::fg_AllocDebug(Size, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
-		memset (addr, 0, nelem * elsize);
+		memset (addr, 0, UnalignedSize);
 		return addr;
 	}
 
@@ -173,10 +225,18 @@ extern "C"
 		)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		umint Size = nNum * nSize;
-		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
+		umint UnalignedSize;
+		if (!fg_TryMultiplyWindowsAllocationSize(nNum, nSize, UnalignedSize, errno_tmp))
+			return nullptr;
+		umint Size = UnalignedSize;
+		if (!fg_TryAlignWindowsAllocationSize(Size))
+		{
+			if (errno_tmp)
+				*errno_tmp = ENOMEM;
+			return nullptr;
+		}
 		void * addr = NMib::NMemory::fg_AllocDebug(Size, szFileName, nLine, (nBlockUse == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
-		memset (addr, 0, nNum * nSize);
+		memset (addr, 0, UnalignedSize);
 		return addr;
 	}
 
@@ -184,27 +244,40 @@ extern "C"
 	void * DDefaultCallingConv _calloc_impl (size_t nelem, size_t elsize, int * errno_tmp)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		umint Size = nelem * elsize;
-		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
+		umint UnalignedSize;
+		if (!fg_TryMultiplyWindowsAllocationSize(nelem, elsize, UnalignedSize, errno_tmp))
+			return nullptr;
+		umint Size = UnalignedSize;
+		if (!fg_TryAlignWindowsAllocationSize(Size))
+		{
+			if (errno_tmp)
+				*errno_tmp = ENOMEM;
+			return nullptr;
+		}
 		void * addr = NMib::NMemory::fg_Alloc(Size);
-		memset (addr, 0, nelem * elsize);
+		memset (addr, 0, UnalignedSize);
 		return addr;
 	}
 
 	void * DDefaultCallingConv _calloc_base (size_t nelem, size_t elsize)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		umint Size = nelem * elsize;
-		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
+		umint UnalignedSize;
+		if (!fg_TryMultiplyWindowsAllocationSize(nelem, elsize, UnalignedSize))
+			return nullptr;
+		umint Size = UnalignedSize;
+		if (!fg_TryAlignWindowsAllocationSize(Size))
+			return nullptr;
 		void * addr = NMib::NMemory::fg_Alloc(Size);
-		memset (addr, 0, nelem * elsize);
+		memset (addr, 0, UnalignedSize);
 		return addr;
 	}
 
 	_CRTIMP __checkReturn __bcount_opt(_Size) void * __cdecl _malloc_crt(__in size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		_Size = NMib::fg_AlignUp(_Size, DMibSystemAlignment);
+		if (!fg_TryAlignWindowsAllocationSize(_Size))
+			return nullptr;
 		void * addr = NMib::NMemory::fg_Alloc(_Size);
 		return addr;
 	}
@@ -212,24 +285,32 @@ extern "C"
 	_CRTIMP void * __cdecl _calloc_crt(size_t count, size_t size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		umint Size = count * size;
-		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
+		umint UnalignedSize;
+		if (!fg_TryMultiplyWindowsAllocationSize(count, size, UnalignedSize))
+			return nullptr;
+		umint Size = UnalignedSize;
+		if (!fg_TryAlignWindowsAllocationSize(Size))
+			return nullptr;
 		void * addr = NMib::NMemory::fg_Alloc(Size);
-		memset (addr, 0, count * size);
+		memset (addr, 0, UnalignedSize);
 		return addr;
 	}
 	_CRTIMP __checkReturn __bcount_opt(_Size) void * __cdecl _realloc_crt(__inout_opt void *_Ptr, __in size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		_Size = NMib::fg_AlignUp(_Size, DMibSystemAlignment);
+		if (!fg_TryAlignWindowsAllocationSize(_Size))
+			return nullptr;
 		void * addr = NMib::NMemory::fg_Resize(_Ptr, _Size, 0, EAllocationFlag_SizeNotNeeded);
 		return addr;
 	}
 	_CRTIMP __checkReturn __bcount_opt(_Size*_Count) void * __cdecl _recalloc_crt(__inout_opt void *_Ptr, __in size_t _Count, __in size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		umint Size = _Count * _Size;
-		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
+		umint Size;
+		if (!fg_TryMultiplyWindowsAllocationSize(_Count, _Size, Size))
+			return nullptr;
+		if (!fg_TryAlignWindowsAllocationSize(Size))
+			return nullptr;
 		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
 		return addr;
 	}
@@ -239,8 +320,11 @@ extern "C"
 	void * __cdecl _recalloc_base(_Pre_maybenull_ _Post_invalid_ void *_Ptr, _In_ size_t _Count, _In_ size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		umint Size = _Count * _Size;
-		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
+		umint Size;
+		if (!fg_TryMultiplyWindowsAllocationSize(_Count, _Size, Size))
+			return nullptr;
+		if (!fg_TryAlignWindowsAllocationSize(Size))
+			return nullptr;
 		void * addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
 		return addr;
 	}
@@ -279,6 +363,13 @@ extern "C"
 	MemDeclNaR void * DDefaultCallingConv memalign (size_t alignment, size_t size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
+		if (!NMib::NMemory::NPrivate::fg_IsAllocationAlignmentValid(alignment))
+		{
+			errno = EINVAL;
+			return nullptr;
+		}
+		if (!fg_TryAlignWindowsAllocationSize(size, alignment))
+			return nullptr;
 		return NMib::NMemory::fg_AllocAligned(size, alignment);
 	}
 
@@ -291,29 +382,35 @@ extern "C"
 	MemDeclNaR void * DDefaultCallingConv realloc (void * ptr, size_t sz)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
+		if (!fg_TryAlignWindowsAllocationSize(sz))
+			return nullptr;
 		return NMib::NMemory::fg_Resize(ptr, sz, 0, EAllocationFlag_SizeNotNeeded);
 	}
 
 	void * DDefaultCallingConv _realloc_base (void * ptr, size_t sz)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
+		if (!fg_TryAlignWindowsAllocationSize(sz))
+			return nullptr;
 		return NMib::NMemory::fg_Resize(ptr, sz, 0, EAllocationFlag_SizeNotNeeded);
 	}
 
 	void * DDefaultCallingConv _realloc_dbg (void * ptr, size_t sz, int BlockType, const char *Filename, int Line)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		sz = NMib::fg_AlignUp(sz, DMibSystemAlignment);
+		if (!fg_TryAlignWindowsAllocationSize(sz))
+			return nullptr;
 		return NMib::NMemory::fg_ResizeDebug(ptr, sz, 0, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 	}
 
 	MemDeclNaR void * DDefaultCallingConv _recalloc(void * memblock,size_t count,size_t size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		umint Size = size * count;
-		Size = NMib::fg_AlignUp(Size, DMibSystemAlignment);
+		umint Size;
+		if (!fg_TryMultiplyWindowsAllocationSize(count, size, Size))
+			return nullptr;
+		if (!fg_TryAlignWindowsAllocationSize(Size))
+			return nullptr;
 		return NMib::NMemory::fg_Resize(memblock, Size, 0, EAllocationFlag_SizeNotNeeded);
 
 	}
@@ -333,7 +430,8 @@ extern "C"
 	{
 		size_t  size_orig=0;
 
-		size_orig = size * count;
+		if (!fg_TryMultiplyWindowsAllocationSize(count, size, size_orig))
+			return nullptr;
 
 		return _realloc_dbg(memblock, size_orig, nBlockUse, szFileName, nLine);
 	}
@@ -731,7 +829,8 @@ extern "C"
 		t_ptr = (0 -offset)&(sizeof(uintptr_t) -1);
 
 		nonuser_size = t_ptr + align + sizeof(_AlignMemBlockHdr); /* cannot overflow */
-		block_size = size + nonuser_size;
+		if (!fg_TryAddWindowsAllocationSize(size, nonuser_size, block_size))
+			return NULL;
 
 		if ((ptr = (uintptr_t) _malloc_dbg(block_size, _NORMAL_BLOCK, f_name, line_n)) == (uintptr_t)NULL)
 			return NULL;
@@ -812,7 +911,8 @@ extern "C"
 		t_ptr = (0 -offset)&(sizeof(uintptr_t) -1);
 
 		nonuser_size = t_ptr + align + sizeof(_AlignMemBlockHdr); /* cannot overflow */
-		block_size = size + nonuser_size;
+		if (!fg_TryAddWindowsAllocationSize(size, nonuser_size, block_size))
+			return NULL;
 
 		if ((ptr = (uintptr_t) _malloc_dbg(block_size, _NORMAL_BLOCK, f_name, line_n)) == (uintptr_t)NULL)
 			return NULL;
@@ -846,7 +946,8 @@ extern "C"
 		void * retp = NULL;      /* result of aligned recalloc*/
 
 		/* ensure that (size * count) does not overflow */
-		user_size = size * count;
+		if (!fg_TryMultiplyWindowsAllocationSize(count, size, user_size))
+			return NULL;
 
 		if (memblock != NULL)
 		{

@@ -979,7 +979,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_always void *TCMemoryManager<t_CParams>::f_AllocAlignedInline(umint _Size, umint _Alignment)
 	{
-		_Size = fg_AlignUp(_Size, _Alignment);
+		_Size = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, _Alignment);
 
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize) [[likely]]
 		{
@@ -1000,7 +1000,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_always void *TCMemoryManager<t_CParams>::f_AllocAlignedWithSizeInline(umint &_Size, umint _Alignment)
 	{
-		_Size = fg_AlignUp(_Size, _Alignment);
+		_Size = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, _Alignment);
 
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize) [[likely]]
 		{
@@ -1021,7 +1021,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
 	{
-		_Size = fg_AlignUp(_Size, _Alignment);
+		_Size = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, _Alignment);
 
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize) [[likely]]
 		{
@@ -1207,6 +1207,9 @@ namespace NMib::NMemory
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
+		// Unsized frees are compatibility ABI paths such as C free and third-party unsized delete. Malterlib C++ code is compiled to use sized frees, so large heap blocks from
+		// internal code do not normally reach this footer classifier. A forged footer attack requires both allocator metadata disclosure and attacker-controlled bytes at the
+		// would-be footer inside a heap allocation. Do not harden this by checking m_HeapChunks first: that would put a locked tree lookup on every unsized free.
 		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic)) [[likely]]
 		{
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);

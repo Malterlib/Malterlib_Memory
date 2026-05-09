@@ -61,6 +61,23 @@ namespace
 
 		void f_DoTests()
 		{
+			DMibTestSuite("Allocation overflow")
+			{
+				{
+					DMibTestPath("Debug guard padding");
+					TCMemoryManagerDebug<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>, mc_bHasExceptions, CDebugOptions> MemoryManager{CMemoryManagerConfig()};
+
+					umint Size = NMib::TCLimitsInt<umint>::mc_Max;
+					DMibExpectExceptionType(MemoryManager.f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None), NMib::NException::CExceptionMemory);
+				}
+				{
+					DMibTestPath("Tracked header padding");
+					TCMemoryManagerTracked<TCMemoryManager<TCMemoryManagerParams<CDefaultMemoryManagerParams_Tests>>> MemoryManager{"Test", CMemoryManagerConfig()};
+
+					umint Size = NMib::TCLimitsInt<umint>::mc_Max;
+					DMibExpectExceptionType(MemoryManager.f_AllocAlignedWithSize(Size, 16), NMib::NException::CExceptionMemory);
+				}
+			};
 
 			DMibTestSuite("All sizes batch")
 			{
@@ -603,4 +620,3 @@ namespace
 	DMibTestRegister(CDebug_Tests, Malterlib::Memory::MemoryManager);
 
 }
-
