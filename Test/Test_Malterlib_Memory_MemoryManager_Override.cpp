@@ -6,6 +6,7 @@
 
 #ifdef DPlatformFamily_macOS
 	#include <memory>
+	#include <stdlib.h>
 	#include <malloc/malloc.h>
 #endif
 
