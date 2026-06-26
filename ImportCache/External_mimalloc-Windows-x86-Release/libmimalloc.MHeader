@@ -1,0 +1,188 @@
+Property.CMakeOutputPath_libmimalloc: string = `@('.'->MakeAbsolute())`->MakeAbsolute()
+%Target "Lib_libmimalloc_mimalloc-static"
+{
+	Compile
+	{
+		!!Compile.Type "C++"
+		SearchPath += [
+			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
+		]
+		PreprocessorDefines += [
+			"MI_BUILD_RELEASE",
+			"MI_CMAKE_BUILD_TYPE=release",
+			"MI_STATIC_LIB"
+		]
+	}
+	Property.MalterlibTargetNameType "Normal"
+	Compile.AllowNonExisting true
+	Target.Group "External/libmimalloc"
+	{
+		!!Target.Group undefined
+	}
+	Target.Type "StaticLibrary"
+	Target.BaseName "libmimalloc_mimalloc-static"
+	Target.BaseFileName "mimalloc-static"
+	%Group "src"
+	{
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/alloc.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/alloc-aligned.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/alloc-posix.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/arena.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/arena-meta.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/bitmap.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/heap.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/init.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/libc.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/options.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/os.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/page.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/page-map.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/random.c`
+		{
+			Compile.Type "C++"
+		}
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/stats.c`
+		{
+			Compile.Type "C++"
+		}
+		%Group "prim"
+		{
+			%File `@('../../../../External/mimalloc'->MakeAbsolute())/src/prim/prim.c`
+			{
+				Compile.Type "C++"
+			}
+		}
+	}
+}
+%Target "Com_libmimalloc_mimalloc-test-api"
+{
+	Compile
+	{
+		!!Compile.Type "C++"
+		SearchPath += [
+			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
+		]
+		PreprocessorDefines += [
+			"MI_BUILD_RELEASE",
+			"MI_CMAKE_BUILD_TYPE=release"
+		]
+	}
+	Property.MalterlibTargetNameType "Normal"
+	Compile.AllowNonExisting true
+	Target.Group "External/libmimalloc"
+	{
+		!!Target.Group undefined
+	}
+	Target.Type "ConsoleExecutable"
+	Target.BaseName "libmimalloc_mimalloc-test-api"
+	Target.BaseFileName "mimalloc-test-api"
+	%Group "test"
+	{
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/test/test-api.c`
+		{
+			Compile.Type "C++"
+		}
+	}
+	%Dependency "Lib_libmimalloc_mimalloc-static"
+}
+%Target "Com_libmimalloc_mimalloc-test-api-fill"
+{
+	Compile
+	{
+		!!Compile.Type "C++"
+		SearchPath += [
+			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
+		]
+		PreprocessorDefines += [
+			"MI_BUILD_RELEASE",
+			"MI_CMAKE_BUILD_TYPE=release"
+		]
+	}
+	Property.MalterlibTargetNameType "Normal"
+	Compile.AllowNonExisting true
+	Target.Group "External/libmimalloc"
+	{
+		!!Target.Group undefined
+	}
+	Target.Type "ConsoleExecutable"
+	Target.BaseName "libmimalloc_mimalloc-test-api-fill"
+	Target.BaseFileName "mimalloc-test-api-fill"
+	%Group "test"
+	{
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/test/test-api-fill.c`
+		{
+			Compile.Type "C++"
+		}
+	}
+	%Dependency "Lib_libmimalloc_mimalloc-static"
+}
+%Target "Com_libmimalloc_mimalloc-test-stress"
+{
+	Compile
+	{
+		!!Compile.Type "C++"
+		SearchPath += [
+			`@('../../../../External/mimalloc'->MakeAbsolute())/include`->MakeAbsolute()
+		]
+		PreprocessorDefines += [
+			"MI_BUILD_RELEASE",
+			"MI_CMAKE_BUILD_TYPE=release"
+		]
+	}
+	Property.MalterlibTargetNameType "Normal"
+	Compile.AllowNonExisting true
+	Target.Group "External/libmimalloc"
+	{
+		!!Target.Group undefined
+	}
+	Target.Type "ConsoleExecutable"
+	Target.BaseName "libmimalloc_mimalloc-test-stress"
+	Target.BaseFileName "mimalloc-test-stress"
+	%Group "test"
+	{
+		%File `@('../../../../External/mimalloc'->MakeAbsolute())/test/test-stress.c`
+		{
+			Compile.Type "C++"
+		}
+	}
+	%Dependency "Lib_libmimalloc_mimalloc-static"
+}
