@@ -780,6 +780,8 @@ namespace
 						}
 					)
 				;
+
+				DMibLog(Info, "{} {}", Params.m_Target, Params.m_Parameters);
 				void *pProcess = nullptr;
 
 				NMib::NThread::CMutual ProcessLaunchLock;
