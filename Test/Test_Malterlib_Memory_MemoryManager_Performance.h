@@ -769,9 +769,9 @@ namespace
 		void f_InitThread()
 		{
 		}
-		int f_Checkout()
+		auto f_Checkout() -> decltype(NMib::fg_GetSys()->f_MemoryManager_Checkout())
 		{
-			return 0;
+			return NMib::fg_GetSys()->f_MemoryManager_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
@@ -832,9 +832,9 @@ namespace
 		void f_InitThread()
 		{
 		}
-		int f_Checkout()
+		auto f_Checkout() -> decltype(NMib::fg_GetSys()->f_MemoryManager_Checkout())
 		{
-			return 0;
+			return NMib::fg_GetSys()->f_MemoryManager_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
@@ -893,9 +893,9 @@ namespace
 		void f_InitThread()
 		{
 		}
-		int f_Checkout()
+		auto f_Checkout() -> decltype(NMib::fg_GetSys()->f_MemoryManager_Checkout())
 		{
-			return 0;
+			return NMib::fg_GetSys()->f_MemoryManager_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
