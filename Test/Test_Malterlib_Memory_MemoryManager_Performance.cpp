@@ -8,17 +8,19 @@
 #include <Mib/Process/ProcessLaunch>
 #include "Test_Malterlib_Memory_MemoryManager_Performance.h"
 
+#include "Malterlib/Memory/Source/Malterlib_Memory_SystemManager_Malterlib.h"
+
 namespace
 {
 	using namespace NMib::NTest;
 	using namespace NMib::NMemory;
 
 	constexpr umint gc_TestSize = 512;
-	constexpr umint gc_TestSizeEnd = 4096;
+	constexpr umint gc_TestSizeBig = 4096;
 #if defined(DMibDebug) || defined(DMibSanitizerEnabled)
 	constexpr umint gc_TestMaxMemory = 256*1024*1;
 #else
-	constexpr umint gc_TestMaxMemory = 256*1024*1024;
+	constexpr umint gc_TestMaxMemory = uint64(256*1024*1024);
 #endif
 #if defined(DMibDebug) || defined(DMibSanitizerEnabled)
 	constexpr umint gc_ArrayLimit = 128u;
@@ -55,8 +57,25 @@ namespace
 
 		struct CPageSize4096 : public CDefaultMemoryManagerParams
 		{
-			static constexpr umint mc_SubSlabSize = 4096;
+			static constexpr umint mc_SubSlabSize = 4 * 1024;
 		};
+
+		struct CPageSize16384 : public CDefaultMemoryManagerParams
+		{
+			static constexpr umint mc_SubSlabSize = 16 * 1024;
+		};
+
+#if !DMibConfig_Memory_Shims_Enable
+		struct CSystem4096 : public NMib::CMemoryManagerParamsCommonOverrides
+		{
+			static constexpr umint mc_SubSlabSize = 4 * 1024;
+		};
+
+		struct CSystem16384 : public NMib::CMemoryManagerParamsCommonOverrides
+		{
+			static constexpr umint mc_SubSlabSize = 16 * 1024;
+		};
+#endif
 
 		CDisplayStats()
 		{
@@ -143,8 +162,13 @@ namespace
 					DMibConOut("NSys::fg_Mem_PageSize() = {}\r\n\r\n", NMib::NSys::fg_Mem_PageSize());
 				}
 			;
-			fDisplayParams.template operator()<TCMemoryManagerParams<>>();
 			fDisplayParams.template operator()<TCMemoryManagerParams<CPageSize4096>>();
+			fDisplayParams.template operator()<TCMemoryManagerParams<CPageSize16384>>();
+
+#if !DMibConfig_Memory_Shims_Enable
+			fDisplayParams.template operator()<TCMemoryManagerParams<CSystem4096>>();
+			fDisplayParams.template operator()<TCMemoryManagerParams<CSystem16384>>();
+#endif
 		}
 	};
 
@@ -1117,7 +1141,7 @@ namespace
 					{
 						if
 							(
-								(_MaxAlloc >= gc_TestSize && _MaxAlloc <= gc_TestSizeEnd)
+								(_MaxAlloc == gc_TestSize || _MaxAlloc == gc_TestSizeBig)
 								&& (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores || _nThreads == nPhysicalCores * 2)
 							)
 						{
