@@ -6,6 +6,7 @@
 #else
 
 #include "Malterlib_Memory_MemoryManager.hpp"
+#include "Malterlib_Memory_SystemManager_MalterlibFlavor.h"
 
 #if DMibConfig_MalterlibMemoryManager_Debug && DMibConfig_MalterlibMemoryManager_Debug_Features || DMibConfig_MalterlibMemoryManager_Debug_Features == 1
 #	define DEnableDebugMemoryManager 1
@@ -19,29 +20,31 @@
 
 namespace NMib
 {
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-	struct CMemoryManagerParamsSmallOverrides : NMemory::CDefaultMemoryManagerParams
+	struct CMemoryManagerParamsCommonOverrides : CMemoryManagerParamsFlavorOverrides
 	{
-		static constexpr umint mc_SubSlabSize = 4096;
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 		using CAllocator = CMainHeapVirtualAllocator;
+	};
+
+#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+	struct CMemoryManagerParamsSmallOverrides : CMemoryManagerParamsCommonOverrides
+	{
+		static constexpr umint mc_SubSlabSize = 4096;
 	};
 
 	struct CMemoryManagerParamsSmall : public NMemory::TCMemoryManagerParams<CMemoryManagerParamsSmallOverrides>
 	{
 	};
 #endif
-	struct CMemoryManagerParamsMaxOverrides : public NMemory::CDefaultMemoryManagerParams
+	struct CMemoryManagerParamsMaxOverrides : public CMemoryManagerParamsCommonOverrides
 	{
-		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
-		using CAllocator = CMainHeapVirtualAllocator;
 	};
 
 	struct CMemoryManagerParamsMax : public NMemory::TCMemoryManagerParams<CMemoryManagerParamsMaxOverrides>
 	{
 	};
 
-#ifdef DMibNeedDebugException
+#ifdef  DMibNeedDebugException
 	static constexpr bool gc_bHasExceptions = true;
 #else
 	static constexpr bool gc_bHasExceptions = false;

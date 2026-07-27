@@ -3,6 +3,7 @@
 
 #include "Malterlib_Memory_MemoryManager.hpp"
 #include "Malterlib_Memory_MemoryManager_Tracked.h"
+#include "Malterlib_Memory_SystemManager_MalterlibFlavor.h"
 
 #if DMibConfig_MalterlibMemoryManager_Debug && DMibConfig_MalterlibMemoryManager_Debug_Features || DMibConfig_MalterlibMemoryManager_Debug_Features == 1
 #	define DEnableDebugMemoryManager 1
@@ -19,7 +20,7 @@
 namespace NMib
 {
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-	struct CMemoryManagerParamsSmallOverrides : public NMemory::CDefaultMemoryManagerParams
+	struct CMemoryManagerParamsSmallOverrides : public CMemoryManagerParamsFlavorOverrides
 	{
 		static constexpr umint mc_SubSlabSize = 4096;
 		using CAllocator = CMainHeapVirtualAllocator;
@@ -30,7 +31,7 @@ namespace NMib
 	{
 	};
 #endif
-	struct CMemoryManagerParamsMaxOverrides : public NMemory::CDefaultMemoryManagerParams
+	struct CMemoryManagerParamsMaxOverrides : public CMemoryManagerParamsFlavorOverrides
 	{
 		using CAllocator = CMainHeapVirtualAllocator;
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;

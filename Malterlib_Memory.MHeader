@@ -503,6 +503,30 @@ Property
 			!!MalterlibMemoryManager_EnableOverrideSystemMalloc true
 		}
 		PreprocessorDefines += `DMibConfig_MemoryManager_Use@(MalterlibMemoryManager)`
+		// Keep the flavor defines in sync with Lib_MalterlibNoPrefix.MInclude: the tests
+		// instantiate the same memory manager types as the main heap translation units
+		PreprocessorDefines += "DMibConfig_Memory_FreeStoreMode=0"
+		{
+			&
+			{
+				MalterlibMemoryManagerFlavor "BlockLists"
+			}
+		}
+		PreprocessorDefines += "DMibConfig_Memory_FreeStoreMode=1"
+		{
+			&
+			{
+				MalterlibMemoryManagerFlavor "SubSlabLists"
+			}
+		}
+		PreprocessorDefines += "DMibConfig_Memory_EagerOwnerGC=0"
+		{
+			|
+			{
+				!MalterlibMemoryManager "Malterlib"
+				MalterlibMemoryManagerFlavor "BlockLists"
+			}
+		}
 	}
 	%Group "Documentation"
 	{
