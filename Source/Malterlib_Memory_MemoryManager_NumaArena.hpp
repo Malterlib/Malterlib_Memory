@@ -54,12 +54,12 @@ namespace NMib::NMemory
 			m_Arenas.f_Insert(pArena);
 		}
 
-		if (pArena->m_Lock.f_TryLockNoSanitize())
+		if (pArena->m_LockState.m_Lock.f_TryLockNoSanitize())
 			return pArena;
 
-		++pArena->m_LockContended;
-		pArena->m_Lock.f_LockNoSanitize();
-		--pArena->m_LockContended;
+		++pArena->m_LockState.m_LockContended;
+		pArena->m_LockState.m_Lock.f_LockNoSanitize();
+		--pArena->m_LockState.m_LockContended;
 
 		return pArena;
 	}
@@ -178,14 +178,14 @@ namespace NMib::NMemory
 					{
 						if (bIncremental)
 						{
-							if (!pArena->m_Lock.f_TryLockNoSanitize())
+							if (!pArena->m_LockState.m_Lock.f_TryLockNoSanitize())
 							{
 								EarliestTimestamp = fg_Min(EarliestTimestamp, _GarbageOptions.m_Timestamp); // Directly request another go
 								return; // Already locked by some other thread, just leave it be
 							}
 						}
 						else
-							pArena->m_Lock.f_LockNoSanitize();
+							pArena->m_LockState.m_Lock.f_LockNoSanitize();
 					}
 
 					int64 ArenaEarliestTimestamp = TCLimitsInt<int64>::mc_Max;
@@ -220,7 +220,7 @@ namespace NMib::NMemory
 					}
 
 					if (pArena != ThreadLocal.m_pArena)
-						pArena->m_Lock.f_UnlockNoSanitize();
+						pArena->m_LockState.m_Lock.f_UnlockNoSanitize();
 				}
 			;
 			if (!_bForceCleanup)
@@ -344,14 +344,14 @@ namespace NMib::NMemory
 				{
 					if (_bIncremental)
 					{
-						if (!pArena->m_Lock.f_TryLockNoSanitize())
+						if (!pArena->m_LockState.m_Lock.f_TryLockNoSanitize())
 						{
 							o_Deferred = true;
 							continue; // Just give up if this arena is already locked by someone else
 						}
 					}
 					else
-						pArena->m_Lock.f_LockNoSanitize();
+						pArena->m_LockState.m_Lock.f_LockNoSanitize();
 				}
 
 				if (_bIncremental)
@@ -374,7 +374,7 @@ namespace NMib::NMemory
 
 				if (pArena != ThreadLocal.m_pArena)
 				{
-					pArena->m_Lock.f_UnlockNoSanitize();
+					pArena->m_LockState.m_Lock.f_UnlockNoSanitize();
 					if (bNeedCleanup)
 						f_OnNeedCleanup();
 				}
@@ -433,9 +433,9 @@ namespace NMib::NMemory
 		{
 			// The other arena is checked out, we need to checkout a new arena here
 			m_pArena = _Other.m_pArena->m_pMemoryManager->fp_CheckoutHelper(*this);
-			m_pArena->m_CheckoutCount.f_Store(_Other.m_pArena->m_CheckoutCount.f_Load(NAtomic::gc_MemoryOrder_Relaxed), NAtomic::gc_MemoryOrder_Relaxed);
+			m_pArena->m_LockState.m_CheckoutCount.f_Store(_Other.m_pArena->m_LockState.m_CheckoutCount.f_Load(NAtomic::gc_MemoryOrder_Relaxed), NAtomic::gc_MemoryOrder_Relaxed);
 
-			_Other.m_pArena->m_CheckoutCount.f_Store(1, NAtomic::gc_MemoryOrder_Relaxed);
+			_Other.m_pArena->m_LockState.m_CheckoutCount.f_Store(1, NAtomic::gc_MemoryOrder_Relaxed);
 			_Other.m_pArena->f_ReturnCheckout();
 			_Other.m_pArena = nullptr;
 			DMibFastCheck(!_Other.m_bInLightCheckout);
@@ -535,8 +535,8 @@ namespace NMib::NMemory
 		auto pArena = m_pArena;
 		DMibFastCheck(pArena);
 		DMibFastCheck(m_TemporaryReturnCheckoutCount == 0);
-		m_TemporaryReturnCheckoutCount = pArena->m_CheckoutCount.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
-		pArena->m_CheckoutCount.f_Store(1, NAtomic::gc_MemoryOrder_Relaxed);
+		m_TemporaryReturnCheckoutCount = pArena->m_LockState.m_CheckoutCount.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
+		pArena->m_LockState.m_CheckoutCount.f_Store(1, NAtomic::gc_MemoryOrder_Relaxed);
 		pArena->f_ReturnCheckout();
 		DMibFastCheck(!m_bInLightCheckout);
 		m_pArena = nullptr;
@@ -551,7 +551,7 @@ namespace NMib::NMemory
 		DMibFastCheck(!m_pArena);
 		m_pArena = m_pNumaArena->m_pMemoryManager->fp_CheckoutHelper(*this);
 		DMibFastCheck(m_TemporaryReturnCheckoutCount != 0);
-		m_pArena->m_CheckoutCount.f_Store(m_TemporaryReturnCheckoutCount, NAtomic::gc_MemoryOrder_Relaxed);
+		m_pArena->m_LockState.m_CheckoutCount.f_Store(m_TemporaryReturnCheckoutCount, NAtomic::gc_MemoryOrder_Relaxed);
 		m_TemporaryReturnCheckoutCount = 0;
 	}
 
@@ -563,6 +563,25 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerThreadLocal<t_CParams>::f_RelinquishOwnership()
 	{
+	}
+
+	template <typename t_CParams>
+	bool TCMemoryManagerThreadLocal<t_CParams>::f_GarbageCollectLocalArenaIfPending()
+	{
+		if (!m_pArena->f_HasPendingMessages())
+			return false;
+
+		// Consolidating fully free sub-slabs into contiguous free-list runs restores the
+		// sequential allocation pattern of a fresh sub-slab, which is where the throughput of
+		// the owner-side collect comes from. Sub-slab release is not needed for that, so most
+		// collects skip it, but the owner must still release periodically: the background
+		// cleanup thread rarely wins the arena lock against a busy thread, and memory creeps
+		// if release is left to it alone.
+		if ((++m_nPendingGarbageCollects & (DMibConfig_Memory_EagerOwnerGC ? 127 : 15)) == 0)
+			m_pArena->fp_GarbageCollectFull(true);
+		else
+			m_pArena->fp_GarbageCollectConsolidate();
+		return true;
 	}
 
 	template <typename t_CParams>

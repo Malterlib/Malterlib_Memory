@@ -84,4 +84,18 @@ namespace NMib::NMemory
 			m_pThreadLocal->f_GarbageCollectLocalArena(_bDecommit);
 		}
 	}
+
+	inline bool CMemoryManagerCheckout::f_GarbageCollectLocalArenaIfPending()
+	{
+		if (m_pThreadLocal)
+		{
+			if (m_pThreadLocal->m_Version < 0x103)
+			{
+				f_GarbageCollectLocalArena(false);
+				return true;
+			}
+			return m_pThreadLocal->f_GarbageCollectLocalArenaIfPending();
+		}
+		return false;
+	}
 }

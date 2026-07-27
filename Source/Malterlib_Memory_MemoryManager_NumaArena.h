@@ -56,6 +56,7 @@ namespace NMib::NMemory
 		TCAutoClear<void *> m_pCustom[DMibConfig_Memory_CustomThreadLocal];
 #endif
 		uint32 m_RandomIndex = 0;
+		uint32 m_nPendingGarbageCollects = 0;
 		NMisc::CRandomShiftRNG m_LimitedRandom;
 
 		struct CRentrantScope
@@ -87,6 +88,7 @@ namespace NMib::NMemory
 		void f_TakeOwnership();
 		void f_RelinquishOwnership();
 		void f_GarbageCollectLocalArena(bool _bDecommit);
+		bool f_GarbageCollectLocalArenaIfPending();
 
 #if DMibConfig_Memory_Shims_Lightweight
 		inline_never void f_TrackAlloc(umint _Size);

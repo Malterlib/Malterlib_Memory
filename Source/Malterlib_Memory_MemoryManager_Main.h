@@ -209,6 +209,7 @@ namespace NMib::NMemory
 
 	protected:
 		void f_GarbageCollectLocalArena(bool _bDecommit) override;
+		bool f_GarbageCollectLocalArenaIfPending() override;
 
 	private:
 		template <typename t_CParams2>

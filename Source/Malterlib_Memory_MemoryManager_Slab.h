@@ -59,35 +59,91 @@ namespace NMib::NMemory
 	{
 	};
 
+	// Per-sub-slab free-block state for the sub-slab store modes
+	template <typename t_CParams>
+	using TCSubSlabFreeStore = TCConditional
+		<
+			t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps
+			, CMemoryManagerSubSlabFreeBits
+			, CMemoryManagerSubSlabFreeState
+		>
+	;
+
+	// Per-sub-slab cross-thread pending-free state for mc_bReapInCleanup
+	template <typename t_CParams>
+	using TCSubSlabRemoteFreeStore = TCConditional
+		<
+			t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps
+			, CMemoryManagerSubSlabRemoteFreeBits
+			, CMemoryManagerSubSlabRemoteFreeChain
+		>
+	;
+
 	template <typename t_CParams>
 	struct alignas(16) TCMemoryManagerSlabShared
 	{
 		TCMemoryManagerSlabShared(uint32 _SlabType, TCMemoryManagerArena<t_CParams> * _pArena, uint8 _nCommittedHeaderSubSlabs);
 		virtual ~TCMemoryManagerSlabShared();
 
+		using CSubSlabIndex = typename t_CParams::CSubSlabIndex;
+
+		static constexpr bool mc_bSubSlabStore = t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists;
+
+		struct CSubSlabFreeStateEmpty
+		{
+		};
+
+		struct CSubSlabNodesEmpty
+		{
+		};
+
+		struct CRemoteFreeNotifyEmpty
+		{
+		};
+
+		struct CRemoteFreeSummaryEmpty
+		{
+		};
+
+		struct CSubSlabRemoteFreeEmpty
+		{
+		};
+
+		// Everything the free fast path reads out of the header is kept in the first cache line
+		// after the vtable pointer: the owning arena, the slab type and the two per-sub-slab
+		// array bases. The owner-mutated counters and the list links follow on later lines so
+		// cross-thread readers of this line do not see them invalidated.
 		TCMemoryManagerArena<t_CParams> *m_pArena;
+		uint32 m_SlabType;
+		uint8 m_nCommittedHeaderSubSlabs;
+
+		TCMemoryManagerSubSlabDataAlloc<t_CParams> *m_pSubSlabDataAlloc;
+
+		// Only present with the sub-slab store modes (SubSlabLists / SubSlabBitmaps)
+		DMibNoUniqueAddress TCConditional<mc_bSubSlabStore, TCSubSlabFreeStore<t_CParams> *, CSubSlabFreeStateEmpty> m_pSubSlabFreeState = {};
+		DMibNoUniqueAddress TCConditional<mc_bSubSlabStore, CMemoryManagerSubSlab_ListNode *, CSubSlabNodesEmpty> m_pSubSlabNodes = {};
+
 		TCMemoryManager<t_CParams> *m_pMemoryManager;
 
-		using CSubSlabIndex = typename t_CParams::CSubSlabIndex;
+		CSubSlabIndex m_nAllocatedSubSlabs;
+		CSubSlabIndex m_nFreeSubSlabs;
+		CSubSlabIndex m_nPendingSubSlabs;
+		int8 m_FullySetLevel;
 
 		int64 m_FreeTimestamp = 0;
 		int64 m_NeedDecommitTimestamp = 0;
 		int64 m_HasGarbageTimestamp = 0;
 
-		uint32 m_SlabType;
-		CSubSlabIndex m_nAllocatedSubSlabs;
-		CSubSlabIndex m_nFreeSubSlabs;
-		CSubSlabIndex m_nPendingSubSlabs;
-		int8 m_FullySetLevel;
-		uint8 m_nCommittedHeaderSubSlabs;
+		// Only present with mc_bReapInCleanup
+		DMibNoUniqueAddress TCConditional<t_CParams::mc_bReapInCleanup, CMemoryManagerSlabRemoteFreeNotify *, CRemoteFreeNotifyEmpty> m_pRemoteFreeNotify = {};
+		DMibNoUniqueAddress TCConditional<t_CParams::mc_bReapInCleanup, NAtomic::TCAtomic<uint64> *, CRemoteFreeSummaryEmpty> m_pRemoteFreeSummary = {};
+		DMibNoUniqueAddress TCConditional<t_CParams::mc_bReapInCleanup, TCSubSlabRemoteFreeStore<t_CParams> *, CSubSlabRemoteFreeEmpty> m_pSubSlabRemoteFree = {};
 
 		// Keep these last so struct is aligned on pointer size
 		DMibMemoryManagerLink(TCMemoryManagerSlabShared, m_Link);
 		DMibMemoryManagerLink(TCMemoryManagerSlabShared, m_LinkToGarbageCollect);
 		DMibMemoryManagerLink(TCMemoryManagerSlabShared, m_LinkNeedDecommit);
 		DMibMemoryManagerList(CMemoryManagerSubSlab_Free, m_Link) m_FreeSubSlabs;
-
-		TCMemoryManagerSubSlabDataAlloc<t_CParams> *m_pSubSlabDataAlloc;
 
 		virtual aint f_FindFreeBitAndSet(umint _Level) = 0;
 		[[nodiscard]] virtual bool f_SetBitFree(umint _Level, umint _Bit) = 0;
@@ -120,10 +176,27 @@ namespace NMib::NMemory
 		TCMemoryManagerSubSlabDataType<t_CParams> const *f_GetSubSlabDataType() const;
 		TCMemoryManagerSubSlabDataAlloc<t_CParams> const *f_GetSubSlabDataAlloc() const;
 
+		static constexpr umint mc_SubSlabListStoreEntrySize
+			= t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists
+			? sizeof(CMemoryManagerSubSlab_ListNode) + sizeof(TCSubSlabFreeStore<t_CParams>)
+			: 0
+		;
+
+		static constexpr umint mc_SubSlabRemoteFreeEntrySize
+			= t_CParams::mc_bReapInCleanup
+			? sizeof(TCSubSlabRemoteFreeStore<t_CParams>)
+			: 0
+		;
+
 		template <umint t_SlabMultiplier>
 		static constexpr umint fs_CalculateSubSlabs()
 		{
 			constexpr umint c_TheoreticalSubSlabs = (t_CParams::mc_SlabSize - 1) / (t_CParams::mc_SubSlabSize * t_SlabMultiplier);
+			constexpr umint c_RemoteFreeFixedSize
+				= t_CParams::mc_bReapInCleanup
+				? DMibPMemoryCacheLineSize * 2 + ((c_TheoreticalSubSlabs + 63) / 64) * sizeof(NAtomic::TCAtomic<uint64>)
+				: 0
+			;
 			return
 				(
 					t_CParams::mc_SlabSize
@@ -132,6 +205,9 @@ namespace NMib::NMemory
 						sizeof(TCMemoryManagerSlabShared<t_CParams>)
 						+ sizeof(TCMemoryManagerSubSlabDataType<t_CParams>) * c_TheoreticalSubSlabs
 						+ sizeof(TCMemoryManagerSubSlabDataAlloc<t_CParams>) * c_TheoreticalSubSlabs
+						+ mc_SubSlabListStoreEntrySize * c_TheoreticalSubSlabs
+						+ mc_SubSlabRemoteFreeEntrySize * c_TheoreticalSubSlabs
+						+ c_RemoteFreeFixedSize
 						+ sizeof(NContainer::TCBitArrayPowerTwo<c_TheoreticalSubSlabs, t_CParams::mc_NumSubSlabSizeLevels, NContainer::TCBitArrayHierarchical>)
 						+ sizeof(NContainer::TCBitArrayHierarchical<c_TheoreticalSubSlabs>) * 3
 						+ sizeof(CMemoryManagerSlabSharedPostfixHeader)
@@ -152,6 +228,56 @@ namespace NMib::NMemory
 
 		alignas(16) TCMemoryManagerSubSlabDataType<t_CParams> m_SubSlabDataType[mc_nSubSlabs]; // This one has to stay first
 		TCMemoryManagerSubSlabDataAlloc<t_CParams> m_SubSlabDataAlloc[mc_nSubSlabs];
+
+		struct CSubSlabListStore
+		{
+			alignas(16) CMemoryManagerSubSlab_ListNode m_Nodes[mc_nSubSlabs];
+			TCSubSlabFreeStore<t_CParams> m_FreeState[mc_nSubSlabs];
+		};
+
+		struct CSubSlabListStoreEmpty
+		{
+		};
+
+		TCConditional
+			<
+				t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists
+				, CSubSlabListStore
+				, CSubSlabListStoreEmpty
+			> m_SubSlabListStore
+		;
+
+		// mc_bReapInCleanup: cross-thread pending-free state. The padding keeps the remotely
+		// written words a cache line away from the owner-hot header arrays on either side (the
+		// slab header is only 16-byte aligned, so boundary alignment cannot be used here).
+		struct CSubSlabRemoteFreeStore
+		{
+			// Every reap-machinery 64-bit atomic becomes live through this struct: the summary
+			// words below, m_SummaryTop in m_Notify, the header-slot remote free bits in
+			// m_Remote and the in-band pending words carved from sub-slab memory. They all take
+			// concurrent fetch-or/exchange from freeing threads and the owner; a lock-table
+			// fallback would serialize every remote free, so require genuinely lock-free 64-bit
+			// atomics (32-bit x86 provides them via cmpxchg8b)
+			static_assert(NAtomic::TCAtomic<uint64>::mc_bIsAlwaysLockFree, "The reap machinery needs lock-free 64-bit atomics");
+
+			uint8 m_PadBefore[DMibPMemoryCacheLineSize];
+			CMemoryManagerSlabRemoteFreeNotify m_Notify;
+			NAtomic::TCAtomic<uint64> m_Summary[(mc_nSubSlabs + 63) / 64];
+			TCSubSlabRemoteFreeStore<t_CParams> m_Remote[mc_nSubSlabs];
+			uint8 m_PadAfter[DMibPMemoryCacheLineSize];
+		};
+
+		struct CSubSlabRemoteFreeStoreEmpty
+		{
+		};
+
+		TCConditional
+			<
+				t_CParams::mc_bReapInCleanup
+				, CSubSlabRemoteFreeStore
+				, CSubSlabRemoteFreeStoreEmpty
+			> m_SubSlabRemoteFreeStore
+		;
 
 		NContainer::TCBitArrayPowerTwo<mc_nSubSlabs, t_CParams::mc_NumSubSlabSizeLevels, NContainer::TCBitArrayHierarchical> m_Allocated;
 

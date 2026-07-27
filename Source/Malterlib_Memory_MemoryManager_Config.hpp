@@ -88,11 +88,11 @@ namespace NMib::NMemory
 	template <typename t_CParams, umint ...tp_Indices>
 	uint32 TCMemoryManagerParams<t_CParams, NMeta::TCIndices<tp_Indices...>>::fs_DivideBySlabMultiplier(uint32 _Offset, uint32 _SlabMultiplier)
 	{
-		using CConstants = TCMemoryManagerParamsSizesPerLevel<t_CParams::mc_NumSizesPerLevel>;
 		DMibFastCheck(_Offset < (mc_SlabSize / t_CParams::mc_SubSlabSize));
 		DMibFastCheck(_SlabMultiplier < t_CParams::mc_NumSizesPerLevel);
-		uint32 Return = (_Offset * CConstants::mc_DivideMultiply[_SlabMultiplier]) >> CConstants::mc_DivideShift[_SlabMultiplier];
-		DMibFastCheck(Return == _Offset / CConstants::mc_SlabTypeInfo[_SlabMultiplier].m_SubSlabMutiplier);
+		auto const &TypeFast = mc_SlabTypeFast[_SlabMultiplier];
+		uint32 Return = (_Offset * TypeFast.m_DivideMultiply) >> TypeFast.m_DivideShift;
+		DMibFastCheck(Return == _Offset / TypeFast.m_SubSlabMultiplier);
 		return Return;
 	}
 

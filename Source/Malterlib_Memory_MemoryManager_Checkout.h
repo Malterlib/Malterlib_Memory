@@ -9,7 +9,7 @@ namespace NMib::NMemory
 
 	enum
 	{
-		ECMemoryManagerReturnCheckoutVersion = 0x102
+		ECMemoryManagerReturnCheckoutVersion = 0x103
 	};
 
 	struct ICMemoryManagerReturnCheckout
@@ -23,6 +23,9 @@ namespace NMib::NMemory
 		virtual void f_TakeOwnership() = 0;
 		virtual void f_RelinquishOwnership() = 0;
 		virtual void f_GarbageCollectLocalArena(bool _bDecommit) = 0;
+
+		// Available in version 0x103
+		virtual bool f_GarbageCollectLocalArenaIfPending() = 0;
 	};
 
 	class CMemoryManagerCheckout
@@ -45,6 +48,7 @@ namespace NMib::NMemory
 		void f_RelinquishOwnership();
 		void f_CheckMessages();
 		void f_GarbageCollectLocalArena(bool _bDecommit);
+		bool f_GarbageCollectLocalArenaIfPending();
 	};
 }
 

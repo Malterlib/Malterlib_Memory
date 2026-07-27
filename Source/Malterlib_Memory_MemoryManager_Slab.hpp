@@ -16,13 +16,13 @@ namespace NMib::NMemory
 			, uint8 _nCommittedHeaderSubSlabs
 		)
 		: m_pArena(_pArena)
+		, m_SlabType(_SlabType)
+		, m_nCommittedHeaderSubSlabs(_nCommittedHeaderSubSlabs)
 		, m_pMemoryManager(_pArena->m_pMemoryManager)
 		, m_nAllocatedSubSlabs(0)
 		, m_nFreeSubSlabs(0)
 		, m_nPendingSubSlabs(0)
 		, m_FullySetLevel(t_CParams::mc_NumSubSlabSizeLevels)
-		, m_SlabType(_SlabType)
-		, m_nCommittedHeaderSubSlabs(_nCommittedHeaderSubSlabs)
 	{
 		static_assert(t_CParams::mc_NumSubSlabSizeLevels < 128);
 	}
@@ -120,6 +120,42 @@ namespace NMib::NMemory
 		for (umint i = 0; i < mc_nSubSlabs; ++i)
 			m_SubSlabDataAlloc[i].m_nAllocs = 0;
 		this->m_pSubSlabDataAlloc = m_SubSlabDataAlloc;
+
+		if constexpr (t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabLists)
+		{
+			for (umint i = 0; i < mc_nSubSlabs; ++i)
+				m_SubSlabListStore.m_FreeState[i] = {nullptr, 0, 0, 0};
+			this->m_pSubSlabNodes = m_SubSlabListStore.m_Nodes;
+			this->m_pSubSlabFreeState = m_SubSlabListStore.m_FreeState;
+		}
+		else if constexpr (t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps)
+		{
+			for (umint i = 0; i < mc_nSubSlabs; ++i)
+				m_SubSlabListStore.m_FreeState[i] = {0};
+			this->m_pSubSlabNodes = m_SubSlabListStore.m_Nodes;
+			this->m_pSubSlabFreeState = m_SubSlabListStore.m_FreeState;
+		}
+
+		if constexpr (t_CParams::mc_bReapInCleanup)
+		{
+			m_SubSlabRemoteFreeStore.m_Notify.m_SummaryTop.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
+			m_SubSlabRemoteFreeStore.m_Notify.m_StackNext.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
+			for (umint i = 0; i < (mc_nSubSlabs + 63) / 64; ++i)
+				m_SubSlabRemoteFreeStore.m_Summary[i].f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
+			if constexpr (t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps)
+			{
+				for (umint i = 0; i < mc_nSubSlabs; ++i)
+					m_SubSlabRemoteFreeStore.m_Remote[i].m_Bits.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
+			}
+			else
+			{
+				for (umint i = 0; i < mc_nSubSlabs; ++i)
+					m_SubSlabRemoteFreeStore.m_Remote[i].m_Head.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
+			}
+			this->m_pRemoteFreeNotify = &m_SubSlabRemoteFreeStore.m_Notify;
+			this->m_pRemoteFreeSummary = m_SubSlabRemoteFreeStore.m_Summary;
+			this->m_pSubSlabRemoteFree = m_SubSlabRemoteFreeStore.m_Remote;
+		}
 
 		DMibFastCheck(this->f_GetSubSlabDataType() == m_SubSlabDataType);
 		DMibFastCheck(this->f_GetSubSlabDataAlloc() == m_SubSlabDataAlloc);
