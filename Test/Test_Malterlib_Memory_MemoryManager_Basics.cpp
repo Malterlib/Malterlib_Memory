@@ -566,6 +566,111 @@ namespace
 #endif
 			};
 
+			DMibTestSuite("Batch give back")
+			{
+				// The bitmap batch path detaches a whole word of blocks up front and gives
+				// unconsumed blocks back on early stop or unwind. A fresh manager hands out
+				// ascending contiguous addresses within the first bitmap word, so a gap
+				// after resuming proves the give-back leaked blocks and a duplicate proves
+				// it restored blocks twice
+				struct CBatchThrow
+				{
+				};
+
+				TCMemoryManager<CParamsNoCleanup> MemoryManagerTest{CMemoryManagerConfig()};
+				umint LastAlloc = 0;
+
+				for (umint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++MemorySize)
+				{
+					umint AllocSize = MemoryManagerTest.f_SizePadded(MemorySize);
+					if (AllocSize == LastAlloc)
+						continue;
+
+					LastAlloc = AllocSize;
+					DMibTestPath(NMib::NStr::CStr::CFormat("{}") << AllocSize);
+
+					TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
+					auto Checkout = MemoryManager.f_CheckoutForce();
+					NMib::NContainer::TCVector<CAlloc> Allocs;
+
+					auto fBatchTake = [&](umint _nTake)
+						{
+							umint nLeft = _nTake;
+							MemoryManager.f_AllocBatch
+								(
+									AllocSize
+									, 1
+									, [&](void *_pAlloc, umint _Size)
+									{
+										Allocs.f_Insert({_pAlloc, _Size});
+										return --nLeft != 0;
+									}
+								)
+							;
+						}
+					;
+
+					fBatchTake(1);
+					fBatchTake(3);
+
+					bool bCaught = false;
+					try
+					{
+						MemoryManager.f_AllocBatch
+							(
+								AllocSize
+								, 1
+								, [&](void *_pAlloc, umint _Size) -> bool
+								{
+									Allocs.f_Insert({_pAlloc, _Size});
+									throw CBatchThrow();
+								}
+							)
+						;
+					}
+					catch (CBatchThrow const &)
+					{
+						bCaught = true;
+					}
+					DMibTest(DMibExpr(bCaught))(ETestFlag_Aggregated);
+
+					fBatchTake(3);
+					fBatchTake(70);
+
+					if constexpr (CParamsNoCleanup::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps)
+					{
+						if (AllocSize >= sizeof(void *) * 2 && AllocSize * 8 <= CParamsNoCleanup::mc_SubSlabSize)
+						{
+							bool bContiguous = true;
+							for (umint i = 1; i < 8; ++i)
+							{
+								if (Allocs[i].m_pAlloc != (uint8 *)Allocs[0].m_pAlloc + i * AllocSize)
+									bContiguous = false;
+							}
+
+							DMibTest(DMibExpr(bContiguous))(ETestFlag_Aggregated);
+						}
+					}
+
+					bool bDistinct = true;
+					{
+						NMib::NContainer::TCVector<void *> Sorted;
+						for (auto &Alloc : Allocs)
+							Sorted.f_Insert(Alloc.m_pAlloc);
+						Sorted.f_Sort();
+						for (umint i = 1; i < Sorted.f_GetLen(); ++i)
+						{
+							if (Sorted[i] == Sorted[i - 1])
+								bDistinct = false;
+						}
+					}
+					DMibTest(DMibExpr(bDistinct))(ETestFlag_Aggregated);
+
+					for (auto &Alloc : Allocs)
+						MemoryManager.f_Free(Alloc.m_pAlloc, Alloc.m_Size);
+				}
+			};
+
 			DMibTestSuite("Big allocs")
 			{
 				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
@@ -1128,6 +1233,36 @@ namespace
 			static constexpr bool mc_bUseSmallSizes = false;
 		};
 
+		template <umint t_PageSize>
+		struct TCTestParamsSubSlabLists : public TCParams<t_PageSize, 8>
+		{
+			static constexpr bool mc_bUseFreeBlockCounting = false;
+			static constexpr EMemoryManagerFreeStore mc_FreeStoreMode = EMemoryManagerFreeStore_SubSlabLists;
+		};
+
+		template <umint t_PageSize>
+		struct TCTestParamsSubSlabBitmaps : public TCParams<t_PageSize, 8>
+		{
+			static constexpr bool mc_bUseFreeBlockCounting = false;
+			static constexpr EMemoryManagerFreeStore mc_FreeStoreMode = EMemoryManagerFreeStore_SubSlabBitmaps;
+		};
+
+		template <umint t_PageSize>
+		struct TCTestParamsSubSlabListsReap : public TCTestParamsSubSlabLists<t_PageSize>
+		{
+			static constexpr bool mc_bReapInCleanup = true;
+			static constexpr bool mc_bGlobalAddressOrder = true;
+			static constexpr umint mc_nOwnerReclaimRetainSubSlabs = 4;
+		};
+
+		template <umint t_PageSize>
+		struct TCTestParamsSubSlabBitmapsReap : public TCTestParamsSubSlabBitmaps<t_PageSize>
+		{
+			static constexpr bool mc_bReapInCleanup = true;
+			static constexpr bool mc_bGlobalAddressOrder = true;
+			static constexpr umint mc_nOwnerReclaimRetainSubSlabs = 4;
+		};
+
 		void f_DoTests()
 		{
 			DMibTestCategory("Default")
@@ -1162,6 +1297,66 @@ namespace
 				};
 			};
 #endif
+			DMibTestCategory("SubSlabLists")
+			{
+				if constexpr (gc_OsMaxPageSize != 4096)
+				{
+					DMibTestCategory("OsMaxPageSize")
+					{
+						f_TestMemory<TCTestParamsSubSlabLists<gc_OsMaxPageSize>, gc_OsMaxPageSize>();
+					};
+				}
+
+				DMibTestCategory("4096")
+				{
+					f_TestMemory<TCTestParamsSubSlabLists<4096>, 4096>();
+				};
+			};
+			DMibTestCategory("SubSlabBitmaps")
+			{
+				if constexpr (gc_OsMaxPageSize != 4096)
+				{
+					DMibTestCategory("OsMaxPageSize")
+					{
+						f_TestMemory<TCTestParamsSubSlabBitmaps<gc_OsMaxPageSize>, gc_OsMaxPageSize>();
+					};
+				}
+
+				DMibTestCategory("4096")
+				{
+					f_TestMemory<TCTestParamsSubSlabBitmaps<4096>, 4096>();
+				};
+			};
+			DMibTestCategory("SubSlabListsReap")
+			{
+				if constexpr (gc_OsMaxPageSize != 4096)
+				{
+					DMibTestCategory("OsMaxPageSize")
+					{
+						f_TestMemory<TCTestParamsSubSlabListsReap<gc_OsMaxPageSize>, gc_OsMaxPageSize>();
+					};
+				}
+
+				DMibTestCategory("4096")
+				{
+					f_TestMemory<TCTestParamsSubSlabListsReap<4096>, 4096>();
+				};
+			};
+			DMibTestCategory("SubSlabBitmapsReap")
+			{
+				if constexpr (gc_OsMaxPageSize != 4096)
+				{
+					DMibTestCategory("OsMaxPageSize")
+					{
+						f_TestMemory<TCTestParamsSubSlabBitmapsReap<gc_OsMaxPageSize>, gc_OsMaxPageSize>();
+					};
+				}
+
+				DMibTestCategory("4096")
+				{
+					f_TestMemory<TCTestParamsSubSlabBitmapsReap<4096>, 4096>();
+				};
+			};
 #if !defined(DMibSanitizerEnabled_Thread) && !defined(DCompiler_MSVC_Workaround_DllsBroken)
 			// tsan does not currently support unloading dlls
 			DMibTestSuite("Dll")
