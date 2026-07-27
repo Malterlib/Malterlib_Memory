@@ -172,6 +172,206 @@ namespace
 	};
 
 #if DMibPPtrBits >= 64
+	// Without reap-in-cleanup, cross-thread frees still use delete messages, which needs the
+	// small size slabs on 32 bit
+	class CMalterlibMemoryMalterlib_SubSlabBitmaps
+	{
+		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
+		{
+			static constexpr NMib::NMemory::EMemoryManagerFreeStore mc_FreeStoreMode = NMib::NMemory::EMemoryManagerFreeStore_SubSlabBitmaps;
+			static constexpr bool mc_bUseSmallSizes = false;
+		};
+
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<CParamsOverrides>
+		{
+		};
+
+		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+	public:
+		CMalterlibMemoryMalterlib_SubSlabBitmaps()
+			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+		{
+		}
+		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
+		{
+			return true;
+		}
+		void f_SetNumaNode(NMib::ENumaNode _Node)
+		{
+			m_MemoryManager.f_SetNumaNode(_Node);
+		}
+
+		bool f_Init(umint _nThreads, umint _MaxSize)
+		{
+			return true;
+		}
+		void f_InitThread()
+		{
+		}
+
+		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		{
+			return m_MemoryManager.f_Checkout();
+		}
+
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
+		{
+			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+		}
+
+		inline_small void *f_Alloc(umint _Size)
+		{
+			return m_MemoryManager.f_Alloc(_Size);
+		}
+
+		inline_small void f_FreeNoSize(void *_pMem)
+		{
+			m_MemoryManager.f_FreeNoSize(_pMem);
+		}
+
+		void f_Clear()
+		{
+		}
+		void f_CheckHeap()
+		{
+		}
+	};
+#endif
+
+	class CMalterlibMemoryMalterlib_SubSlabLists
+	{
+		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
+		{
+			static constexpr NMib::NMemory::EMemoryManagerFreeStore mc_FreeStoreMode = NMib::NMemory::EMemoryManagerFreeStore_SubSlabLists;
+		};
+
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<CParamsOverrides>
+		{
+		};
+
+		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+	public:
+		CMalterlibMemoryMalterlib_SubSlabLists()
+			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+		{
+		}
+		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
+		{
+			return true;
+		}
+		void f_SetNumaNode(NMib::ENumaNode _Node)
+		{
+			m_MemoryManager.f_SetNumaNode(_Node);
+		}
+
+		bool f_Init(umint _nThreads, umint _MaxSize)
+		{
+			return true;
+		}
+		void f_InitThread()
+		{
+		}
+
+		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		{
+			return m_MemoryManager.f_Checkout();
+		}
+
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
+		{
+			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+		}
+
+		inline_small void *f_Alloc(umint _Size)
+		{
+			return m_MemoryManager.f_Alloc(_Size);
+		}
+
+		inline_small void f_FreeNoSize(void *_pMem)
+		{
+			m_MemoryManager.f_FreeNoSize(_pMem);
+		}
+
+		void f_Clear()
+		{
+		}
+		void f_CheckHeap()
+		{
+		}
+	};
+
+	template <NMib::NMemory::EMemoryManagerFreeStore t_FreeStoreMode, bool t_bGlobalAddressOrder>
+	class TCMalterlibMemoryMalterlib_Reap
+	{
+		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
+		{
+			static constexpr NMib::NMemory::EMemoryManagerFreeStore mc_FreeStoreMode = t_FreeStoreMode;
+			static constexpr bool mc_bUseSmallSizes = t_FreeStoreMode != NMib::NMemory::EMemoryManagerFreeStore_SubSlabBitmaps;
+			static constexpr bool mc_bReapInCleanup = true;
+			static constexpr bool mc_bGlobalAddressOrder = t_bGlobalAddressOrder;
+		};
+
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<CParamsOverrides>
+		{
+		};
+
+		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+	public:
+		TCMalterlibMemoryMalterlib_Reap()
+			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+		{
+		}
+		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
+		{
+			return true;
+		}
+		void f_SetNumaNode(NMib::ENumaNode _Node)
+		{
+			m_MemoryManager.f_SetNumaNode(_Node);
+		}
+
+		bool f_Init(umint _nThreads, umint _MaxSize)
+		{
+			return true;
+		}
+		void f_InitThread()
+		{
+		}
+
+		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		{
+			return m_MemoryManager.f_Checkout();
+		}
+
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
+		{
+			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+		}
+
+		inline_small void *f_Alloc(umint _Size)
+		{
+			return m_MemoryManager.f_Alloc(_Size);
+		}
+
+		inline_small void f_FreeNoSize(void *_pMem)
+		{
+			m_MemoryManager.f_FreeNoSize(_pMem);
+		}
+
+		void f_Clear()
+		{
+		}
+		void f_CheckHeap()
+		{
+		}
+	};
+
+	using CMalterlibMemoryMalterlib_SubSlabListsReap = TCMalterlibMemoryMalterlib_Reap<NMib::NMemory::EMemoryManagerFreeStore_SubSlabLists, false>;
+	using CMalterlibMemoryMalterlib_SubSlabBitmapsReap = TCMalterlibMemoryMalterlib_Reap<NMib::NMemory::EMemoryManagerFreeStore_SubSlabBitmaps, false>;
+	using CMalterlibMemoryMalterlib_SubSlabListsReapOrder = TCMalterlibMemoryMalterlib_Reap<NMib::NMemory::EMemoryManagerFreeStore_SubSlabLists, true>;
+	using CMalterlibMemoryMalterlib_SubSlabBitmapsReapOrder = TCMalterlibMemoryMalterlib_Reap<NMib::NMemory::EMemoryManagerFreeStore_SubSlabBitmaps, true>;
+
+#if DMibPPtrBits >= 64
 	class CMalterlibMemoryMalterlib_LowBranch
 	{
 		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams

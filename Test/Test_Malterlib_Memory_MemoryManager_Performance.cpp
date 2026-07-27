@@ -28,7 +28,6 @@ namespace
 	constexpr umint gc_ArrayLimit = 16u * 1024u;
 #endif
 
-
 #if 0
 	struct CDisplayStats
 	{
@@ -1013,17 +1012,25 @@ namespace
 			f_DoTest<CMalterlibMemoryDummy, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Baseline, "Baseline", _MaxAllocSize, _nThreads);
 #ifdef DMemoryManagerTestEnable_Malterlib
 			f_DoTest<CMalterlibMemoryMalterlib, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlib_NoCheckout, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib_Checkout", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_SubSlabLists, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_SubSlabLists", _MaxAllocSize, _nThreads);
 #if DMibPPtrBits >= 64
-			f_DoTest<CMalterlibMemoryMalterlib_LowBranch, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_LowBranch", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmaps, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_SubSlabBitmap", _MaxAllocSize, _nThreads);
+#endif
+			f_DoTest<CMalterlibMemoryMalterlib_SubSlabListsReap, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_ListsReap", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmapsReap, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_BitmapReap", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_SubSlabListsReapOrder, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_ListsOrder", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmapsReapOrder, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_BitmapOrder", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_NoCheckout, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_Checkout", _MaxAllocSize, _nThreads);
+#if DMibPPtrBits >= 64
+			f_DoTest<CMalterlibMemoryMalterlib_LowBranch, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_LowBranch", _MaxAllocSize, _nThreads);
 #endif
 
-			//f_DoTest<CMalterlibMemoryMalterlib_Tracked, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_Tracked", _MaxAllocSize, _nThreads);
-			//f_DoTest<CMalterlibMemoryMalterlib_Debug, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_Debug", _MaxAllocSize, _nThreads);
+			//f_DoTest<CMalterlibMemoryMalterlib_Tracked, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_Tracked", _MaxAllocSize, _nThreads);
+			//f_DoTest<CMalterlibMemoryMalterlib_Debug, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_Debug", _MaxAllocSize, _nThreads);
 			/*
-			f_DoTest<CMalterlibMemoryMalterlib_NoCommit, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_NoCommit", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlib_NoDeferCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_DirectCleanup", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlib_NoCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "Malterlib_NoCleanup", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_NoCommit, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_NoCommit", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_NoDeferCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_DirectCleanup", _MaxAllocSize, _nThreads);
+			f_DoTest<CMalterlibMemoryMalterlib_NoCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_NoCleanup", _MaxAllocSize, _nThreads);
 			 */
 #endif
 
