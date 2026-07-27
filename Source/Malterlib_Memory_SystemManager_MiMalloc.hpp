@@ -10,6 +10,15 @@ namespace NMib
 
 #define DUseAlignedAlloc 1
 
+// Cadence for f_GarbageCollectLocalArenaIfPending as a power-of-two call count. mimalloc has no
+// owner-side notification for cross-thread frees (a remote free lands on the page's xthread_free
+// list and is only noticed when the owner allocates from that same page), so "if pending" cannot
+// be answered cheaply; instead every 2^N calls run a non-forced mi_collect, which drains every
+// page's cross-thread backlog for the calling thread's heap. 0 disables the collect entirely.
+#ifndef DMibConfig_Memory_MiMallocCollectEvery
+#	define DMibConfig_Memory_MiMallocCollectEvery 0
+#endif
+
 namespace NMib::NMemory
 {
 #if DMibConfig_Memory_Shims_Lightweight
@@ -54,10 +63,63 @@ namespace NMib::NMemory
 		}
 	}
 
+	// Shared stateless checkout: the per-thread state (heap and collect cadence counter) lives in
+	// mimalloc's own thread local heap, reached inside each call, so no C++ thread_local is needed
+	// at this level
+	struct CMiMallocCheckout final : public ICMemoryManagerReturnCheckout
+	{
+		constexpr CMiMallocCheckout()
+		{
+			m_Version = ECMemoryManagerReturnCheckoutVersion;
+		}
+
+		virtual void f_ReturnCheckoutVirtual() override
+		{
+		}
+
+		virtual void f_TemporaryReturn() override
+		{
+		}
+
+		virtual void f_TemporaryGetBack() override
+		{
+		}
+
+		virtual void f_TakeOwnership() override
+		{
+		}
+
+		virtual void f_RelinquishOwnership() override
+		{
+		}
+
+		virtual void f_GarbageCollectLocalArena(bool _bDecommit) override
+		{
+			mi_collect(_bDecommit);
+		}
+
+		virtual bool f_GarbageCollectLocalArenaIfPending() override
+		{
+#if DMibConfig_Memory_MiMallocCollectEvery
+			return mi_collect_if_due(DMibConfig_Memory_MiMallocCollectEvery - 1);
+#else
+			return false;
+#endif
+		}
+	};
+
+	constinit CMiMallocCheckout g_MiMallocCheckout;
+
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
 	{
 		static constexpr bool mc_SupportsNonTracked = true;
 		static constexpr bool mc_SupportsDebug = false;
+
+		inline_always static CMemoryManagerCheckout DMibCrossmoduleAPI fs_MemoryManager_Checkout(CMemoryManagerCrossModule *_pModule)
+		{
+			return &g_MiMallocCheckout;
+		}
+
 		inline_always static void DMibCrossmoduleAPI fs_CreateMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
 			DMibMemoryReportAllocatorName(g_pMemoryManagerName, g_pMemoryManagerName);
