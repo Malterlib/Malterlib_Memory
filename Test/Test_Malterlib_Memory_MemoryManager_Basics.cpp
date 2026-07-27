@@ -760,7 +760,16 @@ namespace
 					umint Waste = CParamsNoCleanup::mc_SlabSize - MetaSubSlabs * CParamsNoCleanup::mc_SubSlabSize - CParamsNoCleanup::mc_NumSubSlabs[4] * SubSlabSize;
 					PreviousWaste = Waste;
 					DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, Waste);
-					DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, ==, (CommittedSubSlabs - PreviousCommittedSubSlabs) * CParamsNoCleanup::mc_SubSlabSize);
+					// Re-typing the slab expands each partially committed range outward to whole
+					// multiplier-sized sub-slab groups, costing up to Multiplier - 1 sub-slabs per
+					// range. Arena block lists leave a single contiguous committed range, so the
+					// edge cost is exact; the sub-slab stores can leave a scattered committed set
+					// whose range count depends on the mode and page size, so only bound the total
+					// edge overhead: it has to stay far below re-committing the transferred set
+					if constexpr (CParamsNoCleanup::mc_FreeStoreMode == EMemoryManagerFreeStore_ArenaBlockLists)
+						DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, ==, (CommittedSubSlabs - PreviousCommittedSubSlabs) * CParamsNoCleanup::mc_SubSlabSize);
+					else
+						DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, <=, PreviousCommittedSubSlabs * CParamsNoCleanup::mc_SubSlabSize / 32);
 #	endif
 				}
 				MemoryManager.f_GarbageCollect(false);
