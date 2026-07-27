@@ -115,6 +115,31 @@ namespace NMib::NMemory
 	template <typename t_CParams, uint32 t_SlabType>
 	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> const& _Comitted)
 	{
+		if constexpr (t_CParams::CAllocator::f_CanCommit() && !(t_CParams::mc_DeferCleanup & EDeferCleanup_Commit))
+		{
+			// Without EDeferCleanup_Commit there is no deferred decommit machinery that could
+			// reclaim transferred sub-slabs later (frees decommit immediately and never queue
+			// deferred work), so decommit the transferred set eagerly instead of retaining
+			// committed memory that nothing tracks
+			auto * pMemory = this->f_GetSlabStart();
+			_Comitted.f_EnumSetBitRanges
+				(
+					[&](umint _Bit, umint _nBits) -> bool
+					{
+						this->m_pMemoryManager->m_Allocator.f_Decommit(pMemory + _Bit * t_CParams::mc_SubSlabSize, _nBits * t_CParams::mc_SubSlabSize);
+						if constexpr (mc_EnableCallbacks)
+							this->m_pMemoryManager->f_OnDecommit(pMemory + _Bit * t_CParams::mc_SubSlabSize, _nBits * t_CParams::mc_SubSlabSize);
+
+						return true;
+					}
+					, 0
+					, t_CParams::mc_MaxNumSubSlabs
+				)
+			;
+
+			return;
+		}
+
 		constexpr bool c_bHasWaste = (((sizeof(*this) + t_CParams::mc_SubSlabSize - 1) / t_CParams::mc_SubSlabSize) + mc_nSubSlabs * mc_SlabMultiplier) < t_CParams::mc_MaxNumSubSlabs;
 
 		auto * pMemory = this->f_GetSlabStart();
