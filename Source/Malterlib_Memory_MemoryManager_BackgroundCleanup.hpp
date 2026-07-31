@@ -161,6 +161,11 @@ namespace NMib::NMemory
 								mp_FirstGarbageCollected.f_SetSignaled();
 							}
 							_pThread->m_EventWantQuit.f_Wait();
+
+							// A wake means new cleanup was requested; without this a wake arriving
+							// before NextCleanup re-parks without a pass and the request is lost,
+							// since f_RequestCleanup only signals on the flag 0 -> nonzero edge
+							bNeedUpdate = true;
 						}
 
 					}

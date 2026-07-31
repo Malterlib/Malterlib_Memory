@@ -112,7 +112,7 @@ namespace
 									{
 
 										{
-#if DMibConfig_Memory_Shims_Enable
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 
 											NMib::NMemory::CDisableMemoryReporterScope DisableReport;
 #endif
@@ -144,7 +144,7 @@ namespace
 				NMib::NTest::CTestMemoryResult Results;
 				MeasureMemory.f_GetResults(Results);
 
-#if DMibConfig_Memory_Shims_Enable
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 				DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesAlloc.m_Average) == DMibExpr(Results.m_AllAllocations.m_BytesFree.m_Average));
 #endif
 			};

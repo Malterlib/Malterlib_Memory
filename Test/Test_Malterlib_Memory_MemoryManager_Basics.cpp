@@ -7,6 +7,7 @@
 #include "../../Memory/Source/Malterlib_Memory_MemoryManager.h"
 #include "../../Memory/Source/Malterlib_Memory_MemoryManager.hpp"
 #include "../../Memory/Source/Malterlib_Memory_MemoryManager_Tracked.h"
+#include "../../Memory/Source/Malterlib_Memory_SystemManager_MalterlibFlavor.h"
 
 namespace
 {
@@ -171,6 +172,318 @@ namespace
 			static constexpr umint mc_PreventCacheConflictSize = 0;
 			static constexpr bool mc_bUseSlabFromEnd = true;
 		};
+
+		// Mimics a UI surface that is reallocated on every resize step: allocate the new surface
+		// first, free the old one, walk the size ramp, then verify that everything is reclaimed
+		// and decommitted once the application goes idle
+		template <typename tf_CParams>
+		void f_TestResize()
+		{
+			using CParamsNoCleanup = TCMemoryManagerParams<TCParamsNoCleanup<tf_CParams>>;
+
+			constexpr umint c_SubSlabSize = CParamsNoCleanup::mc_SubSlabSize;
+			constexpr umint c_StartSize = c_SubSlabSize * 4;
+			constexpr umint c_nSteps = 96;
+			constexpr umint c_nPow2Sizes = 5;
+			constexpr umint c_nCycles = 8;
+
+			// Two live surfaces plus per-size-class caches; anything close to the ramp's peak
+			// committed size means the freed surfaces were not decommitted
+			[[maybe_unused]] constexpr aint c_LeftoverBound = aint(c_StartSize * 8);
+
+			DMibTestSuite("Local")
+			{
+				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
+
+				{
+					auto Checkout = MemoryManager.f_CheckoutForce();
+
+					void *pSurface = nullptr;
+					umint SurfaceSize = 0;
+					for (umint iStep = 0; iStep < c_nSteps; ++iStep)
+					{
+						umint Size = c_StartSize + iStep * c_SubSlabSize;
+						umint AllocSize = Size;
+						void *pNew = MemoryManager.f_AllocWithSize(AllocSize);
+
+						if (pSurface)
+							MemoryManager.f_Free(pSurface, SurfaceSize);
+
+						pSurface = pNew;
+						SurfaceSize = Size;
+					}
+
+					MemoryManager.f_Free(pSurface, SurfaceSize);
+				}
+
+				MemoryManager.f_GarbageCollect(true);
+
+				DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(0));
+				DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) <= DMibExpr(1u));
+			};
+
+			DMibTestSuite("CrossThread")
+			{
+				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
+
+				NMib::NContainer::TCVector<CAlloc> OldSurfaces;
+				{
+					// Keep the arena checked out while the other thread frees so the frees take
+					// the remote pending path instead of borrowing the arena
+					auto Checkout = MemoryManager.f_CheckoutForce();
+
+					for (umint iStep = 0; iStep < c_nSteps; ++iStep)
+					{
+						umint Size = c_StartSize + iStep * c_SubSlabSize;
+						umint AllocSize = Size;
+						OldSurfaces.f_Insert({MemoryManager.f_AllocWithSize(AllocSize), Size});
+					}
+
+					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread
+						= NMib::NThread::CThreadObject::fs_StartThread
+						(
+							[&](NMib::NThread::CThreadObject *) -> aint
+							{
+								for (auto &Surface : OldSurfaces)
+									MemoryManager.f_Free(Surface.m_pAlloc, Surface.m_Size);
+
+								return 0;
+							}
+							, "Test resize free"
+						)
+					;
+					pThread.f_Clear();
+				}
+
+				MemoryManager.f_GarbageCollect(true);
+
+				DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(0));
+				DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) <= DMibExpr(1u));
+			};
+
+			DMibTestSuite("Pinned")
+			{
+				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
+
+				// A long-lived allocation keeps the slab alive so the freed surface sub-slabs
+				// must be decommitted inside a still-used slab
+				umint PinSize = c_StartSize;
+				void *pPinned = MemoryManager.f_AllocWithSize(PinSize);
+
+				CTestMemoryMeasure MeasureMemory("Alloc");
+				MeasureMemory.f_Start();
+
+				{
+					auto Checkout = MemoryManager.f_CheckoutForce();
+
+					void *pSurface = nullptr;
+					umint SurfaceSize = 0;
+					for (umint iCycle = 0; iCycle < c_nCycles; ++iCycle)
+					{
+						for (umint iSize = 0; iSize < c_nPow2Sizes; ++iSize)
+						{
+							umint Size = c_StartSize << iSize;
+							umint AllocSize = Size;
+							void *pNew = MemoryManager.f_AllocWithSize(AllocSize);
+
+							if (pSurface)
+								MemoryManager.f_Free(pSurface, SurfaceSize);
+
+							pSurface = pNew;
+							SurfaceSize = Size;
+						}
+					}
+
+					MemoryManager.f_Free(pSurface, SurfaceSize);
+				}
+
+				MemoryManager.f_GarbageCollect(true);
+
+				MeasureMemory.f_Stop(1);
+
+				NMib::NTest::CTestMemoryResult Results;
+				MeasureMemory.f_GetResults(Results);
+
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+				fp64 Leftover = Results.m_AllAllocations.m_BytesCommit.m_Average - Results.m_AllAllocations.m_BytesDecommit.m_Average;
+				DMibTest(DMibExpr(Leftover) <= DMibExpr(c_LeftoverBound));
+#	endif
+
+				DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(1u));
+
+				MemoryManager.f_Free(pPinned, PinSize);
+			};
+
+			DMibTestSuite("PinnedCrossThread")
+			{
+				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
+
+				umint PinSize = c_StartSize;
+				void *pPinned = MemoryManager.f_AllocWithSize(PinSize);
+
+				CTestMemoryMeasure MeasureMemory("Alloc");
+				MeasureMemory.f_Start();
+
+				NMib::NContainer::TCVector<CAlloc> OldSurfaces;
+				{
+					auto Checkout = MemoryManager.f_CheckoutForce();
+
+					for (umint iCycle = 0; iCycle < c_nCycles; ++iCycle)
+					{
+						for (umint iSize = 0; iSize < c_nPow2Sizes; ++iSize)
+						{
+							umint Size = c_StartSize << iSize;
+							umint AllocSize = Size;
+							OldSurfaces.f_Insert({MemoryManager.f_AllocWithSize(AllocSize), Size});
+						}
+					}
+
+					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread
+						= NMib::NThread::CThreadObject::fs_StartThread
+						(
+							[&](NMib::NThread::CThreadObject *) -> aint
+							{
+								for (auto &Surface : OldSurfaces)
+									MemoryManager.f_Free(Surface.m_pAlloc, Surface.m_Size);
+
+								return 0;
+							}
+							, "Test resize free"
+						)
+					;
+					pThread.f_Clear();
+				}
+
+				MemoryManager.f_GarbageCollect(true);
+
+				MeasureMemory.f_Stop(1);
+
+				NMib::NTest::CTestMemoryResult Results;
+				MeasureMemory.f_GetResults(Results);
+
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+				fp64 Leftover = Results.m_AllAllocations.m_BytesCommit.m_Average - Results.m_AllAllocations.m_BytesDecommit.m_Average;
+				DMibTest(DMibExpr(Leftover) <= DMibExpr(c_LeftoverBound));
+#	endif
+
+				DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(1u));
+
+				MemoryManager.f_Free(pPinned, PinSize);
+			};
+
+#if !(defined(DMibSanitizerEnabled_Address) && DMibPPtrBits <= 32)
+			using CParamsBackground = TCMemoryManagerParams<TCParamsBackgroundTest<tf_CParams>>;
+
+			DMibTestSuite("Background")
+			{
+				TCMemoryManager<CParamsBackground> MemoryManager{CMemoryManagerConfig()};
+
+				MemoryManager.f_ForceStartCleanupThreads();
+
+				{
+					void *pSurface = nullptr;
+					umint SurfaceSize = 0;
+					for (umint iStep = 0; iStep < c_nSteps; ++iStep)
+					{
+						umint Size = c_StartSize + iStep * c_SubSlabSize;
+						umint AllocSize = Size;
+						void *pNew = MemoryManager.f_AllocWithSize(AllocSize);
+
+						if (pSurface)
+							MemoryManager.f_Free(pSurface, SurfaceSize);
+
+						pSurface = pNew;
+						SurfaceSize = Size;
+					}
+
+					MemoryManager.f_Free(pSurface, SurfaceSize);
+				}
+
+				// The application goes idle; only the background cleanup thread may reclaim
+				NMib::NSys::fg_Thread_Sleep(fp64(0.05));
+				MemoryManager.f_WaitForBackgroundCleanup();
+				NMib::NSys::fg_Thread_Sleep(fp64(0.05));
+				MemoryManager.f_WaitForBackgroundCleanup();
+
+				// Everything reclaimable must already be gone; a forced collect that still finds
+				// something to decommit means the background cleanup chain dropped it
+				CTestMemoryMeasure MeasureMemory("Alloc");
+				MeasureMemory.f_Start();
+				MemoryManager.f_GarbageCollect(true);
+				MeasureMemory.f_Stop(1);
+
+				NMib::NTest::CTestMemoryResult Results;
+				MeasureMemory.f_GetResults(Results);
+
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+				DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, 0);
+#	endif
+
+				DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(0));
+			};
+
+			DMibTestSuite("PinnedBackground")
+			{
+				TCMemoryManager<CParamsBackground> MemoryManager{CMemoryManagerConfig()};
+
+				MemoryManager.f_ForceStartCleanupThreads();
+
+				umint PinSize = c_StartSize;
+				void *pPinned = MemoryManager.f_AllocWithSize(PinSize);
+
+				NMib::NContainer::TCVector<CAlloc> OldSurfaces;
+				{
+					auto Checkout = MemoryManager.f_CheckoutForce();
+
+					for (umint iCycle = 0; iCycle < c_nCycles; ++iCycle)
+					{
+						for (umint iSize = 0; iSize < c_nPow2Sizes; ++iSize)
+						{
+							umint Size = c_StartSize << iSize;
+							umint AllocSize = Size;
+							OldSurfaces.f_Insert({MemoryManager.f_AllocWithSize(AllocSize), Size});
+						}
+					}
+
+					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread
+						= NMib::NThread::CThreadObject::fs_StartThread
+						(
+							[&](NMib::NThread::CThreadObject *) -> aint
+							{
+								for (auto &Surface : OldSurfaces)
+									MemoryManager.f_Free(Surface.m_pAlloc, Surface.m_Size);
+
+								return 0;
+							}
+							, "Test resize free"
+						)
+					;
+					pThread.f_Clear();
+				}
+
+				NMib::NSys::fg_Thread_Sleep(fp64(0.05));
+				MemoryManager.f_WaitForBackgroundCleanup();
+				NMib::NSys::fg_Thread_Sleep(fp64(0.05));
+				MemoryManager.f_WaitForBackgroundCleanup();
+
+				CTestMemoryMeasure MeasureMemory("Alloc");
+				MeasureMemory.f_Start();
+				MemoryManager.f_GarbageCollect(true);
+				MeasureMemory.f_Stop(1);
+
+				NMib::NTest::CTestMemoryResult Results;
+				MeasureMemory.f_GetResults(Results);
+
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+				DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, 0);
+#	endif
+
+				DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(1u));
+
+				MemoryManager.f_Free(pPinned, PinSize);
+			};
+#endif
+		}
 
 		template <typename tf_CParams, umint t_PageSize>
 		void f_TestMemory()
@@ -476,7 +789,7 @@ namespace
 							umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
 
 							{
-#if DMibConfig_Memory_Shims_Enable
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 
 								NMib::NMemory::CDisableMemoryReporterScope DisableReport;
 #endif
@@ -498,7 +811,7 @@ namespace
 				NMib::NTest::CTestMemoryResult Results;
 				MeasureMemory.f_GetResults(Results);
 
-#if DMibConfig_Memory_Shims_Enable
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 				DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesAlloc.m_Average) == DMibExpr(Results.m_AllAllocations.m_BytesFree.m_Average));
 #endif
 			};
@@ -532,7 +845,7 @@ namespace
 									{
 
 										{
-#if DMibConfig_Memory_Shims_Enable
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 
 											NMib::NMemory::CDisableMemoryReporterScope DisableReport;
 #endif
@@ -561,7 +874,7 @@ namespace
 				NMib::NTest::CTestMemoryResult Results;
 				MeasureMemory.f_GetResults(Results);
 
-#if DMibConfig_Memory_Shims_Enable
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 				DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesAlloc.m_Average) == DMibExpr(Results.m_AllAllocations.m_BytesFree.m_Average));
 #endif
 			};
@@ -820,7 +1133,7 @@ namespace
 					NMib::NTest::CTestMemoryResult Results;
 					MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 					umint MetaCommit = CParamsNoCleanup::fs_GetSlabTypeMetaSize(0);
 					DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesCommit.m_Average) == DMibExpr(SlabSize / 2 + MetaCommit));
 #	endif
@@ -854,7 +1167,7 @@ namespace
 					NMib::NTest::CTestMemoryResult Results;
 					MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 					umint PreviousMetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(0) / CParamsNoCleanup::mc_SubSlabSize;
 					umint MetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(4) / CParamsNoCleanup::mc_SubSlabSize;
 					umint Multiplier = CParamsNoCleanup::mc_SlabTypeInfo[4].m_SubSlabMutiplier;
@@ -906,7 +1219,7 @@ namespace
 
 					MaxCommittedSubSlabs = (SlabSize / 2) / CParamsNoCleanup::mc_SubSlabSize;
 
-#	if DMibConfig_Memory_Shims_Enable
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 					DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, 0);
 					DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, ==, PreviousWaste);
 #	endif
@@ -940,7 +1253,7 @@ namespace
 					NMib::NTest::CTestMemoryResult Results;
 					MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 					// TODO: Calculate actual start and end to get correct sizes
 					umint MetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(3) / CParamsNoCleanup::mc_SubSlabSize;
 					umint Multiplier = CParamsNoCleanup::mc_SlabTypeInfo[3].m_SubSlabMutiplier;
@@ -1010,7 +1323,7 @@ namespace
 						NMib::NTest::CTestMemoryResult Results;
 						MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 						DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesDecommit.m_Average) > DMibExpr(0));
 #	endif
 
@@ -1075,7 +1388,7 @@ namespace
 							MeasureMemory.f_Stop(1);
 							NMib::NTest::CTestMemoryResult Results;
 							MeasureMemory.f_GetResults(Results);
-#	if DMibConfig_Memory_Shims_Enable
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 							DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesDecommit.m_Average) > DMibExpr(0));
 #	endif
 						}
@@ -1091,7 +1404,7 @@ namespace
 						NMib::NTest::CTestMemoryResult Results;
 						MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable
+#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 						DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesDecommit.m_Average) > DMibExpr(0) && DMibExpr("Second"));
 #	endif
 						umint nSlabs = MemoryManager.f_GetNumUsedSlabs();
@@ -1106,6 +1419,11 @@ namespace
 						DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) == DMibExpr(1u) && DMibExpr("Second"));
 					}
 				};
+			};
+
+			DMibTestCategory("Resize")
+			{
+				f_TestResize<tf_CParams>();
 			};
 
 #if !(defined(DMibSanitizerEnabled_Address) && DMibPPtrBits <= 32)
@@ -1356,6 +1674,13 @@ namespace
 				{
 					f_TestMemory<TCTestParamsSubSlabBitmapsReap<4096>, 4096>();
 				};
+			};
+			// The exact parameter set the Malterlib system manager flavor selection compiles in,
+			// so reclaim regressions in the shipped configuration are caught even when the tuned
+			// test parameter sets above pass
+			DMibTestCategory("DefaultFlavorResize")
+			{
+				f_TestResize<NMib::CMemoryManagerParamsFlavorOverrides>();
 			};
 #if !defined(DMibSanitizerEnabled_Thread) && !defined(DCompiler_MSVC_Workaround_DllsBroken)
 			// tsan does not currently support unloading dlls

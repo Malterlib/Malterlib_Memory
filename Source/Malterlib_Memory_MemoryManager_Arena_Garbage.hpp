@@ -127,9 +127,10 @@ namespace NMib::NMemory
 			if constexpr (t_CParams::mc_bBackgroundCleanup)
 				DMibFastCheck(pFreeSlab->m_FreeTimestamp != 0);
 			pNumaArena->m_FreeSlabs.f_Insert(pFreeSlab);
-			if (pFreeSlab->m_LinkNeedDecommit.f_IsInList())
+			bool bPendingDecommit = pFreeSlab->m_LinkNeedDecommit.f_IsInList();
+			if (bPendingDecommit)
 				pNumaArena->m_FreeSlabsNeedingDecommit.f_Insert(pFreeSlab);
-			if (!bWasEmpty)
+			if (bPendingDecommit || !bWasEmpty)
 				_oCleanup |= ENumaArenaCleanup_FreeSlabs;
 		}
 
