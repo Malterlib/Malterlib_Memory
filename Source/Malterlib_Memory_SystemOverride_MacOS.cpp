@@ -11,10 +11,6 @@
 #include <Mib/Memory/Pool>
 #include "Malterlib_Memory_MemoryManager_Utils.h"
 
-#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-#include <Mib/Instrumentation/FunctionHook>
-#endif
-
 #include <malloc/malloc.h>
 #include <stdlib.h>
 #include <setjmp.h>
@@ -165,10 +161,6 @@ namespace NMib
 		void fg_MalterlibSystem_ForkChild();
 		void fg_MalterlibSystem_ForkChildOverride();
 
-#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-		constinit NStorage::TCAggregateSimple<NInstrumentation::CMHook> g_FunctionHooks = {DAggregateInit};
-#endif
-
 		bool g_bAtExitCalled = false;
 	}
 }
@@ -178,14 +170,6 @@ void fg_MalterlibMallocOverride_AtExitCalled()
 {
 	NSys::g_bAtExitCalled = true;
 }
-
-#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-bool fg_MalterlibSystem_InitMacOS1060();
-bool fg_MalterlibSystem_InitMacOS1070(void *_pPThreadInit);
-bool fg_MalterlibSystem_InitMacOS1090(void *_pPThreadInit, char const* envp[], char const* apple[], const ProgramVars * vars);
-bool fg_MalterlibSystem_InitMacOS10100(void *_pPThreadInit, char const* envp[], char const* apple[], const ProgramVars * vars);
-bool fg_MalterlibSystem_InitMacOS10110(void *_pPThreadInit, char const* envp[], char const* apple[], const ProgramVars * vars);
-#endif
 
 namespace
 {
@@ -445,10 +429,6 @@ namespace
 
 extern "C"
 {
-#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-	void * (* malloc_reenter)(size_t _Size) = nullptr;
-#endif
-
 	bool g_MalterlibMallocOveridden = false;
 	bool g_MalterlibMallocOveriddenInstalled = false;
 	bool g_MalterlibMallocOveriddenInterposersInstalled = false;
@@ -458,11 +438,6 @@ extern "C"
 
 	umint g_nMallocZonesBeforeMallocInit = 0;
 	umint g_nMallocZonesAfterMallocInit = 0;
-
-#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-	void fg_InterposeOverride();
-	void fg_InterposeOverrideUnhook();
-#endif
 
 	void fg_MalterlibSystem_DestroyLate()
 	{
@@ -485,49 +460,10 @@ void fg_MalterlibMallocOverride_PreDestroyNonTrackedMemoryManager()
 {
 	if (!g_MalterlibMallocOveriddenInterposersInstalled)
 		return;
-#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-	NSys::g_FunctionHooks->f_Suspend();
-	if (CSystem::ms_PlatformVersion < 10'11'00)
-	{
-		if (malloc_reenter)
-		{
-			NSys::g_FunctionHooks->f_Unhook((void **)&malloc_reenter);
-			malloc_reenter = nullptr;
-		}
-	}
-	if (!g_bMemoryManagerNeededAfterDestroy)
-		fg_InterposeOverrideUnhook();
-	NSys::g_FunctionHooks->f_Resume();
-	if (!g_bMemoryManagerNeededAfterDestroy)
-		NSys::g_FunctionHooks.f_Destruct();
-#endif
 }
 
 extern "C"
 {
-#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-	void *fg_MalterlibSystem_Hooked_Malloc(size_t _Size)
-	{
-		DMibOverrideTrace("fg_MalterlibSystem_Hooked_Malloc!\n");
-		bool bClear = false;
-		if (!g_MalterlibMallocOveridden)
-		{
-			g_MalterlibMallocOveridden = true;
-			fg_MalterlibMallocOverrideEnable();
-			if (malloc_reenter)
-				bClear = true;
-		}
-		void *pRet = malloc_reenter(_Size);
-
-		if (bClear)
-		{
-			NSys::g_FunctionHooks->f_Unhook((void **)&malloc_reenter); // Unhook malloc while assuming no other threads are calling in here simultaneously
-			malloc_reenter = nullptr;
-		}
-		return pRet;
-	}
-#endif
-
 	void fg_MalterlibSystem_Hooked_Exit(int _ExitCode)
 	{
 		if (NSys::g_bAtExitCalled) // If atexit has not been called this is an abnormal exit so don't try to do any cleanup
@@ -545,23 +481,6 @@ extern "C"
 		fg_MalterlibSystem_Hooked_Exit(_ExitCode);
 	}
 
-	bool fg_InstallAllocInterposers_GetReentries(bool _bNeedMalloc)
-	{
-#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-		if (_bNeedMalloc && CSystem::ms_PlatformVersion < 10'11'00)
-		{
-			(void * &)malloc_reenter = dlsym(RTLD_DEFAULT, "malloc");
-
-			if (!malloc_reenter)
-			{
-				DMibOverrideTrace("No malloc found, malloc override not enabled!\n", 0);
-				return false;
-			}
-		}
-#endif
-		return true;
-	}
-
 	void fg_InstallAllocInterposers(bool _bNeedMalloc)
 	{
 		DMibOverrideTrace("fg_InstallAllocInterposers!\n");
@@ -569,28 +488,6 @@ extern "C"
 		g_LowLevelGlobalState.f_Construct();
 		NSys::fg_CreateSystemMalloc(true);
 		g_GlobalState.f_Construct();
-
-#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-		NSys::g_FunctionHooks.f_Construct();
-		NSys::g_FunctionHooks->f_Suspend();
-		if (_bNeedMalloc && CSystem::ms_PlatformVersion < 10'11'00)
-		{
-			if (!NSys::g_FunctionHooks->f_SetHook((void **)&malloc_reenter, (void *)&fg_MalterlibSystem_Hooked_Malloc))
-			{
-				DMibOverrideTrace("Failed to hook malloc, aborting!\n", 0);
-				DMibPDebugBreak;
-			}
-		}
-		if (!NSys::g_FunctionHooks->f_SetHook((void **)&exit_reenter, (void *)&fg_MalterlibSystem_Hooked_Exit))
-		{
-			DMibOverrideTrace("Failed to hook exit, aborting!\n", 0);
-			DMibPDebugBreak;
-		}
-
-		fg_InterposeOverride();
-
-		NSys::g_FunctionHooks->f_Resume();
-#endif
 
 		g_MalterlibMallocOveriddenInterposersInstalled = true;
 
@@ -621,12 +518,6 @@ extern "C"
 			return;
 		}
 
-		if (!fg_InstallAllocInterposers_GetReentries(false))
-		{
-			fg_MalterlibMallocOverrideEnable();
-			return; // Memory already allocated
-		}
-
 		fg_InstallAllocInterposers(false);
 		fg_MalterlibMallocOverrideEnable();
 	}
@@ -639,140 +530,6 @@ extern "C"
 #endif
 
 		NSys::fg_CreateSystemVersion();
-
-#if 0
-		if (fg_RunningUnderRosetta())
-		{
-			if (NSys::fg_System_BeingDebugged())
-			{
-				DMibOverrideTrace("fg_System_BeingDebugged!\n");
-				return;
-			}
-		}
-#endif
-
-		DMibOverrideTrace("fg_MalterlibSystem_InitEarly!\n");
-#ifndef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-		fg_MalterlibMallocOverrideEnable();
-		return;
-#else
-#ifdef DArchitecture_x86
-		// Not debugged for this arch
-		return;
-#endif
-
-		if (g_MalterlibMallocOveriddenInterposersInstalled)
-		{
-			DMibOverrideTrace("fg_MalterlibSystem_InitEarly - g_MalterlibMallocOveriddenInterposersInstalled altready!\n");
-			return;
-		}
-
-		struct utsname un;
-		int Res = uname(&un);
-		int Major = 0;
-		if (Res >= 0)
-		{
-			NStr::CFStr256 VersionString;
-			VersionString = un.release;
-			int Minor = 0;
-			int Fix = 0;
-
-			Major = fg_GetStrSep(VersionString, ".").f_ToInt(0);
-			Minor = fg_GetStrSep(VersionString, ".").f_ToInt(0);
-			Fix = fg_GetStrSep(VersionString, ".").f_ToInt(0);
-
-			if (Major >= 15)
-			{
-				DMibOverrideTrace("fg_MalterlibSystem_InitEarly - Use interposers instead!\n");
-				return;
-			}
-			if (Major > 16)
-				return; // Don't try to override on macOS that we don't yet know about as this is likely to fail
-		}
-
-		auto MemoryStats = mstats();
-		if (MemoryStats.bytes_total)
-		{
-			DMibOverrideTrace("MemoryStats.bytes_total give up in init early!\n");
-			return; // Something else got inbetween
-		}
-
-		if (envp)
-		{
-			for (umint i = 0; envp[i]; ++i)
-			{
-				if (NStr::fg_StrStartsWith(envp[i], "DYLD_INSERT_LIBRARIES"))
-				{
-					//DMibOverrideTrace("Malloc override disabled because of: {}\n", envp[i]);
-					return;
-				}
-
-				if (NStr::fg_StrStartsWith(envp[i], "MalterlibMallocOverrideDisable"))
-				{
-					//DMibOverrideTrace("Malloc override disabled because of: MalterlibMallocOverrideDisable\n", 0);
-					return;
-				}
-			}
-		}
-
-		auto nImages = _dyld_image_count();
-		for (auto i = 0; i < nImages; ++i)
-		{
-			auto pName = _dyld_get_image_name(i);
-			//DMibOverrideTrace("Image: {}\n", pName);
-			if (NStr::fg_StrFindNoCase(pName, "/libBacktraceRecording.dylib") >= 0)
-			{
-				DMibOverrideTrace("Malloc override disabled because of: libBacktraceRecording.dylib\n", 0);
-				return;
-			}
-			if (NStr::fg_StrFindNoCase(pName, "/libsimshim.dylib") >= 0)
-			{
-				DMibOverrideTrace("Malloc override disabled because of: libsimshim.dylib\n", 0);
-				return;
-			}
-		}
-
-		if (!fg_InstallAllocInterposers_GetReentries(true))
-			return;
-
-		void *pthread_init = dlsym(RTLD_DEFAULT, "__pthread_init");
-
-		if (pthread_init)
-		{
-			if (Major == 15)
-			{
-				if (!fg_MalterlibSystem_InitMacOS10110(pthread_init, envp, apple, vars))
-					return;
-			}
-			else if (Major == 14)
-			{
-				if (!fg_MalterlibSystem_InitMacOS10100(pthread_init, envp, apple, vars))
-					return;
-			}
-			else
-			{
-				if (!fg_MalterlibSystem_InitMacOS1090(pthread_init, envp, apple, vars))
-					return;
-			}
-		}
-		else
-		{
-			pthread_init = dlsym(RTLD_DEFAULT, "pthread_init");
-
-			if (pthread_init)
-			{
-				if (!fg_MalterlibSystem_InitMacOS1070(pthread_init))
-					return;
-			}
-			else
-			{
-				if (!fg_MalterlibSystem_InitMacOS1060())
-					return;
-			}
-		}
-
-		fg_InstallAllocInterposers(true);
-#endif
 	}
 }
 
@@ -1529,74 +1286,42 @@ void fg_MalterlibMallocOverrideEnable()
 		g_MalterlibMallocOveriddenInterposersInstalled = true;
 		g_bMemoryManagerNeededAfterDestroy = true;
 
-		if (fg_InstallAllocInterposers_GetReentries(false))
-			fg_InstallAllocInterposers(false);
-		else
-		{
-			g_LowLevelGlobalState.f_Construct();
-			NSys::fg_CreateSystemMalloc(false);
-			g_GlobalState.f_Construct();
-		}
+		fg_InstallAllocInterposers(false);
 	}
 
 #if !defined(DMibConfig_MemoryManager_UseMalterlib) && !defined(DMibConfig_MemoryManager_UseOverwriteCheck) && !defined(DMibConfig_MemoryManager_UseSystem)
 	return;
 #endif
 
-	if (CSystem::ms_PlatformVersion >= 10'16'00)
+	if (malloc_num_zones > g_nMallocZonesAfterMallocInit || g_nMallocZonesBeforeMallocInit > 0)
 	{
-		if (malloc_num_zones > g_nMallocZonesAfterMallocInit || g_nMallocZonesBeforeMallocInit > 0)
-		{
-			DMibOverrideTrace("FOREIGN\n");
-			g_bForeignZone = true; // Some other manager got inbetwee
-			g_bOnlyDefaultZone = false;
-		}
-	}
-	else
-	{
-		auto MemoryStats = mstats();
-		if (MemoryStats.bytes_total)
-		{
-			DMibOverrideTrace("FOREIGN\n");
-			g_bForeignZone = true; // Some other manager got inbetwee
-			g_bOnlyDefaultZone = false;
-		}
+		DMibOverrideTrace("FOREIGN\n");
+		g_bForeignZone = true; // Some other manager got inbetwee
+		g_bOnlyDefaultZone = false;
 	}
 
 	DMibOverrideTrace("Installing ZOONE\n");
 	fg_MalterlibMallocOverrideInit_ReinstallHandler();
 #ifdef DMibConfig_CheckOverrideMemoryLeaks
-	if (CSystem::ms_PlatformVersion >= 10'11'00)
-		g_DebugFlags = EHeapDebugFlag_None;
+	g_DebugFlags = EHeapDebugFlag_None;
 #endif
 
 #ifdef DMemoryManagerIsSame
 	if (g_bForeignZone)
 #endif
 	{
-		if (CSystem::ms_PlatformVersion >= 10'12'00)
-		{
-			malloc_destroy_zone(malloc_create_zone(0, 0));
-			malloc_zone_t_known_version *pDefaultZone = (malloc_zone_t_known_version *)malloc_default_zone();
-			g_pDefaultZone = pDefaultZone;
-			g_OriginalMallocs = *pDefaultZone;
-			malloc_zone_register((malloc_zone_t *)&g_MalterlibMallocZone);
-			*pDefaultZone = g_MalterlibMallocZone;
+		malloc_destroy_zone(malloc_create_zone(0, 0));
+		malloc_zone_t_known_version *pDefaultZone = (malloc_zone_t_known_version *)malloc_default_zone();
+		g_pDefaultZone = pDefaultZone;
+		g_OriginalMallocs = *pDefaultZone;
+		malloc_zone_register((malloc_zone_t *)&g_MalterlibMallocZone);
+		*pDefaultZone = g_MalterlibMallocZone;
 
-			if (malloc_zones && malloc_num_zones > 1 && malloc_zones[0]->malloc != &fg_Malterlib_zone_malloc)
-			{
-				auto pDefaultRealZone = malloc_zones[0];
-				malloc_zone_unregister((malloc_zone_t *)pDefaultRealZone);
-				malloc_zone_register((malloc_zone_t *)pDefaultRealZone);
-			}
-		}
-		else
+		if (malloc_zones && malloc_num_zones > 1 && malloc_zones[0]->malloc != &fg_Malterlib_zone_malloc)
 		{
-			malloc_zone_t_known_version *pDefaultZone = (malloc_zone_t_known_version *)malloc_default_zone();
-			g_pDefaultZone = pDefaultZone;
-			malloc_zone_unregister((malloc_zone_t *)g_pDefaultZone);
-			malloc_zone_register((malloc_zone_t *)&g_MalterlibMallocZone);
-			malloc_zone_register((malloc_zone_t *)g_pDefaultZone);
+			auto pDefaultRealZone = malloc_zones[0];
+			malloc_zone_unregister((malloc_zone_t *)pDefaultRealZone);
+			malloc_zone_register((malloc_zone_t *)pDefaultRealZone);
 		}
 	}
 
@@ -1616,19 +1341,8 @@ void fg_MalterlibMallocOverrideDisable()
 {
 	if (!g_pDefaultZone)
 		return;
-	if (CSystem::ms_PlatformVersion >= 10'07'00)
-		malloc_set_zone_name((malloc_zone_t *)&g_MalterlibMallocZone, nullptr);
-#if 0
-	if (CSystem::ms_PlatformVersion >= 10'12'00)
-	{
-		malloc_zone_unregister((malloc_zone_t *)&g_MalterlibMallocZone);
-		*g_pDefaultZone = g_OriginalMallocs;
-	}
-	else
-	{
-		malloc_zone_unregister((malloc_zone_t *)&g_MalterlibMallocZone);
-	}
-#endif
+
+	malloc_set_zone_name((malloc_zone_t *)&g_MalterlibMallocZone, nullptr);
 }
 
 namespace
@@ -5103,45 +4817,5 @@ extern "C"
 	}
 }
 #endif
-
-extern "C"
-{
-#ifdef DMalterlibMemoryOverrideMacOSInitBeforeLibSystemSupport
-	void fg_InterposeOverride()
-	{
-#define DMibMemoryInterpose_Hooks
-
-#define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
-		if (!NSys::g_FunctionHooks->f_SetHook((void **)&(g_OriginalFunctions.d_Function), (void *)&fg_Malterlib_##d_Function))\
-		{\
-			DMibOverrideTrace("Failed to hook " #d_Function ", aborting!\n", 0);\
-			DMibPDebugBreak;\
-		}
-
-#define DMibMemoryInterposeCpp1(d_Return, d_Function, ...)
-#define DMibMemoryInterposeCpp2(d_Return, d_Function, ...)
-#define DMibMemoryInterposeCpp3(d_Return, d_Function, ...)
-
-#include "Malterlib_Memory_SystemOverride_MacOSInterposeFunctions.h"
-	}
-
-	void fg_InterposeOverrideUnhook()
-	{
-#define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
-		if (!NSys::g_FunctionHooks->f_Unhook((void **)&(g_OriginalFunctions.d_Function)))\
-		{\
-			DMibOverrideTrace("Failed to unhook " #d_Function ", aborting!\n", 0);\
-			DMibPDebugBreak;\
-		}
-
-#define DMibMemoryInterposeCpp1(d_Return, d_Function, ...)
-#define DMibMemoryInterposeCpp2(d_Return, d_Function, ...)
-#define DMibMemoryInterposeCpp3(d_Return, d_Function, ...)
-
-#include "Malterlib_Memory_SystemOverride_MacOSInterposeFunctions.h"
-#undef DMibMemoryInterpose_Hooks
-	}
-#endif
-}
 
 #endif
