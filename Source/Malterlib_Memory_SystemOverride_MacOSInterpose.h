@@ -20,6 +20,8 @@ extern "C"
 #include <mach/message.h>
 #include <mach/semaphore.h>
 #include <sys/event.h>
+#include <poll.h>
+#include <time.h>
 #if DMibConfig_Thread_DebugThreadLocals
 #include <pthread.h>
 #endif
@@ -62,6 +64,10 @@ extern "C" void *malloc_type_zone_malloc_with_options_internal(malloc_zone_t *zo
 
 extern "C" int __workq_kernreturn(int options, user_addr_t item, int affinity, int prio);
 extern "C" uint32_t __psynch_cvwait(user_addr_t cv, uint64_t cvlsgen, uint32_t cvugen, user_addr_t mutex, uint64_t mugen, uint32_t flags, int64_t sec, uint32_t nsec);
+extern "C" int __ulock_wait(uint32_t operation, void *addr, uint64_t value, uint32_t timeout_us);
+extern "C" int __ulock_wait2(uint32_t operation, void *addr, uint64_t value, uint64_t timeout_ns, uint64_t value2) __attribute__((weak_import));
+extern "C" int os_sync_wait_on_address(void *addr, uint64_t value, size_t size, uint32_t flags) __attribute__((weak_import));
+extern "C" int os_sync_wait_on_address_with_timeout(void *addr, uint64_t value, size_t size, uint32_t flags, uint32_t clockid, uint64_t timeout_ns) __attribute__((weak_import));
 extern "C" void _malloc_fork_prepare() __attribute__((weak_import));
 extern "C" void _malloc_fork_child() __attribute__((weak_import));
 extern "C" void _malloc_fork_parent() __attribute__((weak_import));
