@@ -84,10 +84,10 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	int64 TCMemoryManagerNumaArena<t_CParams>::f_GetTimestamp() const
+	int64 TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp()
 	{
 		if constexpr (t_CParams::mc_bBackgroundCleanup)
-			return m_BackgroundCleanup.f_GetTimestamp();
+			return TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::fs_GetTimestamp();
 		return 0;
 	}
 

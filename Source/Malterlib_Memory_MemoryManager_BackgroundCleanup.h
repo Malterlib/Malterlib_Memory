@@ -13,7 +13,7 @@ namespace NMib::NMemory
 
 		void f_OnNeedCleanup();
 
-		int64 f_GetTimestamp() const;
+		static int64 fs_GetTimestamp();
 
 		bool f_IsWaiting();
 
@@ -35,7 +35,6 @@ namespace NMib::NMemory
 	private:
 		TCMemoryManager<t_CParams> * mp_pMemoryManager;
 		TCMemoryManagerNumaArena<t_CParams> * mp_pNumaArena;
-		NTime::CCyclesStopwatch mp_Stopwatch{true};
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bStarted;
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bWaiting;
 		NMib::NThread::CLowLevelLock mp_GarbageCollectLock;
