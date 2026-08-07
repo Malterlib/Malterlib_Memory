@@ -57,11 +57,11 @@ namespace NMib::NMemory
 		{
 			fg_Mem_SetCategory(mp_pOldCategory);
 		}
-		void f_Suspend() override
+		void f_Suspend() noexcept override
 		{
 			fg_Mem_SetCategory(mp_pOldCategory);
 		}
-		void f_Resume() override
+		void f_ResumeNoExcept() noexcept override
 		{
 			mp_pOldCategory = fg_Mem_SetCategory(mp_pNewCategory);
 		}
