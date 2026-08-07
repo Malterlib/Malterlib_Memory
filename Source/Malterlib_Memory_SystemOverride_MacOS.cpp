@@ -4703,6 +4703,51 @@ extern "C"
 		return g_OriginalFunctions.__workq_kernreturn(options, item, affinity, prio);
 	}
 
+	// Threads parking on futexes must return their lazily checked out arenas like every other
+	// kernel wait, or idle threads pin arenas against garbage collection. The os_sync entry
+	// points need their own hooks: their internal ulock calls stay inside the shared cache
+	// where interposing never rebinds.
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib___ulock_wait(uint32_t operation, void *addr, uint64_t value, uint32_t timeout_us)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.__ulock_wait(operation, addr, value, timeout_us);
+	}
+
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib___ulock_wait2(uint32_t operation, void *addr, uint64_t value, uint64_t timeout_ns, uint64_t value2)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.__ulock_wait2(operation, addr, value, timeout_ns, value2);
+	}
+
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_os_sync_wait_on_address(void *addr, uint64_t value, size_t size, uint32_t flags)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.os_sync_wait_on_address(addr, value, size, flags);
+	}
+
+	assure_used auto DMibMalterlibOverrideMallocExport fg_Malterlib_os_sync_wait_on_address_with_timeout
+		(
+			void *addr
+			, uint64_t value
+			, size_t size
+			, uint32_t flags
+			, uint32_t clockid
+			, uint64_t timeout_ns
+		)
+		-> int
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.os_sync_wait_on_address_with_timeout(addr, value, size, flags, clockid, timeout_ns);
+	}
+
 	assure_used uint32_t DMibMalterlibOverrideMallocExport fg_Malterlib___psynch_cvwait(user_addr_t cv, uint64_t cvlsgen, uint32_t cvugen, user_addr_t mutex, uint64_t mugen, uint32_t flags, int64_t sec, uint32_t nsec)
 	{
 #ifdef DMemoryManagerIsSame
@@ -4725,6 +4770,22 @@ extern "C"
 		fg_LazyReturnCheckout();
 #endif
 		return g_OriginalFunctions.kevent64(kq, changelist, nchanges, eventlist, nevents, flags, timeout);
+	}
+
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_poll(struct pollfd *fds, nfds_t nfds, int timeout)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.poll(fds, nfds, timeout);
+	}
+
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_nanosleep(const struct timespec *req, struct timespec *rem)
+	{
+#ifdef DMemoryManagerIsSame
+		fg_LazyReturnCheckout();
+#endif
+		return g_OriginalFunctions.nanosleep(req, rem);
 	}
 }
 
