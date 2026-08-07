@@ -246,7 +246,7 @@ namespace NMib::NMemory
 				this->m_FreeSubSlabs.f_Clear();
 			auto pNumaArena = pArena->m_pNumaArena;
 			if constexpr (t_CParams::mc_bBackgroundCleanup)
-				this->m_FreeTimestamp = pNumaArena->f_GetTimestamp();
+				this->m_FreeTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 			auto FullySetLevel = this->m_FullySetLevel;
 			this->m_FullySetLevel = t_CParams::mc_NumSubSlabSizeLevels;
 

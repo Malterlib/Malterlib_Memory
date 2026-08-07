@@ -118,7 +118,7 @@ namespace NMib::NMemory
 
 		void f_OnNeedCleanup();
 
-		int64 f_GetTimestamp() const;
+		static int64 fs_GetTimestamp();
 
 		void f_RequestCleanup(ENumaArenaCleanup _Cleanup);
 		void f_RequestCleanupWeak(ENumaArenaCleanup _Cleanup);

@@ -58,7 +58,7 @@ namespace NMib::NMemory
 			{
 				m_DeferredDecommitSubSlabs.template f_SetBitRange<true>(_iSubSlab, _nSubSlabs);
 				if constexpr (t_CParams::mc_bBackgroundCleanup)
-					this->m_NeedDecommitTimestamp = this->m_pArena->m_pNumaArena->f_GetTimestamp();
+					this->m_NeedDecommitTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 				this->m_pArena->fp_RequestCleanup();
 				if (!this->m_LinkNeedDecommit.f_IsInList())
 					this->m_pArena->m_SlabsNeedingDecommit.f_Insert(this);
@@ -207,7 +207,7 @@ namespace NMib::NMemory
 			if (!this->m_LinkNeedDecommit.f_IsInList() && !m_DeferredDecommitSubSlabs.f_IsFullyFree())
 			{
 				if constexpr (t_CParams::mc_bBackgroundCleanup)
-					this->m_NeedDecommitTimestamp = this->m_pArena->m_pNumaArena->f_GetTimestamp();
+					this->m_NeedDecommitTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 				this->m_pArena->fp_RequestCleanup();
 				this->m_pArena->m_SlabsNeedingDecommit.f_Insert(this);
 			}
