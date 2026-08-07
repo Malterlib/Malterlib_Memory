@@ -566,7 +566,7 @@ namespace NMib::NMemory
 			m_SlabsToGarbageCollect[_pSlab->m_SlabType].f_Insert(_pSlab);
 
 		if constexpr (t_CParams::mc_bBackgroundCleanup)
-			_pSlab->m_HasGarbageTimestamp = m_pNumaArena->f_GetTimestamp();
+			_pSlab->m_HasGarbageTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 		this->fp_RequestCleanup();
 	}
 

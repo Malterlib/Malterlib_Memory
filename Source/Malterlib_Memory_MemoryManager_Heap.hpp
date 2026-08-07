@@ -305,7 +305,7 @@ namespace NMib::NMemory
 
 			_pChunk->m_DeferredDecommit.template f_SetBitRange<true>(StartBit, nBits);
 
-			_pChunk->m_DecommitTimestamp = m_pNumaArena->f_GetTimestamp();
+			_pChunk->m_DecommitTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 			fp_RequestCleanup(_pChunk, ENumaArenaCleanup_HeapCommit);
 			return;
 		}
@@ -712,7 +712,7 @@ namespace NMib::NMemory
 		{
 			// Totally free chunk, add for cleanup
 			if constexpr (t_CParams::mc_bBackgroundCleanup)
-				_pChunk->m_FreeTimestamp = m_pNumaArena->f_GetTimestamp();
+				_pChunk->m_FreeTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 			fp_RequestCleanup(_pChunk, ENumaArenaCleanup_HeapGarbage);
 		}
 	}
