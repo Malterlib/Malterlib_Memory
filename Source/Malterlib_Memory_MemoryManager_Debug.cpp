@@ -10,7 +10,7 @@ namespace NMib::NMemory
 	DMibImpErrorClassImplement(CExceptionMemoryManagerDebug);
 #endif
 
-	extern char const* gc_IgnoreFunctions[];
+	extern ch8 const *gc_IgnoreFunctions[];
 }
 
 namespace NMib::NMemory::NPrivate
@@ -97,6 +97,10 @@ namespace NMib::NMemory::NPrivate
 
 					if (TraceInfo.m_pModuleName)
 					{
+#ifdef DPlatformFamily_macOS
+						if (NStr::fg_StrCmp(TraceInfo.m_pModuleName, "/System/Library/PrivateFrameworks/CoreSceneUnderstanding.framework/Versions/A/CoreSceneUnderstanding") == 0)
+							return false;
+#endif
 						uint32 Len = NStr::fg_StrLen(TraceInfo.m_pModuleName);
 						if (Len > LongestModule)
 							LongestModule = Len;

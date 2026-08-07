@@ -7,7 +7,7 @@ namespace NMib::NMemory
 {
 	// Qt does not free some global pools, so we tell the debug mem manager to ignore them here.
 	// Nobody should add to this list other than Mike & Erik!
-	char const* gc_IgnoreFunctions[] =
+	ch8 const *gc_IgnoreFunctions[] =
 		{
 #ifdef DPlatformFamily_macOS
 			"_xpc_dyld_image_callback", // Possible bug in macOS, investigate later
@@ -187,6 +187,7 @@ namespace NMib::NMemory
 			"$s7SwiftUI20DynamicPropertyCacheV6fields2ofAC6FieldsVypXp_tFZ",
 			"$sSq7SwiftUIE23makeConditionalMetadatay",
 			"AG::Graph::UpdateStack",
+			"google::protobuf::internal::OnShutdownRun",
 #elif defined(DPlatformFamily_Linux)
 			"qt_load_library_runtime",
 			"qt_set_x11_resources",
