@@ -255,7 +255,7 @@ namespace NMib::NMemory
 		constexpr static umint mc_PreBlockAlignment = fg_Max(alignof(CPreBlock), sizeof(void *) * 2);
 
 		TCPool<zbool, 8, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_ReportingLeaksPool;
-		NThread::TCThreadLocalDynamic<zbool> m_bReportingLeaks;
+		NThread::TCThreadLocalDynamic<zbool, NThread::EThreadLocalFlag_FastThreadLocal> m_bReportingLeaks;
 
 	private:
 

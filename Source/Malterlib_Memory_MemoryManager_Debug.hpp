@@ -297,7 +297,7 @@ namespace NMib::NMemory
 		auto *pReportingLeaks = m_bReportingLeaks.f_TryGet();
 		if (!pReportingLeaks)
 		{
-			if (fg_GetSys()->f_ThreadDestroyed())
+			if (!fg_GetSys()->f_InitDone() || fg_GetSys()->f_ThreadDestroyed())
 				return false;
 			return *m_bReportingLeaks;
 		}
