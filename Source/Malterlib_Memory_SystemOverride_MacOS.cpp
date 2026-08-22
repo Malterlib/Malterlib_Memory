@@ -160,6 +160,7 @@ namespace NMib
 		void fg_MalterlibSystem_ForkParent();
 		void fg_MalterlibSystem_ForkChild();
 		void fg_MalterlibSystem_ForkChildOverride();
+		void fg_MalterlibSystem_ForkChildOverrideFinished();
 
 		bool g_bAtExitCalled = false;
 	}
@@ -1887,6 +1888,8 @@ assure_used extern "C" DMibMalterlibOverrideMallocExport void fg_Malterlib__mall
 
 	if (g_OriginalFunctions._malloc_fork_child)
 		g_OriginalFunctions._malloc_fork_child();
+
+	NSys::fg_MalterlibSystem_ForkChildOverrideFinished();
 }
 
 void fg_Override_ForkedChild()
