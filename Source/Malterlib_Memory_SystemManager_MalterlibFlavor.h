@@ -21,6 +21,10 @@ namespace NMib
 
 		static constexpr bool mc_bUseSmallSizes = mc_FreeStoreMode != NMemory::EMemoryManagerFreeStore_SubSlabBitmaps;
 
+#ifdef DMibConfig_MemoryManager_BackgroundCleanup
+		static constexpr bool mc_bBackgroundCleanup = DMibConfig_MemoryManager_BackgroundCleanup; // Off leaves reclamation to owning threads.
+#endif
+
 #ifdef DMibConfig_Memory_ReapInCleanup
 		static constexpr bool mc_bReapInCleanup = DMibConfig_Memory_ReapInCleanup;
 #else

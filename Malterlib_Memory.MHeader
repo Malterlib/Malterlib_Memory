@@ -527,6 +527,7 @@ Property
 				MalterlibMemoryManagerFlavor "BlockLists"
 			}
 		}
+		PreprocessorDefines += `DMibConfig_MemoryManager_BackgroundCleanup=@(MalterlibMemoryManager_BackgroundCleanup ? "1" : "0")`
 	}
 	%Group "Documentation"
 	{
