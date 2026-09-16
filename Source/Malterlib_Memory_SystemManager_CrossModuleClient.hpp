@@ -207,7 +207,6 @@ namespace NMib
 
 	DMibSuppressUndefinedSanitizer void CSystem::fp_DestroyMemoryManager()
 	{
-		NSys::fg_PreDestroyHeap();
 		return NMemory::g_CrossModule.m_fDestroyMemoryManager(&NMemory::g_CrossModule);
 	}
 

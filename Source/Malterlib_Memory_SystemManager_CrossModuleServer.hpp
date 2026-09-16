@@ -52,7 +52,6 @@ namespace NMib
 
 	void CSystem::fp_DestroyMemoryManager()
 	{
-		NSys::fg_PreDestroyHeap();
 		return NMemory::CCrossModuleImplementationExtra::fs_DestroyMemoryManager(&NMemory::g_CrossModule);
 	}
 
