@@ -199,8 +199,11 @@ namespace NMib::NMemory
 		mp_bStarted.f_FetchOr(4);
 		if (mp_pThread)
 		{
-			// Shutdown must make progress even when normal-priority work saturates the CPUs.
-			mp_pThread->f_SetPriority(EExecutionPriority_Normal);
+			// Shutdown must make progress even when normal-priority work saturates the CPUs. The OS
+			// can refuse the raise, and shutdown then runs at the priority the thread already has
+			if (!mp_pThread->f_TrySetPriority(EExecutionPriority_Normal))
+				DMibDTraceSafe("Could not raise the priority of the memory cleanup thread for shutdown" DMibNewLine);
+
 			mp_pThread->f_Stop();
 			mp_pThread.f_Clear();
 		}
