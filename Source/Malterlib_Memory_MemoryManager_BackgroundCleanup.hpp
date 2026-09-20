@@ -175,7 +175,7 @@ namespace NMib::NMemory
 
 				}
 				, "MemMan Cleanup"
-				, EExecutionPriority_BelowNormal
+				, NSys::fg_Thread_CanRestorePriority() ? EExecutionPriority_BelowNormal : EExecutionPriority_Normal // Raised again for shutdown
 			)
 		;
 	}

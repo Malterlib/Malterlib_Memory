@@ -652,7 +652,7 @@ namespace
 						Heap.f_SetNumaNode(Test.m_iNumaNode);
 						iNode = (iNode + 1) % nNodes;
 					}
-					Test.f_Start(NMib::EExecutionPriority_Normal, 0, 0, false);
+					Test.f_Start(NMib::EExecutionPriority_Normal);
 				}
 
 				// Wait for all threads to start
