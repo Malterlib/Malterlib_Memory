@@ -10,7 +10,7 @@
 
 namespace NMib::NMemory
 {
-#ifdef DMibPOverrideOperatorNew
+#if defined(DMibPOverrideOperatorNew) && !defined(DMibPSizedDestructors)
 	namespace NPrivate
 	{
 		struct CThreadLocal
@@ -94,7 +94,7 @@ namespace NMib::NMemory
 
 	void fg_Mem_InitSubsystem()
 	{
-#ifdef DMibPOverrideOperatorNew
+#if defined(DMibPOverrideOperatorNew) && !defined(DMibPSizedDestructors)
 		*NPrivate::g_SubSystem_Memory;
 #endif
 	}
@@ -120,8 +120,7 @@ namespace NMib::NMemory
 	// operator delete(void*, std::align_val_t)
 	extern "C" void __wrap__ZdlPvSt11align_val_tRKSt9nothrow_t(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow)
 	{
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
@@ -135,8 +134,7 @@ namespace NMib::NMemory
 #endif
 	{
 		umint Size = NMib::fg_AlignUp(_Size, (umint)_Alignment);
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, Size))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, Size);
 
 		NMib::NMemory::fg_Free(_pMemory, Size);
 	}
@@ -145,8 +143,7 @@ namespace NMib::NMemory
 	//extern "C" void __real__ZdlPvSt11align_val_t(void *_pMemory, std::align_val_t _Alignment);
 	extern "C" void __wrap__ZdlPvSt11align_val_t(void *_pMemory, std::align_val_t _Alignment)
 	{
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
@@ -181,8 +178,7 @@ namespace NMib::NMemory
 	// operator delete(void *)
 	extern "C" void __wrap__ZdlPv(void *_pMemory) noexcept
 	{
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
@@ -190,8 +186,7 @@ namespace NMib::NMemory
 	// operator delete(void *)
 	extern "C" void __wrap__ZdlPvRKSt9nothrow_t(void *_pMemory, std::nothrow_t const &) noexcept
 	{
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
@@ -203,8 +198,7 @@ namespace NMib::NMemory
 	extern "C" void __wrap__ZdlPvj(void *_pMemory, std::size_t _Size) noexcept
 #endif
 	{
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, _Size))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, _Size);
 
 		NMib::NMemory::fg_Free(_pMemory, _Size);
 	}
@@ -341,16 +335,14 @@ namespace NMib::NMemory
 
 	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment) noexcept
 	{
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
 
 	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
 	{
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
@@ -358,8 +350,7 @@ namespace NMib::NMemory
 	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept
 	{
 		umint Size = NMib::fg_AlignUp(_Size, (umint)_Alignment);
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, Size))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, Size);
 
 		NMib::NMemory::fg_Free(_pMemory, Size);
 	}
@@ -383,24 +374,21 @@ namespace NMib::NMemory
 
 	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory) noexcept // _ZdlPv
 	{
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
 
 	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::nothrow_t const &) noexcept // _ZdlPvRKSt9nothrow_t
 	{
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
 
 	only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size) noexcept // _ZdlPvm
 	{
-		if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, _Size))
-			return;
+		DMibReturnIfDeleteCaptured(_pMemory, _Size);
 
 		NMib::NMemory::fg_Free(_pMemory, _Size);
 	}

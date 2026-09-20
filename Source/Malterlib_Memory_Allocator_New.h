@@ -123,24 +123,21 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 
 		inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory) noexcept
 		{
-			if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-				return;
+			DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 			NMib::NMemory::fg_FreeNoSize(_pMemory);
 		}
 
 		inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::nothrow_t const &) noexcept
 		{
-			if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-				return;
+			DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 			NMib::NMemory::fg_FreeNoSize(_pMemory);
 		}
 
 		inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::size_t _Size) noexcept
 		{
-			if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, _Size))
-				return;
+			DMibReturnIfDeleteCaptured(_pMemory, _Size);
 
 			NMib::NMemory::fg_Free(_pMemory, _Size);
 		}
@@ -177,16 +174,14 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 
 		inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment) noexcept
 		{
-			if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-				return;
+			DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 			NMib::NMemory::fg_FreeNoSize(_pMemory);
 		}
 
 		inline_always only_parameters_aliased void calling_convention_c operator delete(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
 		{
-			if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, 0))
-				return;
+			DMibReturnIfDeleteCaptured(_pMemory, 0);
 
 			NMib::NMemory::fg_FreeNoSize(_pMemory);
 		}
@@ -202,8 +197,7 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, ui
 			DMibFastCheck((Alignment & AlignmentMask) == 0);
 			DMibFastCheck(Size <= NMib::TCLimitsInt<umint>::mc_Max - AlignmentMask);
 			Size = NMib::fg_AlignUp(Size, Alignment);
-			if (NMib::NMemory::CCaptureDefaultDelete::fs_ReportDelete(_pMemory, Size))
-				return;
+			DMibReturnIfDeleteCaptured(_pMemory, Size);
 
 			NMib::NMemory::fg_Free(_pMemory, Size);
 		}

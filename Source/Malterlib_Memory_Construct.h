@@ -19,6 +19,7 @@ namespace NMib
 			using CType = NMib::TCConditional<NMib::NTraits::cIsVoid<t_CTypeExplicit>, t_CTypeImplicit, t_CTypeExplicit>;
 		};
 
+#ifndef DMibPSizedDestructors
 		template <typename t_CData>
 		concept cHas_m_VirtualAllocSize =
 			requires (t_CData const *_pData)
@@ -26,10 +27,13 @@ namespace NMib
 				_pData->m_VirtualAllocSize;
 			}
 		;
+#endif
 	}
 
+	// The linker proves that every class constructed here has a deleting
+	// destructor that returns the size fg_DeleteObject frees with.
 	template <typename tf_CObjectType, typename tf_CAllocator, typename... tfp_CParams>
-	tf_CObjectType *fg_ConstructObject(tf_CAllocator &&_Allocator, tfp_CParams &&...p_Params)
+	DMibSizedConstruction tf_CObjectType *fg_ConstructObject(tf_CAllocator &&_Allocator, tfp_CParams &&...p_Params)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
 		static_assert(!NTraits::cIsAbstract<tf_CObjectType> || NTraits::cHasVirtualDestructor<tf_CObjectType>);
@@ -63,6 +67,20 @@ namespace NMib
 			if constexpr (NTraits::cHasVirtualDestructor<tf_CObjectType> && !NTraits::cIsFinal<tf_CObjectType>)
 			{
 				static_assert(!NTraits::cHasOperatorDelete<tf_CObjectType>);
+#ifdef DMibPSizedDestructors
+				// TCHasVirtualDestructorOverride speaks for a type that is incomplete where it is used; here the type is complete
+				static_assert(NTraits::cHasSizedDestructor<tf_CObjectType>, "TCHasVirtualDestructorOverride claims a virtual destructor the type does not have");
+
+				DMibFastCheck(_pObject);
+
+				// The deleting destructor of the dynamic type destroys the object
+				// and returns the memory it occupies, so the size comes from a
+				// constant in its code rather than from the object itself.
+				void *pMemory;
+				umint Size = __builtin_malterlib_destroy(_pObject, &pMemory);
+
+				fg_Forward<tf_CAllocator>(_Allocator).f_Free(pMemory, Size);
+#else
 				if constexpr (NMib::NPrivate::cHas_m_VirtualAllocSize<tf_CObjectType>)
 				{
 					umint DeleteSize = _pObject->m_VirtualAllocSize;
@@ -72,7 +90,7 @@ namespace NMib
 				}
 				else
 				{
-#if defined(DMibPOverrideOperatorNew)
+#	if defined(DMibPOverrideOperatorNew)
 					NMemory::CCaptureDefaultDelete Captured;
 					delete _pObject;
 
@@ -82,11 +100,12 @@ namespace NMib
 						fg_Forward<tf_CAllocator>(_Allocator).f_Free(Captured.m_Captured.m_pMemory, Captured.m_Captured.m_Size);
 					else
 						fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(Captured.m_Captured.m_pMemory);
-#else
+#	else
 					_pObject->~tf_CObjectType();
 					fg_Forward<tf_CAllocator>(_Allocator).f_FreeNoSize(_pObject);
-#endif
+#	endif
 				}
+#endif
 			}
 			else
 			{
