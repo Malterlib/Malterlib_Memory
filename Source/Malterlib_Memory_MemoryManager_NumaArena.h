@@ -116,6 +116,10 @@ namespace NMib::NMemory
 
 		TCMemoryManagerArena<t_CParams> *f_NewArena();
 
+		void f_LockLimitedArenas(TCMemoryManagerArena<t_CParams> const *_pCheckedOut);
+		void f_UnlockLimitedArenas(TCMemoryManagerArena<t_CParams> const *_pCheckedOut);
+		void f_ForkedChildLimitedArenas(TCMemoryManagerArena<t_CParams> const *_pCheckedOut);
+
 		void f_OnNeedCleanup();
 
 		static int64 fs_GetTimestamp();

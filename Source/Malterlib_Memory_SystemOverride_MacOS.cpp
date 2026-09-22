@@ -1942,7 +1942,6 @@ void NMib::NSys::fg_Mem_PrepareFork()
 			{
 				for (auto &Zone : State.m_ZoneListSmall)
 				{
-					Zone.m_MemoryManager.f_CheckoutManual();
 					Zone.m_MemoryManager.f_Lock();
 					Zone.m_MemoryManager.f_PrepareFork();
 				}
@@ -1952,7 +1951,6 @@ void NMib::NSys::fg_Mem_PrepareFork()
 			{
 				for (auto &Zone : State.m_ZoneListMax)
 				{
-					Zone.m_MemoryManager.f_CheckoutManual();
 					Zone.m_MemoryManager.f_Lock();
 					Zone.m_MemoryManager.f_PrepareFork();
 				}
@@ -1993,7 +1991,6 @@ void NMib::NSys::fg_Mem_ForkedChild()
 				{
 					Zone.m_MemoryManager.f_ForkedChild();
 					Zone.m_MemoryManager.f_Unlock();
-					Zone.m_MemoryManager.f_CheckinManual();
 				}
 			}
 			else
@@ -2003,7 +2000,6 @@ void NMib::NSys::fg_Mem_ForkedChild()
 				{
 					Zone.m_MemoryManager.f_ForkedChild();
 					Zone.m_MemoryManager.f_Unlock();
-					Zone.m_MemoryManager.f_CheckinManual();
 				}
 			}
 		}
@@ -2049,7 +2045,6 @@ void NMib::NSys::fg_Mem_ForkedParent()
 				{
 					Zone.m_MemoryManager.f_ForkedParent();
 					Zone.m_MemoryManager.f_Unlock();
-					Zone.m_MemoryManager.f_CheckinManual();
 				}
 			}
 			else
@@ -2059,7 +2054,6 @@ void NMib::NSys::fg_Mem_ForkedParent()
 				{
 					Zone.m_MemoryManager.f_ForkedParent();
 					Zone.m_MemoryManager.f_Unlock();
-					Zone.m_MemoryManager.f_CheckinManual();
 				}
 			}
 		}

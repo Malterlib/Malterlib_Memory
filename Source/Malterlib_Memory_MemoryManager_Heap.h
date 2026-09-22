@@ -124,6 +124,7 @@ namespace NMib::NMemory
 
 		void f_Lock();
 		void f_Unlock();
+		void f_ForkedChild();
 
 		int64 f_GarbageCollect(int64 _Timestamp);
 		int64 f_DecommitDeferred(int64 _Timestamp);

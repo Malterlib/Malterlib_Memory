@@ -766,10 +766,13 @@ namespace NMib::NMemory
 			Arena.m_ArenasLock.f_ForkedChildLocked();
 			Arena.m_FreeArenasLock.f_ForkedChildLocked();
 			Arena.m_ArenasNeedCleanupLock.f_ForkedChildLocked();
+			Arena.f_ForkedChildLimitedArenas(ThreadLocal.m_pArena);
 			Arena.m_LimitedArenasCreateLock.f_ForkedChildLocked();
 		}
 		m_NumaArenasLock.f_ForkedChildLocked();
 		m_HeapChunksLock.f_ForkedChild();
+		for (auto &Arena : m_NumaArenas)
+			Arena.m_Heap.f_ForkedChild();
 
 		for (auto &Arena : m_NumaArenas)
 			Arena.m_BackgroundCleanup.f_ForkedChild();;
@@ -783,6 +786,7 @@ namespace NMib::NMemory
 		m_HeapChunksLock.f_ForkedParent();
 	}
 
+	// Ordered so that no thread holding a later lock waits for an earlier one
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_Lock()
 	{
@@ -790,10 +794,16 @@ namespace NMib::NMemory
 		for (auto &Arena : m_NumaArenas)
 			Arena.m_BackgroundCleanup.f_Lock();
 
+		for (auto &Arena : m_NumaArenas)
+			Arena.m_Heap.f_Lock();
+
 		m_HeapChunksLock.f_Lock();
+		f_CheckoutManual();
+		auto *pCheckedOut = m_LocalArena->m_pArena;
 		for (auto &Arena : m_NumaArenas)
 		{
 			Arena.m_LimitedArenasCreateLock.f_Lock();
+			Arena.f_LockLimitedArenas(pCheckedOut);
 			Arena.m_ArenasNeedCleanupLock.f_Lock();
 			Arena.m_FreeArenasLock.f_Lock();
 			Arena.m_ArenasLock.f_Lock();
@@ -806,6 +816,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_Unlock()
 	{
+		auto *pCheckedOut = m_LocalArena->m_pArena;
 		for (auto &Arena : m_NumaArenas)
 		{
 			Arena.m_PoolThreadLocal.f_Unlock();
@@ -814,12 +825,17 @@ namespace NMib::NMemory
 			Arena.m_ArenasLock.f_Unlock();
 			Arena.m_FreeArenasLock.f_Unlock();
 			Arena.m_ArenasNeedCleanupLock.f_Unlock();
+			Arena.f_UnlockLimitedArenas(pCheckedOut);
 			Arena.m_LimitedArenasCreateLock.f_Unlock();
 		}
 		m_HeapChunksLock.f_Unlock();
 		for (auto &Arena : m_NumaArenas)
+			Arena.m_Heap.f_Unlock();
+
+		for (auto &Arena : m_NumaArenas)
 			Arena.m_BackgroundCleanup.f_Unlock();
 		m_NumaArenasLock.f_Unlock();
+		f_CheckinManual();
 	}
 
 	template <typename t_CParams>

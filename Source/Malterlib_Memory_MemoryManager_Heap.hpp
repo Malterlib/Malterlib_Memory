@@ -645,6 +645,12 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
+	void TCMemoryManagerArenaHeap<t_CParams>::f_ForkedChild()
+	{
+		m_Lock.f_ForkedChildLocked();
+	}
+
+	template <typename t_CParams>
 	fp32 TCMemoryManagerArenaHeap<t_CParams>::f_Overhead(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
 	{
 		DMibLock(fg_RemoveQualifiers(*this));

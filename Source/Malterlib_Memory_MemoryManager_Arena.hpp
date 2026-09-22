@@ -68,6 +68,7 @@ namespace NMib::NMemory
 	void TCMemoryManagerArena<t_CParams>::f_ForkedChild()
 	{
 		m_LockState.m_Lock.f_ForkedChildLocked();
+		m_LockState.m_LockContended.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed); // The waiters counted in the parent do not exist in the child
 	}
 
 	template <typename t_CParams>

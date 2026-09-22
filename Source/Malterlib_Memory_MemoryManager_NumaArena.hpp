@@ -64,6 +64,47 @@ namespace NMib::NMemory
 		return pArena;
 	}
 
+	// Call with m_LimitedArenasCreateLock held and before the slab and list locks, which arena operations take while holding an arena
+	template <typename t_CParams>
+	void TCMemoryManagerNumaArena<t_CParams>::f_LockLimitedArenas(TCMemoryManagerArena<t_CParams> const *_pCheckedOut)
+	{
+		for (auto &LimitedArena : m_LimitedArenas)
+		{
+			auto *pArena = LimitedArena.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
+			if (!pArena || pArena == _pCheckedOut)
+				continue;
+
+			if (pArena->m_LockState.m_Lock.f_TryLockNoSanitize())
+				continue;
+
+			++pArena->m_LockState.m_LockContended;
+			pArena->m_LockState.m_Lock.f_LockNoSanitize();
+			--pArena->m_LockState.m_LockContended;
+		}
+	}
+
+	template <typename t_CParams>
+	void TCMemoryManagerNumaArena<t_CParams>::f_UnlockLimitedArenas(TCMemoryManagerArena<t_CParams> const *_pCheckedOut)
+	{
+		for (auto &LimitedArena : m_LimitedArenas)
+		{
+			auto *pArena = LimitedArena.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
+			if (pArena && pArena != _pCheckedOut)
+				pArena->m_LockState.m_Lock.f_UnlockNoSanitize();
+		}
+	}
+
+	template <typename t_CParams>
+	void TCMemoryManagerNumaArena<t_CParams>::f_ForkedChildLimitedArenas(TCMemoryManagerArena<t_CParams> const *_pCheckedOut)
+	{
+		for (auto &LimitedArena : m_LimitedArenas)
+		{
+			auto *pArena = LimitedArena.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
+			if (pArena && pArena != _pCheckedOut)
+				pArena->f_ForkedChild();
+		}
+	}
+
 	template <typename t_CParams>
 	void TCMemoryManagerNumaArena<t_CParams>::f_CanStartThreads()
 	{

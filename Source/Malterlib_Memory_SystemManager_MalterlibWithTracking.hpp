@@ -282,14 +282,6 @@ namespace NMib::NMemory
 
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
-				DMainHeapSmall->f_CheckoutManual();
-			else
-#endif
-				DMainHeapMax->f_CheckoutManual();
-			DNonTrackedHeap->f_CheckoutManual();
-
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-			if (g_bMainHeapIsSmall)
 				DMainHeapSmall->f_Lock();
 			else
 #endif
@@ -332,14 +324,6 @@ namespace NMib::NMemory
 #endif
 				DMainHeapMax->f_Unlock();
 
-			DNonTrackedHeap->f_CheckinManual();
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-			if (g_bMainHeapIsSmall)
-				DMainHeapSmall->f_CheckinManual();
-			else
-#endif
-				DMainHeapMax->f_CheckinManual();
-
 			g_MemoryManagerForkLock.f_Unlock();
 		}
 
@@ -369,14 +353,6 @@ namespace NMib::NMemory
 			else
 #endif
 				DMainHeapMax->f_Unlock();
-
-			DNonTrackedHeap->f_CheckinManual();
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-			if (g_bMainHeapIsSmall)
-				DMainHeapSmall->f_CheckinManual();
-			else
-#endif
-				DMainHeapMax->f_CheckinManual();
 
 			g_MemoryManagerForkLock.f_Unlock();
 		}
