@@ -23,7 +23,9 @@ namespace
 	{
 		void f_DoTests()
 		{
-#if defined(DPlatformFamily_Linux) || defined(DPlatformFamily_macOS)
+// ASan on macOS takes these allocations in its malloc zone, whose quarantine is left inconsistent in the child when the fork
+// interrupts another thread's free
+#if defined(DPlatformFamily_Linux) || (defined(DPlatformFamily_macOS) && !defined(DMibSanitizerEnabled_Address))
 			// Blocks are freed after the last allocation, and pacing keeps heap chunks being created for most of the cycle
 			auto fAllocate = [](umint _Size, umint _nBlocks, fp32 _Pace) -> bool
 				{
