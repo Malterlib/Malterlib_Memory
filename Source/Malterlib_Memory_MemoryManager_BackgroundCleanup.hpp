@@ -89,6 +89,10 @@ namespace NMib::NMemory
 			(
 				[this](NThread::CThreadObjectNonTracked *_pThread) -> aint
 				{
+					// This thread waits for arena locks while holding its cleanup lock, which fork preparation takes after the zone list
+					// lock, so a lazy return from those waits, which reads the zone list lock, would deadlock with a fork
+					NSys::fg_Mem_DisableLazyReturnCheckout();
+
 					if (mp_pNumaArena->m_NumaNode != ENumaNode_Default)
 					{
 						NSys::fg_Thread_SetNumaAffinity(NMib::NSys::fg_Thread_GetCurrent(), mp_pNumaArena->m_NumaNode);
