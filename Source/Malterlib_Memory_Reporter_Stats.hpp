@@ -57,11 +57,12 @@ namespace NMib::NMemory
 
 			SizesList.f_Sort
 				(
-					[&](CSize const* _pLeft, CSize const* _pRight)
+					[&](CSize const *_pLeft, CSize const *_pRight)
 					{
 						return _pLeft->m_Cycles < _pRight->m_Cycles;
 
-/*							if (_pLeft->m_nAllocations < _pRight->m_nAllocations)
+						/*
+							if (_pLeft->m_nAllocations < _pRight->m_nAllocations)
 							return true;
 						else if (_pLeft->m_nAllocations > _pRight->m_nAllocations)
 							return false;
@@ -91,17 +92,15 @@ namespace NMib::NMemory
 				Allocator.m_Name = iAllocator->m_Name;
 			Allocator.m_Total += iAllocator->m_Total;
 			for (auto iSize = iAllocator->m_Sizes.f_GetIterator(); iSize; ++iSize)
-			{
 				Allocator.m_Sizes[iSize.f_GetKey()] += *iSize;
-			}
 		}
 	}
 
-	void CStatsMemoryReporter::f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName)
+	void CStatsMemoryReporter::f_AllocatorName(umint _MemoryAllocator, ch8 const *_pAllocatorName)
 	{
 		auto &ThreadLocal = *m_ThreadLocal;
 
-		auto & Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
+		auto &Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
 		Allocator.m_Name = _pAllocatorName;
 	}
 
@@ -139,7 +138,7 @@ namespace NMib::NMemory
 		auto &ThreadLocal = *m_ThreadLocal;
 		uint64 nCycles = CyclesEnd - ThreadLocal.m_CyclesStart[ThreadLocal.m_CyclesDepth - 1];
 
-		auto & Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
+		auto &Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
 
 		++Allocator.m_Total.m_nAllocations;
 		Allocator.m_Total.m_nBytes += _ReturnedSize;
@@ -147,7 +146,7 @@ namespace NMib::NMemory
 		Allocator.m_Total.m_nBytesOverhead += _nBytesOverhead;
 		Allocator.m_Total.m_Cycles += nCycles;
 
-		auto & Size = Allocator.m_Sizes[_ReturnedSize];
+		auto &Size = Allocator.m_Sizes[_ReturnedSize];
 
 		++Size.m_nAllocations;
 		Size.m_nBytes += _ReturnedSize;
@@ -173,8 +172,8 @@ namespace NMib::NMemory
 		uint64 CyclesEnd = NTime::NPlatform::fg_Timer_CyclesFast();
 		auto &ThreadLocal = *m_ThreadLocal;
 		uint64 nCycles = CyclesEnd - ThreadLocal.m_CyclesStart[ThreadLocal.m_CyclesDepth - 1];
-		auto & Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
-		auto & Size = Allocator.m_Sizes[_ReturnedSize];
+		auto &Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
+		auto &Size = Allocator.m_Sizes[_ReturnedSize];
 		Allocator.m_Total.m_Cycles += nCycles;
 		Size.m_Cycles += nCycles;
 
@@ -209,8 +208,8 @@ namespace NMib::NMemory
 		uint64 CyclesEnd = NTime::NPlatform::fg_Timer_CyclesFast();
 		auto &ThreadLocal = *m_ThreadLocal;
 		uint64 nCycles = CyclesEnd - ThreadLocal.m_CyclesStart[ThreadLocal.m_CyclesDepth - 1];
-		auto & Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
-		auto & Size = Allocator.m_Sizes[_ReturnedSize];
+		auto &Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
+		auto &Size = Allocator.m_Sizes[_ReturnedSize];
 		Allocator.m_Total.m_Cycles += nCycles;
 		Size.m_Cycles += nCycles;
 
@@ -233,8 +232,8 @@ namespace NMib::NMemory
 		uint64 CyclesEnd = NTime::NPlatform::fg_Timer_CyclesFast();
 		auto &ThreadLocal = *m_ThreadLocal;
 		uint64 nCycles = CyclesEnd - ThreadLocal.m_CyclesStart[ThreadLocal.m_CyclesDepth - 1];
-		auto & Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
-		auto & Size = Allocator.m_Sizes[_Size];
+		auto &Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
+		auto &Size = Allocator.m_Sizes[_Size];
 		Allocator.m_Total.m_CyclesFree += nCycles;
 		Size.m_CyclesFree += nCycles;
 	}

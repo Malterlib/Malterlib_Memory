@@ -58,14 +58,14 @@ extern "C"
 		umint Size = umint(_Size);
 		if (!fg_TryAlignSystemAllocationSize(Size, 16))
 			return nullptr;
-#		if DMibConfig_MalterlibMemoryManager_Debug
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
-#		else
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_Alloc(Size);
-#		endif
+#if DMibConfig_MalterlibMemoryManager_Debug
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+#else
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_Alloc(Size);
+#endif
 	}
 
-	module_export void *calloc (size_t _nMembers, size_t _Size) __THROW __wur
+	module_export void *calloc(size_t _nMembers, size_t _Size) __THROW __wur
 	{
 #ifndef DMibInitInPreInitArray
 		if (!NMib::g_bCreatedSystem)
@@ -81,16 +81,16 @@ extern "C"
 		}
 		if (!fg_TryAlignSystemAllocationSize(Size, 16))
 			return nullptr;
-#		if DMibConfig_MalterlibMemoryManager_Debug
-			auto pRet = NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
-#		else
-			auto pRet = NMib::NMemory::CAllocator_NonTrackedHeap::f_Alloc(Size);
-#		endif
+#if DMibConfig_MalterlibMemoryManager_Debug
+		auto pRet = NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+#else
+		auto pRet = NMib::NMemory::CAllocator_NonTrackedHeap::f_Alloc(Size);
+#endif
 		NMib::NMemory::fg_MemClear(pRet, Size);
 		return pRet;
 	}
 
-	module_export void *realloc (void *_pMemory, size_t _Size) __THROW
+	module_export void *realloc(void *_pMemory, size_t _Size) __THROW
 	{
 #ifndef DMibInitInPreInitArray
 		if (!NMib::g_bCreatedSystem)
@@ -101,27 +101,28 @@ extern "C"
 		umint Size = umint(_Size);
 		if (!fg_TryAlignSystemAllocationSize(Size, 16))
 			return nullptr;
-#		if DMibConfig_MalterlibMemoryManager_Debug
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
-#		else
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_Resize(_pMemory, Size, 0);
-#		endif
+#if DMibConfig_MalterlibMemoryManager_Debug
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+#else
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_Resize(_pMemory, Size, 0);
+#endif
 	}
 
-	module_export void free (void *_pMemory) __THROW
+	module_export void free(void *_pMemory) __THROW
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		NMib::NMemory::CAllocator_NonTrackedHeap::f_FreeNoSize(_pMemory);
 	}
 
-	module_export void cfree (void *_pMemory) __THROW
+	module_export void cfree(void *_pMemory) __THROW
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		NMib::NMemory::CAllocator_NonTrackedHeap::f_FreeNoSize(_pMemory);
 	}
-	module_export void *memalign (size_t _Alignment, size_t _Size) __THROW __wur
+
+	module_export void *memalign(size_t _Alignment, size_t _Size) __THROW __wur
 	{
 #ifndef DMibInitInPreInitArray
 		if (!NMib::g_bCreatedSystem)
@@ -132,11 +133,11 @@ extern "C"
 		umint Size = umint(_Size);
 		if (!fg_TryAlignSystemAllocationSize(Size, umint(_Alignment)))
 			return nullptr;
-#		if DMibConfig_MalterlibMemoryManager_Debug
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAlignedDebug(Size, _Alignment, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
-#		else
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAligned(Size, _Alignment);
-#		endif
+#if DMibConfig_MalterlibMemoryManager_Debug
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAlignedDebug(Size, _Alignment, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+#else
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAligned(Size, _Alignment);
+#endif
 	}
 
 	module_export void *__libc_memalign(size_t _Alignment, size_t _Size) __THROW __wur
@@ -184,11 +185,11 @@ extern "C"
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignSystemAllocationSize(Size, 16))
 			return nullptr;
-#		if DMibConfig_MalterlibMemoryManager_Debug
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
-#		else
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_Resize(_pMemory, Size, 0);
-#		endif
+#if DMibConfig_MalterlibMemoryManager_Debug
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+#else
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_Resize(_pMemory, Size, 0);
+#endif
 	}
 
 	module_export struct mallinfo mallinfo(void)
@@ -218,13 +219,14 @@ extern "C"
 		umint Size = umint(_Size);
 		if (!fg_TryAlignSystemAllocationSize(Size, NMib::NSys::NPrivate::g_PageSize))
 			return nullptr;
-#		if DMibConfig_MalterlibMemoryManager_Debug
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAlignedDebug(Size, NMib::NSys::NPrivate::g_PageSize, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
-#		else
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAligned(Size, NMib::NSys::NPrivate::g_PageSize);
-#		endif
+#if DMibConfig_MalterlibMemoryManager_Debug
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAlignedDebug(Size, NMib::NSys::NPrivate::g_PageSize, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+#else
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAligned(Size, NMib::NSys::NPrivate::g_PageSize);
+#endif
 	}
-	module_export void * pvalloc(size_t _Size) __THROW __wur
+
+	module_export void *pvalloc(size_t _Size) __THROW __wur
 	{
 #ifndef DMibInitInPreInitArray
 		if (!NMib::g_bCreatedSystem)
@@ -235,12 +237,13 @@ extern "C"
 		umint Size = umint(_Size);
 		if (!fg_TryAlignSystemAllocationSize(Size, NMib::NSys::NPrivate::g_PageSize))
 			return nullptr;
-#		if DMibConfig_MalterlibMemoryManager_Debug
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAlignedDebug(Size, NMib::NSys::NPrivate::g_PageSize, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
-#		else
-			return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAligned(Size, NMib::NSys::NPrivate::g_PageSize);
-#		endif
+#if DMibConfig_MalterlibMemoryManager_Debug
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAlignedDebug(Size, NMib::NSys::NPrivate::g_PageSize, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+#else
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAligned(Size, NMib::NSys::NPrivate::g_PageSize);
+#endif
 	}
+
 	module_export size_t malloc_usable_size(void *_pMemory) __THROW
 	{
 		if (!_pMemory)

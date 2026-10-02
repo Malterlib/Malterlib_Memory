@@ -16,6 +16,7 @@ namespace NMib::NMemory
 				: m_nBytesOverhead(0.0)
 			{
 			}
+
 			zuint64 m_nAllocations;
 			zuint64 m_nBytes;
 			zuint64 m_nBytesRequested;
@@ -28,7 +29,7 @@ namespace NMib::NMemory
 				return NContainer::TCMap<umint, CSize, CSort_Default, CAllocator_NonTrackedHeap>::fs_GetKey(*this);
 			}
 
-			CSize & operator += (CSize const& _Other)
+			CSize &operator += (CSize const &_Other)
 			{
 				m_nAllocations += _Other.m_nAllocations;
 				m_nBytes += _Other.m_nBytes;
@@ -46,21 +47,11 @@ namespace NMib::NMemory
 		CStatsMemoryReporter();
 		~CStatsMemoryReporter();
 
-		void f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName) override;
+		void f_AllocatorName(umint _MemoryAllocator, ch8 const *_pAllocatorName) override;
 		void f_AllocatorDelete(umint _MemoryAllocator) override;
 		void f_ScopeEnter(umint _MemoryAllocator) override;
 		void f_ScopeExit(umint _MemoryAllocator) override;
-		void f_Alloc
-			(
-				umint _MemoryAllocator
-				, umint _Address
-				, umint _RequestedAlignment
-				, umint _RequestedSize
-				, umint _ReturnedSize
-				, fp32 _nBytesOverhead
-				, void *_pAllocationInfo
-			) override
-		;
+		void f_Alloc(umint _MemoryAllocator, umint _Address, umint _RequestedAlignment, umint _RequestedSize, umint _ReturnedSize, fp32 _nBytesOverhead, void *_pAllocationInfo) override;
 		void f_Resize
 			(
 				umint _MemoryAllocator
@@ -73,7 +64,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) override
+			)
+			override
 		;
 		void f_Realloc
 			(
@@ -87,7 +79,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) override
+			)
+			override
 		;
 
 		void f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) override;
@@ -116,6 +109,7 @@ namespace NMib::NMemory
 				: m_CyclesDepth(0)
 			{
 			}
+
 			~CThreadLocal();
 		};
 

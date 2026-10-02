@@ -42,7 +42,7 @@ namespace NMib::NMemory
 		fp32 f_Overhead(void const *_pMemory, TCMemoryManagerSlabShared<t_CParams> const *_pSlab);
 
 		void *f_AllocWithSize(umint &_Size);
-		void f_AllocBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
+		void f_AllocBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
 
 		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 
@@ -100,17 +100,11 @@ namespace NMib::NMemory
 
 		// The reap pending-slab stack only exists when cross-thread frees land in pending state
 		static constexpr bool mc_bUseRemoteFreeReap = mc_bSubSlabStore && t_CParams::mc_bReapInCleanup;
-	private:
 
+	private:
 		// The per-size-class lists hold free blocks with ArenaBlockLists and sub-slabs with the
 		// sub-slab store modes
-		using CNormalFreeStoreList = TCConditional
-			<
-				mc_bSubSlabStore
-				, CMemoryManagerSubSlab_SubSlabList
-				, CMemoryManagerSubSlab_NormalFreeList
-			>
-		;
+		using CNormalFreeStoreList = TCConditional<mc_bSubSlabStore, CMemoryManagerSubSlab_SubSlabList, CMemoryManagerSubSlab_NormalFreeList>;
 
 		// Sub-slab store modes: the sub-slab currently allocated from, per size-class list. It
 		// is removed from its list while current; exhaustion is discovered lazily by the next
@@ -166,15 +160,14 @@ namespace NMib::NMemory
 		DMibMemoryManagerLink(TCMemoryManagerArena, m_Link);
 		DMibMemoryManagerLink(TCMemoryManagerArena, m_FreeArenasLink);
 		DMibMemoryManagerLink(TCMemoryManagerArena, m_CleanupLink);
-	private:
 
+	private:
 		template <uint32 t_SlabType>
 		TCMemoryManagerSlabShared<t_CParams> *fp_CreateSlab(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
 
 		TCMemoryManagerSlabShared<t_CParams> *fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
 
 		TCMemoryManagerSlabShared<t_CParams> *fp_NewSlab(uint32 _SlabType, uint32 _SizeType);
-
 
 		template <umint tf_Size>
 		TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size> *fp_AllocSmallNoSlab();
@@ -195,7 +188,7 @@ namespace NMib::NMemory
 
 		void *fp_AllocSmallSize(umint &_Size);
 
-		void fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
+		void fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
 
 		void *fp_AllocNormalUncached(CNormalFreeStoreList *_pList, CNormalFreeStoreCurrent *_pCurrent, umint _AlignedSize, umint _SubIndex, umint _SlabBucket);
 		void *fp_AllocNormal(umint &_Size);
@@ -236,7 +229,7 @@ namespace NMib::NMemory
 		static bool fsp_BitmapAdvanceCurrentWord(CNormalFreeStoreCurrent &_Current, umint _AlignedSize);
 		static bool fsp_BitmapFreeBlock(CMemoryManagerSubSlabFreeBits &_Bits, uint8 *_pBase, void *_pMemory, umint _AlignedSize, umint _SlabType, umint _SlabBucket, umint _nBlocks);
 
-		void fp_AllocNormalBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
+		void fp_AllocNormalBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
 
 		void fp_SlabHasGarbageInline(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 		void fp_SlabHasGarbage(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
@@ -279,8 +272,8 @@ namespace NMib::NMemory
 		void fp_FreeOtherThread(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 
 		void fp_RequestCleanup();
-	public:
 
+	public:
 #ifdef DCompiler_MSVC_Workaround
 		static constexpr bool mc_MinArraySize = 1;
 #else
@@ -293,9 +286,9 @@ namespace NMib::NMemory
 		static constexpr umint mc_MinAllocSize = mc_bUseSmallSizes ? 1 : t_CParams::mc_MinNormalAllocSize;
 		static constexpr umint mc_MinAlignment = 4; // Can be 4 or 8
 		static constexpr umint mc_nSmallSizeSlabsAligned = NMib::gc_HighestBitSet<mc_MinAlignment> + 1;
-		static constexpr umint mc_nSmallSizeSlabs = mc_bUseSmallSizes ? (mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment*2) / mc_MinAlignment) : mc_MinArraySize;
+		static constexpr umint mc_nSmallSizeSlabs = mc_bUseSmallSizes ? (mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment * 2) / mc_MinAlignment) : mc_MinArraySize;
 		static constexpr umint mc_nLevel0Lists = mc_bUseSmallSizes ? (32 - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment : mc_MinArraySize;
-		static constexpr umint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels-1 : t_CParams::mc_NumNormalSizeLevels;
+		static constexpr umint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels - 1 : t_CParams::mc_NumNormalSizeLevels;
 
 		// The per-size-class arrays are indexed by one flat class number, size level major, so
 		// neighbouring size classes are neighbours in memory
@@ -327,6 +320,7 @@ namespace NMib::NMemory
 		{
 			FSmallAllocJump m_Table[mc_SmallAllocCategoryJumpTableSize];
 		};
+
 		static constexpr CSmallAllocJumbTable mc_SmallAllocCategoryJumpTable = []() constexpr -> CSmallAllocJumbTable
 			{
 				if constexpr (mc_bUseSmallSizes)
@@ -396,6 +390,7 @@ namespace NMib::NMemory
 			{
 				align_cacheline NAtomic::TCAtomic<umint> m_Messages = 0;
 			};
+
 			CSpreadMessage m_SpreadMessages[mc_MessagesSpread];
 			umint m_DeferredMessages[mc_MessagesSpread] = {};
 		};

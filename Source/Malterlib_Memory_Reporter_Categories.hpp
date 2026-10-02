@@ -7,12 +7,12 @@
 #include "Malterlib_Memory_Reporter_Categories.h"
 #include "Malterlib_Memory_Reporter_CategoriesInterface.h"
 #ifdef DPlatformFamily_Windows
-#include <Windows.h>
-#include <Perflib.h>
-#include <Mib/Cryptography/UUID>
-#include <Mib/Cryptography/Hashes/MD5>
-#include <Mib/Process/ProcessLaunch>
-#include <Mib/Core/PlatformSpecific/WindowsError>
+#	include <Windows.h>
+#	include <Perflib.h>
+#	include <Mib/Cryptography/UUID>
+#	include <Mib/Cryptography/Hashes/MD5>
+#	include <Mib/Process/ProcessLaunch>
+#	include <Mib/Core/PlatformSpecific/WindowsError>
 
 #endif
 
@@ -43,7 +43,6 @@ namespace NMib::NMemory
 #ifdef DPlatformFamily_Windows
 	struct CPerformanceCounters
 	{
-
 		GUID m_ProdiverGUID;
 		GUID m_CounterSetGUID;
 
@@ -80,7 +79,12 @@ namespace NMib::NMemory
 			m_ProdiverGUID = reinterpret_cast<GUID &>(ProdiverGUID);
 			m_CounterSetGUID = reinterpret_cast<GUID &>(CounterSetGUID);
 
-			NStr::CStrNonTracked ExecutableHash = NStr::fg_Format<NStr::CStrNonTracked>("{nfh,sj8,sf0}", NCryptography::CHash_MD5::fs_DigestFromData(Executable.f_GetStr(), Executable.f_GetLen()).f_FoldToInt<uint32>());
+			NStr::CStrNonTracked ExecutableHash = NStr::fg_Format<NStr::CStrNonTracked>
+				(
+					"{nfh,sj8,sf0}"
+					, NCryptography::CHash_MD5::fs_DigestFromData(Executable.f_GetStr(), Executable.f_GetLen()).f_FoldToInt<uint32>()
+				)
+			;
 
 			NStr::CStrNonTracked Manifest = R"***(
 <?xml version='1.0' encoding='utf-8' standalone='yes'?>
@@ -149,16 +153,12 @@ namespace NMib::NMemory
 				NStr::CStr StdErr;
 				uint32 ExitCode;
 				if (!NProcess::CProcessLaunch::fs_LaunchBlock("unlodctr.exe", NContainer::fg_CreateVector<NStr::CStr>("/M:" + ManifestFileName), StdOut, StdErr, ExitCode, Params))
-				{
 					DMibTraceSafe("unlodctr.exe failed with: {}\n", StdErr);
-				}
 				else if (ExitCode != 0)
-				{
 					DMibTraceSafe("unlodctr.exe failed with: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(ExitCode));
-				}
 			}
 
-				DMibTraceSafe("0xc0000bb8: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(0xc0000bb8));
+			DMibTraceSafe("0xc0000bb8: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(0xc0000bb8));
 
 			{
 				NProcess::CProcessLaunchParams Params;
@@ -180,9 +180,9 @@ namespace NMib::NMemory
 
 			m_MemoryUsedInfo =
 				{
-					{ m_CounterSetGUID, m_ProdiverGUID, 2, PERF_COUNTERSET_MULTI_INSTANCES },
-					{ 1, PERF_COUNTER_LARGE_RAWCOUNT, 0, sizeof(ULONGLONG), PERF_DETAIL_NOVICE, -8, 0 },
-					{ 2, PERF_COUNTER_LARGE_RAWCOUNT, 0, sizeof(ULONGLONG), PERF_DETAIL_NOVICE, -5, 0 },
+					{m_CounterSetGUID, m_ProdiverGUID, 2, PERF_COUNTERSET_MULTI_INSTANCES}
+					, {1, PERF_COUNTER_LARGE_RAWCOUNT, 0, sizeof(ULONGLONG), PERF_DETAIL_NOVICE, -8, 0}
+					, {2, PERF_COUNTER_LARGE_RAWCOUNT, 0, sizeof(ULONGLONG), PERF_DETAIL_NOVICE, -5, 0}
 				}
 			;
 
@@ -192,9 +192,7 @@ namespace NMib::NMemory
 			ZeroMemory(&ProviderContext, sizeof(PERF_PROVIDER_CONTEXT));
 			ProviderContext.ContextSize = sizeof(PERF_PROVIDER_CONTEXT);
 
-			Status = PerfStartProviderEx(&m_ProdiverGUID,
-											&ProviderContext,
-											&m_pMalterlibPerfProvider);
+			Status = PerfStartProviderEx(&m_ProdiverGUID, &ProviderContext, &m_pMalterlibPerfProvider);
 			if (Status != ERROR_SUCCESS)
 			{
 				DMibTraceSafe("PerfStartProviderEx failed: {}\n", NMib::NPlatform::fg_Win32_GetLastErrorStr(Status));
@@ -209,10 +207,8 @@ namespace NMib::NMemory
 				return;
 			}
 
-
 			m_bValid = true;
 		}
-
 
 		void f_SetCounter(NStr::CStrNonTracked const &_Name, int64 _Bytes, int64 _Allocations)
 		{
@@ -246,7 +242,6 @@ namespace NMib::NMemory
 				return;
 			}
 		}
-
 	};
 
 	constinit NThread::CMutualAggregate g_PerfcountersLock = {DAggregateInit};
@@ -375,7 +370,8 @@ namespace NMib::NMemory
 			{
 				if (_bFullReport)
 				{
-					ToLog += NStr::CStrNonTracked::CFormat("{}-{sj2,sf0}-{sj2,sf0}\t{sj2,sf0}:{sj2,sf0}:{sj2,sf0}\t{}\t{}\t{}\t{}{\n}")
+					ToLog
+						+= NStr::CStrNonTracked::CFormat("{}-{sj2,sf0}-{sj2,sf0}\t{sj2,sf0}:{sj2,sf0}:{sj2,sf0}\t{}\t{}\t{}\t{}{\n}")
 						<< DateTime.m_Year
 						<< DateTime.m_Month
 						<< DateTime.m_DayOfMonth
@@ -416,7 +412,6 @@ namespace NMib::NMemory
 		}
 	}
 
-
 	CCategoriesMemoryReporter::~CCategoriesMemoryReporter()
 	{
 		fg_ReportMemoryGloballyTo(nullptr);
@@ -424,7 +419,7 @@ namespace NMib::NMemory
 		ms_pThis = nullptr;
 	}
 
-	void CCategoriesMemoryReporter::f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName)
+	void CCategoriesMemoryReporter::f_AllocatorName(umint _MemoryAllocator, ch8 const *_pAllocatorName)
 	{
 	}
 
@@ -488,9 +483,7 @@ namespace NMib::NMemory
 
 				int64 NewValue = Cycles + g_CyclesTimerFrequency;
 				if (g_CyclesTimer.f_CompareExchangeStrong(CurrentValue, NewValue))
-				{
 					f_Report(true);
-				}
 			}
 		}
 #endif

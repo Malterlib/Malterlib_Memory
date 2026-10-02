@@ -19,7 +19,6 @@ namespace
 	class CBasics_Tests : public CTest
 	{
 	public:
-
 		CBasics_Tests()
 		{
 		}
@@ -34,7 +33,6 @@ namespace
 		{
 #if 0
 			TCMemoryManagerSlab<CParamsNoCleanup, 0> *pSlab = nullptr;
-
 
 			{
 				TCMemoryManager<CParamsNoCleanup> MemoryManager;
@@ -65,8 +63,7 @@ namespace
 				NMib::NThread::CEvent ThreadStopEvent;
 				ThreadStopEvent.f_ResetSignaled();
 
-				auto fl_ThreadTest
-					= [&](NMib::NThread::CThreadObject *_pThread) -> aint
+				auto fl_ThreadTest = [&](NMib::NThread::CThreadObject *_pThread) -> aint
 					{
 						for (int i = 0; i <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++i)
 						{
@@ -85,8 +82,7 @@ namespace
 					}
 				;
 
-				NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread
-					= NMib::NThread::CThreadObject::fs_StartThread
+				NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread = NMib::NThread::CThreadObject::fs_StartThread
 					(
 						[&](NMib::NThread::CThreadObject *_pThread) -> aint
 						{
@@ -105,13 +101,7 @@ namespace
 
 				for (int i = 0; i < 1024; ++i)
 				{
-					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread
-						= NMib::NThread::CThreadObject::fs_StartThread
-						(
-							fl_ThreadTest
-							, "Test thread alloc"
-						)
-					;
+					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread = NMib::NThread::CThreadObject::fs_StartThread(fl_ThreadTest, "Test thread alloc");
 					pThread.f_Clear();
 					for (auto iAllocated = Allocated.f_GetIterator(); iAllocated; ++iAllocated)
 						MemoryManager.f_Free(*iAllocated);
@@ -144,7 +134,6 @@ namespace
 			}
 #endif
 		}
-
 
 		void f_Dummy()
 		{
@@ -239,8 +228,7 @@ namespace
 						OldSurfaces.f_Insert({MemoryManager.f_AllocWithSize(AllocSize), Size});
 					}
 
-					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread
-						= NMib::NThread::CThreadObject::fs_StartThread
+					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread = NMib::NThread::CThreadObject::fs_StartThread
 						(
 							[&](NMib::NThread::CThreadObject *) -> aint
 							{
@@ -304,10 +292,10 @@ namespace
 				NMib::NTest::CTestMemoryResult Results;
 				MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 				fp64 Leftover = Results.m_AllAllocations.m_BytesCommit.m_Average - Results.m_AllAllocations.m_BytesDecommit.m_Average;
 				DMibTest(DMibExpr(Leftover) <= DMibExpr(c_LeftoverBound));
-#	endif
+#endif
 
 				DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(1u));
 
@@ -338,8 +326,7 @@ namespace
 						}
 					}
 
-					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread
-						= NMib::NThread::CThreadObject::fs_StartThread
+					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread = NMib::NThread::CThreadObject::fs_StartThread
 						(
 							[&](NMib::NThread::CThreadObject *) -> aint
 							{
@@ -361,10 +348,10 @@ namespace
 				NMib::NTest::CTestMemoryResult Results;
 				MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 				fp64 Leftover = Results.m_AllAllocations.m_BytesCommit.m_Average - Results.m_AllAllocations.m_BytesDecommit.m_Average;
 				DMibTest(DMibExpr(Leftover) <= DMibExpr(c_LeftoverBound));
-#	endif
+#endif
 
 				DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(1u));
 
@@ -445,8 +432,7 @@ namespace
 						}
 					}
 
-					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread
-						= NMib::NThread::CThreadObject::fs_StartThread
+					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread = NMib::NThread::CThreadObject::fs_StartThread
 						(
 							[&](NMib::NThread::CThreadObject *) -> aint
 							{
@@ -503,7 +489,6 @@ namespace
 							for (umint iSize = 0; iSize < _nSizesPerLevel; ++iSize)
 								CParams::fs_DivideBySlabMultiplier(i, iSize);
 						}
-
 					}
 				;
 				fCheckParams.template operator ()<16>(16);
@@ -763,7 +748,6 @@ namespace
 				}
 			};
 
-
 			DMibTestSuite("All sizes")
 			{
 				CTestMemoryMeasure MeasureMemory("Alloc");
@@ -841,9 +825,8 @@ namespace
 								(
 									Size
 									, 1
-									, [&](void * _pAlloc, umint _Size)
+									, [&](void *_pAlloc, umint _Size)
 									{
-
 										{
 #if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 
@@ -1030,9 +1013,7 @@ namespace
 							Allocs[i] = MemoryManager.f_AllocWithSize(Size);
 						}
 						for (umint i = 0; i < nAlloc; ++i)
-						{
 							MemoryManager.f_Free(Allocs[i], AllocSize);
-						}
 						DMibTest(DMibExpr(true));
 					}
 				}
@@ -1064,9 +1045,7 @@ namespace
 							Allocs[i] = MemoryManager.f_AllocWithSize(Size);
 						}
 						for (umint i = 0; i < nAlloc; ++i)
-						{
 							MemoryManager.f_Free(Allocs[i], AllocSize);
-						}
 						DMibTest(DMibExpr(true));
 					}
 				}
@@ -1078,7 +1057,7 @@ namespace
 				umint LastAlignment = 1;
 				TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 				auto Checkout = MemoryManager.f_CheckoutForce();
-				uint8 * pLast = nullptr;
+				uint8 *pLast = nullptr;
 				for (umint MemorySize = 1; MemorySize <= CParamsNoCleanup::mc_MaxHeapAllocSize * 2; ++MemorySize)
 				{
 					umint AllocSize = MemoryManager.f_SizePadded(MemorySize);
@@ -1133,10 +1112,10 @@ namespace
 					NMib::NTest::CTestMemoryResult Results;
 					MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 					umint MetaCommit = CParamsNoCleanup::fs_GetSlabTypeMetaSize(0);
 					DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesCommit.m_Average) == DMibExpr(SlabSize / 2 + MetaCommit));
-#	endif
+#endif
 				}
 				[[maybe_unused]] umint MaxCommittedSubSlabs = 0;
 				MemoryManager.f_GarbageCollect(false);
@@ -1167,7 +1146,7 @@ namespace
 					NMib::NTest::CTestMemoryResult Results;
 					MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 					umint PreviousMetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(0) / CParamsNoCleanup::mc_SubSlabSize;
 					umint MetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(4) / CParamsNoCleanup::mc_SubSlabSize;
 					umint Multiplier = CParamsNoCleanup::mc_SlabTypeInfo[4].m_SubSlabMutiplier;
@@ -1188,7 +1167,7 @@ namespace
 						DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, ==, (CommittedSubSlabs - PreviousCommittedSubSlabs) * CParamsNoCleanup::mc_SubSlabSize);
 					else
 						DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, <=, PreviousCommittedSubSlabs * CParamsNoCleanup::mc_SubSlabSize / 32);
-#	endif
+#endif
 				}
 				MemoryManager.f_GarbageCollect(false);
 				{
@@ -1219,16 +1198,16 @@ namespace
 
 					MaxCommittedSubSlabs = (SlabSize / 2) / CParamsNoCleanup::mc_SubSlabSize;
 
-#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 					DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, 0);
 					DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, ==, PreviousWaste);
-#	endif
+#endif
 				}
 				MemoryManager.f_GarbageCollect(false);
 				{
 					DMibTestPath("Alloc4");
 					auto Checkout = MemoryManager.f_CheckoutForce();
-					umint AllocSize = 256 + (258/8)*3;
+					umint AllocSize = 256 + (258 / 8) * 3;
 					umint nAllocs = (SlabSize / 2) / AllocSize;
 					umint nAllocBytes = nAllocs * AllocSize;
 					NMib::NContainer::TCVector<CAlloc> Allocs;
@@ -1253,7 +1232,7 @@ namespace
 					NMib::NTest::CTestMemoryResult Results;
 					MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 					// TODO: Calculate actual start and end to get correct sizes
 					umint MetaSubSlabs = CParamsNoCleanup::fs_GetSlabTypeMetaSize(3) / CParamsNoCleanup::mc_SubSlabSize;
 					umint Multiplier = CParamsNoCleanup::mc_SlabTypeInfo[3].m_SubSlabMutiplier;
@@ -1261,7 +1240,7 @@ namespace
 					umint Waste = CParamsNoCleanup::mc_SlabSize - MetaSubSlabs * CParamsNoCleanup::mc_SubSlabSize - CParamsNoCleanup::mc_NumSubSlabs[3] * SubSlabSize;
 					DMibExpect(Results.m_AllAllocations.m_BytesDecommit.m_Average, ==, Waste);
 					DMibExpect(Results.m_AllAllocations.m_BytesCommit.m_Average, >=, CParamsNoCleanup::mc_SubSlabSize);
-#	endif
+#endif
 				}
 			};
 
@@ -1323,9 +1302,9 @@ namespace
 						NMib::NTest::CTestMemoryResult Results;
 						MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 						DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesDecommit.m_Average) > DMibExpr(0));
-#	endif
+#endif
 
 						DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(0));
 						DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) == DMibExpr(1u));
@@ -1388,9 +1367,9 @@ namespace
 							MeasureMemory.f_Stop(1);
 							NMib::NTest::CTestMemoryResult Results;
 							MeasureMemory.f_GetResults(Results);
-#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 							DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesDecommit.m_Average) > DMibExpr(0));
-#	endif
+#endif
 						}
 
 						for (umint i = 0; i < BigAllocs.f_GetLen(); ++i)
@@ -1404,9 +1383,9 @@ namespace
 						NMib::NTest::CTestMemoryResult Results;
 						MeasureMemory.f_GetResults(Results);
 
-#	if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
+#if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 						DMibTest(DMibExpr(Results.m_AllAllocations.m_BytesDecommit.m_Average) > DMibExpr(0) && DMibExpr("Second"));
-#	endif
+#endif
 						umint nSlabs = MemoryManager.f_GetNumUsedSlabs();
 
 						DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) == DMibExpr(1u));
@@ -1443,18 +1422,18 @@ namespace
 				}
 
 				umint nThreads = 16;
-#if DMibPPtrBits <= 32
+#	if DMibPPtrBits <= 32
 				nThreads = 4;
-#endif
+#	endif
 				for (umint i = 0; i < nThreads; ++i)
 				{
 					StartedThreads.f_Insert
 						(
 							NMib::NThread::CThreadObject::fs_StartThread
 							(
-								[&](NMib::NThread::CThreadObject * _pThread) -> aint
+								[&](NMib::NThread::CThreadObject *_pThread) -> aint
 								{
-									NMib::NSys::fg_Thread_Sleep(fp64(0.1) + NMib::NMisc::fg_GetRandomFloat()*0.1);
+									NMib::NSys::fg_Thread_Sleep(fp64(0.1) + NMib::NMisc::fg_GetRandomFloat() * 0.1);
 
 									for (int i = 0; i < 64; ++i)
 									{
@@ -1505,7 +1484,7 @@ namespace
 											MemoryManager.f_Free(Alloc.m_pAlloc, Alloc.m_Size);
 										for (auto &Alloc : HugeAllocs)
 											MemoryManager.f_Free(Alloc.m_pAlloc, Alloc.m_Size);
-										NMib::NSys::fg_Thread_Sleep(fp64(0.005) + NMib::NMisc::fg_GetRandomFloat()*0.005);
+										NMib::NSys::fg_Thread_Sleep(fp64(0.005) + NMib::NMisc::fg_GetRandomFloat() * 0.005);
 									}
 
 									return 0;
@@ -1687,9 +1666,9 @@ namespace
 			DMibTestSuite("Dll")
 			{
 				NMib::NStr::CStr DllPath = NMib::NStr::CStr("Test_Malterlib_Helper_Memory") + NMib::NFile::CFile::fs_GetDllExtension();
-#ifdef DPlatformFamily_Linux
+#	ifdef DPlatformFamily_Linux
 				DllPath = NMib::NFile::CFile::fs_AppendPath(NMib::NFile::CFile::fs_GetProgramDirectory(), DllPath);
-#endif
+#	endif
 				auto pDll = NMib::NSys::fg_LoadLibrary(DllPath);
 
 				DMibTest(DMibExpr(pDll))(ETest_FailAndStop);
@@ -1708,5 +1687,4 @@ namespace
 	};
 
 	DMibTestRegister(CBasics_Tests, Malterlib::Memory::MemoryManager);
-
 }

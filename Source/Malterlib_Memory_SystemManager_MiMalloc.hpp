@@ -5,7 +5,7 @@
 
 namespace NMib
 {
-	ch8 const* g_pMemoryManagerName = "mimalloc memory manager";
+	ch8 const *g_pMemoryManagerName = "mimalloc memory manager";
 }
 
 #define DUseAlignedAlloc 1
@@ -138,6 +138,7 @@ namespace NMib::NMemory
 			_Size = mi_usable_size(pRet);
 			return pRet;
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size, umint _Alignment)
 		{
 #if DUseAlignedAlloc
@@ -148,11 +149,13 @@ namespace NMib::NMemory
 			_Size = mi_usable_size(pRet);
 			return pRet;
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, umint _Size)
 		{
 			auto *pRet = mi_malloc(_Size);
 			return pRet;
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment)
 		{
 #if DUseAlignedAlloc
@@ -162,6 +165,7 @@ namespace NMib::NMemory
 #endif
 			return pRet;
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 		{
 			auto *pRet = mi_reallocf(_pMemory, _Size);
@@ -310,7 +314,7 @@ namespace NMib::NMemory
 		DMibMemoryReportFree(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr);
 	}
 
-	umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+	umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		umint Ret = mi_usable_size((void *)_pMemory);
@@ -318,7 +322,7 @@ namespace NMib::NMemory
 		return Ret;
 	}
 
-	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 		DMibPDebugBreak; // Not supported
 		return 0;

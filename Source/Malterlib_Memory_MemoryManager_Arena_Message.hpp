@@ -176,10 +176,7 @@ namespace NMib::NMemory
 				if (!Head)
 					return false; // Stale summary bit from an earlier reap round
 
-				bWasExhausted
-					= FreeState.m_pFreeHead == nullptr
-					&& FreeState.m_CarveOffset >= FreeState.m_CarveEnd
-				;
+				bWasExhausted = FreeState.m_pFreeHead == nullptr && FreeState.m_CarveOffset >= FreeState.m_CarveEnd;
 
 				uint16 Offset = uint16(Head - 1);
 				while (1)
@@ -361,7 +358,7 @@ namespace NMib::NMemory
 		(
 			umint &o_MessageList
 			, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena
- 			, CNormalFreeStoreList *_pFreeList
+			, CNormalFreeStoreList *_pFreeList
 			, smint &_nToProcess
 		)
 	{

@@ -15,6 +15,7 @@ extern "C"
 		void *m_pAlloc;
 		umint m_Size;
 	};
+
 	module_export void calling_convention_c fg_TestMemory()
 	{
 		*g_ThreadLocal = NMib::NStr::CStr::fs_ToStr(NMib::NSys::fg_Thread_GetCurrentUID());
@@ -36,9 +37,9 @@ extern "C"
 				(
 					NMib::NThread::CThreadObject::fs_StartThread
 					(
-						[&](NMib::NThread::CThreadObject * _pThread) -> aint
+						[&](NMib::NThread::CThreadObject *_pThread) -> aint
 						{
-							NMib::NSys::fg_Thread_Sleep(fp64(0.1) + NMib::NMisc::fg_GetRandomFloat()*0.1);
+							NMib::NSys::fg_Thread_Sleep(fp64(0.1) + NMib::NMisc::fg_GetRandomFloat() * 0.1);
 
 							for (int i = 0; i < 2; ++i)
 							{
@@ -47,7 +48,7 @@ extern "C"
 								NMib::NContainer::TCVector<CAlloc> HugeAllocs;
 								auto Checkout = NMib::fg_GetSys()->f_MemoryManager_Checkout();
 								umint LastAlloc = 0;
-								for (umint MemorySize = 1; MemorySize <= 512*1024; MemorySize += MinSizeDifference)
+								for (umint MemorySize = 1; MemorySize <= 512 * 1024; MemorySize += MinSizeDifference)
 								{
 									umint AllocSize = NMib::NMemory::fg_SizePadded(MemorySize);
 									if (AllocSize != LastAlloc || MemorySize < 1024)
@@ -59,7 +60,7 @@ extern "C"
 									}
 								}
 
-								for (umint MemorySize = 512*1024 * 2; MemorySize <= 16*1024*1024; MemorySize *= 2)
+								for (umint MemorySize = 512 * 1024 * 2; MemorySize <= 16 * 1024 * 1024; MemorySize *= 2)
 								{
 									umint AllocSize = MemorySize;
 									if (AllocSize != LastAlloc)
@@ -71,7 +72,7 @@ extern "C"
 									}
 								}
 
-								for (umint MemorySize = 16*1024*1024 * 2; MemorySize <= 16*1024*1024 * 4; MemorySize *= 2)
+								for (umint MemorySize = 16 * 1024 * 1024 * 2; MemorySize <= 16 * 1024 * 1024 * 4; MemorySize *= 2)
 								{
 									umint AllocSize = MemorySize;
 									if (AllocSize != LastAlloc)
@@ -89,7 +90,7 @@ extern "C"
 									NMib::NMemory::fg_Free(Alloc.m_pAlloc, Alloc.m_Size);
 								for (auto &Alloc : HugeAllocs)
 									NMib::NMemory::fg_Free(Alloc.m_pAlloc, Alloc.m_Size);
-								NMib::NSys::fg_Thread_Sleep(fp64(0.005) + NMib::NMisc::fg_GetRandomFloat()*0.005);
+								NMib::NSys::fg_Thread_Sleep(fp64(0.005) + NMib::NMisc::fg_GetRandomFloat() * 0.005);
 							}
 
 							return 0;
@@ -100,5 +101,4 @@ extern "C"
 			;
 		}
 	}
-
 }

@@ -9,11 +9,11 @@ namespace NMib::NMemory
 {
 	enum ENumaArenaCleanup
 	{
-		ENumaArenaCleanup_None = 0
-		, ENumaArenaCleanup_HeapGarbage = DMibBit(0)
-		, ENumaArenaCleanup_HeapCommit = DMibBit(1)
+		ENumaArenaCleanup_None              = 0
+		, ENumaArenaCleanup_HeapGarbage     = DMibBit(0)
+		, ENumaArenaCleanup_HeapCommit      = DMibBit(1)
 		, ENumaArenaCleanup_ProcessMessages = DMibBit(2)
-		, ENumaArenaCleanup_FreeSlabs = DMibBit(3)
+		, ENumaArenaCleanup_FreeSlabs       = DMibBit(3)
 	};
 
 	struct CMemoryManagerGarbageOptions
@@ -27,7 +27,7 @@ namespace NMib::NMemory
 
 	enum EMemoryManagerArenaHeapBlockFlag
 	{
-		EMemoryManagerArenaHeapBlockFlag_None = 0
+		EMemoryManagerArenaHeapBlockFlag_None        = 0
 		, EMemoryManagerArenaHeapBlockFlag_Allocated = DMibBit(0)
 	};
 
@@ -56,14 +56,12 @@ namespace NMib::NMemory
 		DMibListLinkDS_Link(TCMemoryManagerArenaHeapChunk, m_HeapLink);
 		DMibListLinkDS_Link(TCMemoryManagerArenaHeapChunk, m_CleanupLink);
 
-
 		NContainer::TCMap<uint8 *, CMemoryManagerArenaHeapBlock, NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_Blocks;
 
 		int64 m_DecommitTimestamp = 0;
 		int64 m_FreeTimestamp = 0;
 
 	public:
-
 		TCMemoryManagerArenaHeapChunk(umint _Size, TCMemoryManagerArenaHeap<t_CParams> *_pHeap);
 		~TCMemoryManagerArenaHeapChunk();
 
@@ -118,8 +116,8 @@ namespace NMib::NMemory
 		void *f_AllocWithSize(umint &_Size);
 		void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment);
 		void f_Free(void *_pMem, TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk);
-		umint f_Size(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
-		fp32 f_Overhead(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
+		umint f_Size(void const *_pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
+		fp32 f_Overhead(void const *_pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
 		static umint fs_GetAllocSize(umint _Size);
 
 		void f_Lock();
@@ -130,6 +128,5 @@ namespace NMib::NMemory
 		int64 f_DecommitDeferred(int64 _Timestamp);
 
 		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
-
 	};
 }

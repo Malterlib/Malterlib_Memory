@@ -65,11 +65,11 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	TCMemoryManagerSlabShared<t_CParams> * TCMemoryManagerArena<t_CParams>::fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab)
+	TCMemoryManagerSlabShared<t_CParams> *TCMemoryManagerArena<t_CParams>::fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab)
 	{
 		if constexpr (t_CParams::mc_NumSizesPerLevel == 16)
 		{
-			switch(_SlabType & 15)
+			switch (_SlabType & 15)
 			{
 			case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
 			case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
@@ -92,7 +92,7 @@ namespace NMib::NMemory
 		}
 		else if constexpr (t_CParams::mc_NumSizesPerLevel == 8)
 		{
-			switch(_SlabType & 7)
+			switch (_SlabType & 7)
 			{
 			case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
 			case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
@@ -107,7 +107,7 @@ namespace NMib::NMemory
 		}
 		else if constexpr (t_CParams::mc_NumSizesPerLevel == 4)
 		{
-			switch(_SlabType & 3)
+			switch (_SlabType & 3)
 			{
 			case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
 			case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
@@ -118,7 +118,7 @@ namespace NMib::NMemory
 		}
 		else if constexpr (t_CParams::mc_NumSizesPerLevel == 2)
 		{
-			switch(_SlabType & 1)
+			switch (_SlabType & 1)
 			{
 			case 0: return fp_CreateSlab<0>(_pMemory, _pOldSlab);
 			case 1: return fp_CreateSlab<1>(_pMemory, _pOldSlab);
@@ -126,13 +126,9 @@ namespace NMib::NMemory
 			return nullptr;
 		}
 		else if constexpr (t_CParams::mc_NumSizesPerLevel == 1)
-		{
 			return fp_CreateSlab<0>(_pMemory, _pOldSlab);
-		}
 		else
-		{
 			static_assert(t_CParams::mc_NumSizesPerLevel == 0, "Unsupported sizes per level");
-		}
 	}
 
 	template <typename t_CParams>

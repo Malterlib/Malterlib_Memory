@@ -92,17 +92,32 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	only_parameters_aliased inline_small void TCAllocator_MemoryManager<t_CParams>::f_Protect(void *_pMem, umint _Size, uaint _Protect)
 	{
-
 	}
 
 	template <typename t_CParams>
-	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocWithSizeDebug(umint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocWithSizeDebug
+		(
+			umint &_Size
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		return m_pMemoryManager->f_AllocWithSize(_Size);
 	}
 
 	template <typename t_CParams>
-	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocDebug
+		(
+			umint _Size
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		return m_pMemoryManager->f_Alloc(_Size);
 	}
@@ -120,37 +135,83 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocAlignedWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocAlignedWithSize
+		(
+			umint &_Size
+			, umint _Alignment
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		return m_pMemoryManager->f_AllocAlignedWithSize(_Size, _Alignment);
 	}
 
 	template <typename t_CParams>
-	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocAligned
+		(
+			umint _Size
+			, umint _Alignment
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		return m_pMemoryManager->f_AllocAligned(_Size, _Alignment);
 	}
 
 	template <typename t_CParams>
-	only_parameters_aliased inline_small void TCAllocator_MemoryManager<t_CParams>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased inline_small void TCAllocator_MemoryManager<t_CParams>::f_AllocBatch
+		(
+			umint _Size
+			, umint _Alignment
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		return m_pMemoryManager->f_AllocBatch(_Size, _Alignment, _Functor);
 	}
 
 	template <typename t_CParams>
-	only_parameters_aliased inline_small void TCAllocator_MemoryManager<t_CParams>::f_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased inline_small void TCAllocator_MemoryManager<t_CParams>::f_AllocBatchDebug
+		(
+			umint _Size
+			, umint _Alignment
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		return m_pMemoryManager->f_AllocBatch(_Size, _Alignment, _Functor);
 	}
 
 	template <typename t_CParams>
-	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Realloc(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Realloc
+		(
+			void *_pMem
+			, umint &_Size
+			, umint _OldSize
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		return m_pMemoryManager->f_Realloc(_pMem, _Size, _OldSize);
 	}
 
 	template <typename t_CParams>
-	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_ReallocDebug(void *_pMem, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_ReallocDebug
+		(
+			void *_pMem
+			, umint &_Size
+			, umint _OldSize
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		return m_pMemoryManager->f_Realloc(_pMem, _Size, _OldSize);
 	}
@@ -162,7 +223,17 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	only_parameters_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_ResizeDebug(void *_pMem, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_ResizeDebug
+		(
+			void *_pMem
+			, umint &_Size
+			, umint _OldSize
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		return m_pMemoryManager->f_Resize(_pMem, _Size, _OldSize);
 	}

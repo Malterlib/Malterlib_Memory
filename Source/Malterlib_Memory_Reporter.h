@@ -10,7 +10,7 @@
 namespace NMib::NMemory
 {
 #if DMibConfig_Memory_Shims_Lightweight
-	#define DMibMemLightweightTrack(d_Expression) d_Expression
+#	define DMibMemLightweightTrack(d_Expression) d_Expression
 
 	CReportMemoryLightweight *fg_ReportMemoryLightweightTo(CReportMemoryLightweight *_pMemoryReporter);
 
@@ -18,24 +18,29 @@ namespace NMib::NMemory
 	{
 		CReportMemoryLightweight *m_pOldReporter;
 		CReportMemoryLightweight *m_pNewReporter;
+
 	public:
 		CMemoryReportLightweightScope(CReportMemoryLightweight *_pReporter)
 			: m_pNewReporter(_pReporter)
 		{
 			m_pOldReporter = fg_ReportMemoryLightweightTo(_pReporter);
 		}
+
 		CMemoryReportLightweightScope(CReportMemoryLightweight &_Reporter)
 		{
 			m_pOldReporter = fg_ReportMemoryLightweightTo(&_Reporter);
 		}
+
 		~CMemoryReportLightweightScope()
 		{
 			fg_ReportMemoryLightweightTo(m_pOldReporter);
 		}
+
 		void f_Suspend() noexcept override
 		{
 			fg_ReportMemoryLightweightTo(m_pOldReporter);
 		}
+
 		void f_ResumeNoExcept() noexcept override
 		{
 			m_pOldReporter = fg_ReportMemoryLightweightTo(m_pNewReporter);
@@ -44,9 +49,9 @@ namespace NMib::NMemory
 
 	enum EMemoryReportLightweightScopeFlag
 	{
-		EMemoryReportLightweightScopeFlag_None = 0
+		EMemoryReportLightweightScopeFlag_None       = 0
 		, EMemoryReportLightweightScopeFlag_InCScope = DMibBit(0) // We are inside a C allocation scope, for example malloc, or free
-		, EMemoryReportLightweightScopeFlag_User0 = DMibBit(1)
+		, EMemoryReportLightweightScopeFlag_User0    = DMibBit(1)
 	};
 
 	EMemoryReportLightweightScopeFlag fg_MemoryLightweightScopeGetFlags();
@@ -60,6 +65,7 @@ namespace NMib::NMemory
 		{
 			m_OldFlags = fg_MemoryLightweightScopeAddFlags(_AddFlags);
 		}
+
 		~CMemoryReportLightweightScopeFlagScope()
 		{
 			fg_MemoryLightweightScopeSetFlags(m_OldFlags);
@@ -77,6 +83,7 @@ namespace NMib::NMemory
 		{
 			m_OldFlags = fg_MemoryLightweightScopeAddFlags(_AddFlags);
 		}
+
 		~CMemoryReportLightweightScopeFlagLowLevelScope()
 		{
 			fg_MemoryLightweightScopeSetFlags(m_OldFlags);
@@ -86,14 +93,14 @@ namespace NMib::NMemory
 		EMemoryReportLightweightScopeFlag m_OldFlags;
 	};
 
-	#define DMibMemLightweightTrackDisableScope NMib::NMemory::CMemoryReportLightweightScope DisableLightweightTrack(nullptr)
-	#define DMibMemLightweightTrackAddFlagsScope(d_Flags) NMib::NMemory::CMemoryReportLightweightScopeFlagScope AddLightweightTrackScopFlags(d_Flags)
-	#define DMibMemLightweightTrackAddFlagsLowLevelScope(d_Flags) NMib::NMemory::CMemoryReportLightweightScopeFlagLowLevelScope AddLightweightTrackScopFlags(d_Flags)
+#	define DMibMemLightweightTrackDisableScope NMib::NMemory::CMemoryReportLightweightScope DisableLightweightTrack(nullptr)
+#	define DMibMemLightweightTrackAddFlagsScope(d_Flags) NMib::NMemory::CMemoryReportLightweightScopeFlagScope AddLightweightTrackScopFlags(d_Flags)
+#	define DMibMemLightweightTrackAddFlagsLowLevelScope(d_Flags) NMib::NMemory::CMemoryReportLightweightScopeFlagLowLevelScope AddLightweightTrackScopFlags(d_Flags)
 #else
-	#define DMibMemLightweightTrack(d_Expression)
-	#define DMibMemLightweightTrackDisableScope
-	#define DMibMemLightweightTrackAddFlagsScope(d_Flags)
-	#define DMibMemLightweightTrackAddFlagsLowLevelScope(d_Flags)
+#	define DMibMemLightweightTrack(d_Expression)
+#	define DMibMemLightweightTrackDisableScope
+#	define DMibMemLightweightTrackAddFlagsScope(d_Flags)
+#	define DMibMemLightweightTrackAddFlagsLowLevelScope(d_Flags)
 #endif
 
 #if DMibConfig_Memory_Shims_Enable
@@ -149,7 +156,7 @@ namespace NMib::NMemory
 	void fg_ReportMemoryAllocatorDelete(umint _MemoryAllocator, ch8 const *_pAllocatorName);
 	void fg_ReportMemoryGoingToReportEnter(umint _MemoryAllocator);
 	void fg_ReportMemoryGoingToReportExit(umint _MemoryAllocator);
-	void fg_ReportMemoryAllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName);
+	void fg_ReportMemoryAllocatorName(umint _MemoryAllocator, ch8 const *_pAllocatorName);
 	void fg_ReportMemoryReportStatistics(bool _bFullReport);
 
 	CReportMemory *fg_ReportMemoryTo(CReportMemory *_pMemoryReporter);
@@ -159,20 +166,24 @@ namespace NMib::NMemory
 	{
 		CReportMemory *m_pOldReporter;
 		CReportMemory *m_pNewReporter;
+
 	public:
 		CMemoryReportScope(CReportMemory &_Reporter)
 			: m_pNewReporter(&_Reporter)
 		{
 			m_pOldReporter = fg_ReportMemoryTo(&_Reporter);
 		}
+
 		~CMemoryReportScope()
 		{
 			fg_ReportMemoryTo(m_pOldReporter);
 		}
+
 		void f_Suspend() noexcept override
 		{
 			fg_ReportMemoryTo(m_pOldReporter);
 		}
+
 		void f_ResumeNoExcept() noexcept override
 		{
 			m_pOldReporter = fg_ReportMemoryTo(m_pNewReporter);
@@ -182,19 +193,23 @@ namespace NMib::NMemory
 	class CDisableMemoryReporterScope final : public CCoroutineThreadLocalHandler
 	{
 		CReportMemory *m_pOldReporter;
+
 	public:
 		CDisableMemoryReporterScope()
 		{
 			m_pOldReporter = fg_ReportMemoryTo(nullptr);
 		}
+
 		~CDisableMemoryReporterScope()
 		{
 			fg_ReportMemoryTo(m_pOldReporter);
 		}
+
 		void f_Suspend() noexcept override
 		{
 			fg_ReportMemoryTo(m_pOldReporter);
 		}
+
 		void f_ResumeNoExcept() noexcept override
 		{
 			m_pOldReporter = fg_ReportMemoryTo(nullptr);
@@ -205,6 +220,7 @@ namespace NMib::NMemory
 	{
 		umint m_Allocator;
 		bool m_bReport;
+
 	public:
 		CMemoryReportGoingToReportScope(umint _Allocator, bool _bReport)
 			: m_Allocator(_Allocator)
@@ -213,6 +229,7 @@ namespace NMib::NMemory
 			if (_bReport)
 				fg_ReportMemoryGoingToReportEnter(_Allocator);
 		}
+
 		~CMemoryReportGoingToReportScope()
 		{
 			if (m_bReport)
@@ -225,10 +242,14 @@ namespace NMib::NMemory
 #	define DMibMemoryReportExpression(d_Expression) d_Expression
 #	define DMibMemoryReportAlloc(d_MemoryAllocator, d_AllocatorName, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
 		fg_ReportMemoryAlloc((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
-#	define DMibMemoryReportResize(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
-		fg_ReportMemoryResize((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (umint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
-#	define DMibMemoryReportRealloc(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
-		fg_ReportMemoryRealloc((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (umint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+#	define DMibMemoryReportResize(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, \
+		d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
+		fg_ReportMemoryResize((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (umint)d_Address, \
+			d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+#	define DMibMemoryReportRealloc(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, \
+		d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
+		fg_ReportMemoryRealloc((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (umint)d_Address, \
+			d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
 #	define DMibMemoryReportFree(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_pAllocationInfo) \
 		fg_ReportMemoryFree((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_Address, d_Size, d_pAllocationInfo)
 #	define DMibMemoryReportGetSize(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_pAllocationInfo) \
@@ -249,8 +270,10 @@ namespace NMib::NMemory
 #	define DMibMemoryReportSaveVar(d_Name, d_Value)
 #	define DMibMemoryReportExpression(d_Expression)
 #	define DMibMemoryReportAlloc(d_MemoryAllocator, d_AllocatorName, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
-#	define DMibMemoryReportResize(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
-#	define DMibMemoryReportRealloc(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+#	define DMibMemoryReportResize(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, \
+		d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+#	define DMibMemoryReportRealloc(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, \
+		d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
 #	define DMibMemoryReportFree(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_pAllocationInfo)
 #	define DMibMemoryReportGetSize(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_pAllocationInfo)
 #	define DMibMemoryReportProtect(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_Protect)

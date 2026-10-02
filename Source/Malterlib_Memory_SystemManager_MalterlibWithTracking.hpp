@@ -17,38 +17,41 @@ namespace NMib
 
 #if DMibEnableSafeCheck > 0
 
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	static auto &fg_MainHeapSmall()
 	{
 		DMibFastCheck(g_bMainHeapConstructed);
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		DMibFastCheck(g_bMainHeapIsSmall);
-#endif
+#		endif
 		return g_MainHeapSmall;
 	}
-	#define DMainHeapSmall fg_MainHeapSmall()
-#endif
+
+#		define DMainHeapSmall fg_MainHeapSmall()
+#	endif
 
 	static auto &fg_MainHeapMax()
 	{
 		DMibFastCheck(g_bMainHeapConstructed);
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		DMibFastCheck(!g_bMainHeapIsSmall);
-#endif
+#	endif
 		return g_MainHeapMax;
 	}
-	#define DMainHeapMax fg_MainHeapMax()
+
+#	define DMainHeapMax fg_MainHeapMax()
 
 	static auto &fg_NonTrackedHeap()
 	{
 		DMibFastCheck(g_bNonTrackedHeapConstructed);
 		return g_NonTrackedHeap;
 	}
-	#define DNonTrackedHeap fg_NonTrackedHeap()
+
+#	define DNonTrackedHeap fg_NonTrackedHeap()
 #else
-	#define DNonTrackedHeap g_NonTrackedHeap
-	#define DMainHeapSmall g_MainHeapSmall
-	#define DMainHeapMax g_MainHeapMax
+#	define DNonTrackedHeap g_NonTrackedHeap
+#	define DMainHeapSmall g_MainHeapSmall
+#	define DMainHeapMax g_MainHeapMax
 #endif
 
 	constinit NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
@@ -64,11 +67,11 @@ namespace NMib::NMemory
 		if (!g_bMainHeapConstructed)
 			return nullptr;
 		DNonTrackedHeap->f_ReportMemoryTo(_pMemoryReporter);
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_ReportMemoryTo(_pMemoryReporter);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_ReportMemoryTo(_pMemoryReporter);
 	}
 
@@ -76,11 +79,11 @@ namespace NMib::NMemory
 	{
 		if (!g_bMainHeapConstructed)
 			return EMemoryReportLightweightScopeFlag_None;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_GetLightweightScopeFlags();
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_GetLightweightScopeFlags();
 	}
 
@@ -89,11 +92,11 @@ namespace NMib::NMemory
 		if (!g_bMainHeapConstructed)
 			return EMemoryReportLightweightScopeFlag_None;
 		DNonTrackedHeap->f_SetLightweightScopeFlags(_Flags);
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_SetLightweightScopeFlags(_Flags);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_SetLightweightScopeFlags(_Flags);
 	}
 
@@ -102,11 +105,11 @@ namespace NMib::NMemory
 		if (!g_bMainHeapConstructed)
 			return EMemoryReportLightweightScopeFlag_None;
 		DNonTrackedHeap->f_AddLightweightScopeFlags(_Flags);
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_AddLightweightScopeFlags(_Flags);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_AddLightweightScopeFlags(_Flags);
 	}
 #endif
@@ -119,18 +122,18 @@ namespace NMib::NMemory
 
 	inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_DestroyNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 	{
-#		if DEnableDebugMemoryManager
-			if (!CSystem::ms_bDisableMemoryManagerLeakReport)
-				DNonTrackedHeap->f_ReportLeaks();
-#		endif
+#if DEnableDebugMemoryManager
+		if (!CSystem::ms_bDisableMemoryManagerLeakReport)
+			DNonTrackedHeap->f_ReportLeaks();
+#endif
 		if (!g_bMemoryManagerNeededAfterDestroy)
 		{
-#			ifdef DMibConfig_HeapNeverDestroyed
-				DNonTrackedHeap->f_DestroyThreadLocals(); // For debug checks later
-#			else
-				DNonTrackedHeap.f_Destruct();
-				g_MemoryManagerForkLock.f_Destruct();
-#			endif
+#ifdef DMibConfig_HeapNeverDestroyed
+			DNonTrackedHeap->f_DestroyThreadLocals(); // For debug checks later
+#else
+			DNonTrackedHeap.f_Destruct();
+			g_MemoryManagerForkLock.f_Destruct();
+#endif
 		}
 	}
 
@@ -157,11 +160,9 @@ namespace NMib::NMemory
 			{
 				NSys::fg_DebugOutput
 					(
-						(
-							NStr::CFStr256::CFormat("System page size {} is larger than the maximum supported page size of {}\n")
-							<< PageSize
-							<< CMemoryManagerMax::CParams::mc_SubSlabSize
-						).f_GetStr().f_GetStr()
+						(NStr::CFStr256::CFormat("System page size {} is larger than the maximum supported page size of {}\n") << PageSize << CMemoryManagerMax::CParams::mc_SubSlabSize)
+						.f_GetStr()
+						.f_GetStr()
 					)
 				;
 				DMibPDebugBreak;
@@ -170,7 +171,6 @@ namespace NMib::NMemory
 			else if (PageSize <= CMemoryManagerSmall::CParams::mc_SubSlabSize)
 				g_bMainHeapIsSmall = true;
 #endif
-
 
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
@@ -186,6 +186,7 @@ namespace NMib::NMemory
 				NSys::fg_Compiler_MakeActive(1, &MemoryManagerCheckout);
 			}
 		}
+
 		inline_always static CMemoryManagerCheckout DMibCrossmoduleAPI fs_MemoryManager_Checkout(CMemoryManagerCrossModule *_pModule)
 		{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -198,37 +199,37 @@ namespace NMib::NMemory
 
 		inline_always static void DMibCrossmoduleAPI fs_DestroyMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
-#		if DEnableDebugMemoryManager
+#if DEnableDebugMemoryManager
 			{
 				if (!CSystem::ms_bDisableMemoryManagerLeakReport)
 				{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 					if (g_bMainHeapIsSmall)
 						DMainHeapSmall->f_ReportLeaks();
 					else
-#endif
+#	endif
 						DMainHeapMax->f_ReportLeaks();
 				}
 			}
-#		endif
+#endif
 			{
 				if (!g_bMemoryManagerNeededAfterDestroy)
 				{
-#				ifdef DMibConfig_HeapNeverDestroyed
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#ifdef DMibConfig_HeapNeverDestroyed
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 					if (g_bMainHeapIsSmall)
 						DMainHeapSmall->f_DestroyThreadLocals(); // For debug checks later
 					else
-#endif
+#	endif
 						DMainHeapMax->f_DestroyThreadLocals(); // For debug checks later
-#				else
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#else
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 					if (g_bMainHeapIsSmall)
 						DMainHeapSmall.f_Destruct();
 					else
-#endif
+#	endif
 						DMainHeapMax.f_Destruct();
-#				endif
+#endif
 				}
 			}
 		}
@@ -236,16 +237,16 @@ namespace NMib::NMemory
 		inline_always static bool DMibCrossmoduleAPI fs_MemoryManager_Check(CMemoryManagerCrossModule *_pModule, bool _bBreak)
 		{
 			bool bRet = true;
-#			if DEnableDebugMemoryManager
+#if DEnableDebugMemoryManager
 			{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 				if (g_bMainHeapIsSmall)
 				{
 					if (!DMainHeapSmall->f_CheckAll(_bBreak ? EMemoryManagerCheckFlag_Break : EMemoryManagerCheckFlag_None))
 						bRet = false;
 				}
 				else
-#endif
+#	endif
 				{
 					if (!DMainHeapMax->f_CheckAll(_bBreak ? EMemoryManagerCheckFlag_Break : EMemoryManagerCheckFlag_None))
 						bRet = false;
@@ -254,23 +255,24 @@ namespace NMib::NMemory
 				if (!DNonTrackedHeap->f_CheckAll(_bBreak ? EMemoryManagerCheckFlag_Break : EMemoryManagerCheckFlag_None))
 					bRet = false;
 			}
-#			endif
+#endif
 			return bRet;
 		}
 
 		inline_always static bool DMibCrossmoduleAPI fs_ReportingLeaks(CMemoryManagerCrossModule *_pModule)
 		{
-#		if DEnableDebugMemoryManager
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#if DEnableDebugMemoryManager
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 				return DMainHeapSmall->f_ReportingLeaks();
 			else
-#endif
+#	endif
 				return DMainHeapMax->f_ReportingLeaks();
-#		else
+#else
 			return false;
-#		endif
+#endif
 		}
+
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_PrepareFork(CMemoryManagerCrossModule *_pModule)
 		{
 			g_MemoryManagerForkLock.f_Lock();
@@ -390,94 +392,147 @@ namespace NMib::NMemory
 			// Don't bother with non-tracked heap as that should not be used a lot
 			//DNonTrackedHeap->f_SetNumaNode(_NumaNode);
 		}
+
 		static constexpr bool mc_SupportsNonTracked = true;
-#		if DEnableDebugMemoryManager
-			static constexpr bool mc_SupportsDebug = true;
-			inline_always static void * DMibCrossmoduleAPI fs_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, umint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+#if DEnableDebugMemoryManager
+		static constexpr bool mc_SupportsDebug = true;
+		inline_always static void * DMibCrossmoduleAPI fs_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, umint &_Size, ch8 const *_pFile, aint _Line, EHeapDebugFlag _Flags)
+		{
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				return DMainHeapSmall->f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags);
+			else
+#	endif
+				return DMainHeapMax->f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags);
+		}
+
+		inline_always static void * DMibCrossmoduleAPI fs_AllocAlignedWithSizeDebug
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint &_Size
+				, umint _Align
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+			)
+		{
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				return DMainHeapSmall->f_AllocAlignedWithSizeDebug(_Size, _Align, _pFile, _Line, _Flags);
+			else
+#	endif
+				return DMainHeapMax->f_AllocAlignedWithSizeDebug(_Size, _Align, _pFile, _Line, _Flags);
+		}
+
+		inline_always static void * DMibCrossmoduleAPI fs_ReallocDebug
+			(
+				CMemoryManagerCrossModule *_pModule
+				, void *_pMemory
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+				, EAllocationFlag _AllocFlags
+			)
+		{
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				return DMainHeapSmall->f_ReallocDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
+			else
+#	endif
+				return DMainHeapMax->f_ReallocDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
+		}
+
+		inline_always static void * DMibCrossmoduleAPI fs_ResizeDebug
+			(
+				CMemoryManagerCrossModule *_pModule
+				, void *_pMemory
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+				, EAllocationFlag _AllocFlags
+			)
+		{
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				return DMainHeapSmall->f_ResizeDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
+			else
+#	endif
+				return DMainHeapMax->f_ResizeDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
+		}
+
+		inline_always static void DMibCrossmoduleAPI fs_AllocBatchDebugInternal
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+			)
+		{
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				DMainHeapSmall->f_AllocBatchDebug(_Size, _Alignment, _Functor, _pFile, _Line, _Flags);
+			else
+#	endif
+				DMainHeapMax->f_AllocBatchDebug(_Size, _Alignment, _Functor, _pFile, _Line, _Flags);
+		}
+
+		inline_always static void DMibCrossmoduleAPI fs_AllocBatchDebug
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint _Size
+				, umint _Alignment
+				, bool (DMibCrossmoduleAPI *_fCallBatchFunctor)(void *_pContext, void *_pAlloc, umint _Size)
+				, void *_pContext
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+			)
+		{
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
 			{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if (g_bMainHeapIsSmall)
-					return DMainHeapSmall->f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags);
-				else
-#endif
-					return DMainHeapMax->f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags);
+				DMainHeapSmall->f_AllocBatchDebug
+					(
+						_Size
+						, _Alignment
+						, [&](void *_pAlloc, umint _Size)
+						{
+							return _fCallBatchFunctor(_pContext, _pAlloc, _Size);
+						}
+						, _pFile
+						, _Line
+						, _Flags
+					)
+				;
 			}
-			inline_always static void * DMibCrossmoduleAPI fs_AllocAlignedWithSizeDebug(CMemoryManagerCrossModule *_pModule, umint &_Size, umint _Align, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
+			else
+#	endif
 			{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if (g_bMainHeapIsSmall)
-					return DMainHeapSmall->f_AllocAlignedWithSizeDebug(_Size, _Align, _pFile, _Line, _Flags);
-				else
-#endif
-					return DMainHeapMax->f_AllocAlignedWithSizeDebug(_Size, _Align, _pFile, _Line, _Flags);
+				DMainHeapMax->f_AllocBatchDebug
+					(
+						_Size
+						, _Alignment
+						, [&](void *_pAlloc, umint _Size)
+						{
+							return _fCallBatchFunctor(_pContext, _pAlloc, _Size);
+						}
+						, _pFile
+						, _Line
+						, _Flags
+					)
+				;
 			}
-			inline_always static void * DMibCrossmoduleAPI fs_ReallocDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
-			{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if (g_bMainHeapIsSmall)
-					return DMainHeapSmall->f_ReallocDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
-				else
+		}
+#else
+		static constexpr bool mc_SupportsDebug = false;
 #endif
-					return DMainHeapMax->f_ReallocDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
-			}
-			inline_always static void * DMibCrossmoduleAPI fs_ResizeDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
-			{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if (g_bMainHeapIsSmall)
-					return DMainHeapSmall->f_ResizeDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
-				else
-#endif
-					return DMainHeapMax->f_ResizeDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
-			}
-			inline_always static void DMibCrossmoduleAPI fs_AllocBatchDebugInternal(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
-			{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if (g_bMainHeapIsSmall)
-					DMainHeapSmall->f_AllocBatchDebug(_Size, _Alignment, _Functor, _pFile, _Line, _Flags);
-				else
-#endif
-					DMainHeapMax->f_AllocBatchDebug(_Size, _Alignment, _Functor, _pFile, _Line, _Flags);
-			}
-			inline_always static void DMibCrossmoduleAPI fs_AllocBatchDebug(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment, bool (DMibCrossmoduleAPI * _fCallBatchFunctor)(void *_pContext, void * _pAlloc, umint _Size), void * _pContext, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
-			{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if (g_bMainHeapIsSmall)
-				{
-					DMainHeapSmall->f_AllocBatchDebug
-						(
-							_Size
-							, _Alignment
-							, [&](void * _pAlloc, umint _Size)
-							{
-								return _fCallBatchFunctor(_pContext, _pAlloc, _Size);
-							}
-							, _pFile
-							, _Line
-							, _Flags
-						)
-					;
-				}
-				else
-#endif
-				{
-					DMainHeapMax->f_AllocBatchDebug
-						(
-							_Size
-							, _Alignment
-							, [&](void * _pAlloc, umint _Size)
-							{
-								return _fCallBatchFunctor(_pContext, _pAlloc, _Size);
-							}
-							, _pFile
-							, _Line
-							, _Flags
-						)
-					;
-				}
-			}
-#		else
-			static constexpr bool mc_SupportsDebug = false;
-#		endif
 
 		inline_always static umint DMibCrossmoduleAPI fs_NonTracked_Granularity(CMemoryManagerCrossModule *_pModule)
 		{
@@ -504,7 +559,13 @@ namespace NMib::NMemory
 			return DNonTrackedHeap->f_Overhead(_pBlock);
 		}
 
-		inline_always static void DMibCrossmoduleAPI fs_AllocBatchInternal(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+		inline_always static void DMibCrossmoduleAPI fs_AllocBatchInternal
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			)
 		{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
@@ -513,7 +574,15 @@ namespace NMib::NMemory
 #endif
 				DMainHeapMax->f_AllocBatch(_Size, _Alignment, _Functor);
 		}
-		inline_always static void DMibCrossmoduleAPI fs_AllocBatch(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment, bool (DMibCrossmoduleAPI * _fCallBatchFunctor)(void *_pContext, void * _pAlloc, umint _Size), void * _pContext)
+
+		inline_always static void DMibCrossmoduleAPI fs_AllocBatch
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint _Size
+				, umint _Alignment
+				, bool (DMibCrossmoduleAPI *_fCallBatchFunctor)(void *_pContext, void *_pAlloc, umint _Size)
+				, void *_pContext
+			)
 		{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
@@ -522,7 +591,7 @@ namespace NMib::NMemory
 					(
 						_Size
 						, _Alignment
-						, [&](void * _pAlloc, umint _Size)
+						, [&](void *_pAlloc, umint _Size)
 						{
 							return _fCallBatchFunctor(_pContext, _pAlloc, _Size);
 						}
@@ -536,7 +605,7 @@ namespace NMib::NMemory
 					(
 						_Size
 						, _Alignment
-						, [&](void * _pAlloc, umint _Size)
+						, [&](void *_pAlloc, umint _Size)
 						{
 							return _fCallBatchFunctor(_pContext, _pAlloc, _Size);
 						}
@@ -544,7 +613,14 @@ namespace NMib::NMemory
 				;
 			}
 		}
-		inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatchInternal(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+
+		inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatchInternal
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			)
 		{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
@@ -553,7 +629,15 @@ namespace NMib::NMemory
 #endif
 				DMainHeapMax->f_AllocBatch(_Size, _Alignment, _Functor);
 		}
-		inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatch(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment, bool (DMibCrossmoduleAPI * _fCallBatchFunctor)(void *_pContext, void * _pAlloc, umint _Size), void * _pContext)
+
+		inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatch
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint _Size
+				, umint _Alignment
+				, bool (DMibCrossmoduleAPI *_fCallBatchFunctor)(void *_pContext, void *_pAlloc, umint _Size)
+				, void *_pContext
+			)
 		{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
@@ -562,7 +646,7 @@ namespace NMib::NMemory
 					(
 						_Size
 						, _Alignment
-						, [&](void * _pAlloc, umint _Size)
+						, [&](void *_pAlloc, umint _Size)
 						{
 							return _fCallBatchFunctor(_pContext, _pAlloc, _Size);
 						}
@@ -576,7 +660,7 @@ namespace NMib::NMemory
 					(
 						_Size
 						, _Alignment
-						, [&](void * _pAlloc, umint _Size)
+						, [&](void *_pAlloc, umint _Size)
 						{
 							return _fCallBatchFunctor(_pContext, _pAlloc, _Size);
 						}
@@ -585,62 +669,124 @@ namespace NMib::NMemory
 			}
 		}
 
-#		if DEnableDebugMemoryManager
-			inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, umint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
-			{
-				return DNonTrackedHeap->f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags);
-			}
-			inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAlignedWithSizeDebug(CMemoryManagerCrossModule *_pModule, umint &_Size, umint _Align, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
-			{
-				return DNonTrackedHeap->f_AllocAlignedWithSizeDebug(_Size, _Align, _pFile, _Line, _Flags);
-			}
-			inline_always static void * DMibCrossmoduleAPI fs_NonTracked_ReallocDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
-			{
-				return DNonTrackedHeap->f_ReallocDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
-			}
-			inline_always static void * DMibCrossmoduleAPI fs_NonTracked_ResizeDebug(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags)
-			{
-				return DNonTrackedHeap->f_ResizeDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
-			}
+#if DEnableDebugMemoryManager
+		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocWithSizeDebug
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint &_Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+			)
+		{
+			return DNonTrackedHeap->f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags);
+		}
 
-			inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatchDebugInternal(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
-			{
-				DNonTrackedHeap->f_AllocBatchDebug(_Size, _Alignment, _Functor, _pFile, _Line, _Flags);
-			}
-			inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatchDebug(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment, bool (DMibCrossmoduleAPI * _fCallBatchFunctor)(void *_pContext, void * _pAlloc, umint _Size), void * _pContext, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags)
-			{
-				DNonTrackedHeap->f_AllocBatchDebug
-					(
-						_Size
-						, _Alignment
-						, [&](void * _pAlloc, umint _Size)
-						{
-							return _fCallBatchFunctor(_pContext, _pAlloc, _Size);
-						}
-						, _pFile
-						, _Line
-						, _Flags
-					)
-				;
-			}
-#		endif
+		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAlignedWithSizeDebug
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint &_Size
+				, umint _Align
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+			)
+		{
+			return DNonTrackedHeap->f_AllocAlignedWithSizeDebug(_Size, _Align, _pFile, _Line, _Flags);
+		}
+
+		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_ReallocDebug
+			(
+				CMemoryManagerCrossModule *_pModule
+				, void *_pMemory
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+				, EAllocationFlag _AllocFlags
+			)
+		{
+			return DNonTrackedHeap->f_ReallocDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
+		}
+
+		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_ResizeDebug
+			(
+				CMemoryManagerCrossModule *_pModule
+				, void *_pMemory
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+				, EAllocationFlag _AllocFlags
+			)
+		{
+			return DNonTrackedHeap->f_ResizeDebug(_pMemory, _Size, _OldSize, _pFile, _Line, _Flags);
+		}
+
+		inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatchDebugInternal
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+			)
+		{
+			DNonTrackedHeap->f_AllocBatchDebug(_Size, _Alignment, _Functor, _pFile, _Line, _Flags);
+		}
+
+		inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatchDebug
+			(
+				CMemoryManagerCrossModule *_pModule
+				, umint _Size
+				, umint _Alignment
+				, bool (DMibCrossmoduleAPI *_fCallBatchFunctor)(void *_pContext, void *_pAlloc, umint _Size)
+				, void *_pContext
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags
+			)
+		{
+			DNonTrackedHeap->f_AllocBatchDebug
+				(
+					_Size
+					, _Alignment
+					, [&](void *_pAlloc, umint _Size)
+					{
+						return _fCallBatchFunctor(_pContext, _pAlloc, _Size);
+					}
+					, _pFile
+					, _Line
+					, _Flags
+				)
+			;
+		}
+#endif
 
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size)
 		{
 			return DNonTrackedHeap->f_AllocWithSize(_Size);
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, umint _Size)
 		{
 			return DNonTrackedHeap->f_Alloc(_Size);
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size, umint _Alignment)
 		{
 			return DNonTrackedHeap->f_AllocAlignedWithSize(_Size, _Alignment);
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment)
 		{
 			return DNonTrackedHeap->f_AllocAligned(_Size, _Alignment);
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 		{
 			return DNonTrackedHeap->f_Realloc(_pMem, _Size, _OldSize);
@@ -767,7 +913,14 @@ namespace NMib::NMemory
 			return DMainHeapMax->f_AllocAlignedWithSize(_Size, _Align);
 	}
 
-	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
+	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Realloc
+		(
+			CMemoryManagerCrossModule *_pModule
+			, void *_pMemory
+			, umint &_Size
+			, umint _OldSize
+			, EAllocationFlag _AllocFlags
+		)
 	{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
@@ -777,7 +930,14 @@ namespace NMib::NMemory
 			return DMainHeapMax->f_Realloc(_pMemory, _Size, _OldSize);
 	}
 
-	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
+	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Resize
+		(
+			CMemoryManagerCrossModule *_pModule
+			, void *_pMemory
+			, umint &_Size
+			, umint _OldSize
+			, EAllocationFlag _AllocFlags
+		)
 	{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
@@ -807,7 +967,7 @@ namespace NMib::NMemory
 			DMainHeapMax->f_FreeNoSize(_pMemory);
 	}
 
-	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
@@ -817,7 +977,7 @@ namespace NMib::NMemory
 			return DMainHeapMax->f_Size(_pMemory);
 	}
 
-	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)

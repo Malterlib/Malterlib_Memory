@@ -20,13 +20,13 @@ Repository
 		, LinePrefix: "// "
 	}
 
-	License #<ReuseAnnotations> =+ [{
+	License #<ReuseAnnotations> =+ [
+		{
 			Path: ["Source/Mig/*"]
 			, CopyrightText: "Apple Inc."
 			, LicenseIdentifier: "APSL-2.0"
 			, Precedence: "override"
-		}
-		, {
+		}, {
 			Path: ["Source/TCMalloc/*"]
 			, CopyrightText: "Google Inc."
 			, LicenseIdentifier: "BSD-3-Clause"
@@ -383,7 +383,6 @@ Property
 	%File "Test/Test_Malterlib_Memory_DllMain.cpp"
 	%Dependency "Lib_Malterlib"
 }
-
 
 %Group "{Test}/{Malterlib_Memory}"
 {

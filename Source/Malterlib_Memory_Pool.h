@@ -12,7 +12,6 @@ namespace NMib::NMemory
 	class CPoolType_Growing
 	{
 	public:
-
 		template <typename t_CAllocator>
 		class TCBlock
 		{
@@ -30,7 +29,7 @@ namespace NMib::NMemory
 
 			enum
 			{
-				EBlockSize = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize
+				EBlockSize  = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize
 				, EDataSize = (EBlockSize + t_Alignment - 1) & (~(t_Alignment - 1))
 			};
 
@@ -58,7 +57,6 @@ namespace NMib::NMemory
 			}
 		};
 
-
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		class TCPool
 		{
@@ -73,6 +71,7 @@ namespace NMib::NMemory
 				, m_GrowSize(0)
 			{
 			}
+
 			inline_always TCPool()
 			{
 			}
@@ -83,9 +82,9 @@ namespace NMib::NMemory
 
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
-#				ifdef DMibDebug
-				aint m_NumUsed;
-#				endif
+#ifdef DMibDebug
+			aint m_NumUsed;
+#endif
 			ENumaNode m_NumaNode;
 			umint m_GrowSize;
 
@@ -100,9 +99,9 @@ namespace NMib::NMemory
 				m_GrowSize = _GrowSize;
 				m_Chunks.f_Construct();
 				m_FreeBlocks.f_Construct();
-#					ifdef DMibDebug
-					m_NumUsed = 0;
-#					endif
+#ifdef DMibDebug
+				m_NumUsed = 0;
+#endif
 			}
 
 			void f_Destruct(ch8 const *_pTypeName);
@@ -115,18 +114,17 @@ namespace NMib::NMemory
 
 			void *f_GetBlock()
 			{
-				TCBlock<t_CAllocator> * pBlock = m_FreeBlocks.f_Pop();
+				TCBlock<t_CAllocator> *pBlock = m_FreeBlocks.f_Pop();
 
 				if (pBlock)
 				{
-#						ifdef DMibDebug
-						++m_NumUsed;
-#						endif
+#ifdef DMibDebug
+					++m_NumUsed;
+#endif
 					return pBlock;
 				}
 				else
 				{
-
 					umint Size = ((((sizeof(CChunk) + m_GrowSize * EDataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
 					void *pMem = t_CAllocator::f_AllocWithSize(Size, EAllocationFlag_WillFreeWithSize, m_NumaNode);
 
@@ -135,15 +133,13 @@ namespace NMib::NMemory
 						fp_AddChunk(pMem, Size);
 						pBlock = m_FreeBlocks.f_Pop();
 						DMibFastCheck(pBlock); // Must succed
-#							ifdef DMibDebug
-							++m_NumUsed;
-#							endif
+#ifdef DMibDebug
+						++m_NumUsed;
+#endif
 						return pBlock;
 					}
 					else
-					{
 						return nullptr;
-					}
 				}
 			}
 
@@ -165,19 +161,16 @@ namespace NMib::NMemory
 				TCBlock<t_CAllocator> *pBlock = (TCBlock<t_CAllocator> *)_pBlock;
 				// We are adding to a full block
 				m_FreeBlocks.f_UnsafePush(pBlock);
-#					ifdef DMibDebug
-					--m_NumUsed;
-#					endif
+#ifdef DMibDebug
+				--m_NumUsed;
+#endif
 			}
-
 		};
-
 	};
 
 	class CPoolType_Freeable
 	{
 	public:
-
 		class CPool;
 
 		template <typename t_CAllocator>
@@ -207,13 +200,12 @@ namespace NMib::NMemory
 
 			enum
 			{
-				EBlockSize = (sizeof(TCBlock<t_CAllocator>) + t_Alignment - 1) & (~(t_Alignment - 1))
+				EBlockSize  = (sizeof(TCBlock<t_CAllocator>) + t_Alignment - 1) & (~(t_Alignment - 1))
 				, EDataSize = ((EBlockSize + t_DataSize) + t_Alignment - 1) & (~(t_Alignment - 1))
 			};
 
 			inline_large TCChunk(umint _Size)
 			{
-
 				m_Size = _Size;
 				m_NumUsed = 0;
 
@@ -230,7 +222,6 @@ namespace NMib::NMemory
 					m_FreeBlocks.f_UnsafeInsertFirst(pToInsert);
 					pCurrentBlock -= EDataSize;
 				}
-
 			}
 
 			~TCChunk()
@@ -238,7 +229,6 @@ namespace NMib::NMemory
 				//DMibFastCheck(m_NumUsed == 0); // Memory leak in pool!
 			}
 		};
-
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		class TCPool
@@ -252,6 +242,7 @@ namespace NMib::NMemory
 				, m_GrowSize(0)
 			{
 			}
+
 			inline_always TCPool()
 			{
 			}
@@ -268,7 +259,7 @@ namespace NMib::NMemory
 
 			enum
 			{
-				EDataSize = CChunk::EDataSize
+				EDataSize    = CChunk::EDataSize
 				, EBlockSize = CChunk::EBlockSize
 			};
 
@@ -303,11 +294,11 @@ namespace NMib::NMemory
 
 			void *f_GetBlock()
 			{
-//					DMibListLinkD_Iter(TCChunk<>, m_Link) Iter = m_FreeChunks;
+				// DMibListLinkD_Iter(TCChunk<>, m_Link) Iter = m_FreeChunks;
 
 				CChunk *pChunk = m_FreeChunks.f_GetFirst();
 
-				TCBlock<t_CAllocator> * pBlock = nullptr;
+				TCBlock<t_CAllocator> *pBlock = nullptr;
 
 				if (pChunk)
 					pBlock = pChunk->m_FreeBlocks.f_Pop();
@@ -326,12 +317,10 @@ namespace NMib::NMemory
 						m_Chunks.f_Insert(pChunk);
 					}
 					else if (pChunk->m_NumUsed == 0)
-					{
 						m_FreeChunks.f_Insert(pChunk);
-					}
 					++pChunk->m_NumUsed;
 					pBlock->m_pChunk = pChunk;
-					return ((uint8*)pBlock) + EBlockSize;
+					return ((uint8 *)pBlock) + EBlockSize;
 				}
 				else
 				{
@@ -348,12 +337,10 @@ namespace NMib::NMemory
 
 						++pNewChunk->m_NumUsed;
 						pBlock->m_pChunk = pNewChunk;
-						return ((uint8*)pBlock) + EBlockSize;
+						return ((uint8 *)pBlock) + EBlockSize;
 					}
 					else
-					{
 						return nullptr;
-					}
 				}
 			}
 
@@ -361,7 +348,6 @@ namespace NMib::NMemory
 			{
 				t_CAllocator::f_Free(_pChunk, _pChunk->m_Size);
 			}
-
 
 			fp32 f_Overhead() const
 			{
@@ -371,7 +357,7 @@ namespace NMib::NMemory
 			void f_ReturnBlock(void *_pBlock)
 			{
 				// Too slow to check this
-//					DMibFastCheck(f_ContainsBlock(_pBlock), "Must be part of pool");
+				// 	DMibFastCheck(f_ContainsBlock(_pBlock), "Must be part of pool");
 				TCBlock<t_CAllocator> *pBlock = (TCBlock<t_CAllocator> *)((uint8 *)_pBlock - EBlockSize);
 				CChunk *pChunk = ((CChunk *)(pBlock->m_pChunk));
 				if (pChunk->m_FreeBlocks.f_IsEmpty())
@@ -393,7 +379,6 @@ namespace NMib::NMemory
 							// Remove the excess chunk
 							CChunk *pChunkToDelete = m_EmptyChunks.f_Pop();
 
-
 							pChunkToDelete->~CChunk();
 							fs_FreeChunk(pChunkToDelete);
 						}
@@ -401,15 +386,12 @@ namespace NMib::NMemory
 					}
 				}
 			}
-
 		};
-
 	};
 
 	class CPoolType_FreeableSmall
 	{
 	public:
-
 		class CPool;
 
 		template <typename t_CAllocator>
@@ -443,7 +425,7 @@ namespace NMib::NMemory
 
 			enum
 			{
-				EBlockSize = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize
+				EBlockSize  = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize
 				, EDataSize = (EBlockSize + t_Alignment - 1) & (~(t_Alignment - 1))
 			};
 
@@ -465,7 +447,6 @@ namespace NMib::NMemory
 					m_FreeBlocks.f_UnsafeInsertFirst(pToInsert);
 					pCurrentBlock -= EDataSize;
 				}
-
 			}
 
 			~TCChunk()
@@ -473,7 +454,6 @@ namespace NMib::NMemory
 				//DMibFastCheck(m_NumUsed == 0); // Memory leak in pool!
 			}
 		};
-
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		class TCPool
@@ -488,6 +468,7 @@ namespace NMib::NMemory
 				, m_GrowSize(0)
 			{
 			}
+
 			inline_always TCPool()
 			{
 			}
@@ -548,24 +529,20 @@ namespace NMib::NMemory
 
 			void *f_GetBlock()
 			{
-	//					DMibListLinkD_Iter(TCChunk<>, m_Link) Iter = m_FreeChunks;
+				// DMibListLinkD_Iter(TCChunk<>, m_Link) Iter = m_FreeChunks;
 
 				CChunk *pChunk = m_FreeChunks.f_GetFirst();
 
-				TCBlock<t_CAllocator> * pBlock = nullptr;
+				TCBlock<t_CAllocator> *pBlock = nullptr;
 
 				if (pChunk)
-				{
 					pBlock = pChunk->m_FreeBlocks.f_Pop();
-				}
 
 				if (!pBlock)
 				{
 					pChunk = m_EmptyChunks.f_GetFirst();
 					if (pChunk)
-					{
 						pBlock = pChunk->m_FreeBlocks.f_Pop();
-					}
 				}
 
 				if (pBlock)
@@ -576,9 +553,7 @@ namespace NMib::NMemory
 						m_Chunks.f_Insert(pChunk);
 					}
 					else if (pChunk->m_NumUsed == 0)
-					{
 						m_FreeChunks.f_Insert(pChunk);
-					}
 					++pChunk->m_NumUsed;
 					return pBlock;
 				}
@@ -602,9 +577,7 @@ namespace NMib::NMemory
 						return pBlock;
 					}
 					else
-					{
 						return nullptr;
-					}
 				}
 			}
 
@@ -644,11 +617,8 @@ namespace NMib::NMemory
 					}
 				}
 			}
-
 		};
-
 	};
-
 
 	template <typename t_CLock>
 	class TCPoolAggregateData : public t_CLock
@@ -659,6 +629,7 @@ namespace NMib::NMemory
 			, m_bDoneInit(false)
 		{
 		}
+
 		inline_always TCPoolAggregateData()
 		{
 		}
@@ -684,23 +655,33 @@ namespace NMib::NMemory
 		}
 	};
 
-	template <typename t_CData, aint t_GrowSize = 128, typename t_CLock = NThread::CNoLock, typename t_CPoolType = CPoolType_Freeable, typename t_CAllocator = CAllocator_Virtual, typename t_CAggregateData = TCPoolAggregateData<t_CLock>, typename t_CDebugStrType = NStr::CFStr256>
+	template
+	<
+		typename t_CData
+		, aint t_GrowSize = 128
+		, typename t_CLock = NThread::CNoLock
+		, typename t_CPoolType = CPoolType_Freeable
+		, typename t_CAllocator = CAllocator_Virtual
+		, typename t_CAggregateData = TCPoolAggregateData<t_CLock>
+		, typename t_CDebugStrType = NStr::CFStr256
+	>
 	class TCPoolAggregate : public t_CAggregateData
 	{
 	public:
 		constexpr TCPoolAggregate(EAggregateInitialization _Init)
 			: t_CAggregateData(_Init)
-#		if DMibConfig_Memory_Shims_Enable
+#if DMibConfig_Memory_Shims_Enable
 			, m_DebugName()
 #endif
 			, m_Pool(_Init)
 		{
 		}
+
 		inline_always TCPoolAggregate()
 		{
 		}
 
-		inline_small void fp_ReturnBlock(void * _pBlock)
+		inline_small void fp_ReturnBlock(void *_pBlock)
 		{
 			DMibMemoryGoingToReportScope(this, mc_Reporting);
 			{
@@ -736,15 +717,15 @@ namespace NMib::NMemory
 			return pBlock;
 		}
 
-#		if DMibConfig_Memory_Shims_Enable
+#if DMibConfig_Memory_Shims_Enable
 		t_CDebugStrType m_DebugName;
-#		endif
+#endif
 
 	public:
 		enum
 		{
-			mc_Reporting = t_CAllocator::mc_Reporting
-			, mc_CanBeStatic = false
+			mc_Reporting        = t_CAllocator::mc_Reporting
+			, mc_CanBeStatic    = false
 			, mc_bMethodsStatic = false
 		};
 
@@ -792,7 +773,6 @@ namespace NMib::NMemory
 			return fp_GetBlock();
 		}
 
-
 		inline_small void f_ReturnBlock(void *_pToDelete)
 		{
 			fp_ReturnBlock(_pToDelete);
@@ -804,8 +784,8 @@ namespace NMib::NMemory
 			fp_ReturnBlock(_pToDelete);
 		}
 
-		template <typename... tfp_CParams>
-		t_CData *f_New(tfp_CParams &&... p_Params)
+		template <typename ...tfp_CParams>
+		t_CData *f_New(tfp_CParams && ...p_Params)
 		{
 			void *pMem;
 			pMem = fp_GetBlock();
@@ -814,11 +794,11 @@ namespace NMib::NMemory
 		}
 	};
 
-#		define DMibMemPoolStaticImpl(_PoolType, _PoolName) _PoolType _PoolName = {0};
+#define DMibMemPoolStaticImpl(_PoolType, _PoolName) _PoolType _PoolName = {0};
 
-#		ifndef DMibPNoShortCuts
-#			define DPoolStaticImpl(_PoolType, _PoolName) DMibMemPoolStaticImpl(_PoolType, _PoolName)
-#		endif
+#ifndef DMibPNoShortCuts
+#	define DPoolStaticImpl(_PoolType, _PoolName) DMibMemPoolStaticImpl(_PoolType, _PoolName)
+#endif
 
 	template <typename t_CLock>
 	class TCNoAggregateData : public t_CLock
@@ -835,44 +815,47 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CData, umint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CPoolType = CPoolType_Freeable, typename t_CAllocator = CAllocator_Virtual>
-	class TCPool : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, t_CPoolType, t_CAllocator, TCNoAggregateData<t_CLock> >
+	class TCPool : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, t_CPoolType, t_CAllocator, TCNoAggregateData<t_CLock>>
 	{
 	public:
 		TCPool(ENumaNode _NumaNode = ENumaNode_Default)
 		{
-			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, t_CPoolType, t_CAllocator, TCNoAggregateData<t_CLock> >::f_Construct(_NumaNode);
+			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, t_CPoolType, t_CAllocator, TCNoAggregateData<t_CLock>>::f_Construct(_NumaNode);
 		}
+
 		~TCPool()
 		{
-			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, t_CPoolType, t_CAllocator, TCNoAggregateData<t_CLock> >::f_Destruct();
+			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, t_CPoolType, t_CAllocator, TCNoAggregateData<t_CLock>>::f_Destruct();
 		}
 	};
 
 	template <typename t_CData, umint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CAllocator = CAllocator_Virtual>
-	class TCPoolSmall : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_FreeableSmall, t_CAllocator, TCNoAggregateData<t_CLock> >
+	class TCPoolSmall : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_FreeableSmall, t_CAllocator, TCNoAggregateData<t_CLock>>
 	{
 	public:
 		TCPoolSmall(ENumaNode _NumaNode = ENumaNode_Default)
 		{
-			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_FreeableSmall, t_CAllocator, TCNoAggregateData<t_CLock> >::f_Construct(_NumaNode);
+			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_FreeableSmall, t_CAllocator, TCNoAggregateData<t_CLock>>::f_Construct(_NumaNode);
 		}
+
 		~TCPoolSmall()
 		{
-			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_FreeableSmall, t_CAllocator, TCNoAggregateData<t_CLock> >::f_Destruct();
+			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_FreeableSmall, t_CAllocator, TCNoAggregateData<t_CLock>>::f_Destruct();
 		}
 	};
 
 	template <typename t_CData, umint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CAllocator = CAllocator_Virtual>
-	class TCPoolGrowing : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_Growing, t_CAllocator, TCNoAggregateData<t_CLock> >
+	class TCPoolGrowing : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_Growing, t_CAllocator, TCNoAggregateData<t_CLock>>
 	{
 	public:
 		TCPoolGrowing(ENumaNode _NumaNode = ENumaNode_Default)
 		{
-			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_Growing, t_CAllocator, TCNoAggregateData<t_CLock> >::f_Construct(_NumaNode);
+			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_Growing, t_CAllocator, TCNoAggregateData<t_CLock>>::f_Construct(_NumaNode);
 		}
+
 		~TCPoolGrowing()
 		{
-			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_Growing, t_CAllocator, TCNoAggregateData<t_CLock> >::f_Destruct();
+			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_Growing, t_CAllocator, TCNoAggregateData<t_CLock>>::f_Destruct();
 		}
 	};
 
@@ -889,23 +872,21 @@ namespace NMib::NMemory
 	class TBCPool
 	{
 	public:
-		void * operator new(umint _NumBytes, const t_CPool &_Pool)
+		void *operator new (umint _NumBytes, t_CPool const &_Pool)
 		{
 			return _Pool.f_GetBlock(_NumBytes);
 		}
 
-		void operator delete(void *_pToDelete, const t_CPool &_Pool) noexcept
+		void operator delete (void *_pToDelete, t_CPool const &_Pool) noexcept
 		{
 			_Pool.f_ReturnBlock(_pToDelete);
 		}
 
-		void operator delete(void *_pToDelete)
+		void operator delete (void *_pToDelete)
 		{
 			// We do nothing here, as we dont know the pool
 		}
-
 	};
-
 
 	template
 	<
@@ -928,11 +909,10 @@ namespace NMib::NMemory
 	class TCStaticPoolAllocator : public CAllocator_Base
 	{
 	public:
-
 		enum
 		{
-			mc_Reporting = t_CAllocator::mc_Reporting
-			, mc_CanBeStatic = false
+			mc_Reporting        = t_CAllocator::mc_Reporting
+			, mc_CanBeStatic    = false
 			, mc_bMethodsStatic = true
 		};
 
@@ -985,7 +965,7 @@ namespace NMib::NMemory
 			return sizeof(t_CType);
 		}
 
-		constexpr static inline_small bool f_CanCommit()
+		static constexpr inline_small bool f_CanCommit()
 		{
 			return false;
 		}
@@ -1002,10 +982,17 @@ namespace NMib::NMemory
 
 		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect)
 		{
-
 		}
 
-		static inline_small void *f_AllocWithSizeDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocWithSizeDebug
+			(
+				umint _Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return CStaticPool::ms_Pool->f_GetBlock();
@@ -1023,7 +1010,15 @@ namespace NMib::NMemory
 			return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void *f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocDebug
+			(
+				umint _Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return CStaticPool::ms_Pool->f_GetBlock();
@@ -1041,18 +1036,24 @@ namespace NMib::NMemory
 			return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void f_AllocBatch
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			while (true)
 			{
 				umint Size = _Size;
-				void * pMem = CStaticPool::ms_Pool->f_GetBlock();
+				void *pMem = CStaticPool::ms_Pool->f_GetBlock();
 				if (!_Functor(pMem, Size))
 					break;
 			}
 		}
-
 
 		static inline_small void *f_Realloc(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
@@ -1063,7 +1064,17 @@ namespace NMib::NMemory
 				return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void *f_ReallocDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_ReallocDebug
+			(
+				void *_pMem
+				, umint _Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1081,7 +1092,17 @@ namespace NMib::NMemory
 				return CStaticPool::ms_Pool->f_GetBlock();
 		}
 
-		static inline_small void *f_ResizeDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_ResizeDebug
+			(
+				void *_pMem
+				, umint _Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1112,7 +1133,9 @@ namespace NMib::NMemory
 		{
 			return CStaticPool::ms_Pool->f_Overhead(_pBlock);
 		}
-		only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+
+		only_parameters_aliased static auto f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			-> CAutoDestroy
 		{
 			CAutoDestroy AutoDestroy;
 			AutoDestroy.m_pMemory = f_AllocAlignedWithSize(_Size, _Alignment, _AllocFlags, _NumaNode);
@@ -1120,6 +1143,7 @@ namespace NMib::NMemory
 
 			return fg_Move(AutoDestroy);
 		}
+
 		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy;
@@ -1157,8 +1181,8 @@ namespace NMib::NMemory
 		TCStaticPool<t_CType>::ms_Pool->f_Delete(_pToDelete);
 	}
 
-	template <typename t_CType, typename... tfp_CParams>
-	void fg_StaticPoolNew(t_CType * &_pDestPtr, tfp_CParams&&... p_Params)
+	template <typename t_CType, typename ...tfp_CParams>
+	void fg_StaticPoolNew(t_CType * &_pDestPtr, tfp_CParams && ...p_Params)
 	{
 		_pDestPtr = TCStaticPool<t_CType>::ms_Pool->f_New(fg_Forward<tfp_CParams>(p_Params)...);
 	}
@@ -1176,8 +1200,8 @@ namespace NMib::NMemory
 	public:
 		enum
 		{
-			mc_Reporting = t_CAllocator::mc_Reporting
-			, mc_CanBeStatic = false
+			mc_Reporting        = t_CAllocator::mc_Reporting
+			, mc_CanBeStatic    = false
 			, mc_bMethodsStatic = false
 		};
 
@@ -1231,7 +1255,7 @@ namespace NMib::NMemory
 			return sizeof(t_CType);
 		}
 
-		constexpr static inline_small bool f_CanCommit()
+		static constexpr inline_small bool f_CanCommit()
 		{
 			return false;
 		}
@@ -1248,10 +1272,17 @@ namespace NMib::NMemory
 
 		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect)
 		{
-
 		}
 
-		inline_small void *f_AllocWithSizeDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocWithSizeDebug
+			(
+				umint _Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return m_Pool.f_GetBlock();
@@ -1269,7 +1300,15 @@ namespace NMib::NMemory
 			return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocDebug
+			(
+				umint _Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			return m_Pool.f_GetBlock();
@@ -1287,13 +1326,20 @@ namespace NMib::NMemory
 			return m_Pool.f_GetBlock();
 		}
 
-		only_parameters_aliased inline_small void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased inline_small void f_AllocBatch
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			while (true)
 			{
 				umint Size = _Size;
-				void * pMem = m_Pool.f_GetBlock();
+				void *pMem = m_Pool.f_GetBlock();
 				if (!_Functor(pMem, Size))
 					break;
 			}
@@ -1308,7 +1354,17 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_ReallocDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_ReallocDebug
+			(
+				void *_pMem
+				, umint _Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1326,7 +1382,17 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_ResizeDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_ResizeDebug
+			(
+				void *_pMem
+				, umint _Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(t_CType));
 			if (_pMem)
@@ -1357,6 +1423,7 @@ namespace NMib::NMemory
 		{
 			return m_Pool.f_Overhead(_pBlock);
 		}
+
 		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy{*this};
@@ -1365,6 +1432,7 @@ namespace NMib::NMemory
 
 			return fg_Move(AutoDestroy);
 		}
+
 		only_parameters_aliased CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy{*this};
@@ -1386,8 +1454,8 @@ namespace NMib::NMemory
 	public:
 		enum
 		{
-			mc_Reporting = t_CPoolType::mc_Reporting
-			, mc_CanBeStatic = false
+			mc_Reporting        = t_CPoolType::mc_Reporting
+			, mc_CanBeStatic    = false
 			, mc_bMethodsStatic = false
 		};
 
@@ -1447,7 +1515,7 @@ namespace NMib::NMemory
 			return sizeof(CData);
 		}
 
-		constexpr static inline_small bool f_CanCommit()
+		static constexpr inline_small bool f_CanCommit()
 		{
 			return false;
 		}
@@ -1464,10 +1532,17 @@ namespace NMib::NMemory
 
 		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect)
 		{
-
 		}
 
-		inline_small void *f_AllocWithSizeDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocWithSizeDebug
+			(
+				umint _Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			return m_Pool.f_GetBlock();
@@ -1485,7 +1560,15 @@ namespace NMib::NMemory
 			return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_AllocDebug
+			(
+				umint _Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			return m_Pool.f_GetBlock();
@@ -1503,13 +1586,20 @@ namespace NMib::NMemory
 			return m_Pool.f_GetBlock();
 		}
 
-		only_parameters_aliased inline_small void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased inline_small void f_AllocBatch
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			while (true)
 			{
 				umint Size = _Size;
-				void * pMem = m_Pool.f_GetBlock();
+				void *pMem = m_Pool.f_GetBlock();
 				if (!_Functor(pMem, Size))
 					break;
 			}
@@ -1524,7 +1614,17 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_ReallocDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_ReallocDebug
+			(
+				void *_pMem
+				, umint _Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			if (_pMem)
@@ -1542,7 +1642,17 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
-		inline_small void *f_ResizeDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		inline_small void *f_ResizeDebug
+			(
+				void *_pMem
+				, umint _Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			DMibFastCheck(_Size == sizeof(CData));
 			if (_pMem)
@@ -1573,6 +1683,7 @@ namespace NMib::NMemory
 		{
 			return m_Pool.f_Overhead(_pBlock);
 		}
+
 		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy{*this};
@@ -1581,6 +1692,7 @@ namespace NMib::NMemory
 
 			return fg_Move(AutoDestroy);
 		}
+
 		only_parameters_aliased CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			CAutoDestroy AutoDestroy{*this};

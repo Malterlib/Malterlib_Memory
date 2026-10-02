@@ -28,29 +28,35 @@ namespace NMib::NMemory
 	{
 		return 1;
 	}
+
 	umint CAllocator_Placement::f_GranularityCommit(bool _bLargePages)
 	{
 		return 1;
 	}
+
 	umint CAllocator_Placement::f_GranularityProtect(bool _bLargePages)
 	{
 		return 1;
 	}
+
 	only_parameters_aliased umint CAllocator_Placement::f_Size(void *_pBlock)
 	{
 		DMibPDebugBreak; // Not supported
 		return 0;
 	}
+
 	only_parameters_aliased umint CAllocator_Placement::f_TrySize(void *_pBlock)
 	{
 		DMibPDebugBreak; // Not supported
 		return 0;
 	}
+
 	umint CAllocator_Placement::f_SizePadded(umint _Size)
 	{
 		DMibPDebugBreak; // Not supported
 		return 0;
 	}
+
 	fp32 CAllocator_Placement::f_Overhead(void const *_pBlock)
 	{
 		return 0.0;
@@ -73,16 +79,31 @@ namespace NMib::NMemory
 
 	only_parameters_aliased inline_small void CAllocator_Placement::f_Protect(void *_pMem, umint _Size, uaint _Protect)
 	{
-
 	}
 
-	only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocWithSizeDebug(umint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocWithSizeDebug
+		(
+			umint &_Size
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		DMibPDebugBreak; // Not supported
 		return nullptr;
 	}
 
-	only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased malloc_like inline_small void *CAllocator_Placement::f_AllocDebug
+		(
+			umint _Size
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		DMibPDebugBreak; // Not supported
 		return nullptr;
@@ -135,12 +156,29 @@ namespace NMib::NMemory
 		return CAutoDestroy{_pMemory, _Size};
 	}
 
-	only_parameters_aliased inline_small void CAllocator_Placement::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased inline_small void CAllocator_Placement::f_AllocBatch
+		(
+			umint _Size
+			, umint _Alignment
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		DMibPDebugBreak; // Not supported
 	}
 
-	only_parameters_aliased inline_small void CAllocator_Placement::f_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+	only_parameters_aliased inline_small void CAllocator_Placement::f_AllocBatchDebug
+		(
+			umint _Size
+			, umint _Alignment
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		return f_AllocBatch(_Size, _Alignment, _Functor, _AllocFlags, _NumaNode);
 	}
@@ -150,17 +188,40 @@ namespace NMib::NMemory
 		DMibPDebugBreak; // Not supported
 		return nullptr;
 	}
-	only_parameters_aliased malloc_like void *CAllocator_Placement::f_ReallocDebug(void *_pMem, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+
+	only_parameters_aliased malloc_like void *CAllocator_Placement::f_ReallocDebug
+		(
+			void *_pMem
+			, umint &_Size
+			, umint _OldSize
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		DMibPDebugBreak; // Not supported
 		return nullptr;
 	}
+
 	only_parameters_aliased void *CAllocator_Placement::f_Resize(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		DMibPDebugBreak; // Not supported
 		return nullptr;
 	}
-	only_parameters_aliased void *CAllocator_Placement::f_ResizeDebug(void *_pMem, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
+
+	only_parameters_aliased void *CAllocator_Placement::f_ResizeDebug
+		(
+			void *_pMem
+			, umint &_Size
+			, umint _OldSize
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+			, ENumaNode _NumaNode
+		)
 	{
 		DMibPDebugBreak; // Not supported
 		return nullptr;

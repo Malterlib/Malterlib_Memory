@@ -47,50 +47,49 @@ namespace NMib
 	static constexpr bool gc_bHasExceptions = false;
 #endif
 
-
-#	if DEnableDebugMemoryManager
-		struct CMemoryManagerDebugOptions : public NMemory::CMemoryManagerDebugOptionsDefault
+#if DEnableDebugMemoryManager
+	struct CMemoryManagerDebugOptions : public NMemory::CMemoryManagerDebugOptionsDefault
+	{
+		enum
 		{
-			enum
-			{
-				EDummy
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreedGuards
-				, mc_bCheckModifyAfterFree	= false
-	#endif
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableAllocatedFill
-				, mc_bFillAllocated			= false
-	#endif
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableStackTrace
-				, mc_StackTraceDepth		= 0
-	#endif
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableEdgeGuards
-				, mc_nPreGuardBytes			= 0
-				, mc_nPostGuardBytes		= 0
-	#endif
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreeValidation
-				, mc_bFreeValidation		= false
-	#endif
-	#if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreeValidation && !DMibConfig_MalterlibMemoryManager_Debug_EnableMemoryLeaks
-				, mc_bEnumeration			= false
-	#endif
-	#if  !DMibConfig_MalterlibMemoryManager_Debug_EnableMemoryLeaks
-				, mc_bTraceLeaks			= false
-	#endif
-	#if  DMibConfig_MalterlibMemoryManager_Debug_EnableAssertOnMemoryLeak
-				, mc_bAssertOnMemoryLeak	= true
-	#endif
-			};
-		};
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		using CMemoryManagerWithDebugSmall = NMemory::TCMemoryManagerDebug<CMemoryManagerParamsSmall, gc_bHasExceptions, CMemoryManagerDebugOptions>;
-#endif
-		using CMemoryManagerWithDebugMax = NMemory::TCMemoryManagerDebug<CMemoryManagerParamsMax, gc_bHasExceptions, CMemoryManagerDebugOptions>;
-#	else
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		using CMemoryManagerWithDebugSmall = NMemory::TCMemoryManager<CMemoryManagerParamsSmall>;
-#endif
-		using CMemoryManagerWithDebugMax = NMemory::TCMemoryManager<CMemoryManagerParamsMax>;
+			EDummy
+#	if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreedGuards
+			, mc_bCheckModifyAfterFree = false
 #	endif
+#	if !DMibConfig_MalterlibMemoryManager_Debug_EnableAllocatedFill
+			, mc_bFillAllocated = false
+#	endif
+#	if !DMibConfig_MalterlibMemoryManager_Debug_EnableStackTrace
+			, mc_StackTraceDepth = 0
+#	endif
+#	if !DMibConfig_MalterlibMemoryManager_Debug_EnableEdgeGuards
+			, mc_nPreGuardBytes  = 0
+			, mc_nPostGuardBytes = 0
+#	endif
+#	if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreeValidation
+			, mc_bFreeValidation = false
+#	endif
+#	if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreeValidation && !DMibConfig_MalterlibMemoryManager_Debug_EnableMemoryLeaks
+			, mc_bEnumeration = false
+#	endif
+#	if  !DMibConfig_MalterlibMemoryManager_Debug_EnableMemoryLeaks
+			, mc_bTraceLeaks = false
+#	endif
+#	if  DMibConfig_MalterlibMemoryManager_Debug_EnableAssertOnMemoryLeak
+			, mc_bAssertOnMemoryLeak = true
+#	endif
+		};
+	};
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+	using CMemoryManagerWithDebugSmall = NMemory::TCMemoryManagerDebug<CMemoryManagerParamsSmall, gc_bHasExceptions, CMemoryManagerDebugOptions>;
+#	endif
+	using CMemoryManagerWithDebugMax = NMemory::TCMemoryManagerDebug<CMemoryManagerParamsMax, gc_bHasExceptions, CMemoryManagerDebugOptions>;
+#else
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+	using CMemoryManagerWithDebugSmall = NMemory::TCMemoryManager<CMemoryManagerParamsSmall>;
+#	endif
+	using CMemoryManagerWithDebugMax = NMemory::TCMemoryManager<CMemoryManagerParamsMax>;
+#endif
 
 #if !DMibConfig_MemoryManager_Stats_EnableCategories
 	namespace NMemory
@@ -100,7 +99,7 @@ namespace NMib
 #endif
 
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-	using CMemoryManagerSmall = NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebugSmall, NMemory::CTrackedAllocationInfo> ;
+	using CMemoryManagerSmall = NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebugSmall, NMemory::CTrackedAllocationInfo>;
 #endif
 	using CMemoryManagerMax = NMemory::TCMemoryManagerTracked<CMemoryManagerWithDebugMax, NMemory::CTrackedAllocationInfo>;
 
@@ -123,12 +122,13 @@ namespace NMib
 		enum
 		{
 			mc_bCanAllocateNonTracked = false // Threading potentially recursive allocations
-#ifdef DPlatformFamily_Linux
+#	ifdef DPlatformFamily_Linux
 			, mc_StackTraceDepth = 0
-#endif
+#	endif
 		};
 	};
-	using CMemoryManagerNonTracked = NMemory::TCMemoryManagerDebug<CMemoryManagerNonTrackedParams, false, CMemoryManagerNonTrackedDebugOptions> ;
+
+	using CMemoryManagerNonTracked = NMemory::TCMemoryManagerDebug<CMemoryManagerNonTrackedParams, false, CMemoryManagerNonTrackedDebugOptions>;
 #else
 	using CMemoryManagerNonTracked = NMemory::TCMemoryManager<CMemoryManagerNonTrackedParams>;
 #endif

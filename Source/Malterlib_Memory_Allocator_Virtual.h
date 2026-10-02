@@ -16,10 +16,11 @@ namespace NMib::NMemory
 	public:
 		enum
 		{
-			mc_Reporting = true
-			, mc_CanBeStatic = false
+			mc_Reporting        = true
+			, mc_CanBeStatic    = false
 			, mc_bMethodsStatic = true
 		};
+
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Virtual>;
 
 		constexpr bool operator == (CAllocator_Virtual const &_Right) const noexcept
@@ -38,7 +39,7 @@ namespace NMib::NMemory
 		static umint f_GranularityAlloc(bool _bLargePages = false);
 		static umint f_GranularityCommit(bool _bLargePages = false);
 		static umint f_GranularityProtect(bool _bLargePages = false);
-		constexpr static bool f_CanCommit();
+		static constexpr bool f_CanCommit();
 		static bool f_CanProtect();
 		static bool f_DeterministicSize();
 		static ch8 ms_HeapName[];
@@ -57,25 +58,106 @@ namespace NMib::NMemory
 		static void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static void *f_Alloc(umint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static void *f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void f_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_AllocWithSizeDebug(umint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_AllocAlignedDebug(umint _Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		static void f_AllocBatch
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		static void f_AllocBatchDebug
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		static void *f_AllocWithSizeDebug
+			(
+				umint &_Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		static void *f_AllocAlignedWithSizeDebug
+			(
+				umint &_Size
+				, umint _Alignment
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		static void *f_AllocDebug
+			(
+				umint _Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		static void *f_AllocAlignedDebug
+			(
+				umint _Size
+				, umint _Alignment
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
 		static void *f_Realloc(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_ReallocDebug(void *_pMem, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		static void *f_ReallocDebug
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
 		static void *f_Resize(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_ResizeDebug(void *_pMem, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		static void *f_ResizeDebug
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
 		static void f_Commit(void *_pMem, umint _Size);
 		static void f_Decommit(void *_pMem, umint _Size);
 		static void f_Free(void *_pBlock, umint _Size);
 		static void f_FreeNoSize(void *_pBlock);
-		static umint f_Size(const void *_pBlock);
-		static umint f_TrySize(const void *_pBlock);
+		static umint f_Size(void const *_pBlock);
+		static umint f_TrySize(void const *_pBlock);
 		static umint f_SizePadded(umint _Size);
 		static fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
-		only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		only_parameters_aliased static auto f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			-> CAutoDestroy
+		;
 		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
 	};
@@ -83,7 +165,7 @@ namespace NMib::NMemory
 	class CAllocator_VirtualNoCommit : public CAllocator_Virtual
 	{
 	public:
-		constexpr static bool f_CanCommit();
+		static constexpr bool f_CanCommit();
 		static bool f_CanProtect();
 		static void f_Commit(void *_pMem, umint _Size);
 		static void f_Decommit(void *_pMem, umint _Size);
@@ -94,10 +176,11 @@ namespace NMib::NMemory
 	public:
 		enum
 		{
-			mc_Reporting = false
-			, mc_CanBeStatic = false
+			mc_Reporting        = false
+			, mc_CanBeStatic    = false
 			, mc_bMethodsStatic = true
 		};
+
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_VirtualNoTracking>;
 
 		constexpr bool operator == (CAllocator_VirtualNoTracking const &_Right) const noexcept = default;
@@ -113,7 +196,7 @@ namespace NMib::NMemory
 		static umint f_GranularityAlloc(bool _bLargePages = false);
 		static umint f_GranularityCommit(bool _bLargePages = false);
 		static umint f_GranularityProtect(bool _bLargePages = false);
-		constexpr static bool f_CanCommit();
+		static constexpr bool f_CanCommit();
 		static bool f_CanProtect();
 		static bool f_DeterministicSize();
 		static void f_Protect(void *_pMem, umint _Size, uaint _Protect);
@@ -121,25 +204,106 @@ namespace NMib::NMemory
 		static void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static void *f_Alloc(umint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static void *f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void f_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_AllocWithSizeDebug(umint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_AllocAlignedDebug(umint _Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		static void f_AllocBatch
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		static void f_AllocBatchDebug
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		static void *f_AllocWithSizeDebug
+			(
+				umint &_Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		static void *f_AllocAlignedWithSizeDebug
+			(
+				umint &_Size
+				, umint _Alignment
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		static void *f_AllocDebug
+			(
+				umint _Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		static void *f_AllocAlignedDebug
+			(
+				umint _Size
+				, umint _Alignment
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
 		static void *f_Realloc(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_ReallocDebug(void *_pMem, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		static void *f_ReallocDebug
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
 		static void *f_Resize(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static void *f_ResizeDebug(void *_pMem, umint &_Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		static void *f_ResizeDebug
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
 		static void f_Commit(void *_pMem, umint _Size);
 		static void f_Decommit(void *_pMem, umint _Size);
-		static void f_Free(void *_pBlock, umint _Size );
+		static void f_Free(void *_pBlock, umint _Size);
 		static void f_FreeNoSize(void *_pBlock);
-		static umint f_Size(const void *_pBlock);
-		static umint f_TrySize(const void *_pBlock);
+		static umint f_Size(void const *_pBlock);
+		static umint f_TrySize(void const *_pBlock);
 		static umint f_SizePadded(umint _Size);
 		static fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
-		only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		only_parameters_aliased static auto f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			-> CAutoDestroy
+		;
 		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
 	};
@@ -147,7 +311,7 @@ namespace NMib::NMemory
 	class CAllocator_VirtualNoTrackingNoCommit : public CAllocator_VirtualNoTracking
 	{
 	public:
-		constexpr static bool f_CanCommit();
+		static constexpr bool f_CanCommit();
 		static bool f_CanProtect();
 		static void f_Commit(void *_pMem, umint _Size);
 		static void f_Decommit(void *_pMem, umint _Size);
