@@ -42,18 +42,18 @@ namespace NMib::NMemory
 	{
 		EDeferCleanup_None
 		, EDeferCleanup_OneSizeBlocks = DMibBit(0)
-		, EDeferCleanup_Commit = DMibBit(1)
-		, EDeferCleanup_Allocs = DMibBit(2)
-		, EDeferCleanup_NoCleanup = DMibBit(3)
+		, EDeferCleanup_Commit        = DMibBit(1)
+		, EDeferCleanup_Allocs        = DMibBit(2)
+		, EDeferCleanup_NoCleanup     = DMibBit(3)
 	};
 
 	enum EMemoryManagerCheckFlag
 	{
-		EMemoryManagerCheckFlag_None = 0
-		, EMemoryManagerCheckFlag_Break = DMibBit(0)
+		EMemoryManagerCheckFlag_None        = 0
+		, EMemoryManagerCheckFlag_Break     = DMibBit(0)
 		, EMemoryManagerCheckFlag_Unprotect = DMibBit(1)
-		, EMemoryManagerCheckFlag_Protect = DMibBit(2)
-		, EMemoryManagerCheckFlag_Default = EMemoryManagerCheckFlag_Break | EMemoryManagerCheckFlag_Unprotect
+		, EMemoryManagerCheckFlag_Protect   = DMibBit(2)
+		, EMemoryManagerCheckFlag_Default   = EMemoryManagerCheckFlag_Break | EMemoryManagerCheckFlag_Unprotect
 	};
 
 	struct CDefaultMemoryManagerNotifier
@@ -107,7 +107,7 @@ namespace NMib::NMemory
 			};
 
 			template <typename tf_CMemoryManager>
-			CGlobal(tf_CMemoryManager & _MemMan);
+			CGlobal(tf_CMemoryManager &_MemMan);
 
 			void f_OnAlloc(uint8 *_pMemory, umint _nBytes);
 			void f_OnFree(uint8 *_pMemory);
@@ -118,15 +118,15 @@ namespace NMib::NMemory
 	};
 
 #if defined(DPlatformFamily_macOS)
-	static constexpr umint gc_OsMaxPageSize = 16*1024;
+	static constexpr umint gc_OsMaxPageSize = 16 * 1024;
 #else
-	static constexpr umint gc_OsMaxPageSize = 4*1024;
+	static constexpr umint gc_OsMaxPageSize = 4 * 1024;
 #endif
 
 	struct CDefaultMemoryManagerParams
 	{
 		static constexpr umint mc_NumSizesPerLevel = 8;
-		static constexpr umint mc_SubSlabSize = gc_OsMaxPageSize;						// Should be the page size
+		static constexpr umint mc_SubSlabSize = gc_OsMaxPageSize; // Should be the page size
 		static constexpr bool mc_bRandomizeSlabHeader = false;
 		static constexpr bool mc_bBackgroundCleanup = true;
 		static constexpr EDeferCleanup mc_DeferCleanup = (EDeferCleanup)(EDeferCleanup_Allocs | EDeferCleanup_Commit | EDeferCleanup_OneSizeBlocks);
@@ -139,18 +139,20 @@ namespace NMib::NMemory
 #	error "Decide max arenas"
 #endif
 
-		static constexpr uint32 mc_BackgroundCleanupLifetime = 50; // The number of milleseconds that garbage should be kept before being cleaned up.
+		static constexpr uint32 mc_BackgroundCleanupLifetime = 50;          // The number of milleseconds that garbage should be kept before being cleaned up.
 		static constexpr uint32 mc_BackgroundCleanupLifetimeDecommit = 500; // The number of milleseconds that garbage pages should be kept before being decommitted.
 
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_None;
-		static constexpr bool mc_bFullGarbageCollect  = false;
+		static constexpr bool mc_bFullGarbageCollect = false;
 		static constexpr bool mc_bUseSmallSizes = true;
 		static constexpr bool mc_bSpecialCaseSlabType0 = false;
 		static constexpr bool mc_bUseFreeBlockCounting = false;
 		static constexpr EMemoryManagerFreeStore mc_FreeStoreMode = EMemoryManagerFreeStore_ArenaBlockLists;
 		static constexpr bool mc_bReapInCleanup = false; // Sub-slab store modes: cross-thread frees land in per-sub-slab pending state reaped by the cleanup thread instead of messages
-		static constexpr bool mc_bReapDenseBitmaps = true; // With SubSlabBitmaps reap: dense sub-slabs get in-band pending words too (density); false keeps them on the message path (throughput)
-		static constexpr bool mc_bGlobalAddressOrder = false; // Sub-slab store modes: the cleanup thread re-sorts the per-size-class sub-slab lists by address for approximate global first-fit
+		// With SubSlabBitmaps reap: dense sub-slabs get in-band pending words too (density); false keeps them on the message path (throughput)
+		static constexpr bool mc_bReapDenseBitmaps = true;
+		// Sub-slab store modes: the cleanup thread re-sorts the per-size-class sub-slab lists by address for approximate global first-fit
+		static constexpr bool mc_bGlobalAddressOrder = false;
 #ifdef DMibSanitizerEnabled_UndefinedBehavior
 		static constexpr bool mc_bAllowUnalignedFreeList = false;
 #else
@@ -166,7 +168,8 @@ namespace NMib::NMemory
 		static constexpr umint mc_PreventCacheConflictSizeMaxOverhead = 32; // 1 / x maximum overhead
 
 		static constexpr umint mc_MaxPendingSubSlabs = 0;
-		static constexpr umint mc_nOwnerReclaimRetainSubSlabs = 0; // Owner full collects retain up to this many pending sub-slabs per slab type as a ready-to-reuse cache; pressure and background paths reclaim fully
+		// Owner full collects retain up to this many pending sub-slabs per slab type as a ready-to-reuse cache; pressure and background paths reclaim fully
+		static constexpr umint mc_nOwnerReclaimRetainSubSlabs = 0;
 
 		using CAllocator = CAllocator_Virtual;
 		using CNotifier = CDefaultMemoryManagerNotifier;
@@ -196,7 +199,7 @@ namespace NMib::NMemory
 	{
 		static constexpr CSlabTypeInfo mc_SlabTypeInfo[4] = {{1}, {5}, {3}, {7}};
 		static constexpr uint16 mc_DivideMultiply[4] = {1, 52429, 43691, 9363};
-		static constexpr uint8 mc_DivideShift[4] =  {0, 18, 17, 16};
+		static constexpr uint8 mc_DivideShift[4] = {0, 18, 17, 16};
 	};
 
 	template <>
@@ -204,7 +207,7 @@ namespace NMib::NMemory
 	{
 		static constexpr CSlabTypeInfo mc_SlabTypeInfo[2] = {{1}, {3}};
 		static constexpr uint16 mc_DivideMultiply[2] = {1, 43691};
-		static constexpr uint8 mc_DivideShift[2]= {0, 17};
+		static constexpr uint8 mc_DivideShift[2] = {0, 17};
 	};
 
 	template <>
@@ -240,7 +243,7 @@ namespace NMib::NMemory
 
 		static constexpr umint mc_SizesPerLevelShift = gc_HighestBitSet<t_CParams::mc_NumSizesPerLevel>;
 
-		static constexpr umint mc_SlabSize = t_CParams::mc_SubSlabSize * 1024 * 4;			// Carefully choosen to minimize waste in different subslab types
+		static constexpr umint mc_SlabSize = t_CParams::mc_SubSlabSize * 1024 * 4; // Carefully choosen to minimize waste in different subslab types
 		static constexpr umint mc_MaxNumSubSlabs = mc_SlabSize / t_CParams::mc_SubSlabSize;
 
 		static constexpr umint mc_MaxHeapAllocSize = mc_SlabSize;
@@ -248,21 +251,22 @@ namespace NMib::NMemory
 		static constexpr umint mc_HeapChunkSize = mc_SlabSize * 2;
 		static constexpr umint mc_HeapBlockSize = mc_MinHeapAllocSize / t_CParams::mc_NumSizesPerLevel;
 
-		static constexpr umint mc_MaxSlabAllocSize = mc_MinHeapAllocSize - (mc_MinHeapAllocSize /2) / t_CParams::mc_NumSizesPerLevel;
+		static constexpr umint mc_MaxSlabAllocSize = mc_MinHeapAllocSize - (mc_MinHeapAllocSize / 2) / t_CParams::mc_NumSizesPerLevel;
 
 		static constexpr umint mc_NumSizeLevels = gc_HighestBitSet<mc_MaxSlabAllocSize> + 1;
 
 		static constexpr umint mc_NumSubSlabSizeLevels = mc_NumSizeLevels - gc_HighestBitSet<t_CParams::mc_SubSlabSize>;
 
-		static constexpr umint mc_MinAlignmentCalc = t_CParams::mc_bAllowUnalignedFreeList ? 16 / t_CParams::mc_NumSizesPerLevel : fg_Max(16 / t_CParams::mc_NumSizesPerLevel, sizeof(void *));
+		static constexpr umint mc_MinAlignmentCalc
+			= t_CParams::mc_bAllowUnalignedFreeList ? 16 / t_CParams::mc_NumSizesPerLevel : fg_Max(16 / t_CParams::mc_NumSizesPerLevel, sizeof(void *))
+		;
 		static constexpr umint mc_MinNormalSizeAlignment = mc_MinAlignmentCalc < 4 ? 4 : mc_MinAlignmentCalc;
 
 		static constexpr umint mc_SmallSizeSlabsLargestSize = t_CParams::mc_bUseSmallSizes ? (t_CParams::mc_bUseFreeBlockCounting ? 16 : 12) : 0;
 
 		static constexpr umint mc_PreventCacheConflictSizeMaxBlockSize = t_CParams::mc_PreventCacheConflictSize / t_CParams::mc_PreventCacheConflictSizeMaxOverhead; // 1 / x maximum overhead
 
-		static constexpr umint mc_MinNormalAllocSizeAfterSmallSize =
-			fg_AlignUpConstExpr
+		static constexpr umint mc_MinNormalAllocSizeAfterSmallSize = fg_AlignUpConstExpr
 			(
 				mc_SmallSizeSlabsLargestSize + (fg_RoundPowerOfTwoDown(mc_SmallSizeSlabsLargestSize) / t_CParams::mc_NumSizesPerLevel)
 				, mc_MinNormalSizeAlignment
@@ -273,34 +277,31 @@ namespace NMib::NMemory
 		// small-size slabs the in-block link floor does not apply and the ladder extends down to
 		// the smallest bucket the size-class arithmetic can express (granularity
 		// 2^(bucket - mc_SizesPerLevelShift) requires bucket >= mc_SizesPerLevelShift)
-		static constexpr bool mc_bNoBlockMetadata =
-			t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps
-			&& t_CParams::mc_bReapInCleanup
-			&& t_CParams::mc_bReapDenseBitmaps
-			&& !t_CParams::mc_bUseSmallSizes
+		static constexpr bool mc_bNoBlockMetadata
+			= t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps && t_CParams::mc_bReapInCleanup && t_CParams::mc_bReapDenseBitmaps && !t_CParams::mc_bUseSmallSizes
 		;
 
-		static constexpr umint mc_MinNormalAllocSize = mc_bNoBlockMetadata
+		static constexpr umint mc_MinNormalAllocSize
+			= mc_bNoBlockMetadata
 			? fg_MaxConstexpr(umint(1) << mc_SizesPerLevelShift, mc_MinNormalSizeAlignment)
 			: fg_MaxConstexpr
-				(
-					fg_AlignUpConstExpr(t_CParams::mc_bUseFreeBlockCounting ? (sizeof(void *) * 2 + 4) : sizeof(void *) * 2, mc_MinNormalSizeAlignment)
-					, mc_MinNormalAllocSizeAfterSmallSize
-				)
+			(
+				fg_AlignUpConstExpr(t_CParams::mc_bUseFreeBlockCounting ? (sizeof(void *) * 2 + 4) : sizeof(void *) * 2, mc_MinNormalSizeAlignment)
+				, mc_MinNormalAllocSizeAfterSmallSize
+			)
 		;
 
 		using CSubSlabIndex = NTraits::TCUnsigned<NTraits::TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(mc_MaxNumSubSlabs - 1) + 1 + 7) / 8>>;
 
 		static constexpr umint fs_CalculateNumAllocsPerSubSlab(umint _Index)
-			{
-				if (_Index == 0)
-					return t_CParams::mc_SubSlabSize;
+		{
+			if (_Index == 0)
+				return t_CParams::mc_SubSlabSize;
 
-				umint LowestBitSet = fg_GetLowestBitSetNoZero(_Index);
-				umint SizesPerLevelBits = fg_GetHighestBitSetNoZero(t_CParams::mc_NumSizesPerLevel);
-				return t_CParams::mc_SubSlabSize * (umint(1) << (SizesPerLevelBits - LowestBitSet));
-			}
-		;
+			umint LowestBitSet = fg_GetLowestBitSetNoZero(_Index);
+			umint SizesPerLevelBits = fg_GetHighestBitSetNoZero(t_CParams::mc_NumSizesPerLevel);
+			return t_CParams::mc_SubSlabSize * (umint(1) << (SizesPerLevelBits - LowestBitSet));
+		}
 
 		static constexpr umint mc_MinNormalSlabBucket = NMib::fg_GetHighestBitSetNoZero(mc_MinNormalAllocSize);
 		static constexpr umint mc_NumNormalSizeLevels = mc_NumSizeLevels - mc_MinNormalSlabBucket;
@@ -317,13 +318,12 @@ namespace NMib::NMemory
 		// whose size 2^Bucket + Index * 2^(Bucket - mc_SizesPerLevelShift) is not a multiple of
 		// that alignment are unreachable and must not inflate the per-sub-slab block bound
 		static constexpr umint fs_MinReachableSlabBucket(umint _Index)
-			{
-				umint Bucket = mc_MinNormalSlabBucket;
-				while (((umint(1) << Bucket) + (_Index << (Bucket - mc_SizesPerLevelShift))) % mc_MinNormalSizeAlignment != 0)
-					++Bucket;
-				return Bucket;
-			}
-		;
+		{
+			umint Bucket = mc_MinNormalSlabBucket;
+			while (((umint(1) << Bucket) + (_Index << (Bucket - mc_SizesPerLevelShift))) % mc_MinNormalSizeAlignment != 0)
+				++Bucket;
+			return Bucket;
+		}
 
 		static constexpr umint mc_MaxAllocsPerSubSlabActual = []
 			{
@@ -341,15 +341,13 @@ namespace NMib::NMemory
 
 		static_assert
 			(
-				t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_ArenaBlockLists
-				|| !t_CParams::mc_bUseFreeBlockCounting
+				t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_ArenaBlockLists || !t_CParams::mc_bUseFreeBlockCounting
 				, "Free block counting is only supported with arena block lists"
 			)
 		;
 		static_assert
 			(
-				t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_SubSlabLists
-				|| mc_MaxSubSlabMultipliedSize / 4 <= 0xFFFE
+				t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_SubSlabLists || mc_MaxSubSlabMultipliedSize / 4 <= 0xFFFE
 				, "Sub-slab free chains encode block offsets as uint16 quarter-offsets; this sub-slab size / sizes-per-level combination overflows them"
 			)
 		;
@@ -363,29 +361,20 @@ namespace NMib::NMemory
 #endif
 		static_assert
 			(
-				t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_SubSlabBitmaps
-				|| mc_MaxAllocsPerSubSlabActual <= 64 * 64
+				t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_SubSlabBitmaps || mc_MaxAllocsPerSubSlabActual <= 64 * 64
 				, "Sub-slab bitmaps use a uint64 summary over uint64 words, limiting sub-slabs to 4096 blocks"
 			)
 		;
 		static_assert
 			(
-				!t_CParams::mc_bReapInCleanup
-				|| t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists
+				!t_CParams::mc_bReapInCleanup || t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists
 				, "Reap-in-cleanup requires a sub-slab store mode; arena block lists already reap through message draining"
 			)
 		;
+		static_assert(!t_CParams::mc_bReapInCleanup || mc_MaxNumSubSlabs <= 64 * 64, "The remote-free summary top word covers at most 64 summary words of 64 sub-slabs");
 		static_assert
 			(
-				!t_CParams::mc_bReapInCleanup
-				|| mc_MaxNumSubSlabs <= 64 * 64
-				, "The remote-free summary top word covers at most 64 summary words of 64 sub-slabs"
-			)
-		;
-		static_assert
-			(
-				!t_CParams::mc_bGlobalAddressOrder
-				|| t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists
+				!t_CParams::mc_bGlobalAddressOrder || t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists
 				, "Global address order is a policy on the per-size-class sub-slab lists and requires a sub-slab store mode"
 			)
 		;
@@ -394,17 +383,15 @@ namespace NMib::NMemory
 			{
 				CSubSlabIndex
 				(
-
-					TCMemoryManagerSlabShared<TCMemoryManagerParams>::template fs_CalculateSubSlabs<TCMemoryManagerParamsSizesPerLevel<t_CParams::mc_NumSizesPerLevel>::mc_SlabTypeInfo[tp_Indices].m_SubSlabMutiplier>()
+					TCMemoryManagerSlabShared<TCMemoryManagerParams>::template fs_CalculateSubSlabs
+					<
+						TCMemoryManagerParamsSizesPerLevel<t_CParams::mc_NumSizesPerLevel>::mc_SlabTypeInfo[tp_Indices].m_SubSlabMutiplier
+					>()
 				)...
 			}
 		;
 
-		using CNumAllocsPerSubSlabIndex = NTraits::TCUnsigned
-			<
-				NTraits::TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(mc_MaxAllocsPerSubSlab) + 1 + 7) / 8>
-			>
-		;
+		using CNumAllocsPerSubSlabIndex = NTraits::TCUnsigned<NTraits::TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(mc_MaxAllocsPerSubSlab) + 1 + 7) / 8>>;
 
 		static constexpr CNumAllocsPerSubSlabIndex mc_NumAllocsPerSubSlab[t_CParams::mc_NumSizesPerLevel] =
 			{

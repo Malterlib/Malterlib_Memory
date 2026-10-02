@@ -5,9 +5,9 @@
 #define assure_used __attribute__((used))
 
 #if defined(DMibMemoryOverrideDll)
-#define DMibMalterlibOverrideMallocExport
+#	define DMibMalterlibOverrideMallocExport
 #else
-#define DMibMalterlibOverrideMallocExport module_export
+#	define DMibMalterlibOverrideMallocExport module_export
 #endif
 
 #include "Malterlib_Memory_SystemOverride_MacOSInterpose.h"
@@ -23,7 +23,7 @@
 
 extern "C"
 {
-	extern void fg_MalterlibSystem_InitEarly(COriginalFunctions const &_Functions, int argc, char const* argv[], char const* envp[], char const* apple[], const struct ProgramVars * vars);
+	extern void fg_MalterlibSystem_InitEarly(COriginalFunctions const &_Functions, int argc, char const *argv[], char const *envp[], char const *apple[], struct ProgramVars const *vars);
 	extern void fg_MalterlibSystem_InitBeforeMalloc(COriginalFunctions const &_Functions);
 	extern void fg_MalterlibSystem_InitAfterMalloc();
 #if !defined(DMibMemoryOverrideDll)
@@ -31,11 +31,9 @@ extern "C"
 #endif
 	assure_used DMibMalterlibOverrideMallocExport void fg_MalterlibSystem_InitHelper()
 	{
-
 	}
 
 	int malloc_jumpstart(int);
-
 }
 struct CTesting
 {
@@ -45,7 +43,6 @@ struct CTesting
 
 extern "C"
 {
-
 #define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) &d_Function,
 
 #ifndef DMibMemoryOverrideDll
@@ -54,7 +51,7 @@ extern "C"
 
 	constinit COriginalFunctions g_OriginalFunctions =
 		{
-#			include "Malterlib_Memory_SystemOverride_MacOSInterposeFunctions.h"
+#include "Malterlib_Memory_SystemOverride_MacOSInterposeFunctions.h"
 		}
 	;
 
@@ -68,8 +65,8 @@ extern "C"
 	assure_used static CInterpose g_Malterlib_Interpose_##d_Replacee \
 	__attribute__ ((section ("__DATA,__interpose"))) = { (void (*)())&d_Replacement, (void (*)())&d_Replacee}
 
-	extern void __malloc_init(const char *apple[]) __attribute__((weak_import)); // from libsystem_malloc.dylib
-	void fg_Malterlib___malloc_init(const char *apple[])
+	extern void __malloc_init(char const *apple[]) __attribute__((weak_import)); // from libsystem_malloc.dylib
+	void fg_Malterlib___malloc_init(char const *apple[])
 	{
 		fg_MalterlibSystem_InitBeforeMalloc(g_OriginalFunctions);
 		if (__malloc_init)
@@ -77,8 +74,17 @@ extern "C"
 		fg_MalterlibSystem_InitAfterMalloc();
 	}
 
-	extern void __libc_init(const struct ProgramVars *vars, void (*atfork_prepare)(void),void (*atfork_parent)(void),void (*atfork_child)(void),const char *apple[]) __attribute__((weak_import));
-	void fg_Malterlib___libc_init(const struct ProgramVars *vars, void (*atfork_prepare)(void),void (*atfork_parent)(void),void (*atfork_child)(void),const char *apple[])
+	extern void __libc_init
+		(
+			struct ProgramVars const *vars
+			, void (*atfork_prepare)(void)
+			, void (*atfork_parent)(void)
+			, void (*atfork_child)(void)
+			, char const *apple[]
+		)
+		__attribute__((weak_import))
+	;
+	void fg_Malterlib___libc_init(struct ProgramVars const *vars, void (*atfork_prepare)(void), void (*atfork_parent)(void), void (*atfork_child)(void), char const *apple[])
 	{
 		fg_MalterlibSystem_InitBeforeMalloc(g_OriginalFunctions);
 		if (__libc_init)
@@ -91,19 +97,19 @@ extern "C"
 
 #if defined(DMibMemoryOverrideDll)
 
-#define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
-	extern d_Return fg_Malterlib_##d_Function(__VA_ARGS__); \
-	DMibMacOSInterpose(fg_Malterlib_##d_Function, d_Function);
+#	define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
+		extern d_Return fg_Malterlib_##d_Function(__VA_ARGS__); \
+		DMibMacOSInterpose(fg_Malterlib_##d_Function, d_Function);
 
 #else
 
-#define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
-	extern d_Return fg_Malterlib_##d_Function(__VA_ARGS__); \
-	module_export d_Return fg_Malterlib_Interpose_##d_Function(__VA_ARGS__) \
-	{ \
-		return fg_Malterlib_##d_Function d_Args; \
-	} \
-	DMibMacOSInterpose(fg_Malterlib_Interpose_##d_Function, d_Function);
+#	define DMibMemoryInterpose(d_Return, d_Function, d_Args, ...) \
+		extern d_Return fg_Malterlib_##d_Function(__VA_ARGS__); \
+		module_export d_Return fg_Malterlib_Interpose_##d_Function(__VA_ARGS__) \
+		{ \
+			return fg_Malterlib_##d_Function d_Args; \
+		} \
+		DMibMacOSInterpose(fg_Malterlib_Interpose_##d_Function, d_Function);
 
 #endif
 
@@ -112,7 +118,7 @@ extern "C"
 
 namespace
 {
-	void __attribute__ ((constructor(-1111111111))) fg_InitMalterlibEarly(int argc, char const* argv[], char const* envp[], char const* apple[], const struct ProgramVars * vars)
+	void __attribute__((constructor(-1111111111))) fg_InitMalterlibEarly(int argc, char const *argv[], char const *envp[], char const *apple[], struct ProgramVars const *vars)
 	{
 #if !defined(DMibMemoryOverrideDll)
 		if (fg_MalterlibSystem_InitDyldDummyHelper)

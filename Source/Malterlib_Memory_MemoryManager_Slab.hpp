@@ -9,12 +9,7 @@ namespace NMib::NMemory
 	// Shared
 
 	template <typename t_CParams>
-	TCMemoryManagerSlabShared<t_CParams>::TCMemoryManagerSlabShared
-		(
-			uint32 _SlabType
-			, TCMemoryManagerArena<t_CParams> *_pArena
-			, uint8 _nCommittedHeaderSubSlabs
-		)
+	TCMemoryManagerSlabShared<t_CParams>::TCMemoryManagerSlabShared(uint32 _SlabType, TCMemoryManagerArena<t_CParams> *_pArena, uint8 _nCommittedHeaderSubSlabs)
 		: m_pArena(_pArena)
 		, m_SlabType(_SlabType)
 		, m_nCommittedHeaderSubSlabs(_nCommittedHeaderSubSlabs)
@@ -84,12 +79,7 @@ namespace NMib::NMemory
 	// Non-shared
 
 	template <typename t_CParams, uint32 t_SlabType>
-	TCMemoryManagerSlab<t_CParams, t_SlabType>::TCMemoryManagerSlab
-		(
-			uint64 _Magic
-			, TCMemoryManagerArena<t_CParams> *_pArena
-			, uint8 _nCommittedHeaderSubSlabs
-		)
+	TCMemoryManagerSlab<t_CParams, t_SlabType>::TCMemoryManagerSlab(uint64 _Magic, TCMemoryManagerArena<t_CParams> *_pArena, uint8 _nCommittedHeaderSubSlabs)
 		: TCMemoryManagerSlabShared<t_CParams>(t_SlabType, _pArena, _nCommittedHeaderSubSlabs)
 	{
 		DMibFastCheck(m_Allocated.f_IsFullyFree());
@@ -107,7 +97,7 @@ namespace NMib::NMemory
 			)
 		;
 
-		uint8 *pEndOfSlab =  fg_AlignUp((uint8 *)this, t_CParams::mc_SlabSize);
+		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)this, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
 		pHeader->m_Magic = NPrivate::fg_CalcMagic(pEndOfSlab, _Magic);
@@ -164,7 +154,7 @@ namespace NMib::NMemory
 	template <typename t_CParams, uint32 t_SlabType>
 	TCMemoryManagerSlab<t_CParams, t_SlabType>::~TCMemoryManagerSlab()
 	{
-		uint8 *pEndOfSlab =  fg_AlignUp((uint8 *)this, t_CParams::mc_SlabSize);
+		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)this, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
 		pHeader->m_Magic = 0;
@@ -204,7 +194,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (umint _Bit)> const& _fCallback)
+	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (umint _Bit)> const &_fCallback)
 	{
 		m_PendingFree.f_EnumSetBits(_fCallback, 0);
 	}
@@ -388,7 +378,7 @@ namespace NMib::NMemory
 
 			Location >>= Shift;
 #if 0
-			const static umint FreeSpace = TCAlignDown<umint, (t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab)), alignof(TCMemoryManagerSlab)>::mc_Value;
+			static umint const FreeSpace = TCAlignDown<umint, (t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab)), alignof(TCMemoryManagerSlab)>::mc_Value;
 			uint8 *pFinalLocation = _pLocation + fg_AlignDown(Location, alignof(TCMemoryManagerSlab)) % FreeSpace;
 #else
 			umint FreeSpace = umint(1) << (gc_HighestBitSet<(t_CParams::mc_SubSlabSize - sizeof(TCMemoryManagerSlab))>);

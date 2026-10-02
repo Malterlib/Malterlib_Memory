@@ -16,7 +16,6 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct TCMemoryManager;
 
-
 	struct CMemoryManagerSlabSharedPostfixHeader
 	{
 		uint32 m_SlabStartOffset;
@@ -61,13 +60,7 @@ namespace NMib::NMemory
 
 	// Per-sub-slab free-block state for the sub-slab store modes
 	template <typename t_CParams>
-	using TCSubSlabFreeStore = TCConditional
-		<
-			t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps
-			, CMemoryManagerSubSlabFreeBits
-			, CMemoryManagerSubSlabFreeState
-		>
-	;
+	using TCSubSlabFreeStore = TCConditional<t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps, CMemoryManagerSubSlabFreeBits, CMemoryManagerSubSlabFreeState>;
 
 	// Per-sub-slab cross-thread pending-free state for mc_bReapInCleanup
 	template <typename t_CParams>
@@ -82,7 +75,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct alignas(16) TCMemoryManagerSlabShared
 	{
-		TCMemoryManagerSlabShared(uint32 _SlabType, TCMemoryManagerArena<t_CParams> * _pArena, uint8 _nCommittedHeaderSubSlabs);
+		TCMemoryManagerSlabShared(uint32 _SlabType, TCMemoryManagerArena<t_CParams> *_pArena, uint8 _nCommittedHeaderSubSlabs);
 		virtual ~TCMemoryManagerSlabShared();
 
 		using CSubSlabIndex = typename t_CParams::CSubSlabIndex;
@@ -155,7 +148,7 @@ namespace NMib::NMemory
 		virtual bool f_ClearPendingBit(umint _Bit) = 0;
 		virtual bool f_HasPendingBit() = 0;
 		virtual umint f_GetNumPendingBits() = 0;
-		virtual void f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (umint _Bit)> const& _fCallback) = 0;
+		virtual void f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (umint _Bit)> const &_fCallback) = 0;
 
 		virtual fp32 f_OverheadPerByte() const = 0;
 
@@ -163,40 +156,30 @@ namespace NMib::NMemory
 		virtual void f_OnCommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) = 0;
 		virtual void f_DecommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) = 0;
 		virtual void f_DecommitDeferred() = 0;
-		virtual void f_GetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> & _Comitted) = 0;
-		virtual void f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> const& _Comitted) = 0;
+		virtual void f_GetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> &_Comitted) = 0;
+		virtual void f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> const &_Comitted) = 0;
 
 		umint f_GetNumSubSlabs() const;
 		umint f_GetSubSlabMultiplier() const;
-		uint8 * f_GetSlabStart();
+		uint8 *f_GetSlabStart();
 		TCMemoryManagerSubSlabDataType<t_CParams> *f_GetSubSlabDataType();
 		TCMemoryManagerSubSlabDataAlloc<t_CParams> *f_GetSubSlabDataAlloc();
 
-		uint8 const * f_GetSlabStart() const;
+		uint8 const *f_GetSlabStart() const;
 		TCMemoryManagerSubSlabDataType<t_CParams> const *f_GetSubSlabDataType() const;
 		TCMemoryManagerSubSlabDataAlloc<t_CParams> const *f_GetSubSlabDataAlloc() const;
 
 		static constexpr umint mc_SubSlabListStoreEntrySize
-			= t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists
-			? sizeof(CMemoryManagerSubSlab_ListNode) + sizeof(TCSubSlabFreeStore<t_CParams>)
-			: 0
+			= t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists ? sizeof(CMemoryManagerSubSlab_ListNode) + sizeof(TCSubSlabFreeStore<t_CParams>) : 0
 		;
 
-		static constexpr umint mc_SubSlabRemoteFreeEntrySize
-			= t_CParams::mc_bReapInCleanup
-			? sizeof(TCSubSlabRemoteFreeStore<t_CParams>)
-			: 0
-		;
+		static constexpr umint mc_SubSlabRemoteFreeEntrySize = t_CParams::mc_bReapInCleanup ? sizeof(TCSubSlabRemoteFreeStore<t_CParams>) : 0;
 
 		template <umint t_SlabMultiplier>
 		static constexpr umint fs_CalculateSubSlabs()
 		{
 			constexpr umint c_TheoreticalSubSlabs = (t_CParams::mc_SlabSize - 1) / (t_CParams::mc_SubSlabSize * t_SlabMultiplier);
-			constexpr umint c_RemoteFreeFixedSize
-				= t_CParams::mc_bReapInCleanup
-				? DMibPMemoryCacheLineSize * 2 + ((c_TheoreticalSubSlabs + 63) / 64) * sizeof(NAtomic::TCAtomic<uint64>)
-				: 0
-			;
+			constexpr umint c_RemoteFreeFixedSize = t_CParams::mc_bReapInCleanup ? DMibPMemoryCacheLineSize * 2 + ((c_TheoreticalSubSlabs + 63) / 64) * sizeof(NAtomic::TCAtomic<uint64>) : 0;
 			return
 				(
 					t_CParams::mc_SlabSize
@@ -218,7 +201,6 @@ namespace NMib::NMemory
 		}
 	};
 
-
 	template <typename t_CParams, uint32 t_SlabType>
 	struct alignas(16) TCMemoryManagerSlab : public TCMemoryManagerSlabShared<t_CParams>
 	{
@@ -239,13 +221,7 @@ namespace NMib::NMemory
 		{
 		};
 
-		TCConditional
-			<
-				t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists
-				, CSubSlabListStore
-				, CSubSlabListStoreEmpty
-			> m_SubSlabListStore
-		;
+		TCConditional<t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists, CSubSlabListStore, CSubSlabListStoreEmpty> m_SubSlabListStore;
 
 		// mc_bReapInCleanup: cross-thread pending-free state. The padding keeps the remotely
 		// written words a cache line away from the owner-hot header arrays on either side (the
@@ -271,13 +247,7 @@ namespace NMib::NMemory
 		{
 		};
 
-		TCConditional
-			<
-				t_CParams::mc_bReapInCleanup
-				, CSubSlabRemoteFreeStore
-				, CSubSlabRemoteFreeStoreEmpty
-			> m_SubSlabRemoteFreeStore
-		;
+		TCConditional<t_CParams::mc_bReapInCleanup, CSubSlabRemoteFreeStore, CSubSlabRemoteFreeStoreEmpty> m_SubSlabRemoteFreeStore;
 
 		NContainer::TCBitArrayPowerTwo<mc_nSubSlabs, t_CParams::mc_NumSubSlabSizeLevels, NContainer::TCBitArrayHierarchical> m_Allocated;
 
@@ -293,7 +263,7 @@ namespace NMib::NMemory
 			return m_SubSlabData;
 		}*/
 
-		TCMemoryManagerSlab(uint64 _Magic, TCMemoryManagerArena<t_CParams> * _pArena, uint8 _nCommittedHeaderSubSlabs);
+		TCMemoryManagerSlab(uint64 _Magic, TCMemoryManagerArena<t_CParams> *_pArena, uint8 _nCommittedHeaderSubSlabs);
 		~TCMemoryManagerSlab() override;
 
 		aint f_FindFreeBitAndSet(umint _Level) override;
@@ -302,23 +272,22 @@ namespace NMib::NMemory
 		umint f_GetNumSetBits(umint _Level) override;
 		bool f_IsFullyFree() override;
 
-
 		void f_SetPendingBit(umint _Bit) override;
 		bool f_ClearPendingBit(umint _Bit) override;
 		bool f_HasPendingBit() override;
 		umint f_GetNumPendingBits() override;
-		void f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (umint _Bit)> const& _fCallback) override;
+		void f_EnumPendingBits(NFunction::TCFunctionNoAlloc<bool (umint _Bit)> const &_fCallback) override;
 
 		void f_CommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) override;
 		void f_OnCommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) override;
 		void f_DecommitSubSlabs(umint _iSubSlab, umint _nSubSlabs) override;
 		void f_DecommitDeferred() override;
-		void f_GetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> & _Comitted) override;
-		void f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> const& _Comitted) override;
+		void f_GetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> &_Comitted) override;
+		void f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> const &_Comitted) override;
 
 		fp32 f_OverheadPerByte() const override;
 
-		static TCMemoryManagerSlab *fs_CalcSlabLocation(uint8 * _pLocation);
+		static TCMemoryManagerSlab *fs_CalcSlabLocation(uint8 *_pLocation);
 	};
 
 	template <typename t_CParams, umint t_Index>

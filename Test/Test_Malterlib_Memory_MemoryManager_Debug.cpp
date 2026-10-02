@@ -29,8 +29,8 @@ namespace
 		{
 			enum
 			{
-				mc_bAsanPoisioning = false
-				, mc_StackTraceDepth	= 0
+				mc_bAsanPoisioning   = false
+				, mc_StackTraceDepth = 0
 			};
 		};
 
@@ -38,10 +38,10 @@ namespace
 		{
 			enum
 			{
-				mc_bAsanPoisioning = false
-				, mc_nPreGuardBytes		= 0
-				, mc_nPostGuardBytes	= 0
-				, mc_StackTraceDepth	= 0
+				mc_bAsanPoisioning   = false
+				, mc_nPreGuardBytes  = 0
+				, mc_nPostGuardBytes = 0
+				, mc_StackTraceDepth = 0
 			};
 		};
 
@@ -108,9 +108,8 @@ namespace
 								(
 									Size
 									, 1
-									, [&](void * _pAlloc, umint _Size)
+									, [&](void *_pAlloc, umint _Size)
 									{
-
 										{
 #if DMibConfig_Memory_Shims_Enable && DMibConfig_Memory_Shims_EnableLocal
 
@@ -155,8 +154,7 @@ namespace
 				uint8 *pAlloc = nullptr;
 				bool bFoundAlloc = false;
 
-				auto fl_AllocFunctor
-					=[&](uint8 *_pAlloc, umint, CMibCodeAddress*, umint, const ch8 *, uint32, uint32, umint, umint)
+				auto fl_AllocFunctor = [&](uint8 *_pAlloc, umint, CMibCodeAddress *, umint, ch8 const *, uint32, uint32, umint, umint)
 					{
 						if (pAlloc == _pAlloc)
 							bFoundAlloc = true;
@@ -174,7 +172,7 @@ namespace
 				}
 				{
 					DMibTestPath("Big");
-					umint Size = 512*1024;
+					umint Size = 512 * 1024;
 					pAlloc = (uint8 *)MemoryManager.f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
 					MemoryManager.f_EnumAllocations(fl_AllocFunctor);
 					DMibTest(DMibExpr(bFoundAlloc));
@@ -183,7 +181,7 @@ namespace
 				}
 				{
 					DMibTestPath("Huge");
-					umint Size = 32*1024*1024;
+					umint Size = 32 * 1024 * 1024;
 					pAlloc = (uint8 *)MemoryManager.f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
 					MemoryManager.f_EnumAllocations(fl_AllocFunctor);
 					DMibTest(DMibExpr(bFoundAlloc));
@@ -200,7 +198,6 @@ namespace
 
 				auto DoubleFreeException = DMibImpExceptionInstance(CExceptionMemoryManagerDebug, "Double free");
 				{
-
 					DMibTestPath("Small");
 					umint Size = 1;
 					void *pMemory = MemoryManager.f_AllocWithSize(Size);
@@ -213,11 +210,11 @@ namespace
 					umint Size = 64;
 					void *pMemory = MemoryManager.f_AllocWithSize(Size);
 					MemoryManager.f_Free(pMemory, Size);
-					DMibExpectException(MemoryManager.f_Free(pMemory, Size),DoubleFreeException );
+					DMibExpectException(MemoryManager.f_Free(pMemory, Size), DoubleFreeException);
 				}
 				{
 					DMibTestPath("Big");
-					umint Size = 512*1024;
+					umint Size = 512 * 1024;
 					void *pMemory = MemoryManager.f_AllocWithSize(Size);
 					MemoryManager.f_Free(pMemory, Size);
 					DMibExpectException(MemoryManager.f_Free(pMemory, Size), DoubleFreeException);
@@ -264,12 +261,11 @@ namespace
 			};
 			DMibTestCategory("Memory overwrite")
 			{
-				auto fl_TestOverwite
-					= [&](umint _Size, ch8 const * _pDesc)
+				auto fl_TestOverwite = [&](umint _Size, ch8 const *_pDesc)
 					{
 						DMibTestPath(_pDesc);
 
-						if (_Size < 16*1024*1024)
+						if (_Size < 16 * 1024 * 1024)
 						{
 							DMibTestSuite("Freed")
 							{
@@ -417,7 +413,7 @@ namespace
 								pMemory[-1] = OldValue;
 
 								pMemory = (uint8 *)MemoryManager.f_Realloc(pMemory, NewSizeSmaller, Size);
-								Size = NewSizeSmaller ;
+								Size = NewSizeSmaller;
 							}
 
 							{
@@ -608,15 +604,14 @@ namespace
 				;
 
 				fl_TestOverwite(64, "Normal");
-				fl_TestOverwite(512*1024, "Big");
-#if DMibPPtrBits > 32
-				fl_TestOverwite(32*1024*1024, "Huge");
-#endif
+				fl_TestOverwite(512 * 1024, "Big");
+#	if DMibPPtrBits > 32
+				fl_TestOverwite(32 * 1024 * 1024, "Huge");
+#	endif
 			};
 #endif
 		}
 	};
 
 	DMibTestRegister(CDebug_Tests, Malterlib::Memory::MemoryManager);
-
 }

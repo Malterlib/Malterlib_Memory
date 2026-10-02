@@ -237,7 +237,8 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_always typename TCMemoryManagerArena<t_CParams>::CNormalFreeStoreCurrent *TCMemoryManagerArena<t_CParams>::fp_GetCurrentSubSlabSlot(umint _SlabType, umint _SlabBucket, umint _AlignedSize)
+	inline_always auto TCMemoryManagerArena<t_CParams>::fp_GetCurrentSubSlabSlot(umint _SlabType, umint _SlabBucket, umint _AlignedSize)
+		-> typename TCMemoryManagerArena<t_CParams>::CNormalFreeStoreCurrent *
 	{
 		if constexpr (!mc_bSubSlabStore)
 			return nullptr; // No current sub-slab slots; never dereferenced in this mode
@@ -253,7 +254,8 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_always typename TCMemoryManagerArena<t_CParams>::CNormalFreeStoreList *TCMemoryManagerArena<t_CParams>::fp_GetNormalFreeList(umint _SlabType, umint _SlabBucket, umint _AlignedSize)
+	inline_always auto TCMemoryManagerArena<t_CParams>::fp_GetNormalFreeList(umint _SlabType, umint _SlabBucket, umint _AlignedSize)
+		-> typename TCMemoryManagerArena<t_CParams>::CNormalFreeStoreList *
 	{
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
@@ -293,11 +295,7 @@ namespace NMib::NMemory
 
 		if constexpr (t_CParams::mc_PreventCacheConflictSize)
 		{
-			if
-				(
-					((umint)_pSubSlabStart & (umint)(t_CParams::mc_PreventCacheConflictSize - 1)) == 0
-					&& _AlignedSize <= t_CParams::mc_PreventCacheConflictSizeMaxBlockSize
-				)
+			if (((umint)_pSubSlabStart & (umint)(t_CParams::mc_PreventCacheConflictSize - 1)) == 0 && _AlignedSize <= t_CParams::mc_PreventCacheConflictSizeMaxBlockSize)
 			{
 				smint ToRemove = DMibPMemoryCacheLineSize;
 				while (ToRemove > 0 && nFree > 1)
@@ -441,7 +439,6 @@ namespace NMib::NMemory
 
 			if (this->f_OnCheckFree(pStart, pEnd - pStart, _Flags))
 				bError = true;
-
 		}
 
 		return bError;
@@ -507,7 +504,6 @@ namespace NMib::NMemory
 					}
 					else
 					{
-
 						umint InternalSlabBucketStart = sizeof(void *) * 2;
 						umint SlabIndex = (AlignedSize - InternalSlabBucketStart) / t_CParams::mc_MinNormalSizeAlignment;
 
@@ -702,7 +698,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocNormalBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocNormalBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
 	{
 		CNormalFreeStoreList *pList;
 		umint Size;
@@ -738,7 +734,6 @@ namespace NMib::NMemory
 					}
 					else
 					{
-
 						umint InternalSlabBucketStart = sizeof(void *) * 2;
 						umint SlabIndex = (AlignedSize - InternalSlabBucketStart) / t_CParams::mc_MinNormalSizeAlignment;
 
@@ -761,11 +756,7 @@ namespace NMib::NMemory
 
 			auto &List = *pList;
 
-			DMibMemLightweightTrack
-				(
-					auto *pLocalArena = m_pMemoryManager->m_LocalArena.f_TryGet();
-				)
-			;
+			DMibMemLightweightTrack(auto *pLocalArena = m_pMemoryManager->m_LocalArena.f_TryGet());
 
 			while (1)
 			{
@@ -1044,7 +1035,7 @@ namespace NMib::NMemory
 
 		//					DMibTrace("++{} {} {}" DMibNewLine, pData[iAlloc].m_nAllocs, iAlloc, pSlab->m_SlabType);
 
-		#if DMibPPtrBits >= 64 && defined(DMibPNoUnalignedAccess)
+#if DMibPPtrBits >= 64 && defined(DMibPNoUnalignedAccess)
 						if constexpr (t_CParams::mc_bUseFreeBlockCounting)
 						{
 							if ((AlignedSize & 4) && AlignedSize < 32)
@@ -1056,7 +1047,7 @@ namespace NMib::NMemory
 								pAlloc = (CMemoryManagerSubSlab_NormalLink *)(BaseAddress + ((((umint)pAlloc - BaseAddress) / AlignedSize) * AlignedSize));
 							}
 						}
-		#endif
+#endif
 						if constexpr (mc_EnableCallbacks)
 							this->f_OnAlloc((uint8 *)pAlloc, AlignedSize);
 						if (!_Functor(pAlloc, AlignedSize))
@@ -1073,7 +1064,14 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocNormalUncached(CNormalFreeStoreList *_pList, CNormalFreeStoreCurrent *_pCurrent, umint _AlignedSize, umint _SubIndex, umint _SlabBucket)
+	inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocNormalUncached
+		(
+			CNormalFreeStoreList *_pList
+			, CNormalFreeStoreCurrent *_pCurrent
+			, umint _AlignedSize
+			, umint _SubIndex
+			, umint _SlabBucket
+		)
 	{
 		umint SizeType = 0;
 		umint SubSlabMultiplier = t_CParams::mc_SlabTypeInfo[_SubIndex].m_SubSlabMutiplier;
@@ -1181,11 +1179,7 @@ namespace NMib::NMemory
 
 				if constexpr (t_CParams::mc_PreventCacheConflictSize)
 				{
-					if
-						(
-							((umint)pSlabAddress & (umint)(t_CParams::mc_PreventCacheConflictSize - 1)) == 0
-							&& _AlignedSize <= t_CParams::mc_PreventCacheConflictSizeMaxBlockSize
-						)
+					if (((umint)pSlabAddress & (umint)(t_CParams::mc_PreventCacheConflictSize - 1)) == 0 && _AlignedSize <= t_CParams::mc_PreventCacheConflictSizeMaxBlockSize)
 					{
 						smint ToRemove = smint(DMibPMemoryCacheLineSize) - smint(nReserved * _AlignedSize);
 						while (ToRemove > 0 && nBlocks - nReserved > 2)
@@ -1282,15 +1276,15 @@ namespace NMib::NMemory
 				--nBlocks;
 				if constexpr (t_CParams::mc_bUseFreeBlockCounting)
 				{
-	#if defined(DMibPNoUnalignedAccess)
+#if defined(DMibPNoUnalignedAccess)
 					CMemoryManagerSubSlab_NormalLink *pNormalLink;
 					if constexpr (t_CParams::mc_bUseFreeBlockCounting)
 						pNormalLink = (CMemoryManagerSubSlab_NormalLink *)fg_AlignUp(pSlabAddress, sizeof(void *));
 					else
 						pNormalLink = (CMemoryManagerSubSlab_NormalLink *)pSlabAddress;
-	#else
+#else
 					CMemoryManagerSubSlab_NormalLink *pNormalLink = (CMemoryManagerSubSlab_NormalLink *)pSlabAddress;
-	#endif
+#endif
 
 					pNormalLink->m_nBlocks = nBlocks;
 					_pList->f_UnsafeInsertFirst(pNormalLink);
@@ -1321,7 +1315,7 @@ namespace NMib::NMemory
 						}
 					}
 
-					for (auto pLinkAddress = pSlabAddress + nBlocks  * _AlignedSize; pLinkAddress > pSlabAddress; pLinkAddress -= _AlignedSize)
+					for (auto pLinkAddress = pSlabAddress + nBlocks * _AlignedSize; pLinkAddress > pSlabAddress; pLinkAddress -= _AlignedSize)
 						_pList->f_UnsafeInsertFirst((CMemoryManagerSubSlab_NormalLink *)pLinkAddress);
 				}
 			}
@@ -1332,7 +1326,6 @@ namespace NMib::NMemory
 			return pSlabAddress;
 		}
 	}
-
 
 	template <typename t_CParams>
 	inline_always void TCMemoryManagerArena<t_CParams>::fp_FreeInline(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pSlab)
@@ -1405,7 +1398,6 @@ namespace NMib::NMemory
 
 		if constexpr (mc_bSubSlabStore)
 		{
-
 			umint MinSize = t_CParams::mc_SlabTypeFast[SlabType].m_SubSlabMultiplier * t_CParams::mc_SubSlabSize;
 
 			if (AlignedSize <= MinSize) [[likely]]
@@ -1436,10 +1428,7 @@ namespace NMib::NMemory
 				{
 					auto &FreeState = _pSlab->m_pSubSlabFreeState[iSubSlab];
 
-					bool bWasExhausted
-						= FreeState.m_pFreeHead == nullptr
-						&& FreeState.m_CarveOffset >= FreeState.m_CarveEnd
-					;
+					bool bWasExhausted = FreeState.m_pFreeHead == nullptr && FreeState.m_CarveOffset >= FreeState.m_CarveEnd;
 
 					*(void **)_pMemory = FreeState.m_pFreeHead;
 					FreeState.m_pFreeHead = _pMemory;
@@ -1527,7 +1516,14 @@ namespace NMib::NMemory
 	// Out of line for the same reason: this is the only thing on the free path that needs the
 	// size-class list and the current-sub-slab slot.
 	template <typename t_CParams>
-	inline_never void TCMemoryManagerArena<t_CParams>::fp_FreeRelistSubSlab(TCMemoryManagerSlabShared<t_CParams> *_pSlab, umint _iSubSlab, umint _SlabType, umint _SlabBucket, umint _AlignedSize)
+	inline_never void TCMemoryManagerArena<t_CParams>::fp_FreeRelistSubSlab
+		(
+			TCMemoryManagerSlabShared<t_CParams> *_pSlab
+			, umint _iSubSlab
+			, umint _SlabType
+			, umint _SlabBucket
+			, umint _AlignedSize
+		)
 	{
 		// A drained sub-slab can still be cached as current (exhaustion is only discovered by the
 		// next allocation); the freed bit is reachable through the cursor, so it must not be
@@ -1590,7 +1586,7 @@ namespace NMib::NMemory
 			}
 			else
 			{
-				for (void *pFree = FreeState.m_pFreeHead; pFree != nullptr; )
+				for (void *pFree = FreeState.m_pFreeHead; pFree != nullptr;)
 				{
 					uint8 *pBlock = (uint8 *)pFree;
 					pFree = *(void **)pBlock;

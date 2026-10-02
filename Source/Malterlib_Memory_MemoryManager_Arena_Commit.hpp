@@ -10,7 +10,7 @@ namespace NMib::NMemory
 	{
 		if constexpr (mc_EnableCallbacks && t_CParams::CAllocator::f_CanCommit())
 		{
-			auto * pMemory = this->f_GetSlabStart();
+			auto *pMemory = this->f_GetSlabStart();
 			this->m_pMemoryManager->f_OnCommit(pMemory + _iSubSlab * t_CParams::mc_SubSlabSize * mc_SlabMultiplier, _nSubSlabs * t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
 		}
 	}
@@ -20,7 +20,7 @@ namespace NMib::NMemory
 	{
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 		{
-			auto * pMemory = this->f_GetSlabStart();
+			auto *pMemory = this->f_GetSlabStart();
 			if constexpr (mc_EnableCallbacks)
 				this->m_pMemoryManager->f_OnCommit(pMemory + _iSubSlab * t_CParams::mc_SubSlabSize * mc_SlabMultiplier, _nSubSlabs * t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
 
@@ -48,7 +48,6 @@ namespace NMib::NMemory
 		}
 	}
 
-
 	template <typename t_CParams, uint32 t_SlabType>
 	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_DecommitSubSlabs(umint _iSubSlab, umint _nSubSlabs)
 	{
@@ -65,7 +64,7 @@ namespace NMib::NMemory
 			}
 			else
 			{
-				auto * pMemory = this->f_GetSlabStart();
+				auto *pMemory = this->f_GetSlabStart();
 				m_CommittedSubSlabs.f_EnumSetBitRanges
 					(
 						[&](umint _Bit, umint _nBits) -> bool
@@ -77,14 +76,7 @@ namespace NMib::NMemory
 								)
 							;
 							if constexpr (mc_EnableCallbacks)
-							{
-								this->m_pMemoryManager->f_OnDecommit
-									(
-										pMemory + _Bit * t_CParams::mc_SubSlabSize * mc_SlabMultiplier
-										, _nBits * t_CParams::mc_SubSlabSize * mc_SlabMultiplier
-									)
-								;
-							}
+								this->m_pMemoryManager->f_OnDecommit(pMemory + _Bit * t_CParams::mc_SubSlabSize * mc_SlabMultiplier, _nBits * t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
 
 							return true;
 						}
@@ -99,7 +91,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_GetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> & _Comitted)
+	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_GetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> &_Comitted)
 	{
 		m_CommittedSubSlabs.f_EnumSetBitRanges
 			(
@@ -113,7 +105,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, uint32 t_SlabType>
-	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> const& _Comitted)
+	void TCMemoryManagerSlab<t_CParams, t_SlabType>::f_SetCommitted(NContainer::TCBitArrayHierarchical<t_CParams::mc_MaxNumSubSlabs> const &_Comitted)
 	{
 		if constexpr (t_CParams::CAllocator::f_CanCommit() && !(t_CParams::mc_DeferCleanup & EDeferCleanup_Commit))
 		{
@@ -121,7 +113,7 @@ namespace NMib::NMemory
 			// reclaim transferred sub-slabs later (frees decommit immediately and never queue
 			// deferred work), so decommit the transferred set eagerly instead of retaining
 			// committed memory that nothing tracks
-			auto * pMemory = this->f_GetSlabStart();
+			auto *pMemory = this->f_GetSlabStart();
 			_Comitted.f_EnumSetBitRanges
 				(
 					[&](umint _Bit, umint _nBits) -> bool
@@ -142,7 +134,7 @@ namespace NMib::NMemory
 
 		constexpr bool c_bHasWaste = (((sizeof(*this) + t_CParams::mc_SubSlabSize - 1) / t_CParams::mc_SubSlabSize) + mc_nSubSlabs * mc_SlabMultiplier) < t_CParams::mc_MaxNumSubSlabs;
 
-		auto * pMemory = this->f_GetSlabStart();
+		auto *pMemory = this->f_GetSlabStart();
 		_Comitted.f_EnumSetBitRanges
 			(
 				[&](umint _Bit, umint _nBits) -> bool
@@ -220,7 +212,7 @@ namespace NMib::NMemory
 		if constexpr (!t_CParams::CAllocator::f_CanCommit() || !(t_CParams::mc_DeferCleanup & EDeferCleanup_Commit))
 			return;
 
-		auto * pMemory = this->f_GetSlabStart();
+		auto *pMemory = this->f_GetSlabStart();
 
 		m_DeferredDecommitSubSlabs.f_EnumSetBitRanges
 			(

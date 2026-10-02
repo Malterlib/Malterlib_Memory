@@ -13,11 +13,12 @@ namespace NMib::NMemory
 	using CDebugMemoryManagerUnderlying = int32;
 	enum EDebugMemoryManager : int32
 	{
-		EDebugMemoryManager_None = 0,
-		EDebugMemoryManager_CheckUpper = DMibBit(0),			// Check for overwrites just above each allocation
-		EDebugMemoryManager_CheckRandom = DMibBit(1),			// Check for overwrites just below each allocation
-		EDebugMemoryManager_ProtectOnDemand = DMibBit(2),		// Do not place any protection on guard pages until f_DemandProtection is called.
+		EDebugMemoryManager_None              = 0
+		, EDebugMemoryManager_CheckUpper      = DMibBit(0) // Check for overwrites just above each allocation
+		, EDebugMemoryManager_CheckRandom     = DMibBit(1) // Check for overwrites just below each allocation
+		, EDebugMemoryManager_ProtectOnDemand = DMibBit(2) // Do not place any protection on guard pages until f_DemandProtection is called.
 	};
+
 	template <CDebugMemoryManagerUnderlying t_Options>
 	class TCDebugMemoryManager
 	{
@@ -33,7 +34,6 @@ namespace NMib::NMemory
 			{
 				return NContainer::TCMapWithPool<uint8 *, CMemoryBlock>::fs_GetKey(this);
 			}
-
 		};
 
 		umint m_Sequence;
@@ -43,9 +43,10 @@ namespace NMib::NMemory
 				, CMemoryBlock
 				, NMib::CSort_Default
 				, NMib::NMemory::CAllocator_VirtualNoTrackingNoCommit
-				, (2*1024*1024) / (sizeof(CMemoryBlock) + sizeof(void *))
+				, (2 * 1024 * 1024) / (sizeof(CMemoryBlock) + sizeof(void *))
 				, NMib::NMemory::CPoolType_Growing
-			> m_Blocks
+			>
+			m_Blocks
 		;
 
 		NContainer::TCMapWithPool
@@ -54,9 +55,10 @@ namespace NMib::NMemory
 				, CMemoryBlock
 				, NMib::CSort_Default
 				, NMib::NMemory::CAllocator_VirtualNoTrackingNoCommit
-				, (2*1024*1024) / (sizeof(CMemoryBlock) + sizeof(umint))
+				, (2 * 1024 * 1024) / (sizeof(CMemoryBlock) + sizeof(umint))
 				, NMib::NMemory::CPoolType_Growing
-			> m_FreeBlocks
+			>
+			m_FreeBlocks
 		;
 		umint m_nFreeBlocks;
 		umint m_nFreeMemBytes;
@@ -74,7 +76,7 @@ namespace NMib::NMemory
 //#ifdef DPlatformFamily_macOS
 			// macOS needs 16 byte alignment to handle SSE
 			EMemoryManagerAlignmentCalc = gc_HighestBitSet<sizeof(umint) * 2>
-			, EMemoryManagerAlignment = EMemoryManagerAlignmentCalc < 4 ? 4 : EMemoryManagerAlignmentCalc
+			, EMemoryManagerAlignment   = EMemoryManagerAlignmentCalc < 4 ? 4 : EMemoryManagerAlignmentCalc
 //#else
 //			EMemoryManagerAlignment = gc_HighestBitSet<sizeof(umint) * 2>
 //#endif
@@ -95,7 +97,6 @@ namespace NMib::NMemory
 		CMemoryManager m_Heap;
 
 	public:
-
 		TCDebugMemoryManager()
 			: m_Heap(CMemoryManagerConfig())
 			, m_Sequence(0)
@@ -126,9 +127,9 @@ namespace NMib::NMemory
 			//m_nMaxFreeMemory = NMib::NSys::fg_Process_GetPhysicalMemory() / 5;
 
 #if DMibPPtrBits == 32
-			m_nMaxFreeMemory = umint(128)*uint64(1024)*uint64(1024);
+			m_nMaxFreeMemory = umint(128) * uint64(1024) * uint64(1024);
 #else
-			m_nMaxFreeMemory = uint64(4)*uint64(1024)*uint64(1024)*uint64(1024);
+			m_nMaxFreeMemory = uint64(4) * uint64(1024) * uint64(1024) * uint64(1024);
 #endif
 		}
 
@@ -163,7 +164,7 @@ namespace NMib::NMemory
 			uint8 *pBlock = pMemBlock->m_pStart;
 			uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
 			if (!m_bProtectOnDemand || m_bProtectionDemanded)
-				NSys::fg_Mem_VirtualProtect(pBlockStart, GranularityProtect*2 + UserNeededSize, EProtect_ReadWrite);
+				NSys::fg_Mem_VirtualProtect(pBlockStart, GranularityProtect * 2 + UserNeededSize, EProtect_ReadWrite);
 
 			umint Size = pMemBlock->m_RealSize;
 
@@ -257,6 +258,7 @@ namespace NMib::NMemory
 			_Size = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, umint(1 << EMemoryManagerAlignment));
 			return fp_Free(_pBlock, _Size);
 		}
+
 		void f_FreeNoSize(void *_pBlock)
 		{
 			fp_Free(_pBlock, 0);
@@ -301,7 +303,7 @@ namespace NMib::NMemory
 				fp_RemoveFreeBlock();
 		}
 
-		umint f_Size(const void *_pBlock) const
+		umint f_Size(void const *_pBlock) const
 		{
 			if (!_pBlock)
 				return 0;
@@ -314,7 +316,7 @@ namespace NMib::NMemory
 			return pMemBlock->m_AllocSize;
 		}
 
-		umint f_TrySize(const void *_pBlock) const
+		umint f_TrySize(void const *_pBlock) const
 		{
 			if (!_pBlock)
 				return 0;
@@ -326,7 +328,7 @@ namespace NMib::NMemory
 			return 0;
 		}
 
-		umint f_Overhead(const void *_pBlock) const
+		umint f_Overhead(void const *_pBlock) const
 		{
 			if (!_pBlock)
 				return 0;
@@ -342,7 +344,7 @@ namespace NMib::NMemory
 			return UserNeededSize - pMemBlock->m_AllocSize + GranularityProtect * 2;
 		}
 
-		bool f_ContainsBlock(void* _pPtr)
+		bool f_ContainsBlock(void *_pPtr)
 		{
 			DMibLock(m_Lock);
 			return m_Heap.f_ContainsBlock(_pPtr);
@@ -357,11 +359,9 @@ namespace NMib::NMemory
 			{
 				umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
 
-				for (auto BIter = m_Blocks.f_GetIterator()
-					;BIter
-					;++BIter)
+				for (auto BIter = m_Blocks.f_GetIterator(); BIter; ++BIter)
 				{
-					CMemoryBlock* pMemBlock = BIter;
+					CMemoryBlock *pMemBlock = BIter;
 
 					uint8 *pBlock = pMemBlock->m_pStart;
 					uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
@@ -373,18 +373,16 @@ namespace NMib::NMemory
 					NSys::fg_Mem_VirtualProtect(pRetBlock + UserNeededSize, GranularityProtect, EProtect_Exec);
 				}
 
-				for (auto FIter = m_FreeBlocks.f_GetIterator()
-					;FIter
-					;++FIter)
+				for (auto FIter = m_FreeBlocks.f_GetIterator(); FIter; ++FIter)
 				{
-					CMemoryBlock* pMemBlock = FIter;
+					CMemoryBlock *pMemBlock = FIter;
 
 					umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
 
 					uint8 *pBlock = pMemBlock->m_pStart;
 					uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
 
-					NSys::fg_Mem_VirtualProtect(pBlockStart, GranularityProtect*2 + UserNeededSize, EProtect_Exec);
+					NSys::fg_Mem_VirtualProtect(pBlockStart, GranularityProtect * 2 + UserNeededSize, EProtect_Exec);
 				}
 
 				m_bProtectionDemanded = true;
@@ -415,6 +413,5 @@ namespace NMib::NMemory
 		{
 			m_Lock.f_ForkedParent();
 		}
-
 	};
 }

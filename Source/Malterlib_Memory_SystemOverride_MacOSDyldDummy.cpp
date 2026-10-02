@@ -7,6 +7,5 @@ extern "C"
 {
 	__attribute__((used)) module_export void fg_MalterlibSystem_InitDyldDummyHelper()
 	{
-
 	}
 }

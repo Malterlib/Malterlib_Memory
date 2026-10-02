@@ -10,38 +10,27 @@ namespace NMib::NMemory
 {
 	enum EMemoryManagerFeatureFlag : uint32
 	{
-		EMemoryManagerFeatureFlag_None = 0
-		, EMemoryManagerFeatureFlag_TraceLeaks = DMibBit(0)
-		, EMemoryManagerFeatureFlag_StackTrace = DMibBit(1)
+		EMemoryManagerFeatureFlag_None                   = 0
+		, EMemoryManagerFeatureFlag_TraceLeaks           = DMibBit(0)
+		, EMemoryManagerFeatureFlag_StackTrace           = DMibBit(1)
 		, EMemoryManagerFeatureFlag_CheckModifyAfterFree = DMibBit(2)
-		, EMemoryManagerFeatureFlag_PreGuard = DMibBit(3)
-		, EMemoryManagerFeatureFlag_PostGuard = DMibBit(4)
-		, EMemoryManagerFeatureFlag_FreeValidation = DMibBit(5)
-		, EMemoryManagerFeatureFlag_Enumeration = DMibBit(6)
-		, EMemoryManagerFeatureFlag_AssertOnMemoryLeak = DMibBit(7)
+		, EMemoryManagerFeatureFlag_PreGuard             = DMibBit(3)
+		, EMemoryManagerFeatureFlag_PostGuard            = DMibBit(4)
+		, EMemoryManagerFeatureFlag_FreeValidation       = DMibBit(5)
+		, EMemoryManagerFeatureFlag_Enumeration          = DMibBit(6)
+		, EMemoryManagerFeatureFlag_AssertOnMemoryLeak   = DMibBit(7)
 	};
 
 	class CGlobalReportMemory
 	{
 	public:
-
-		virtual void f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName) = 0;
+		virtual void f_AllocatorName(umint _MemoryAllocator, ch8 const *_pAllocatorName) = 0;
 		virtual void f_AllocatorDelete(umint _MemoryAllocator) = 0;
 
 		virtual void f_ScopeEnter(umint _MemoryAllocator) = 0;
 		virtual void f_ScopeExit(umint _MemoryAllocator) = 0;
 
-		virtual void f_Alloc
-			(
-				umint _MemoryAllocator
-				, umint _Address
-				, umint _RequestedAlignment
-				, umint _RequestedSize
-				, umint _ReturnedSize
-				, fp32 _nBytesOverhead
-				, void *_pAllocationInfo
-			) = 0
-		;
+		virtual void f_Alloc(umint _MemoryAllocator, umint _Address, umint _RequestedAlignment, umint _RequestedSize, umint _ReturnedSize, fp32 _nBytesOverhead, void *_pAllocationInfo) = 0;
 		virtual void f_Resize
 			(
 				umint _MemoryAllocator
@@ -54,7 +43,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) = 0
+			)
+			= 0
 		;
 		virtual void f_Realloc
 			(
@@ -68,7 +58,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) = 0
+			)
+			= 0
 		;
 		virtual void f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) = 0;
 		virtual void f_GetSize(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) = 0;
@@ -76,7 +67,9 @@ namespace NMib::NMemory
 		virtual void f_Commit(umint _MemoryAllocator, umint _Address, umint _Size) = 0;
 		virtual void f_Decommit(umint _MemoryAllocator, umint _Address, umint _Size) = 0;
 
-		virtual void f_Report(bool _bFullReport) {};
+		virtual void f_Report(bool _bFullReport)
+		{
+		};
 	};
 
 	class CReportMemory
@@ -93,7 +86,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) = 0
+			)
+			= 0
 		;
 		virtual void f_Resize
 			(
@@ -109,7 +103,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) = 0
+			)
+			= 0
 		;
 		virtual void f_Realloc
 			(
@@ -125,7 +120,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) = 0
+			)
+			= 0
 		;
 		virtual void f_Free(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _AllocatorDepth, umint _Address, umint _Size, void const *_pAllocationInfo) = 0;
 		virtual void f_GetSize(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _AllocatorDepth, umint _Address, umint _Size, void const *_pAllocationInfo) = 0;
@@ -153,7 +149,6 @@ namespace NMib::NMemory
 		constexpr bool operator == (CAllocator_Base const &_Right) const noexcept = default;
 	};
 
-
 	struct CAllocator_AutoDestroy
 	{
 		void *m_pMemory;
@@ -172,7 +167,7 @@ namespace NMib::NMemory
 			_Other.m_pMemory = nullptr;
 		}
 
-		CAllocator_AutoDestroy &operator =(CAllocator_AutoDestroy &&_Other)
+		CAllocator_AutoDestroy &operator = (CAllocator_AutoDestroy &&_Other)
 		{
 			m_pMemory = _Other.m_pMemory;
 			m_Size = _Other.m_Size;
@@ -203,6 +198,7 @@ namespace NMib::NMemory
 			: CAllocator_AutoDestroy(_pMemory, _Size)
 		{
 		}
+
 		TCAllocator_AutoDestroyStatic(TCAllocator_AutoDestroyStatic &&) = default;
 		TCAllocator_AutoDestroyStatic &operator = (TCAllocator_AutoDestroyStatic &&) = default;
 		TCAllocator_AutoDestroyStatic() = default;
@@ -221,6 +217,7 @@ namespace NMib::NMemory
 			, m_Allocator(_Allocator)
 		{
 		}
+
 		TCAllocator_AutoDestroy(TCAllocator_AutoDestroy &&) = default;
 		TCAllocator_AutoDestroy &operator = (TCAllocator_AutoDestroy &&) = default;
 		TCAllocator_AutoDestroy(t_CAllocator &_Allocator)
@@ -232,13 +229,13 @@ namespace NMib::NMemory
 			if (this->m_pMemory)
 				m_Allocator.f_Free(this->m_pMemory, this->m_Size);
 		}
+
 		t_CAllocator &m_Allocator;
 	};
 
 	class CAllocator_Empty : public CAllocator_Base
 	{
 	public:
-
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Empty>;
 
 		static inline_small umint f_GranularityAlloc(bool _bLargePages = false)
@@ -276,7 +273,7 @@ namespace NMib::NMemory
 			return 0.0f;
 		}
 
-		constexpr static inline_small bool f_CanCommit()
+		static constexpr inline_small bool f_CanCommit()
 		{
 			return false;
 		}
@@ -293,7 +290,6 @@ namespace NMib::NMemory
 
 		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect)
 		{
-
 		}
 
 		static inline_small void *f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
@@ -316,29 +312,81 @@ namespace NMib::NMemory
 			return nullptr;
 		}
 
-		static inline_small void *f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocAlignedWithSizeDebug
+			(
+				umint &_Size
+				, umint _Alignment
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			return nullptr;
 		}
 
-		static inline_small void *f_AllocAlignedDebug(umint _Size, umint _Alignment, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocAlignedDebug
+			(
+				umint _Size
+				, umint _Alignment
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			return nullptr;
 		}
 
-		static inline_small void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void f_AllocBatch
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 		}
 
-		static inline_small void f_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void f_AllocBatchDebug
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 		}
 
-		static inline_small void *f_AllocWithSizeDebug(umint &_Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_AllocWithSizeDebug
+			(
+				umint &_Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			return nullptr;
 		}
-		static inline_small void *f_AllocDebug(umint _Size, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+
+		static inline_small void *f_AllocDebug
+			(
+				umint _Size
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			return nullptr;
 		}
@@ -353,7 +401,17 @@ namespace NMib::NMemory
 			return nullptr;
 		}
 
-		static inline_small void *f_ReallocDebug(void *_pMem, umint _Size, umint _OldSize, const ch8 *_pFile, aint _Line, EHeapDebugFlag _Flags = EHeapDebugFlag_None, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		static inline_small void *f_ReallocDebug
+			(
+				void *_pMem
+				, umint _Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 		{
 			return nullptr;
 		}
@@ -379,10 +437,12 @@ namespace NMib::NMemory
 		{
 		}
 
-		only_parameters_aliased static CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		only_parameters_aliased static auto f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+			-> CAutoDestroy
 		{
 			return {};
 		}
+
 		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			return {};
@@ -407,49 +467,49 @@ namespace NMib::NMemory
 	||______________________________________________________________________________________________||
 	\************************************************************************************************/
 
-#	ifdef	DMibPIntrinsicMemCopy
-		template <typename t_CData1, typename t_CData2>
-		inline_small t_CData1 *fg_MemCopy(t_CData1 *_pDest, const t_CData2 *_pSource, umint _Size) noexcept
-		{
-			return (t_CData1 *)DMibPIntrinsicMemCopy(_pDest, _pSource, _Size);
-		}
-#	else
-		template <typename t_CData1, typename t_CData2>
-		inline_medium t_CData1 *fg_MemCopy(t_CData1 *_pDest, const t_CData2 *_pSource, umint _Size) noexcept
-		{
-	/*		for (umint i = 0; i < _Size; ++i)
+#ifdef	DMibPIntrinsicMemCopy
+	template <typename t_CData1, typename t_CData2>
+	inline_small t_CData1 *fg_MemCopy(t_CData1 *_pDest, t_CData2 const *_pSource, umint _Size) noexcept
+	{
+		return (t_CData1 *)DMibPIntrinsicMemCopy(_pDest, _pSource, _Size);
+	}
+#else
+	template <typename t_CData1, typename t_CData2>
+	inline_medium t_CData1 *fg_MemCopy(t_CData1 *_pDest, t_CData2 const *_pSource, umint _Size) noexcept
+	{
+/*		for (umint i = 0; i < _Size; ++i)
 				((uint8 *)_pDest)[i] = ((uint8 *)_pSource)[i];*/
 
-			int DoLarge = _Size / sizeof(umint);
-			umint *pDest = (umint *)_pDest;
-			umint *pSrc = (umint *)_pSource;
+		int DoLarge = _Size / sizeof(umint);
+		umint *pDest = (umint *)_pDest;
+		umint *pSrc = (umint *)_pSource;
+		{
+			umint *pDestEnd = pDest + DoLarge;
+
+			while ((pDestEnd - pDest))
 			{
-				umint *pDestEnd = pDest + DoLarge;
-
-				while ((pDestEnd - pDest))
-				{
-					*pDest = *pSrc;
-					++pDest;
-					++pSrc;
-				}
+				*pDest = *pSrc;
+				++pDest;
+				++pSrc;
 			}
-
-			{
-				uint8 *pDest2 = (uint8 *)pDest;
-				uint8 *pSrc2 = (uint8 *)pSrc;
-				uint8 *pDestEnd = pDest2 + (_Size - (DoLarge * sizeof(umint)));
-
-				while ((pDestEnd - pDest2))
-				{
-					*pDest2 = *pSrc2;
-					++pDest2;
-					++pSrc2;
-				}
-			}
-
-			return _pDest;
 		}
-#	endif
+
+		{
+			uint8 *pDest2 = (uint8 *)pDest;
+			uint8 *pSrc2 = (uint8 *)pSrc;
+			uint8 *pDestEnd = pDest2 + (_Size - (DoLarge * sizeof(umint)));
+
+			while ((pDestEnd - pDest2))
+			{
+				*pDest2 = *pSrc2;
+				++pDest2;
+				++pSrc2;
+			}
+		}
+
+		return _pDest;
+	}
+#endif
 
 	template <typename t_CData1, typename t_CData2>
 	inline_medium t_CData1 *fg_ObjectCopy(t_CData1 *_pDest, t_CData2 const *_pSource, umint _nObjects) noexcept(noexcept(fg_GetType<t_CData1 &>() = fg_GetType<t_CData2 const &>()))
@@ -478,13 +538,13 @@ namespace NMib::NMemory
 		return _pDest;
 	}
 
-#	ifdef	DMibPIntrinsicMemSet
+#ifdef	DMibPIntrinsicMemSet
 	template <typename t_CData2>
 	inline_always uint8 *fg_ObjectSet(uint8 *_pDest, t_CData2 _SetValue, umint _NumElements) noexcept
 	{
 		return (uint8 *)DMibPIntrinsicMemSet(_pDest, uint8(_SetValue), _NumElements);
 	}
-#	endif
+#endif
 
 #ifdef	DMibPIntrinsicMemSet
 	template <typename t_CData1>
@@ -518,35 +578,35 @@ namespace NMib::NMemory
 		return _Data;
 	}
 
-#	ifdef	DMibPIntrinsicMemSet
-#		ifdef DCompiler_MSVC
-			template <typename t_CData1>
-			inline_always t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, umint _Size) noexcept
-			{
-				DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
-				NAtomic::fg_CompilerFence();
-				return _pFirst;
-			}
-#		else
-			template <typename t_CData1>
-			inline_always t_CData1 *fg_SecureMemClear(t_CData1 *_pFirst, umint _Size) noexcept
-			{
-				DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
-				__asm__ __volatile__("" ::"r"(_pFirst): "memory");
-				return _pFirst;
-			}
-#		endif
+#ifdef	DMibPIntrinsicMemSet
+#	ifdef DCompiler_MSVC
+	template <typename t_CData1>
+	inline_always t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, umint _Size) noexcept
+	{
+		DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
+		NAtomic::fg_CompilerFence();
+		return _pFirst;
+	}
 #	else
-		template <typename t_CData1>
-		inline_large t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, umint _Size) noexcept
-		{
-			umint DoSize = _Size / sizeof(umint);
-			fg_ObjectSet((umint *)_pFirst, 0, DoSize);
-			fg_ObjectSet((uint8 *)_pFirst + (DoSize * sizeof(umint)), 0, _Size - (DoSize * sizeof(umint)));
-			NAtomic::fg_CompilerFence();
-			return _pFirst;
-		}
+	template <typename t_CData1>
+	inline_always t_CData1 *fg_SecureMemClear(t_CData1 *_pFirst, umint _Size) noexcept
+	{
+		DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
+		__asm__ __volatile__("" :: "r"(_pFirst) : "memory");
+		return _pFirst;
+	}
 #	endif
+#else
+	template <typename t_CData1>
+	inline_large t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, umint _Size) noexcept
+	{
+		umint DoSize = _Size / sizeof(umint);
+		fg_ObjectSet((umint *)_pFirst, 0, DoSize);
+		fg_ObjectSet((uint8 *)_pFirst + (DoSize * sizeof(umint)), 0, _Size - (DoSize * sizeof(umint)));
+		NAtomic::fg_CompilerFence();
+		return _pFirst;
+	}
+#endif
 
 	template <typename t_CData1>
 	inline_always t_CData1 &fg_SecureMemClear(t_CData1 &_First) noexcept
@@ -561,7 +621,6 @@ namespace NMib::NMemory
 		fg_SecureMemClear(&_Data, sizeof(t_CData1) * _nElem);
 		return _Data;
 	}
-
 
 #ifdef DMibPIntrinsicMemCmp
 	static inline_always aint fg_MemCmp(uint8 const *_pFirst, uint8 const *_pSecond, umint _Size) noexcept
@@ -587,7 +646,7 @@ namespace NMib::NMemory
 	}
 #endif
 
-	static inline_medium aint fg_MemCmpOne(uint8 const *_pFirst, const uint8 _Second, umint _Size) noexcept
+	static inline_medium aint fg_MemCmpOne(uint8 const *_pFirst, uint8 const _Second, umint _Size) noexcept
 	{
 		uint8 const *pFirst = _pFirst;
 		uint8 const *pFirstEnd = pFirst + _Size;
@@ -602,52 +661,52 @@ namespace NMib::NMemory
 		return 0;
 	}
 
-#	ifdef	DMibPIntrinsicMemMove
-		template <typename t_CData1, typename t_CData2>
-		inline_small t_CData1 *fg_MemMove(t_CData1 *_pDest, const t_CData2 *_pSource, umint _Size) noexcept
-		{
-			return (t_CData1 *)DMibPIntrinsicMemMove(_pDest, _pSource, _Size);
-		}
-#	else
-		template <typename t_CData1, typename t_CData2>
-		inline_extralarge t_CData1 *fg_MemMove(t_CData1 *_pDest, const t_CData2 *_pSource, umint _Size) noexcept
-		{
-			uint8 *pSrc = (uint8 *)_pSource;
-			uint8 *pDest = (uint8 *)_pDest;
+#ifdef	DMibPIntrinsicMemMove
+	template <typename t_CData1, typename t_CData2>
+	inline_small t_CData1 *fg_MemMove(t_CData1 *_pDest, t_CData2 const *_pSource, umint _Size) noexcept
+	{
+		return (t_CData1 *)DMibPIntrinsicMemMove(_pDest, _pSource, _Size);
+	}
+#else
+	template <typename t_CData1, typename t_CData2>
+	inline_extralarge t_CData1 *fg_MemMove(t_CData1 *_pDest, t_CData2 const *_pSource, umint _Size) noexcept
+	{
+		uint8 *pSrc = (uint8 *)_pSource;
+		uint8 *pDest = (uint8 *)_pDest;
 
-			if (pDest > (pSrc + _Size) || pDest < pSrc)
+		if (pDest > (pSrc + _Size) || pDest < pSrc)
+		{
+			uint8 *pSrcEnd = pSrc + _Size;
+			while (pSrcEnd - pSrc)
 			{
-				uint8 *pSrcEnd = pSrc + _Size;
-				while (pSrcEnd - pSrc)
-				{
-					*pDest = *pSrc;
-					++pDest;
-					++pSrc;
-				}
+				*pDest = *pSrc;
+				++pDest;
+				++pSrc;
 			}
-			else
-			{
-				pSrc = (uint8 *)_pSource + _Size - 1;
-				pDest = (uint8 *)_pDest + _Size - 1;
-				uint8 *pSrcEnd = (uint8 *)_pSource - 1;
-				while (pSrcEnd - pSrc)
-				{
-					*pDest = *pSrc;
-					--pDest;
-					--pSrc;
-				}
-			}
-
-			return _pDest;
 		}
-#	endif
+		else
+		{
+			pSrc = (uint8 *)_pSource + _Size - 1;
+			pDest = (uint8 *)_pDest + _Size - 1;
+			uint8 *pSrcEnd = (uint8 *)_pSource - 1;
+			while (pSrcEnd - pSrc)
+			{
+				*pDest = *pSrc;
+				--pDest;
+				--pSrc;
+			}
+		}
+
+		return _pDest;
+	}
+#endif
 
 	namespace NPrivate
 	{
 		template <typename t_CData, typename t_CSorter>
 		class TCHelpQSort
 		{
-			static void fp_InsertSort(t_CData *_pArray, aint _Low, aint _High, const t_CSorter &_fCompare)
+			static void fp_InsertSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
 			{
 				t_CData Temp;
 				aint i, j;
@@ -656,23 +715,23 @@ namespace NMib::NMemory
 				{
 					Temp = _pArray[i];
 
-					for (j = i-1; j >= _Low && fg_CheckOrdering(_fCompare(Temp, _pArray[j])) < 0; j--)
-						_pArray[j+1] = _pArray[j];
+					for (j = i - 1; j >= _Low && fg_CheckOrdering(_fCompare(Temp, _pArray[j])) < 0; j--)
+						_pArray[j + 1] = _pArray[j];
 
-					_pArray[j+1] = Temp;
+					_pArray[j + 1] = Temp;
 				}
 			}
 
-			static aint fp_Partition(t_CData *_pArray, aint _Low, aint _High, const t_CSorter &_fCompare)
+			static aint fp_Partition(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
 			{
 				t_CData Temp, Pivot;
 				aint i, j, p;
 
-				p = _Low + ((_High - _Low)>>1);
+				p = _Low + ((_High - _Low) >> 1);
 				Pivot = _pArray[p];
 				_pArray[p] = _pArray[_Low];
 
-				i = _Low+1;
+				i = _Low + 1;
 				j = _High;
 				while (1)
 				{
@@ -685,7 +744,8 @@ namespace NMib::NMemory
 					Temp = _pArray[i];
 					_pArray[i] = _pArray[j];
 					_pArray[j] = Temp;
-					j--; i++;
+					j--;
+					i++;
 				}
 
 				_pArray[_Low] = _pArray[j];
@@ -695,13 +755,12 @@ namespace NMib::NMemory
 			}
 
 		public:
-			static void fpr_QuickSort(t_CData *_pArray, aint _Low, aint _High, const t_CSorter &_fCompare)
+			static void fpr_QuickSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
 			{
 				aint m;
 
 				while (_Low < _High)
 				{
-
 					if (_High - _Low <= 12)
 					{
 						fp_InsertSort(_pArray, _Low, _High, _fCompare);
@@ -726,12 +785,12 @@ namespace NMib::NMemory
 	}
 
 	template <typename tf_CType, typename tf_CCompare>
-	void fg_QSort(tf_CType *_pToSort, umint _nNumElements, const tf_CCompare &_fCompare)
+	void fg_QSort(tf_CType *_pToSort, umint _nNumElements, tf_CCompare const &_fCompare)
 	{
-		NPrivate::TCHelpQSort<tf_CType, tf_CCompare>::fpr_QuickSort(_pToSort, 0, _nNumElements-1, _fCompare);
+		NPrivate::TCHelpQSort<tf_CType, tf_CCompare>::fpr_QuickSort(_pToSort, 0, _nNumElements - 1, _fCompare);
 	}
 }
 
 #ifndef DMibPNoShortCuts
-	using namespace NMib::NMemory;
+using namespace NMib::NMemory;
 #endif

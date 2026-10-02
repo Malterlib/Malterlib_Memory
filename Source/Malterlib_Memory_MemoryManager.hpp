@@ -5,7 +5,6 @@
 
 #include <Mib/Core/Core>
 
-
 //#	define DMibPNoUnalignedAccess
 
 namespace NMib::NMemory

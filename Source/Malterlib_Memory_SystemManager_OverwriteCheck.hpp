@@ -5,15 +5,12 @@
 
 namespace NMib
 {
-
 #if DMibPPtrBits == 32
 	//#warning "Overwrite memory manager not suiteable for 32 bit executables as you are likely to run out of memory"
 #endif
 
 #if 0
-	constinit NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_CheckUpper>> g_DebugMemoryManager
-		= {DAggregateInit}
-	;
+	constinit NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_CheckUpper>> g_DebugMemoryManager = {DAggregateInit};
 #else
 	constinit NStorage::TCAggregateSimple<NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_None>> g_DebugMemoryManager = {DAggregateInit};
 #endif
@@ -58,14 +55,15 @@ namespace NMib::NMemory
 
 	inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_DestroyNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 	{
-#		ifndef DMibConfig_HeapNeverDestroyed
+#ifndef DMibConfig_HeapNeverDestroyed
 		if (!g_bMemoryManagerNeededAfterDestroy)
 		{
 			g_DebugMemoryManager.f_Destruct();
 			g_MemoryManagerForkLock.f_Destruct();
 		}
-#		endif
+#endif
 	}
+
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
 	{
 		static constexpr bool mc_SupportsNonTracked = false;
@@ -154,7 +152,14 @@ namespace NMib::NMemory
 		return g_DebugMemoryManager->f_AllocWithSize(_Size, _Align);
 	}
 
-	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
+	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Realloc
+		(
+			CMemoryManagerCrossModule *_pModule
+			, void *_pMemory
+			, umint &_Size
+			, umint _OldSize
+			, EAllocationFlag _AllocFlags
+		)
 	{
 		if (_OldSize)
 			fs_Free(_pModule, _pMemory, _OldSize);
@@ -163,7 +168,14 @@ namespace NMib::NMemory
 		return fs_AllocWithSize(_pModule, _Size);
 	}
 
-	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
+	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Resize
+		(
+			CMemoryManagerCrossModule *_pModule
+			, void *_pMemory
+			, umint &_Size
+			, umint _OldSize
+			, EAllocationFlag _AllocFlags
+		)
 	{
 		void *pRet = fs_AllocWithSize(_pModule, _Size);
 		umint OldSize = _OldSize ? _OldSize : fs_Size(_pModule, _pMemory);
@@ -182,12 +194,12 @@ namespace NMib::NMemory
 		g_DebugMemoryManager->f_FreeNoSize(_pMemory);
 	}
 
-	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 		return g_DebugMemoryManager->f_Size(_pMemory);
 	}
 
-	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 		return g_DebugMemoryManager->f_TrySize(_pMemory);
 	}

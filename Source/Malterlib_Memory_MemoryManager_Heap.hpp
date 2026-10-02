@@ -45,7 +45,6 @@ namespace NMib::NMemory
 		return true;
 	}
 
-
 	template <typename t_CParams>
 	TCMemoryManagerArenaHeapChunk<t_CParams>::TCMemoryManagerArenaHeapChunk(umint _Size, TCMemoryManagerArenaHeap<t_CParams> *_pHeap)
 		: m_Size(_Size)
@@ -62,7 +61,7 @@ namespace NMib::NMemory
 
 		for (auto iBlock = m_Blocks.f_GetIterator(); iBlock; ++iBlock)
 		{
-			auto * pBlock = &*iBlock;
+			auto *pBlock = &*iBlock;
 			if (!(pBlock->m_Flags & EMemoryManagerArenaHeapBlockFlag_Allocated))
 			{
 				DMibFastCheck(pBlock->m_Link.f_IsInList());
@@ -71,9 +70,7 @@ namespace NMib::NMemory
 				DMibFastCheck(pFreeBucket);
 				pBlock->m_Link.f_UnlinkLinked();
 				if (pFreeBucket && pFreeBucket->f_IsEmpty())
-				{
 					m_pHeap->m_FreeBuckets.f_Remove(pFreeBucket);
-				}
 			}
 			else
 				DMibFastCheck(!pBlock->m_Link.f_IsInList());
@@ -89,7 +86,6 @@ namespace NMib::NMemory
 
 		m_pHeap->m_pMemoryManager->m_Allocator.f_Free(pAddress, Size);
 	}
-
 
 	template <typename t_CParams>
 	uint8 *TCMemoryManagerArenaHeapChunk<t_CParams>::f_GetAddress() const
@@ -117,7 +113,6 @@ namespace NMib::NMemory
 
 	////////////////////////////////////////////////////
 
-
 	template <typename t_CParams>
 	TCMemoryManagerArenaHeap<t_CParams>::TCMemoryManagerArenaHeap(TCMemoryManager<t_CParams> *_pMemoryManager, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena)
 		: t_CParams::CNotifier::CHeap(_pMemoryManager)
@@ -125,21 +120,19 @@ namespace NMib::NMemory
 		, m_pNumaArena(_pNumaArena)
 		, m_pMemoryManager(_pMemoryManager)
 	{
-
 	}
 
 	template <typename t_CParams>
 	TCMemoryManagerArenaHeap<t_CParams>::~TCMemoryManagerArenaHeap()
 	{
 		DMibMemLightweightTrackDisableScope;
-		for (auto iChunk = m_Chunks.f_GetIterator(); iChunk; )
+		for (auto iChunk = m_Chunks.f_GetIterator(); iChunk;)
 		{
 			auto pChunk = &*iChunk;
 			++iChunk;
 			m_pMemoryManager->m_HeapChunks.f_Remove(pChunk);
 		}
 	}
-
 
 	template <typename t_CParams>
 	void TCMemoryManagerArenaHeap<t_CParams>::fp_RequestCleanup(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, ENumaArenaCleanup _Cleanup)
@@ -151,7 +144,6 @@ namespace NMib::NMemory
 			m_pNumaArena->f_RequestCleanup(_Cleanup);
 		}
 	}
-
 
 	template <typename t_CParams>
 	void TCMemoryManagerArenaHeap<t_CParams>::f_Destroy()
@@ -169,12 +161,7 @@ namespace NMib::NMemory
 
 		auto Granularity = m_pMemoryManager->m_Allocator.f_GranularityCommit();
 		uint8 *pEndAddress = _pAddress + _Size;
-		for
-			(
-				uint8 *pAddress = fg_AlignUp(_pAddress + 1, t_CParams::mc_SlabSize) - Granularity
-				; pAddress < pEndAddress
-				; pAddress += t_CParams::mc_SlabSize
-			)
+		for (uint8 *pAddress = fg_AlignUp(_pAddress + 1, t_CParams::mc_SlabSize) - Granularity; pAddress < pEndAddress; pAddress += t_CParams::mc_SlabSize)
 		{
 			m_pMemoryManager->m_Allocator.f_Commit(pAddress, Granularity);
 			if constexpr (mc_EnableCallbacks)
@@ -236,7 +223,7 @@ namespace NMib::NMemory
 					uint8 *pStartAddress = pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize;
 					umint nBytesToDecommit = _nBits * t_CParams::mc_HeapBlockSize;
 					uint8 *pEndAddress = pStartAddress + nBytesToDecommit;
-					for (uint8 *pAddress = pStartAddress; pAddress < pEndAddress; )
+					for (uint8 *pAddress = pStartAddress; pAddress < pEndAddress;)
 					{
 						uint8 *pMaxEnd = fg_AlignUp(pAddress + 1, t_CParams::mc_SlabSize) - t_CParams::mc_SubSlabSize;
 						if (pMaxEnd == pAddress)
@@ -278,7 +265,7 @@ namespace NMib::NMemory
 							uint8 *pStartAddress = pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize;
 							umint nBytesToDecommit = _nBits * t_CParams::mc_HeapBlockSize;
 							uint8 *pEndAddress = pStartAddress + nBytesToDecommit;
-							for (uint8 *pAddress = pStartAddress; pAddress < pEndAddress; )
+							for (uint8 *pAddress = pStartAddress; pAddress < pEndAddress;)
 							{
 								uint8 *pMaxEnd = fg_AlignUp(pAddress + 1, t_CParams::mc_SlabSize) - t_CParams::mc_SubSlabSize;
 								if (pMaxEnd == pAddress)
@@ -321,7 +308,7 @@ namespace NMib::NMemory
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 		DMibMemLightweightTrackDisableScope;
 
-		for (auto iChunk = m_ChunksNeedingCleanup.f_GetIterator(); iChunk; )
+		for (auto iChunk = m_ChunksNeedingCleanup.f_GetIterator(); iChunk;)
 		{
 			auto pChunk = &*iChunk;
 			++iChunk;
@@ -352,7 +339,7 @@ namespace NMib::NMemory
 		if constexpr (!t_CParams::CAllocator::f_CanCommit())
 			return NextTimestamp;
 
-		for (auto iChunk = m_ChunksNeedingCleanup.f_GetIterator(); iChunk; )
+		for (auto iChunk = m_ChunksNeedingCleanup.f_GetIterator(); iChunk;)
 		{
 			auto pChunk = &*iChunk;
 			++iChunk;
@@ -606,20 +593,17 @@ namespace NMib::NMemory
 			m_FreeBuckets.f_Remove(pBucket);
 	}
 
-
 	template <typename t_CParams>
 	void TCMemoryManagerArenaHeap<t_CParams>::fp_TraceBlocks(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk)
 	{
 		DMibTrace("Blocks start\n", 0);
 		for (auto &Block : _pChunk->m_Blocks)
-		{
 			DMibTrace("0x{}: {}\n", (void *)(_pChunk->f_GetBlockAddress(&Block)), Block.m_Flags);
-		}
 		DMibTrace("Blocks end\n", 0);
 	}
 
 	template <typename t_CParams>
-	umint TCMemoryManagerArenaHeap<t_CParams>::f_Size(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
+	umint TCMemoryManagerArenaHeap<t_CParams>::f_Size(void const *_pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
 	{
 		DMibLock(fg_RemoveQualifiers(*this));
 
@@ -651,7 +635,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	fp32 TCMemoryManagerArenaHeap<t_CParams>::f_Overhead(void const * _pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
+	fp32 TCMemoryManagerArenaHeap<t_CParams>::f_Overhead(void const *_pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const
 	{
 		DMibLock(fg_RemoveQualifiers(*this));
 		uint8 *pMem = (uint8 *)_pMemory;
@@ -662,8 +646,7 @@ namespace NMib::NMemory
 		fp32 OverheadPerByte = fp32(sizeof(TCMemoryManagerArenaHeapChunk<t_CParams>)) / fp32(_pChunk->m_Size);
 		umint Size = _pChunk->f_GetBlockSize(pBlock);
 
-		return
-			fp32(Size) * OverheadPerByte
+		return fp32(Size) * OverheadPerByte
 			+ sizeof(CMemoryManagerArenaHeapBlock)
 			+ sizeof(void *) * 3 // Address and map tree pointers
 		;
@@ -734,7 +717,7 @@ namespace NMib::NMemory
 
 			for (auto iBlock = iBucket->f_GetIterator(); iBlock; ++iBlock)
 			{
-				TCMemoryManagerArenaHeapChunk<t_CParams> * pChunk = fg_AutoStaticCast(iBlock->m_pChunk);
+				TCMemoryManagerArenaHeapChunk<t_CParams> *pChunk = fg_AutoStaticCast(iBlock->m_pChunk);
 
 				uint8 *pAddress = pChunk->f_GetBlockAddress(iBlock);
 				DMibFastCheck(Size == pChunk->f_GetBlockSize(iBlock));

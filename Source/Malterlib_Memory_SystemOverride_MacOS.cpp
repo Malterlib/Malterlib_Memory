@@ -40,56 +40,57 @@ constexpr exception_behavior_t gc_MachExceptionCodes = MACH_EXCEPTION_CODES;
 #	define DMemoryManagerIsSame
 namespace NMib
 {
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	extern bool g_bMainHeapIsSmall;
 	extern NMib::NStorage::TCAggregateSimple<CMemoryManagerSmall> g_MainHeapSmall;
-#endif
+#	endif
 	extern NMib::NStorage::TCAggregateSimple<CMemoryManagerMax> g_MainHeapMax;
 	extern bool g_bMainHeapConstructed;
-#if DMibEnableSafeCheck > 0
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibEnableSafeCheck > 0
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	static auto &fg_MainHeapSmall()
 	{
 		DMibFastCheck(g_bMainHeapConstructed);
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#			if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		DMibFastCheck(g_bMainHeapIsSmall);
-#endif
+#			endif
 		return g_MainHeapSmall;
 	}
-	#define DMainHeapSmall fg_MainHeapSmall()
-#endif
+
+#			define DMainHeapSmall fg_MainHeapSmall()
+#		endif
 
 	static auto &fg_MainHeapMax()
 	{
 		DMibFastCheck(g_bMainHeapConstructed);
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		DMibFastCheck(!g_bMainHeapIsSmall);
-#endif
+#		endif
 		return g_MainHeapMax;
 	}
-	#define DMainHeapMax fg_MainHeapMax()
-#else
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-	#define DMainHeapSmall g_MainHeapSmall
-#endif
-	#define DMainHeapMax g_MainHeapMax
-#endif
 
+#		define DMainHeapMax fg_MainHeapMax()
+#	else
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#			define DMainHeapSmall g_MainHeapSmall
+#		endif
+#		define DMainHeapMax g_MainHeapMax
+#	endif
 }
 #endif
 
 #define DMibOverrideErrorOutput(...) NMib::NSys::fg_DebugOutput((NMib::NStr::fg_Format<NMib::NStr::CFStr256>(__VA_ARGS__)).f_GetStr())
 
 #if 0
-#define DMibOverrideTrace DMibOverrideErrorOutput
+#	define DMibOverrideTrace DMibOverrideErrorOutput
 #else
-#define DMibOverrideTrace(...) (void)0
+#	define DMibOverrideTrace(...) (void)0
 #endif
 
 #if defined(DMibMemoryOverrideDll)
-#define DMibMalterlibOverrideMallocExport
+#	define DMibMalterlibOverrideMallocExport
 #else
-#define DMibMalterlibOverrideMallocExport module_export
+#	define DMibMalterlibOverrideMallocExport module_export
 #endif
 
 #if DMibConfig_MalterlibMemoryManager_Debug && DMibConfig_MalterlibMemoryManager_Debug_Features || DMibConfig_MalterlibMemoryManager_Debug_Features == 1
@@ -133,19 +134,27 @@ extern "C"
 {
 	struct ProgramVars
 	{
-		const void*		mh;
-		int*			NXArgcPtr;
-		const char***	NXArgvPtr;
-		const char***	environPtr;
-		const char**	__prognamePtr;
+		void const *mh;
+		int *NXArgcPtr;
+		char const ***NXArgvPtr;
+		char const ***environPtr;
+		char const **__prognamePtr;
 	};
 
 	// These are here so dynamic linking works on OSes where these are not defined
 #if !defined(DMibMemoryOverrideDll)
-	assure_used module_export void __attribute__((weak)) __malloc_init(const char *apple[])
+	assure_used module_export void __attribute__((weak)) __malloc_init(char const *apple[])
 	{
 	}
-	assure_used module_export void __attribute__((weak)) __libc_init(const struct ProgramVars *vars, void (*atfork_prepare)(void),void (*atfork_parent)(void),void (*atfork_child)(void),const char *apple[])
+
+	assure_used module_export void __attribute__((weak)) __libc_init
+		(
+			struct ProgramVars const *vars
+			, void (*atfork_prepare)(void)
+			, void (*atfork_parent)(void)
+			, void (*atfork_child)(void)
+			, char const *apple[]
+		)
 	{
 	}
 #endif
@@ -166,7 +175,6 @@ namespace NMib
 		bool g_bAtExitCalled = false;
 	}
 }
-
 
 void fg_MalterlibMallocOverride_AtExitCalled()
 {
@@ -250,11 +258,11 @@ namespace
 	struct CMemoryManagerZoneSmall
 	{
 		CMemoryManagerZoneSmall(CMemoryManagerConfig const &_Config)
-#if DMibConfig_Memory_Shims_Enable
+#	if DMibConfig_Memory_Shims_Enable
 			: m_MemoryManager("macOS Zone", _Config)
-#else
+#	else
 			: m_MemoryManager(_Config)
-#endif
+#	endif
 		{
 		}
 
@@ -349,14 +357,14 @@ namespace
 	};
 
 #ifdef  __MigPackStructs
-#pragma pack(4)
+#	pragma pack(4)
 #endif
 
 	using CExceptionMessage = __RequestUnion__mach_exc_subsystem;
 	using CExceptionReplyMessage = __ReplyUnion__mach_exc_subsystem;
 
 #ifdef  __MigPackStructs
-#pragma pack()
+#	pragma pack()
 #endif
 
 	struct CExceptionHandlingState
@@ -394,7 +402,7 @@ namespace
 
 		NStorage::TCSharedPointer<CExceptionHandlingState> m_pExceptionHandlingState;
 		NStorage::TCUniquePointer<NThread::CThreadObject> m_pExceptionHandlingThread;
-		CExceptionParameters m_ChildExceptionParams; // The ports the handler replaced; written before m_bChildExceptionParamsValid is set
+		CExceptionParameters m_ChildExceptionParams;          // The ports the handler replaced; written before m_bChildExceptionParamsValid is set
 		NAtomic::TCAtomic<bool> m_bChildExceptionParamsValid; // Set while the handler is installed
 	};
 
@@ -459,7 +467,6 @@ void fg_ExitReenter(int _Value)
 		return g_OriginalFunctions._exit(_Value);
 }
 
-
 void fg_MalterlibMallocOverride_PreDestroyNonTrackedMemoryManager()
 {
 	if (!g_MalterlibMallocOveriddenInterposersInstalled)
@@ -496,11 +503,11 @@ extern "C"
 		g_MalterlibMallocOveriddenInterposersInstalled = true;
 
 #ifdef DMemoryManagerIsSame
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			DMainHeapSmall->f_CanDoLazyCheckout();
 		else
-#endif
+#	endif
 			DMainHeapMax->f_CanDoLazyCheckout();
 #endif
 	}
@@ -526,7 +533,15 @@ extern "C"
 		fg_MalterlibMallocOverrideEnable();
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport void fg_MalterlibSystem_InitEarly(COriginalFunctions const &_Functions, int argc, char const* argv[], char const* envp[], char const* apple[], const ProgramVars * vars)
+	assure_used DMibMalterlibOverrideMallocExport void fg_MalterlibSystem_InitEarly
+		(
+			COriginalFunctions const &_Functions
+			, int argc
+			, char const *argv[]
+			, char const *envp[]
+			, char const *apple[]
+			, ProgramVars const *vars
+		)
 	{
 #ifndef DMibMemoryOverrideDll
 		if (!g_MalterlibMallocBeforeMallocCalled)
@@ -559,7 +574,7 @@ void fg_HandleCrashSignalBus(int signal)
 #ifdef DOptimizeSetJmp
 		// Unblock this signal so it's called again the next time
 		sigset_t ToUnblock;
-		sigemptyset (&ToUnblock);
+		sigemptyset(&ToUnblock);
 		sigaddset(&ToUnblock, signal);
 		sigprocmask(SIG_UNBLOCK, &ToUnblock, nullptr);
 		_longjmp(*pJumpBuffer, 1);
@@ -581,7 +596,7 @@ void fg_HandleCrashSignalSegv(int signal)
 #ifdef DOptimizeSetJmp
 		// Unblock this signal so it's called again the next time
 		sigset_t ToUnblock;
-		sigemptyset (&ToUnblock);
+		sigemptyset(&ToUnblock);
 		sigaddset(&ToUnblock, signal);
 		sigprocmask(SIG_UNBLOCK, &ToUnblock, nullptr);
 		_longjmp(*pJumpBuffer, 1);
@@ -655,7 +670,8 @@ extern "C"
 #endif
 }
 
-size_t fg_Malterlib_zone_size(malloc_zone_t_known_version *_pZone, const void *_pMemory) /* returns the size of a block or 0 if not in this zone; must be fast, especially for negative answers */
+// Returns the size of a block or 0 if not in this zone; must be fast, especially for negative answers
+size_t fg_Malterlib_zone_size(malloc_zone_t_known_version *_pZone, void const *_pMemory)
 {
 	if (!_pMemory)
 		return 0;
@@ -697,11 +713,11 @@ size_t fg_Malterlib_zone_size(malloc_zone_t_known_version *_pZone, const void *_
 	}
 
 #ifdef DMemoryManagerIsSame
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		return DMainHeapSmall->f_TrySize(pMalterlibAlloc);
 	else
-#endif
+#	endif
 		return DMainHeapMax->f_TrySize(pMalterlibAlloc);
 #else
 	return fg_TrySize(pMalterlibAlloc);
@@ -716,11 +732,11 @@ void fg_Malterlib_zone_free(malloc_zone_t_known_version *_pZone, void *_pMemory)
 	DMibMacOSOverrideZoneCheck(_pZone);
 	uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 #ifdef DMemoryManagerIsSame
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		return DMainHeapSmall->f_FreeNoSize(pMalterlibAlloc);
 	else
-#endif
+#	endif
 		return DMainHeapMax->f_FreeNoSize(pMalterlibAlloc);
 #else
 	return fg_FreeNoSize(pMalterlibAlloc);
@@ -739,11 +755,11 @@ void fg_Malterlib_zone_free_definite_size(malloc_zone_t_known_version *_pZone, v
 		return;
 
 #ifdef DMemoryManagerIsSame
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		return DMainHeapSmall->f_Free(pMalterlibAlloc, Size);
 	else
-#endif
+#	endif
 		return DMainHeapMax->f_Free(pMalterlibAlloc, Size);
 #else
 	return fg_Free(pMalterlibAlloc, Size);
@@ -800,29 +816,29 @@ void *fg_Malterlib_zone_malloc(malloc_zone_t_known_version *_pZone, size_t _Size
 		return nullptr;
 
 #ifdef DMemoryManagerIsSame
-#if DEnableDebugMemoryManager
-	uint8 * pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DEnableDebugMemoryManager
+	uint8 *pMalterlibAlloc;
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	else
-#endif
+#		endif
 		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-#else
+#	else
 	uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_Alloc(Size);
 	else
-#endif
+#		endif
 		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_Alloc(Size);
-#endif
+#	endif
 #else
-#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-#else
+#	else
 	uint8 *pMalterlibAlloc = (uint8 *)fg_Alloc(Size);
-#endif
+#	endif
 #endif
 
 	return pMalterlibAlloc;
@@ -840,8 +856,8 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 
 	umint nAllocated = 0;
 #ifdef DMemoryManagerIsSame
-#if DEnableDebugMemoryManager
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DEnableDebugMemoryManager
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 	{
 		DMainHeapSmall->f_AllocBatchDebug
@@ -861,7 +877,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 		;
 	}
 	else
-#endif
+#		endif
 	{
 		DMainHeapMax->f_AllocBatchDebug
 			(
@@ -879,8 +895,8 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 			)
 		;
 	}
-#else
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	else
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 	{
 		DMainHeapSmall->f_AllocBatch
@@ -897,7 +913,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 		;
 	}
 	else
-#endif
+#		endif
 	{
 		DMainHeapMax->f_AllocBatch
 			(
@@ -912,9 +928,9 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 			)
 		;
 	}
-#endif
+#	endif
 #else
-#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 	fg_AllocBatchDebug
 		(
 			Size
@@ -930,7 +946,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 			, g_DebugFlags
 		)
 	;
-#else
+#	else
 	fg_AllocBatch
 		(
 			Size
@@ -943,7 +959,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 			}
 		)
 	;
-#endif
+#	endif
 #endif
 
 	return _nRequested;
@@ -956,7 +972,7 @@ void fg_Malterlib_zone_batch_free(malloc_zone_t_known_version *_pZone, void **to
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 
 #ifdef DMemoryManagerIsSame
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 	{
 		auto &MainHeap = *DMainHeapSmall;
@@ -965,7 +981,7 @@ void fg_Malterlib_zone_batch_free(malloc_zone_t_known_version *_pZone, void **to
 			return MainHeap.f_FreeNoSize(to_be_freed[iToFree]);
 	}
 	else
-#endif
+#	endif
 	{
 		auto &MainHeap = *DMainHeapMax;
 		auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
@@ -979,7 +995,7 @@ void fg_Malterlib_zone_batch_free(malloc_zone_t_known_version *_pZone, void **to
 #endif
 }
 
-void *fg_Malterlib_zone_calloc(malloc_zone_t_known_version *_pZone, size_t num_items, size_t _Size) /* same as malloc, but block returned is set to zero */
+void *fg_Malterlib_zone_calloc(malloc_zone_t_known_version *_pZone, size_t num_items, size_t _Size) // same as malloc, but block returned is set to zero
 {
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
@@ -987,33 +1003,34 @@ void *fg_Malterlib_zone_calloc(malloc_zone_t_known_version *_pZone, size_t num_i
 	if (!fg_TryMultiplyMacOSAllocationSize(num_items, _Size, Size))
 		return nullptr;
 #ifdef DMemoryManagerIsSame
-#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 	else
-#endif
+#		endif
 		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-#else
+#	else
 	uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_Alloc(Size);
 	else
-#endif
+#		endif
 		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_Alloc(Size);
-#endif
+#	endif
 #else
-#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-#else
+#	else
 	uint8 *pMalterlibAlloc = (uint8 *)fg_Alloc(Size);
-#endif
+#	endif
 #endif
 	fg_MemClear(pMalterlibAlloc, Size);
 	return pMalterlibAlloc;
 }
+
 /* aligned memory allocation. The callback may be NULL. Present in version >= 5. */
 void *fg_Malterlib_zone_memalign(malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size)
 {
@@ -1028,35 +1045,35 @@ void *fg_Malterlib_zone_memalign(malloc_zone_t_known_version *_pZone, size_t _Al
 	if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
 		return nullptr;
 #ifdef DMemoryManagerIsSame
-#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	else
-#endif
+#		endif
 		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-#else
+#	else
 	uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 	else
-#endif
+#		endif
 		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
-#endif
+#	endif
 #else
-#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-#else
+#	else
 	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, Alignment);
-#endif
+#	endif
 #endif
 
 	return pMalterlibAlloc;
 }
 
-void *fg_Malterlib_zone_valloc(malloc_zone_t_known_version *_pZone, size_t _Size) /* same as malloc, but block returned is set to zero and is guaranteed to be page aligned */
+void *fg_Malterlib_zone_valloc(malloc_zone_t_known_version *_pZone, size_t _Size) // same as malloc, but block returned is set to zero and is guaranteed to be page aligned
 {
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
@@ -1066,29 +1083,29 @@ void *fg_Malterlib_zone_valloc(malloc_zone_t_known_version *_pZone, size_t _Size
 	if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
 		return nullptr;
 #ifdef DMemoryManagerIsSame
-#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 	else
-#endif
+#		endif
 		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-#else
+#	else
 	uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 	else
-#endif
+#		endif
 		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
-#endif
+#	endif
 #else
-#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAlignedDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-#else
+#	else
 	uint8 *pMalterlibAlloc = (uint8 *)fg_AllocAligned(Size, Alignment);
-#endif
+#	endif
 #endif
 
 	fg_MemClear(pMalterlibAlloc, Size);
@@ -1107,44 +1124,44 @@ void *fg_Malterlib_zone_realloc(malloc_zone_t_known_version *_pZone, void *_pMem
 		return nullptr;
 
 #ifdef DMemoryManagerIsSame
-#if DEnableDebugMemoryManager
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DEnableDebugMemoryManager
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
 	else
-#endif
+#		endif
 		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
-#else
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	else
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_Resize(pMalterlibAlloc, Size, 0);
 	else
-#endif
+#		endif
 		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_Resize(pMalterlibAlloc, Size, 0);
-#endif
+#	endif
 #else
-#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 	pMalterlibAlloc = (uint8 *)fg_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
-#else
+#	else
 	pMalterlibAlloc = (uint8 *)fg_Resize(pMalterlibAlloc, Size, 0, EAllocationFlag_SizeNotNeeded);
-#endif
+#	endif
 #endif
 	return pMalterlibAlloc;
 }
 
-void fg_Malterlib_zone_destroy(malloc_zone_t_known_version *_pZone) /* zone is destroyed and all memory reclaimed */
+void fg_Malterlib_zone_destroy(malloc_zone_t_known_version *_pZone) // zone is destroyed and all memory reclaimed
 {
 	DMibPDebugBreak; // Sholud not get here
 }
 
-size_t fg_Malterlib_zone_good_size(malloc_zone_t_known_version *_pZone, size_t _Size) /* zone is destroyed and all memory reclaimed */
+size_t fg_Malterlib_zone_good_size(malloc_zone_t_known_version *_pZone, size_t _Size) // zone is destroyed and all memory reclaimed
 {
 #ifdef DMemoryManagerIsSame
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	if (g_bMainHeapIsSmall)
 		return DMainHeapSmall->f_SizePadded(_Size);
 	else
-#endif
+#	endif
 		return DMainHeapMax->f_SizePadded(_Size);
 #else
 	return fg_SizePadded(_Size);
@@ -1178,32 +1195,33 @@ void *fg_Malterlib_zone_malloc_type_malloc_with_options(malloc_zone_t_known_vers
 
 malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 	{
-		.enumerator = [](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t /* enumerates all the malloc pointers in use */
+		// Enumerates all the malloc pointers in use
+		.enumerator = [](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t
 		{
 			return KERN_FAILURE;
 		}
 		, .good_size = &fg_Malterlib_zone_good_size
-		, .check = [](malloc_zone_t_known_version *_pZone) -> boolean_t /* Consistency checker */
+		, .check = [](malloc_zone_t_known_version *_pZone) -> boolean_t // Consistency checker
 		{
 			return true;
 		}
-		, .print = [](malloc_zone_t_known_version *_pZone, boolean_t verbose) /* Prints zone  */
+		, .print = [](malloc_zone_t_known_version *_pZone, boolean_t verbose) // Prints zone
 		{
 		}
-		, .log = [](malloc_zone_t_known_version *_pZone, void *address) /* Enables logging of activity */
+		, .log = [](malloc_zone_t_known_version *_pZone, void *address) // Enables logging of activity
 		{
 		}
-		, .force_lock = [](malloc_zone_t_known_version *_pZone) /* Forces locking zone */
+		, .force_lock = [](malloc_zone_t_known_version *_pZone) // Forces locking zone
 		{
 		}
-		, .force_unlock = [](malloc_zone_t_known_version *_pZone) /* Forces unlocking zone */
+		, .force_unlock = [](malloc_zone_t_known_version *_pZone) // Forces unlocking zone
 		{
 		}
-		, .statistics = [](malloc_zone_t_known_version *_pZone, malloc_statistics_t *stats) /* Fills statistics */
+		, .statistics = [](malloc_zone_t_known_version *_pZone, malloc_statistics_t *stats) // Fills statistics
 		{
 			fg_MemClear(*stats);
 		}
-		, .zone_locked = [](malloc_zone_t_known_version *_pZone) -> boolean_t /* Are any zone locks held */
+		, .zone_locked = [](malloc_zone_t_known_version *_pZone) -> boolean_t // Are any zone locks held
 		{
 			return false;
 		}
@@ -1217,23 +1235,25 @@ malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 		, .discharge = [](malloc_zone_t_known_version *_pZone, void *memory)
 		{
 		}
-	#ifdef __BLOCKS__
+#ifdef __BLOCKS__
 		, .enumerate_discharged_pointers = [](malloc_zone_t_known_version *_pZone, void (^report_discharged)(void *memory, void *info))
 		{
 		}
-	#else
-		, .enumerate_unavailable_without_blocks= nullptr
-	#endif /* __BLOCKS__ */
-		, .reinit_lock = [](malloc_zone_t_known_version *_pZone) /* Reinitialize zone locks, called only from atfork_child handler. Present in version >= 9. */
+#else
+		, .enumerate_unavailable_without_blocks = nullptr
+#endif /* __BLOCKS__ */
+		// Reinitialize zone locks, called only from atfork_child handler. Present in version >= 9.
+		, .reinit_lock = [](malloc_zone_t_known_version *_pZone)
 		{
 		}
-		, .print_task = [](task_t task, unsigned level, vm_address_t zone_address, memory_reader_t reader, print_task_printer_t printer) /* debug print for another process. Present in version >= 11. */
+		// Debug print for another process. Present in version >= 11.
+		, .print_task = [](task_t task, unsigned level, vm_address_t zone_address, memory_reader_t reader, print_task_printer_t printer)
 		{
 		}
-		, .task_statistics = [](task_t task, vm_address_t zone_address, memory_reader_t reader, malloc_statistics_t *stats) /* Present in version >= 12. */
+		, .task_statistics = [](task_t task, vm_address_t zone_address, memory_reader_t reader, malloc_statistics_t *stats) // Present in version >= 12.
 		{
 		}
-		, .zone_type = 0 /* Identifies the zone type.  0 means unknown/undefined zone type.  Present in version >= 14. */
+		, .zone_type = 0 // Identifies the zone type.  0 means unknown/undefined zone type.  Present in version >= 14.
 	}
 ;
 
@@ -1261,7 +1281,7 @@ malloc_zone_t_known_version g_MalterlibMallocZone =
 		, .malloc_with_options = &fg_Malterlib_zone_malloc_with_options
 		, .malloc_type_malloc = &fg_Malterlib_zone_malloc_type_malloc
 		, .malloc_type_calloc = &fg_Malterlib_zone_malloc_type_calloc
-		, .malloc_type_realloc  = &fg_Malterlib_zone_malloc_type_realloc
+		, .malloc_type_realloc = &fg_Malterlib_zone_malloc_type_realloc
 		, .malloc_type_memalign = &fg_Malterlib_zone_malloc_type_memalign
 		, .malloc_type_malloc_with_options = &fg_Malterlib_zone_malloc_type_malloc_with_options
 	}
@@ -1335,7 +1355,7 @@ void fg_MalterlibMallocOverrideEnable()
 	{
 		g_bRegisteredAtFork = true;
 		if (g_OriginalFunctions._malloc_fork_prepare && g_OriginalFunctions._malloc_fork_parent && g_OriginalFunctions._malloc_fork_child)
-			;//pthread_atfork(&fg_Override_PrepareForkDummy, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
+			; //pthread_atfork(&fg_Override_PrepareForkDummy, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
 		else
 			pthread_atfork(&fg_Override_PrepareFork, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
 	}
@@ -1376,7 +1396,7 @@ namespace
 	static constexpr int gc_StateFlavor = ARM_THREAD_STATE64;
 	static constexpr int gc_StateCount = ARM_THREAD_STATE64_COUNT;
 #else
-	#error "Implement this"
+#	error "Implement this"
 #endif
 }
 
@@ -1385,65 +1405,57 @@ extern "C"
 	boolean_t mach_exc_server(mach_msg_header_t *InHeadP, mach_msg_header_t *OutHeadP);
 
 	kern_return_t catch_exception_raise_state
-	(
-		mach_port_t exception_port,
-		exception_type_t exception,
-		const exception_data_t code,
-		mach_msg_type_number_t codeCnt,
-		int *flavor,
-		const thread_state_t old_state,
-		mach_msg_type_number_t old_stateCnt,
-		thread_state_t new_state,
-		mach_msg_type_number_t *new_stateCnt
-	)
+		(
+			mach_port_t exception_port
+			, exception_type_t exception
+			, exception_data_t const code
+			, mach_msg_type_number_t codeCnt
+			, int *flavor
+			, thread_state_t const old_state
+			, mach_msg_type_number_t old_stateCnt
+			, thread_state_t new_state
+			, mach_msg_type_number_t *new_stateCnt
+		)
 	{
 		return KERN_FAILURE;
 	}
 
 	kern_return_t catch_exception_raise_state_identity
-	(
-		mach_port_t exception_port,
-		mach_port_t thread,
-		mach_port_t task,
-		exception_type_t exception,
-		exception_data_t code,
-		mach_msg_type_number_t codeCnt,
-		int *flavor,
-		thread_state_t old_state,
-		mach_msg_type_number_t old_stateCnt,
-		thread_state_t new_state,
-		mach_msg_type_number_t *new_stateCnt
-	)
+		(
+			mach_port_t exception_port
+			, mach_port_t thread
+			, mach_port_t task
+			, exception_type_t exception
+			, exception_data_t code
+			, mach_msg_type_number_t codeCnt
+			, int *flavor
+			, thread_state_t old_state
+			, mach_msg_type_number_t old_stateCnt
+			, thread_state_t new_state
+			, mach_msg_type_number_t *new_stateCnt
+		)
 	{
 		return KERN_FAILURE;
 	}
 
-
-	kern_return_t catch_mach_exception_raise
-	(
-		mach_port_t exception_port,
-		mach_port_t thread,
-		mach_port_t task,
-		exception_type_t exception,
-		mach_exception_data_t code,
-		mach_msg_type_number_t codeCnt
-	)
+	auto catch_mach_exception_raise(mach_port_t exception_port, mach_port_t thread, mach_port_t task, exception_type_t exception, mach_exception_data_t code, mach_msg_type_number_t codeCnt)
+		-> kern_return_t
 	{
 		return KERN_FAILURE;
 	}
 
 	kern_return_t catch_mach_exception_raise_state
-	(
-		mach_port_t exception_port,
-		exception_type_t exception,
-		const mach_exception_data_t code,
-		mach_msg_type_number_t codeCnt,
-		int *flavor,
-		const thread_state_t old_state,
-		mach_msg_type_number_t old_stateCnt,
-		thread_state_t new_state,
-		mach_msg_type_number_t *new_stateCnt
-	)
+		(
+			mach_port_t exception_port
+			, exception_type_t exception
+			, mach_exception_data_t const code
+			, mach_msg_type_number_t codeCnt
+			, int *flavor
+			, thread_state_t const old_state
+			, mach_msg_type_number_t old_stateCnt
+			, thread_state_t new_state
+			, mach_msg_type_number_t *new_stateCnt
+		)
 	{
 		return KERN_FAILURE;
 	}
@@ -1457,7 +1469,7 @@ extern "C"
 			, mach_exception_data_t _pCodes
 			, mach_msg_type_number_t _CodesCount
 			, int *_pFlavor
-			, const thread_state_t _pOldState
+			, thread_state_t const _pOldState
 			, mach_msg_type_number_t _OldStatesCount
 			, thread_state_t _pNewState
 			, mach_msg_type_number_t *_pNewStateCount
@@ -1468,10 +1480,7 @@ extern "C"
 
 		// The exceptions of another task are those of a child that inherited this port. Only the handler that this one replaced
 		// can handle them, as if this process had no handler
-		auto *pJumpBuffer = _Task == mach_task_self()
-			? (jmp_buf *)NSys::fg_Thread_GetLocal((umint)pthread_from_mach_thread_np(_Thread), g_LowLevelGlobalState->m_iThreadLocal)
-			: nullptr
-		;
+		auto *pJumpBuffer = _Task == mach_task_self() ? (jmp_buf *)NSys::fg_Thread_GetLocal((umint)pthread_from_mach_thread_np(_Thread), g_LowLevelGlobalState->m_iThreadLocal) : nullptr;
 		if (pJumpBuffer)
 		{
 			if (*_pFlavor != gc_StateFlavor)
@@ -1544,23 +1553,33 @@ extern "C"
 
 				switch (TargetBehavior)
 				{
-				case EXCEPTION_DEFAULT:
-					return exception_raise(TargetPort, _Thread, _Task, _Exception, pSmallCode, _CodesCount);
-				case EXCEPTION_STATE:
-					return exception_raise_state(TargetPort, _Exception, pSmallCode, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
+				case EXCEPTION_DEFAULT: return exception_raise(TargetPort, _Thread, _Task, _Exception, pSmallCode, _CodesCount);
+				case EXCEPTION_STATE: return exception_raise_state(TargetPort, _Exception, pSmallCode, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
 				case EXCEPTION_STATE_IDENTITY:
-					return exception_raise_state_identity(TargetPort, _Thread, _Task, _Exception, pSmallCode, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
+					return exception_raise_state_identity
+						(
+							TargetPort
+							, _Thread
+							, _Task
+							, _Exception
+							, pSmallCode
+							, _CodesCount
+							, _pFlavor
+							, _pOldState
+							, _OldStatesCount
+							, _pNewState
+							, _pNewStateCount
+						)
+					;
 				}
 			}
 			break;
-		case EXCEPTION_DEFAULT | gc_MachExceptionCodes:
-			return mach_exception_raise(TargetPort, _Thread, _Task, _Exception, _pCodes, _CodesCount);
+		case EXCEPTION_DEFAULT | gc_MachExceptionCodes: return mach_exception_raise(TargetPort, _Thread, _Task, _Exception, _pCodes, _CodesCount);
 		case EXCEPTION_STATE | gc_MachExceptionCodes:
 			return mach_exception_raise_state(TargetPort, _Exception, _pCodes, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
 		case EXCEPTION_STATE_IDENTITY | gc_MachExceptionCodes:
 			return mach_exception_raise_state_identity(TargetPort, _Thread, _Task, _Exception, _pCodes, _CodesCount, _pFlavor, _pOldState, _OldStatesCount, _pNewState, _pNewStateCount);
-		default:
-			return KERN_FAILURE;
+		default: return KERN_FAILURE;
 		}
 
 		return KERN_FAILURE;
@@ -1575,7 +1594,7 @@ extern "C"
 			, mach_exception_data_t _pCodes
 			, mach_msg_type_number_t _CodesCount
 			, int *_pFlavor
-			, const thread_state_t _pOldState
+			, thread_state_t const _pOldState
 			, mach_msg_type_number_t _OldStatesCount
 			, thread_state_t _pNewState
 			, mach_msg_type_number_t *_pNewStateCount
@@ -1628,17 +1647,7 @@ namespace
 		Header.msgh_remote_port = m_ExceptionHandlingPort;
 		Header.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, MACH_MSG_TYPE_MAKE_SEND_ONCE);
 
-		mach_msg
-			(
-				&Header
-				, MACH_SEND_MSG | MACH_SEND_TIMEOUT
-				, Header.msgh_size
-				, 0
-				, 0
-				, MACH_MSG_TIMEOUT_NONE
-				, MACH_PORT_NULL
-			)
-		;
+		mach_msg(&Header, MACH_SEND_MSG | MACH_SEND_TIMEOUT, Header.msgh_size, 0, 0, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
 	}
 
 	bool CExceptionHandlingState::f_InstallHandlerPorts()
@@ -1731,17 +1740,7 @@ namespace
 
 			Header.msgh_local_port = m_ExceptionHandlingPort;
 			Header.msgh_size = sizeof(Message);
-			kern_return_t Result = mach_msg
-				(
-					&Header
-					,MACH_RCV_MSG | MACH_RCV_LARGE
-					, 0
-					, Header.msgh_size
-					, m_ExceptionHandlingPort
-					, MACH_MSG_TIMEOUT_NONE
-					, MACH_PORT_NULL
-				)
-			;
+			kern_return_t Result = mach_msg(&Header, MACH_RCV_MSG | MACH_RCV_LARGE, 0, Header.msgh_size, m_ExceptionHandlingPort, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
 
 			if (Result != KERN_SUCCESS)
 				return;
@@ -1771,17 +1770,7 @@ namespace
 				}
 
 				// Send a reply and exit
-				mach_msg
-					(
-						&ReplyHeader
-						, MACH_SEND_MSG
-						, ReplyHeader.msgh_size
-						, 0
-						, MACH_PORT_NULL
-						, MACH_MSG_TIMEOUT_NONE
-						, MACH_PORT_NULL
-					)
-				;
+				mach_msg(&ReplyHeader, MACH_SEND_MSG, ReplyHeader.msgh_size, 0, MACH_PORT_NULL, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
 			}
 		}
 	}
@@ -2031,7 +2020,7 @@ void NMib::NSys::fg_Mem_PrepareFork()
 
 		if (!g_bOnlyDefaultZone)
 		{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 			{
 				for (auto &Zone : State.m_ZoneListSmall)
@@ -2041,7 +2030,7 @@ void NMib::NSys::fg_Mem_PrepareFork()
 				}
 			}
 			else
-#endif
+#	endif
 			{
 				for (auto &Zone : State.m_ZoneListMax)
 				{
@@ -2058,6 +2047,7 @@ void NMib::NSys::fg_Mem_PrepareFork()
 	while (false)
 		;
 }
+
 void NMib::NSys::fg_Mem_ForkedChild()
 {
 	if (!g_MalterlibMallocOveriddenInterposersInstalled)
@@ -2079,7 +2069,7 @@ void NMib::NSys::fg_Mem_ForkedChild()
 		State.m_Unforked = true;
 		if (!g_bOnlyDefaultZone)
 		{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 			{
 				for (auto &Zone : State.m_ZoneListSmall)
@@ -2089,7 +2079,7 @@ void NMib::NSys::fg_Mem_ForkedChild()
 				}
 			}
 			else
-#endif
+#	endif
 			{
 				for (auto &Zone : State.m_ZoneListMax)
 				{
@@ -2113,6 +2103,7 @@ void NMib::NSys::fg_Mem_ForkedChild()
 	while (false)
 		;
 }
+
 void NMib::NSys::fg_Mem_ForkedParent()
 {
 	if (!g_MalterlibMallocOveriddenInterposersInstalled)
@@ -2133,7 +2124,7 @@ void NMib::NSys::fg_Mem_ForkedParent()
 		State.m_Unforked = true;
 		if (!g_bOnlyDefaultZone)
 		{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 			{
 				for (auto &Zone : State.m_ZoneListSmall)
@@ -2143,7 +2134,7 @@ void NMib::NSys::fg_Mem_ForkedParent()
 				}
 			}
 			else
-#endif
+#	endif
 			{
 				for (auto &Zone : State.m_ZoneListMax)
 				{
@@ -2201,7 +2192,7 @@ namespace
 		g_bIsBeingDebugged = NSys::fg_System_BeingDebugged();
 	}
 
-	inline_never bool fg_IsInvalidRegionSlowPath(const void *_pMemory)
+	inline_never bool fg_IsInvalidRegionSlowPath(void const *_pMemory)
 	{
 		if (g_InvalidRegionCache.f_WasDestructed() || !g_bCreatedSystem || fg_GetSys()->f_ThreadDestroyed() || !fg_GetSys()->f_ThreadCreated())
 			return false;
@@ -2217,7 +2208,7 @@ namespace
 		mach_msg_type_number_t InfoCount = VM_REGION_SUBMAP_SHORT_INFO_COUNT_64;
 		vm_region_submap_short_info_64 Info;
 		auto Return = vm_region_recurse_64(mach_task_self(), &Address, &Size, &Depth, (vm_region_recurse_info_t)&Info, &InfoCount);
-        if (Return)
+		if (Return)
 			return false;
 
 		Cache.m_Regions.f_MakeRegion
@@ -2234,7 +2225,7 @@ namespace
 		return Info.user_tag < 240 || Info.user_tag > 255;
 	}
 
-	[[maybe_unused]] inline_always bool fg_IsInvalidRegion(const void *_pMemory)
+	[[maybe_unused]] inline_always bool fg_IsInvalidRegion(void const *_pMemory)
 	{
 		if ((uint8 *)_pMemory != fg_AlignUp((uint8 *)_pMemory, 16))
 			return true; // Unaligned memory can never be OK
@@ -2262,7 +2253,7 @@ namespace
 			return false;
 		auto &LowLevelState = *g_LowLevelGlobalState;
 		auto &State = *g_GlobalState;
-#ifdef DMemoryManagerIsSame
+#	ifdef DMemoryManagerIsSame
 		if (LowLevelState.f_GetRentrant())
 			return false;
 
@@ -2272,37 +2263,37 @@ namespace
 				LowLevelState.f_DecRentrant();
 			}
 		;
-#ifdef DFullArenasForSecondary
+#		ifdef DFullArenasForSecondary
 		if (!g_bOnlyDefaultZone)
 		{
 			DMibLockRead(State.m_ZoneListLock);
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#			if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 			{
 				for (auto &Zone : State.m_ZoneListSmall)
 					Zone.m_MemoryManager.f_LazyReturnCheckout();
 			}
 			else
-#endif
+#			endif
 			{
 				for (auto &Zone : State.m_ZoneListMax)
 					Zone.m_MemoryManager.f_LazyReturnCheckout();
 			}
 		}
-#endif
-#endif
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		endif
+#	endif
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			DMainHeapSmall->f_LazyReturnCheckout();
 		else
-#endif
+#	endif
 			DMainHeapMax->f_LazyReturnCheckout();
 
 		return true;
 	}
 
 	template <typename tf_CMemoryManagerZone>
-	umint fg_Malterlib_Safe_GetSize(tf_CMemoryManagerZone *_pZone, const void *_pMemory)
+	umint fg_Malterlib_Safe_GetSize(tf_CMemoryManagerZone *_pZone, void const *_pMemory)
 	{
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 
@@ -2318,11 +2309,11 @@ namespace
 				}
 			)
 		;
-	#ifdef DOptimizeSetJmp
+#	ifdef DOptimizeSetJmp
 		if (_setjmp(JumpBuffer))
-	#else
+#	else
 		if (setjmp(JumpBuffer))
-	#endif
+#	endif
 			return 0; // Access violation accessing header, this is not our block
 		return _pZone->m_MemoryManager.f_TrySize(pMalterlibAlloc);
 	}
@@ -2343,18 +2334,18 @@ namespace
 			)
 		;
 
-	#ifdef DOptimizeSetJmp
+#	ifdef DOptimizeSetJmp
 		if (_setjmp(JumpBuffer))
-	#else
+#	else
 		if (setjmp(JumpBuffer))
-	#endif
+#	endif
 			return nullptr;
 
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if constexpr (NTraits::cIsSame<tf_CMemoryManager, CMemoryManagerSmall>)
 			return DMainHeapSmall->f_GetMemoryManager(_pMemory);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_GetMemoryManager(_pMemory);
 	}
 
@@ -2375,17 +2366,17 @@ namespace
 			)
 		;
 
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if constexpr (NTraits::cIsSame<tf_CMemoryManager, CMemoryManagerSmall>)
 		{
 			DMibLockRead(State.m_ZoneListLock);
 			auto iZone = State.m_ZoneListSmall.f_GetIterator();
 
-		#ifdef DOptimizeSetJmp
+#		ifdef DOptimizeSetJmp
 			if (_setjmp(JumpBuffer))
-		#else
+#		else
 			if (setjmp(JumpBuffer))
-		#endif
+#		endif
 				return nullptr;
 
 			for (; iZone; ++iZone)
@@ -2397,16 +2388,16 @@ namespace
 			return nullptr;
 		}
 		else
-#endif
+#	endif
 		{
 			DMibLockRead(State.m_ZoneListLock);
 			auto iZone = State.m_ZoneListMax.f_GetIterator();
 
-		#ifdef DOptimizeSetJmp
+#	ifdef DOptimizeSetJmp
 			if (_setjmp(JumpBuffer))
-		#else
+#	else
 			if (setjmp(JumpBuffer))
-		#endif
+#	endif
 				return nullptr;
 
 			for (; iZone; ++iZone)
@@ -2418,6 +2409,7 @@ namespace
 			return nullptr;
 		}
 	}
+
 	template <typename tf_CMemoryManager>
 	inline_always tf_CMemoryManager *fg_Malterlib_Safe_GetMemoryManager(void const *_pMemory)
 	{
@@ -2430,7 +2422,7 @@ namespace
 	template <typename tf_CMemoryManager>
 	inline_always malloc_zone_t_known_version *fg_Malterlib_ZoneFromMemoryManager(tf_CMemoryManager *_pMemoryManager)
 	{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if constexpr (NTraits::cIsSame<tf_CMemoryManager, CMemoryManagerSmall>)
 		{
 			if (_pMemoryManager == &(*DMainHeapSmall))
@@ -2438,7 +2430,7 @@ namespace
 			return &(((CMemoryManagerZoneSmall *)((uint8 *)_pMemoryManager - DMibPOffsetOf(CMemoryManagerZoneSmall, m_MemoryManager)))->m_MallocZone);
 		}
 		else
-#endif
+#	endif
 		{
 			if (_pMemoryManager == &(*DMainHeapMax))
 				return &g_MalterlibMallocZone;
@@ -2449,7 +2441,7 @@ namespace
 	template <typename tf_CMemoryManager>
 	tf_CMemoryManager *fg_Malterlib_GetMemoryManager(void const *_pMemory)
 	{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if constexpr (NTraits::cIsSame<tf_CMemoryManager, CMemoryManagerSmall>)
 		{
 			tf_CMemoryManager *pMemoryManager = DMainHeapSmall->f_GetMemoryManager(_pMemory);
@@ -2466,7 +2458,7 @@ namespace
 			return nullptr;
 		}
 		else
-#endif
+#	endif
 		{
 			tf_CMemoryManager *pMemoryManager = DMainHeapMax->f_GetMemoryManager(_pMemory);
 			if (pMemoryManager) [[likely]]
@@ -2484,13 +2476,10 @@ namespace
 	}
 
 #endif
-
-
 }
 // Direct overrides
 extern "C"
 {
-
 	assure_used DMibMalterlibOverrideMallocExport void fg_MalterlibSystem_InitBeforeMalloc(COriginalFunctions const &_Functions)
 	{
 		if (g_MalterlibMallocBeforeMallocCalled)
@@ -2528,23 +2517,23 @@ extern "C"
 		if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
 			return nullptr;
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_Alloc(Size);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_Alloc(Size);
-#endif
+#	endif
 		return pMalterlibAlloc;
 #else
 		return g_OriginalFunctions.malloc(_Size);
@@ -2559,23 +2548,23 @@ extern "C"
 		if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
 			return nullptr;
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
-	#endif
+#	endif
 		return pMalterlibAlloc;
 #else
 		return g_OriginalFunctions.valloc(_Size);
@@ -2589,23 +2578,23 @@ extern "C"
 		if (!fg_TryMultiplyMacOSAllocationSize(_NumItems, _Size, Size))
 			return nullptr;
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_Alloc(Size);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_Alloc(Size);
-	#endif
+#	endif
 		fg_MemClear(pMalterlibAlloc, Size);
 		return pMalterlibAlloc;
 #else
@@ -2625,23 +2614,23 @@ extern "C"
 		if (g_bOnlyDefaultZone || !_pMemory)
 		{
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-#			if DEnableDebugMemoryManager
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if (g_bMainHeapIsSmall)
-					return (uint8 *)DMainHeapSmall->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
-				else
-#endif
-					return (uint8 *)DMainHeapMax->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
-#			else
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if (g_bMainHeapIsSmall)
-					return (uint8 *)DMainHeapSmall->f_Resize(pMalterlibAlloc, Size, 0);
-				else
-#endif
-					return (uint8 *)DMainHeapMax->f_Resize(pMalterlibAlloc, Size, 0);
-#			endif
+#	if DEnableDebugMemoryManager
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				return (uint8 *)DMainHeapSmall->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+			else
+#		endif
+				return (uint8 *)DMainHeapMax->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+#	else
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				return (uint8 *)DMainHeapSmall->f_Resize(pMalterlibAlloc, Size, 0);
+			else
+#		endif
+				return (uint8 *)DMainHeapMax->f_Resize(pMalterlibAlloc, Size, 0);
+#	endif
 		}
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 		{
 			CMemoryManagerSmall *pMemoryManager;
@@ -2663,14 +2652,14 @@ extern "C"
 				pMemoryManager = fg_Malterlib_GetMemoryManager<CMemoryManagerSmall>(_pMemory);
 			DMibFastCheck(pMemoryManager);
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-	#		if DEnableDebugMemoryManager
-				return pMemoryManager->f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
-	#		else
-				return pMemoryManager->f_Resize(_pMemory, Size, 0);
-	#		endif
+#		if DEnableDebugMemoryManager
+			return pMemoryManager->f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+#		else
+			return pMemoryManager->f_Resize(_pMemory, Size, 0);
+#		endif
 		}
 		else
-#endif
+#	endif
 		{
 			CMemoryManagerMax *pMemoryManager;
 			if (g_bHasForeignZones)
@@ -2691,11 +2680,11 @@ extern "C"
 				pMemoryManager = fg_Malterlib_GetMemoryManager<CMemoryManagerMax>(_pMemory);
 			DMibFastCheck(pMemoryManager);
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-	#		if DEnableDebugMemoryManager
-				return pMemoryManager->f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
-	#		else
-				return pMemoryManager->f_Resize(_pMemory, Size, 0);
-	#		endif
+#	if DEnableDebugMemoryManager
+			return pMemoryManager->f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+#	else
+			return pMemoryManager->f_Resize(_pMemory, Size, 0);
+#	endif
 		}
 #else
 		return g_OriginalFunctions.realloc(_pMemory, _Size);
@@ -2717,23 +2706,23 @@ extern "C"
 		if (g_bOnlyDefaultZone || !_pMemory)
 		{
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-#			if DEnableDebugMemoryManager
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if (g_bMainHeapIsSmall)
-					return (uint8 *)DMainHeapSmall->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
-				else
-#endif
-					return (uint8 *)DMainHeapMax->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
-#			else
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-				if (g_bMainHeapIsSmall)
-					return (uint8 *)DMainHeapSmall->f_Resize(pMalterlibAlloc, Size, 0);
-				else
-#endif
-					return (uint8 *)DMainHeapMax->f_Resize(pMalterlibAlloc, Size, 0);
-#			endif
+#	if DEnableDebugMemoryManager
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				return (uint8 *)DMainHeapSmall->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+			else
+#		endif
+				return (uint8 *)DMainHeapMax->f_ResizeDebug(pMalterlibAlloc, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+#	else
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				return (uint8 *)DMainHeapSmall->f_Resize(pMalterlibAlloc, Size, 0);
+			else
+#		endif
+				return (uint8 *)DMainHeapMax->f_Resize(pMalterlibAlloc, Size, 0);
+#	endif
 		}
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 		{
 			CMemoryManagerSmall *pMemoryManager;
@@ -2755,14 +2744,14 @@ extern "C"
 				pMemoryManager = fg_Malterlib_GetMemoryManager<CMemoryManagerSmall>(_pMemory);
 			DMibFastCheck(pMemoryManager);
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-	#		if DEnableDebugMemoryManager
-				return pMemoryManager->f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
-	#		else
-				return pMemoryManager->f_Resize(_pMemory, Size, 0);
-	#		endif
+#		if DEnableDebugMemoryManager
+			return pMemoryManager->f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+#		else
+			return pMemoryManager->f_Resize(_pMemory, Size, 0);
+#		endif
 		}
 		else
-#endif
+#	endif
 		{
 			CMemoryManagerMax *pMemoryManager;
 			if (g_bHasForeignZones)
@@ -2783,11 +2772,11 @@ extern "C"
 				pMemoryManager = fg_Malterlib_GetMemoryManager<CMemoryManagerMax>(_pMemory);
 			DMibFastCheck(pMemoryManager);
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-	#		if DEnableDebugMemoryManager
-				return pMemoryManager->f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
-	#		else
-				return pMemoryManager->f_Resize(_pMemory, Size, 0);
-	#		endif
+#	if DEnableDebugMemoryManager
+			return pMemoryManager->f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, g_DebugFlags);
+#	else
+			return pMemoryManager->f_Resize(_pMemory, Size, 0);
+#	endif
 		}
 #else
 		return g_OriginalFunctions.reallocf(_pMemory, _Size);
@@ -2803,25 +2792,25 @@ extern "C"
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.free(_pMemory);
 
-#if 0 // Cannot be used if we have an unimplemented function so the macOS built in memory manager is used
+#	if 0 // Cannot be used if we have an unimplemented function so the macOS built in memory manager is used
 		if (g_bOnlyDefaultZone)
 		{
 			uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-#ifdef DMemoryManagerIsSame
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		ifdef DMemoryManagerIsSame
+#			if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 				return DMainHeapSmall->f_FreeNoSize(pMalterlibAlloc);
 			else
-#endif
+#			endif
 				return DMainHeapMax->f_FreeNoSize(pMalterlibAlloc);
-#else
+#		else
 			return fg_FreeNoSize(pMalterlibAlloc);
-#endif
+#		endif
 		}
-#endif
+#	endif
 
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 		{
 			CMemoryManagerSmall *pMemoryManager;
@@ -2851,7 +2840,7 @@ extern "C"
 			return pMemoryManager->f_FreeNoSize(_pMemory);
 		}
 		else
-#endif
+#	endif
 		{
 			CMemoryManagerMax *pMemoryManager;
 			if (g_bHasForeignZones)
@@ -2894,18 +2883,18 @@ extern "C"
 		if (g_bOnlyDefaultZone)
 		{
 			DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-#ifdef DMemoryManagerIsSame
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	ifdef DMemoryManagerIsSame
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 				return DMainHeapSmall->f_FreeNoSize(_pMemory);
 			else
-#endif
+#		endif
 				return DMainHeapMax->f_FreeNoSize(_pMemory);
-#else
+#	else
 			return fg_FreeNoSize((uint8 *)_pMemory);
-#endif
+#	endif
 		}
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 		{
 			CMemoryManagerSmall *pMemoryManager;
@@ -2930,7 +2919,7 @@ extern "C"
 			return pMemoryManager->f_FreeNoSize(_pMemory);
 		}
 		else
-#endif
+#	endif
 		{
 			CMemoryManagerMax *pMemoryManager;
 			if (g_bHasForeignZones)
@@ -2969,23 +2958,23 @@ extern "C"
 			return ENOMEM;
 
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
-#endif
+#	endif
 		*_pOutput = pMalterlibAlloc;
 		return 0;
 #else
@@ -3004,21 +2993,21 @@ extern "C"
 			return nullptr;
 
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-	#if DEnableDebugMemoryManager
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DEnableDebugMemoryManager
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			return DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	else
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
-#endif
+#		endif
 			return DMainHeapMax->f_AllocAligned(Size, Alignment);
-	#endif
+#	endif
 #else
 		return g_OriginalFunctions.aligned_alloc(_Alignment, _Size);
 #endif
@@ -3101,23 +3090,23 @@ extern "C"
 	{
 		umint Size = fg_AlignMacOSAllocationSizeOrThrow(_Size);
 #ifdef DMemoryManagerIsSame
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_Alloc(Size);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_Alloc(Size);
-	#endif
+#	endif
 		return pMalterlibAlloc;
 #else
 		return fg_Alloc(Size);
@@ -3129,23 +3118,23 @@ extern "C"
 	{
 		umint Size = fg_AlignMacOSAllocationSizeOrThrow(_Size);
 #ifdef DMemoryManagerIsSame
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_Alloc(Size);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_Alloc(Size);
-	#endif
+#	endif
 		return pMalterlibAlloc;
 #else
 		return fg_Alloc(Size);
@@ -3159,23 +3148,23 @@ extern "C"
 		if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
 			return nullptr;
 #ifdef DMemoryManagerIsSame
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_Alloc(Size);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_Alloc(Size);
-	#endif
+#	endif
 		return pMalterlibAlloc;
 #else
 		return fg_Alloc(Size);
@@ -3189,23 +3178,23 @@ extern "C"
 		umint Size = fg_AlignMacOSAllocationSizeOrThrow(_Size, Alignment);
 
 #ifdef DMemoryManagerIsSame
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
-	#endif
+#	endif
 		return pMalterlibAlloc;
 #else
 		return fg_AllocAligned(Size, Alignment);
@@ -3223,23 +3212,23 @@ extern "C"
 			return nullptr;
 
 #ifdef DMemoryManagerIsSame
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
-	#endif
+#	endif
 		return pMalterlibAlloc;
 #else
 		return fg_AllocAligned(Size, Alignment);
@@ -3253,23 +3242,23 @@ extern "C"
 		if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
 			return nullptr;
 #ifdef DMemoryManagerIsSame
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_Alloc(Size);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_Alloc(Size);
-	#endif
+#	endif
 		return pMalterlibAlloc;
 #else
 		return fg_Alloc(Size);
@@ -3283,23 +3272,23 @@ extern "C"
 		umint Size = fg_AlignMacOSAllocationSizeOrThrow(_Size, Alignment);
 
 #ifdef DMemoryManagerIsSame
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-		#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-			if (g_bMainHeapIsSmall)
-				pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-			else
-		#endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+		if (g_bMainHeapIsSmall)
+			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+		else
+#		endif
+		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
+#	else
 		uint8 *pMalterlibAlloc;
-		#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-			if (g_bMainHeapIsSmall)
-				pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
-			else
-		#endif
-			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
-	#endif
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+		if (g_bMainHeapIsSmall)
+			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
+		else
+#		endif
+		pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
+#	endif
 		return pMalterlibAlloc;
 #else
 		return fg_AllocAligned(Size, Alignment);
@@ -3317,23 +3306,23 @@ extern "C"
 			return nullptr;
 
 #ifdef DMemoryManagerIsSame
-	#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-	#else
+#	else
 		uint8 *pMalterlibAlloc;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			pMalterlibAlloc = (uint8 *)DMainHeapSmall->f_AllocAligned(Size, Alignment);
 		else
-#endif
+#		endif
 			pMalterlibAlloc = (uint8 *)DMainHeapMax->f_AllocAligned(Size, Alignment);
-	#endif
+#	endif
 		return pMalterlibAlloc;
 #else
 		return fg_AllocAligned(Size, Alignment);
@@ -3347,11 +3336,11 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_FreeNoSize(pMalterlibAlloc);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return fg_FreeNoSize(_pMemory);
@@ -3365,11 +3354,11 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_FreeNoSize(pMalterlibAlloc);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return fg_FreeNoSize(_pMemory);
@@ -3383,11 +3372,11 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_FreeNoSize(pMalterlibAlloc);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return fg_FreeNoSize(_pMemory);
@@ -3401,11 +3390,11 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_FreeNoSize(pMalterlibAlloc);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return fg_FreeNoSize(_pMemory);
@@ -3419,11 +3408,11 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_FreeNoSize(pMalterlibAlloc);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return fg_FreeNoSize(_pMemory);
@@ -3438,11 +3427,11 @@ extern "C"
 		umint Size = fg_AlignMacOSAllocationSizeForDelete(_Size);
 #ifdef DMemoryManagerIsSame
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_Free(pMalterlibAlloc, Size);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_Free(pMalterlibAlloc, Size);
 #else
 		return fg_Free(_pMemory, Size);
@@ -3459,11 +3448,11 @@ extern "C"
 
 #ifdef DMemoryManagerIsSame
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_Free(pMalterlibAlloc, Size);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_Free(pMalterlibAlloc, Size);
 #else
 		return fg_Free(_pMemory, Size);
@@ -3477,11 +3466,11 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_FreeNoSize(pMalterlibAlloc);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return fg_FreeNoSize(_pMemory);
@@ -3495,11 +3484,11 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_FreeNoSize(pMalterlibAlloc);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return fg_FreeNoSize(_pMemory);
@@ -3513,11 +3502,11 @@ extern "C"
 		if (!_pMemory)
 			return;
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_FreeNoSize(pMalterlibAlloc);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_FreeNoSize(pMalterlibAlloc);
 #else
 		return fg_FreeNoSize(_pMemory);
@@ -3533,11 +3522,11 @@ extern "C"
 
 #ifdef DMemoryManagerIsSame
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_Free(pMalterlibAlloc, Size);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_Free(pMalterlibAlloc, Size);
 #else
 		return fg_Free(_pMemory, Size);
@@ -3554,18 +3543,18 @@ extern "C"
 
 #ifdef DMemoryManagerIsSame
 		uint8 *pMalterlibAlloc = (uint8 *)_pMemory;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_Free(pMalterlibAlloc, Size);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_Free(pMalterlibAlloc, Size);
 #else
 		return fg_Free(_pMemory, Size);
 #endif
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport size_t fg_Malterlib_malloc_size(const void *_pMemory)
+	assure_used DMibMalterlibOverrideMallocExport size_t fg_Malterlib_malloc_size(void const *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (!_pMemory)
@@ -3573,27 +3562,27 @@ extern "C"
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_size(_pMemory);
 
-#if 0 // OS functions can ask at any point for malloc_size on invalid pointers
+#	if 0 // OS functions can ask at any point for malloc_size on invalid pointers
 		if (g_bOnlyDefaultZone)
 		{
 			if (fg_IsInvalidRegion(_pMemory))
 				return 0;
 
-#ifdef DMemoryManagerIsSame
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
-		if (g_bMainHeapIsSmall)
-			return DMainHeapSmall->f_Size(_pMemory);
-		else
-#endif
-			return DMainHeapMax->f_Size(_pMemory);
-#else
+#		ifdef DMemoryManagerIsSame
+#			if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+			if (g_bMainHeapIsSmall)
+				return DMainHeapSmall->f_Size(_pMemory);
+			else
+#			endif
+				return DMainHeapMax->f_Size(_pMemory);
+#		else
 			return fg_Size(_pMemory);
-#endif
+#		endif
 		}
-#endif
+#	endif
 
 		// Need safe because objc stupidly relies on being able to check if it's a real memory block
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 		{
 			CMemoryManagerSmall *pMemoryManager;
@@ -3620,7 +3609,7 @@ extern "C"
 			return pMemoryManager->f_Size(_pMemory);
 		}
 		else
-#endif
+#	endif
 		{
 			CMemoryManagerMax *pMemoryManager;
 			if (g_bHasForeignZones)
@@ -3653,11 +3642,11 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport size_t fg_Malterlib_malloc_good_size(size_t _Size)
 	{
 #ifdef DMemoryManagerIsSame
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return DMainHeapSmall->f_SizePadded(_Size);
 		else
-#endif
+#	endif
 			return DMainHeapMax->f_SizePadded(_Size);
 #else
 		return g_OriginalFunctions.malloc_good_size(_Size);
@@ -3675,7 +3664,8 @@ extern "C"
 
 	malloc_introspection_t_known_version g_MalterlibMallocZoneZoneIntrospection =
 		{
-			[](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t /* enumerates all the malloc pointers in use */
+			// Enumerates all the malloc pointers in use
+			[](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t
 			{
 				return KERN_FAILURE;
 			}
@@ -3694,27 +3684,27 @@ extern "C"
 					return pZone->m_MemoryManager.f_SizePadded(_Size);
 				}
 			}
-			, [](malloc_zone_t_known_version *_pZone) -> boolean_t /* Consistency checker */
+			, [](malloc_zone_t_known_version *_pZone) -> boolean_t // Consistency checker
 			{
 				return true;
 			}
-			, [](malloc_zone_t_known_version *_pZone, boolean_t verbose) /* Prints zone  */
+			, [](malloc_zone_t_known_version *_pZone, boolean_t verbose) // Prints zone
 			{
 			}
-			, [](malloc_zone_t_known_version *_pZone, void *address) /* Enables logging of activity */
+			, [](malloc_zone_t_known_version *_pZone, void *address) // Enables logging of activity
 			{
 			}
-			, [](malloc_zone_t_known_version *_pZone) /* Forces locking zone */
+			, [](malloc_zone_t_known_version *_pZone) // Forces locking zone
 			{
 			}
-			, [](malloc_zone_t_known_version *_pZone) /* Forces unlocking zone */
+			, [](malloc_zone_t_known_version *_pZone) // Forces unlocking zone
 			{
 			}
-			, [](malloc_zone_t_known_version *_pZone, malloc_statistics_t *_pStats) /* Fills statistics */
+			, [](malloc_zone_t_known_version *_pZone, malloc_statistics_t *_pStats) // Fills statistics
 			{
 				fg_MemClear(*_pStats);
 			}
-			, [](malloc_zone_t_known_version *_pZone) -> boolean_t /* Are any zone locks held */
+			, [](malloc_zone_t_known_version *_pZone) -> boolean_t // Are any zone locks held
 			{
 				return false;
 			}
@@ -3740,28 +3730,27 @@ extern "C"
 		auto fCreateZone = [&]<typename tf_CZone>()
 			{
 				CMemoryManagerConfig Config;
-		#ifndef DFullArenasForSecondary
+#	ifndef DFullArenasForSecondary
 				Config.m_nMaxArenas = 1; // For these zones don't waste address space, chances are they will be single thread use anyways
-		#endif
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	endif
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 				if constexpr (NTraits::cIsSame<tf_CZone, CMemoryManagerZoneSmall>)
 					Config.m_Magic = DMainHeapSmall->f_GetMagic();
 				else
-#endif
+#	endif
 					Config.m_Magic = DMainHeapMax->f_GetMagic();
 
 				NStorage::TCUniquePointer<tf_CZone> pMemoryManager = fg_Construct(Config);
 
-		#ifdef DFullArenasForSecondary
+#	ifdef DFullArenasForSecondary
 				pMemoryManager->m_MemoryManager.f_CanDoLazyCheckout();
-		#endif
-
+#	endif
 
 				pMemoryManager->m_MallocZone = malloc_zone_t_known_version
 					{
 						.reserved1 = nullptr
 						, .reserved2 = nullptr
-						, .size = [](malloc_zone_t_known_version *_pZone, const void *_pMemory) -> size_t // size
+						, .size = [](malloc_zone_t_known_version *_pZone, void const *_pMemory) -> size_t // size
 						{
 							if (!_pMemory)
 								return 0;
@@ -3830,14 +3819,14 @@ extern "C"
 							{
 								auto &State = *g_GlobalState;
 								DMibLock(State.m_ZoneListLock);
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 								if constexpr (NTraits::cIsSame<tf_CZone, CMemoryManagerZoneSmall>)
 								{
 									State.m_ZoneListSmall.f_Remove(*pMemoryManager);
 									g_bOnlyDefaultZone = State.m_ZoneListSmall.f_IsEmpty() && !g_bHasForeignZones;
 								}
 								else
-#endif
+#	endif
 								{
 									State.m_ZoneListMax.f_Remove(*pMemoryManager);
 									g_bOnlyDefaultZone = State.m_ZoneListMax.f_IsEmpty() && !g_bHasForeignZones;
@@ -3857,7 +3846,7 @@ extern "C"
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 
 							umint nAllocated = 0;
-						#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 							pZone->m_MemoryManager.f_AllocBatchDebug
 								(
 									Size
@@ -3873,7 +3862,7 @@ extern "C"
 									, g_DebugFlags
 								)
 							;
-						#else
+#	else
 							pZone->m_MemoryManager.f_AllocBatch
 								(
 									Size
@@ -3886,7 +3875,7 @@ extern "C"
 									}
 								)
 							;
-						#endif
+#	endif
 
 							return _nRequested;
 						}
@@ -3912,11 +3901,11 @@ extern "C"
 							if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
 								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-						#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-						#else
+#	else
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, Alignment);
-						#endif
+#	endif
 
 							return pMalterlibAlloc;
 						}
@@ -3964,11 +3953,11 @@ extern "C"
 							if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Align))
 								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-						#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, Align, DMibPFile, DMibPLine, g_DebugFlags);
-						#else
+#	else
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, Align);
-						#endif
+#	endif
 
 							if (pMalterlibAlloc && (_Options & 1))
 								fg_MemClear(pMalterlibAlloc, _Size);
@@ -4017,11 +4006,11 @@ extern "C"
 							if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Alignment))
 								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-						#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, Alignment, DMibPFile, DMibPLine, g_DebugFlags);
-						#else
+#	else
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, Alignment);
-						#endif
+#	endif
 
 							return pMalterlibAlloc;
 						}
@@ -4035,11 +4024,11 @@ extern "C"
 							if (!fg_TryAlignMacOSAllocationSize(_Size, Size, Align))
 								return nullptr;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-						#if DEnableDebugMemoryManager
+#	if DEnableDebugMemoryManager
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAlignedWithSizeDebug(Size, Align, DMibPFile, DMibPLine, g_DebugFlags);
-						#else
+#	else
 							uint8 *pMalterlibAlloc = (uint8 *)pZone->m_MemoryManager.f_AllocAligned(Size, Align);
-						#endif
+#	endif
 
 							if (pMalterlibAlloc && (_Options & 1))
 								fg_MemClear(pMalterlibAlloc, _Size);
@@ -4055,11 +4044,11 @@ extern "C"
 				{
 					auto &State = *g_GlobalState;
 					DMibLock(State.m_ZoneListLock);
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 					if constexpr (NTraits::cIsSame<tf_CZone, CMemoryManagerZoneSmall>)
 						State.m_ZoneListSmall.f_Insert(*pMemoryManager);
 					else
-#endif
+#	endif
 						State.m_ZoneListMax.f_Insert(*pMemoryManager);
 					g_bOnlyDefaultZone = false;
 				}
@@ -4069,11 +4058,11 @@ extern "C"
 			}
 		;
 
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 			return fCreateZone.operator ()<CMemoryManagerZoneSmall>();
 		else
-#endif
+#	endif
 			return fCreateZone.operator ()<CMemoryManagerZoneMax>();
 #else
 		return (malloc_zone_t_known_version *)g_OriginalFunctions.malloc_create_zone(start_size, flags);
@@ -4152,7 +4141,7 @@ extern "C"
 		if (_pMemory == nullptr)
 			return nullptr;
 
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 		if (g_bMainHeapIsSmall)
 		{
 			CMemoryManagerSmall *pMemoryManager;
@@ -4182,7 +4171,7 @@ extern "C"
 			return nullptr;
 		}
 		else
-#endif
+#	endif
 		{
 			CMemoryManagerMax *pMemoryManager;
 			if (g_bForeignZone) [[unlikely]]
@@ -4341,15 +4330,15 @@ extern "C"
 		if (State.m_nForeignZones == 1)
 		{
 			g_bHasForeignZones = false;
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 				g_bOnlyDefaultZone = State.m_ZoneListSmall.f_IsEmpty() && !g_bHasForeignZones;
 			else
-#endif
+#	endif
 				g_bOnlyDefaultZone = State.m_ZoneListMax.f_IsEmpty() && !g_bHasForeignZones;
 			State.m_nForeignZones = 0;
 			State.m_pForeignZones[iFoundZone] = nullptr;
-			return ;
+			return;
 		}
 
 		umint iLastZone = State.m_nForeignZones - 1;
@@ -4365,7 +4354,7 @@ extern "C"
 #endif
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_set_zone_name(malloc_zone_t_known_version *_pZone, const char *_pName)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_set_zone_name(malloc_zone_t_known_version *_pZone, char const *_pName)
 	{
 #ifdef DMemoryManagerIsSame
 		if (_pZone == &g_MalterlibMallocZone)
@@ -4381,7 +4370,7 @@ extern "C"
 #endif
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport const char *fg_Malterlib_malloc_get_zone_name(malloc_zone_t_known_version *_pZone)
+	assure_used DMibMalterlibOverrideMallocExport char const *fg_Malterlib_malloc_get_zone_name(malloc_zone_t_known_version *_pZone)
 	{
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
@@ -4632,7 +4621,11 @@ extern "C"
 #endif
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_enumerate_discharged_pointers(malloc_zone_t_known_version *_pZone, void (^report_discharged)(void *memory, void *info))
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_enumerate_discharged_pointers
+		(
+			malloc_zone_t_known_version *_pZone
+			, void (^report_discharged)(void *memory, void *info)
+		)
 	{
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
@@ -4712,13 +4705,13 @@ extern "C"
 
 	assure_used mach_msg_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_mach_msg
 		(
-			mach_msg_header_t *msg,
-			mach_msg_option_t option,
-			mach_msg_size_t send_size,
-			mach_msg_size_t rcv_size,
-			mach_port_name_t rcv_name,
-			mach_msg_timeout_t timeout,
-			mach_port_name_t notify
+			mach_msg_header_t *msg
+			, mach_msg_option_t option
+			, mach_msg_size_t send_size
+			, mach_msg_size_t rcv_size
+			, mach_port_name_t rcv_name
+			, mach_msg_timeout_t timeout
+			, mach_port_name_t notify
 		)
 	{
 #ifdef DMemoryManagerIsSame
@@ -4726,11 +4719,11 @@ extern "C"
 		if ((option & MACH_RCV_MSG) && msg->msgh_remote_port == 0)
 		{
 			bSuccessLazyReturn = fg_LazyReturnCheckout();
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 				DMainHeapSmall->f_LazyReturnCheckoutPrevent();
 			else
-#endif
+#	endif
 				DMainHeapMax->f_LazyReturnCheckoutPrevent();
 		}
 #endif
@@ -4740,11 +4733,11 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		if (bSuccessLazyReturn)
 		{
-#if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
+#	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
 				DMainHeapSmall->f_LazyReturnCheckoutAllow();
 			else
-#endif
+#	endif
 				DMainHeapMax->f_LazyReturnCheckoutAllow();
 		}
 #endif
@@ -4835,7 +4828,17 @@ extern "C"
 		return g_OriginalFunctions.os_sync_wait_on_address_with_timeout(addr, value, size, flags, clockid, timeout_ns);
 	}
 
-	assure_used uint32_t DMibMalterlibOverrideMallocExport fg_Malterlib___psynch_cvwait(user_addr_t cv, uint64_t cvlsgen, uint32_t cvugen, user_addr_t mutex, uint64_t mugen, uint32_t flags, int64_t sec, uint32_t nsec)
+	assure_used uint32_t DMibMalterlibOverrideMallocExport fg_Malterlib___psynch_cvwait
+		(
+			user_addr_t cv
+			, uint64_t cvlsgen
+			, uint32_t cvugen
+			, user_addr_t mutex
+			, uint64_t mugen
+			, uint32_t flags
+			, int64_t sec
+			, uint32_t nsec
+		)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
@@ -4843,7 +4846,15 @@ extern "C"
 		return g_OriginalFunctions.__psynch_cvwait(cv, cvlsgen, cvugen, mutex, mugen, flags, sec, nsec);
 	}
 
-	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_kevent(int kq, const struct kevent *changelist, int nchanges, struct kevent *eventlist, int nevents, const struct timespec *timeout)
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_kevent
+		(
+			int kq
+			, struct kevent const *changelist
+			, int nchanges
+			, struct kevent *eventlist
+			, int nevents
+			, struct timespec const *timeout
+		)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
@@ -4851,7 +4862,16 @@ extern "C"
 		return g_OriginalFunctions.kevent(kq, changelist, nchanges, eventlist, nevents, timeout);
 	}
 
-	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_kevent64(int kq, const struct kevent64_s *changelist, int nchanges, struct kevent64_s *eventlist, int nevents, unsigned int flags, const struct timespec *timeout)
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_kevent64
+		(
+			int kq
+			, struct kevent64_s const *changelist
+			, int nchanges
+			, struct kevent64_s *eventlist
+			, int nevents
+			, unsigned int flags
+			, struct timespec const *timeout
+		)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
@@ -4867,7 +4887,7 @@ extern "C"
 		return g_OriginalFunctions.poll(fds, nfds, timeout);
 	}
 
-	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_nanosleep(const struct timespec *req, struct timespec *rem)
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_nanosleep(struct timespec const *req, struct timespec *rem)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();

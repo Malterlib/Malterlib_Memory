@@ -18,9 +18,9 @@ namespace
 	constexpr umint gc_TestSize = 512;
 	constexpr umint gc_TestSizeBig = 4096;
 #if defined(DMibDebug) || defined(DMibSanitizerEnabled)
-	constexpr umint gc_TestMaxMemory = 256*1024*1;
+	constexpr umint gc_TestMaxMemory = 256 * 1024 * 1;
 #else
-	constexpr umint gc_TestMaxMemory = uint64(256*1024*1024);
+	constexpr umint gc_TestMaxMemory = uint64(256 * 1024 * 1024);
 #endif
 #if defined(DMibDebug) || defined(DMibSanitizerEnabled)
 	constexpr umint gc_ArrayLimit = 128u;
@@ -34,8 +34,8 @@ namespace
 		template <typename t_CParams, umint t_Index>
 		struct TCGetWaste
 		{
-			static constexpr umint mc_Waste =
-				t_CParams::mc_SlabSize
+			static constexpr umint mc_Waste
+				= t_CParams::mc_SlabSize
 				-
 				(
 					TCMemoryManagerSlab<t_CParams, t_Index>::mc_nSubSlabs * t_CParams::mc_SlabTypeInfo[t_Index].m_SubSlabMutiplier * t_CParams::mc_SubSlabSize
@@ -48,8 +48,8 @@ namespace
 		template <typename t_CParams, umint t_Index>
 		struct TCGetOverhead
 		{
-			static constexpr umint mc_Overhead =
-				t_CParams::mc_SlabSize - TCMemoryManagerSlab<t_CParams, t_Index>::mc_nSubSlabs * t_CParams::mc_SlabTypeInfo[t_Index].m_SubSlabMutiplier * t_CParams::mc_SubSlabSize
+			static constexpr umint mc_Overhead
+				= t_CParams::mc_SlabSize - TCMemoryManagerSlab<t_CParams, t_Index>::mc_nSubSlabs * t_CParams::mc_SlabTypeInfo[t_Index].m_SubSlabMutiplier * t_CParams::mc_SubSlabSize
 			;
 			static constexpr double mc_OverheadPercent = (double(mc_Overhead) / double(t_CParams::mc_SlabSize)) * 100.0;
 		};
@@ -64,7 +64,7 @@ namespace
 			static constexpr umint mc_SubSlabSize = 16 * 1024;
 		};
 
-#if !DMibConfig_Memory_Shims_Enable
+#	if !DMibConfig_Memory_Shims_Enable
 		struct CSystem4096 : public NMib::CMemoryManagerParamsCommonOverrides
 		{
 			static constexpr umint mc_SubSlabSize = 4 * 1024;
@@ -74,7 +74,7 @@ namespace
 		{
 			static constexpr umint mc_SubSlabSize = 16 * 1024;
 		};
-#endif
+#	endif
 
 		CDisplayStats()
 		{
@@ -125,14 +125,70 @@ namespace
 					DMibConOut("sizeof(TCMemoryManagerSubSlabDataAlloc<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlabDataAlloc<CParams>));
 					DMibConOut("sizeof(TCMemoryManagerSubSlabDataType<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlabDataType<CParams>));
 
-					DMibConOut("sizeof(TCMemoryManagerSlab<{}, 0>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 0>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 0>), CParams::mc_SubSlabSize));
-					DMibConOut("sizeof(TCMemoryManagerSlab<{}, 1>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 1>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 1>), CParams::mc_SubSlabSize));
-					DMibConOut("sizeof(TCMemoryManagerSlab<{}, 2>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 2>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 2>), CParams::mc_SubSlabSize));
-					DMibConOut("sizeof(TCMemoryManagerSlab<{}, 3>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 3>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 3>), CParams::mc_SubSlabSize));
-					DMibConOut("sizeof(TCMemoryManagerSlab<{}, 4>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 4>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 4>), CParams::mc_SubSlabSize));
-					DMibConOut("sizeof(TCMemoryManagerSlab<{}, 5>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 5>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 5>), CParams::mc_SubSlabSize));
-					DMibConOut("sizeof(TCMemoryManagerSlab<{}, 6>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 6>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 6>), CParams::mc_SubSlabSize));
-					DMibConOut("sizeof(TCMemoryManagerSlab<{}, 7>) = {} {}\r\n", Type, sizeof(TCMemoryManagerSlab<CParams, 7>), NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 7>), CParams::mc_SubSlabSize));
+					DMibConOut
+						(
+							"sizeof(TCMemoryManagerSlab<{}, 0>) = {} {}\r\n"
+							, Type
+							, sizeof(TCMemoryManagerSlab<CParams, 0>)
+							, NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 0>), CParams::mc_SubSlabSize)
+						)
+					;
+					DMibConOut
+						(
+							"sizeof(TCMemoryManagerSlab<{}, 1>) = {} {}\r\n"
+							, Type
+							, sizeof(TCMemoryManagerSlab<CParams, 1>)
+							, NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 1>), CParams::mc_SubSlabSize)
+						)
+					;
+					DMibConOut
+						(
+							"sizeof(TCMemoryManagerSlab<{}, 2>) = {} {}\r\n"
+							, Type
+							, sizeof(TCMemoryManagerSlab<CParams, 2>)
+							, NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 2>), CParams::mc_SubSlabSize)
+						)
+					;
+					DMibConOut
+						(
+							"sizeof(TCMemoryManagerSlab<{}, 3>) = {} {}\r\n"
+							, Type
+							, sizeof(TCMemoryManagerSlab<CParams, 3>)
+							, NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 3>), CParams::mc_SubSlabSize)
+						)
+					;
+					DMibConOut
+						(
+							"sizeof(TCMemoryManagerSlab<{}, 4>) = {} {}\r\n"
+							, Type
+							, sizeof(TCMemoryManagerSlab<CParams, 4>)
+							, NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 4>), CParams::mc_SubSlabSize)
+						)
+					;
+					DMibConOut
+						(
+							"sizeof(TCMemoryManagerSlab<{}, 5>) = {} {}\r\n"
+							, Type
+							, sizeof(TCMemoryManagerSlab<CParams, 5>)
+							, NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 5>), CParams::mc_SubSlabSize)
+						)
+					;
+					DMibConOut
+						(
+							"sizeof(TCMemoryManagerSlab<{}, 6>) = {} {}\r\n"
+							, Type
+							, sizeof(TCMemoryManagerSlab<CParams, 6>)
+							, NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 6>), CParams::mc_SubSlabSize)
+						)
+					;
+					DMibConOut
+						(
+							"sizeof(TCMemoryManagerSlab<{}, 7>) = {} {}\r\n"
+							, Type
+							, sizeof(TCMemoryManagerSlab<CParams, 7>)
+							, NMib::fg_AlignUp(sizeof(TCMemoryManagerSlab<CParams, 7>), CParams::mc_SubSlabSize)
+						)
+					;
 					DMibConOut("TCMemoryManagerSlab<{}, 0>::mc_nSubSlabs = {}\r\n", Type, umint(TCMemoryManagerSlab<CParams, 0>::mc_nSubSlabs));
 					DMibConOut("TCMemoryManagerSlab<{}, 1>::mc_nSubSlabs = {}\r\n", Type, umint(TCMemoryManagerSlab<CParams, 1>::mc_nSubSlabs));
 					DMibConOut("TCMemoryManagerSlab<{}, 2>::mc_nSubSlabs = {}\r\n", Type, umint(TCMemoryManagerSlab<CParams, 2>::mc_nSubSlabs));
@@ -142,16 +198,16 @@ namespace
 					DMibConOut("TCMemoryManagerSlab<{}, 6>::mc_nSubSlabs = {}\r\n", Type, umint(TCMemoryManagerSlab<CParams, 6>::mc_nSubSlabs));
 					DMibConOut("TCMemoryManagerSlab<{}, 7>::mc_nSubSlabs = {}\r\n", Type, umint(TCMemoryManagerSlab<CParams, 7>::mc_nSubSlabs));
 
-					DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<{},1>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams,1>));
-					DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<{},2>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams,2>));
-					DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<{},4>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams,4>));
-					DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<{},8>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams,8>));
-					DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<{},12>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams,12>));
-					DMibConOut("TCMemoryManagerSubSlab_SmallSize<{},1>::mc_NumAllocs = {}\r\n", Type, umint(TCMemoryManagerSubSlab_SmallSize<CParams,1>::mc_NumAllocs));
-					DMibConOut("TCMemoryManagerSubSlab_SmallSize<{},2>::mc_NumAllocs = {}\r\n", Type, umint(TCMemoryManagerSubSlab_SmallSize<CParams,2>::mc_NumAllocs));
-					DMibConOut("TCMemoryManagerSubSlab_SmallSize<{},4>::mc_NumAllocs = {}\r\n", Type, umint(TCMemoryManagerSubSlab_SmallSize<CParams,4>::mc_NumAllocs));
-					DMibConOut("TCMemoryManagerSubSlab_SmallSize<{},8>::mc_NumAllocs = {}\r\n", Type, umint(TCMemoryManagerSubSlab_SmallSize<CParams,8>::mc_NumAllocs));
-					DMibConOut("TCMemoryManagerSubSlab_SmallSize<{},12>::mc_NumAllocs = {}\r\n", Type, umint(TCMemoryManagerSubSlab_SmallSize<CParams,12>::mc_NumAllocs));
+					DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<{},1>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams, 1>));
+					DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<{},2>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams, 2>));
+					DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<{},4>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams, 4>));
+					DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<{},8>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams, 8>));
+					DMibConOut("sizeof(TCMemoryManagerSubSlab_SmallSize<{},12>) = {}\r\n", Type, sizeof(TCMemoryManagerSubSlab_SmallSize<CParams, 12>));
+					DMibConOut("TCMemoryManagerSubSlab_SmallSize<{},1>::mc_NumAllocs = {}\r\n", Type, umint(TCMemoryManagerSubSlab_SmallSize<CParams, 1>::mc_NumAllocs));
+					DMibConOut("TCMemoryManagerSubSlab_SmallSize<{},2>::mc_NumAllocs = {}\r\n", Type, umint(TCMemoryManagerSubSlab_SmallSize<CParams, 2>::mc_NumAllocs));
+					DMibConOut("TCMemoryManagerSubSlab_SmallSize<{},4>::mc_NumAllocs = {}\r\n", Type, umint(TCMemoryManagerSubSlab_SmallSize<CParams, 4>::mc_NumAllocs));
+					DMibConOut("TCMemoryManagerSubSlab_SmallSize<{},8>::mc_NumAllocs = {}\r\n", Type, umint(TCMemoryManagerSubSlab_SmallSize<CParams, 8>::mc_NumAllocs));
+					DMibConOut("TCMemoryManagerSubSlab_SmallSize<{},12>::mc_NumAllocs = {}\r\n", Type, umint(TCMemoryManagerSubSlab_SmallSize<CParams, 12>::mc_NumAllocs));
 					DMibConOut("sizeof(TCMemoryManagerArena<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerArena<CParams>));
 					DMibConOut("sizeof(TCMemoryManagerNumaArena<{}>) = {}\r\n", Type, sizeof(TCMemoryManagerNumaArena<CParams>));
 					DMibConOut("sizeof(TCMemoryManager<{}>) = {}\r\n", Type, sizeof(TCMemoryManager<CParams>));
@@ -161,13 +217,13 @@ namespace
 					DMibConOut("NSys::fg_Mem_PageSize() = {}\r\n\r\n", NMib::NSys::fg_Mem_PageSize());
 				}
 			;
-			fDisplayParams.template operator()<TCMemoryManagerParams<CPageSize4096>>();
-			fDisplayParams.template operator()<TCMemoryManagerParams<CPageSize16384>>();
+			fDisplayParams.template operator ()<TCMemoryManagerParams<CPageSize4096>>();
+			fDisplayParams.template operator ()<TCMemoryManagerParams<CPageSize16384>>();
 
-#if !DMibConfig_Memory_Shims_Enable
-			fDisplayParams.template operator()<TCMemoryManagerParams<CSystem4096>>();
-			fDisplayParams.template operator()<TCMemoryManagerParams<CSystem16384>>();
-#endif
+#	if !DMibConfig_Memory_Shims_Enable
+			fDisplayParams.template operator ()<TCMemoryManagerParams<CSystem4096>>();
+			fDisplayParams.template operator ()<TCMemoryManagerParams<CSystem16384>>();
+#	endif
 		}
 	};
 
@@ -178,7 +234,6 @@ namespace
 	class CPerformance_Tests : public CTest
 	{
 	public:
-
 		umint m_nCores;
 		CPerformance_Tests()
 		{
@@ -194,6 +249,7 @@ namespace
 					: m_pAddress(nullptr)
 				{
 				}
+
 				void *m_pAddress;
 			};
 
@@ -208,11 +264,11 @@ namespace
 //			using CAllocInfoList = DMibListLinkD_List(CAllocationInfo, m_Link);
 	//		NMib::NMemory::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing> m_AllocationInfoPool;
 
-
 			CAllocPattern_Random()
 				: m_pAllocations(nullptr)
 			{
 			}
+
 			CAllocPattern_Random(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
 				: m_Random(55556, _iThread, _iRepetition)
 				, m_pAllocations(nullptr)
@@ -226,7 +282,7 @@ namespace
 				umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
 				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
 				for (umint i = 0; i <= m_ArraySize; ++i)
-					new (m_pAllocations + i) CAllocationInfo();
+					new(m_pAllocations + i) CAllocationInfo();
 			}
 
 			static bool fs_Alignment()
@@ -297,6 +353,7 @@ namespace
 					: m_pAddress(nullptr)
 				{
 				}
+
 				void *m_pAddress;
 			};
 
@@ -312,11 +369,11 @@ namespace
 //			using CAllocInfoList = DMibListLinkD_List(CAllocationInfo, m_Link);
 	//		NMib::NMemory::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing> m_AllocationInfoPool;
 
-
 			CAllocPattern_RandomAlignment()
 				: m_pAllocations(nullptr)
 			{
 			}
+
 			CAllocPattern_RandomAlignment(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
 				: m_Random(55556, _iThread, _iRepetition)
 				, m_pAllocations(nullptr)
@@ -335,7 +392,7 @@ namespace
 				umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
 				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
 				for (umint i = 0; i <= m_ArraySize; ++i)
-					new (m_pAllocations + i) CAllocationInfo();
+					new(m_pAllocations + i) CAllocationInfo();
 			}
 
 			static bool fs_Alignment()
@@ -374,9 +431,7 @@ namespace
 						Info.m_pAddress = _Heap.f_AllocAligned(Size, Alignment);
 						*((uint8 *)Info.m_pAddress) = iStart;
 						if ((umint)Info.m_pAddress & (Alignment - 1))
-						{
 							m_bFailed = true;
-						}
 
 						++m_nIterations;
 					}
@@ -401,7 +456,6 @@ namespace
 				m_nIterations = 0;
 				return Ret;
 			}
-
 		};
 
 		struct CAllocPattern_OneSize
@@ -412,6 +466,7 @@ namespace
 					: m_pAddress(nullptr)
 				{
 				}
+
 				void *m_pAddress;
 			};
 
@@ -427,6 +482,7 @@ namespace
 				: m_pAllocations(nullptr)
 			{
 			}
+
 			CAllocPattern_OneSize(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
 				: m_Random(55556, _iThread, _iRepetition)
 				, m_pAllocations(nullptr)
@@ -440,7 +496,7 @@ namespace
 				umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
 				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
 				for (umint i = 0; i <= m_ArraySize; ++i)
-					new (m_pAllocations + i) CAllocationInfo();
+					new(m_pAllocations + i) CAllocationInfo();
 			}
 
 			static bool fs_Alignment()
@@ -546,6 +602,7 @@ namespace
 			{
 				m_StartedEvent.f_ResetSignaled();
 			}
+
 			t_CHeap *m_pHeap;
 			NMib::NThread::CEvent *m_pWakeEvent;
 			CTestPerformanceMeasure m_Measure;
@@ -630,7 +687,6 @@ namespace
 				NMib::NSys::fg_Mem_GetNumaNodes(Nodes.f_GetArray(), nNodes);
 			}
 
-
 			for (umint iRepetition = 0; iRepetition < nTests; ++iRepetition)
 			{
 				// Reset started
@@ -696,7 +752,6 @@ namespace
 				_PerfTest.f_Add(Measure);
 		}
 
-
 		template <typename tf_CHeap, typename tf_CAllocPattern>
 		void f_DoTest(CTestPerformance &_PerfTest, CTestMemory &_MemoryTest, ETestMeasureType _MeasureType, ch8 const *_pName, umint _MaxAllocSize, umint _nThreads)
 		{
@@ -724,26 +779,28 @@ namespace
 						, m_bValidResult(false)
 					{
 					}
+
 					virtual void f_HandleHeader(NMib::NContainer::CRegistry const &_Reg) override
 					{
 					}
+
 					virtual void f_HandleFooter(NMib::NContainer::CRegistry const &_Reg) override
 					{
 					}
+
 					virtual void f_HandleCategory(NMib::NContainer::CRegistry const &_Reg) override
 					{
 					}
+
 					virtual void f_HandleResult(NMib::NContainer::CRegistry const &_Reg) override
 					{
 						CTestResult Result;
 						CTestResultParser::fs_DecodeResult(_Reg, Result);
 
 						if (Result.m_Result == ETestResult_Fail && Result.m_TestPath.f_Find("m_bFailed") >= 0)
-						{
 							m_bFailedTest = true;
-						}
-
 					}
+
 					virtual void f_HandlePerformanceResult(NMib::NContainer::CRegistry const &_Reg) override
 					{
 						CTestPerformanceResults Results;
@@ -756,6 +813,7 @@ namespace
 							m_bValidResult = true;
 						}
 					}
+
 					virtual void f_HandleMemoryResult(NMib::NContainer::CRegistry const &_Reg) override
 					{
 					}
@@ -789,8 +847,7 @@ namespace
 				NMib::NThread::CEvent Exited;
 				Exited.f_ResetSignaled();
 
-				auto fl_AddStats
-					= [&](NMib::NProcess::CProcessStatistics const &_Stats)
+				auto fl_AddStats = [&](NMib::NProcess::CProcessStatistics const &_Stats)
 					{
 						for (auto Iter = _Stats.m_Statistics.f_GetIterator(); Iter; ++Iter)
 						{
@@ -806,12 +863,12 @@ namespace
 								break;
 							case NMib::NProcess::EProcessStatUnit_Bytes:
 								{
-									if (Iter->m_IdealScale == fp64(1024*1024*1024))
+									if (Iter->m_IdealScale == fp64(1024 * 1024 * 1024))
 									{
 										Value /= Iter->m_IdealScale;
 										Name += " (GiB)";
 									}
-									else if (Iter->m_IdealScale == fp64(1024*1024))
+									else if (Iter->m_IdealScale == fp64(1024 * 1024))
 									{
 										Value /= Iter->m_IdealScale;
 										Name += " (MiB)";
@@ -857,17 +914,14 @@ namespace
 									Name += " (%)";
 								}
 								break;
-							default:
-								DMibNeverGetHere(Iter->m_Unit);
-								break;
+							default: DMibNeverGetHere(Iter->m_Unit); break;
 							}
 							Result.m_PerformanceCounters[Name] = CTestStats(Value);
 						}
 					}
 				;
 
-				Params.m_fOnStateChange =
-					[&](NMib::NProcess::CProcessLaunchStateChangeVariant const &_State, fp64 _TimeSinceStart)
+				Params.m_fOnStateChange = [&](NMib::NProcess::CProcessLaunchStateChangeVariant const &_State, fp64 _TimeSinceStart)
 					{
 						switch (_State.f_GetTypeID())
 						{
@@ -881,7 +935,6 @@ namespace
 									NMib::NProcess::CProcessStatistics MemoryStats = pProcessLaunch->f_GetOverallMemoryStatistics();
 									NMib::NProcess::CProcessStatistics ExecutionStats = pProcessLaunch->f_GetOverallExecutionStatistics();
 
-
 									fl_AddStats(ExecutionStats);
 									fl_AddStats(MemoryStats);
 									/*
@@ -891,8 +944,6 @@ namespace
 											MemoryResult.m_AllAllocations.m_BytesMaxAlloc = CTestStats(fp64(*Iter));
 										MemoryResult.m_PerAllocationType[Iter.f_GetKey()].m_BytesMaxAlloc = CTestStats(fp64(*Iter));
 									}*/
-
-
 								}
 								Exited.f_SetSignaled();
 							}
@@ -911,8 +962,7 @@ namespace
 						}
 					}
 				;
-				Params.m_fOnOutput =
-					[&](NMib::NProcess::EProcessLaunchOutputType _OutputType, NMib::NStr::CStr const &_Output)
+				Params.m_fOnOutput = [&](NMib::NProcess::EProcessLaunchOutputType _OutputType, NMib::NStr::CStr const &_Output)
 					{
 						if (_OutputType == NMib::NProcess::EProcessLaunchOutputType_StdOut)
 							ResultParser.f_FeedText(_Output);
@@ -940,7 +990,6 @@ namespace
 								if (iStat->m_Value > (*Mapped).m_Value)
 									(*Mapped).m_Value = iStat->m_Value;
 							}
-
 						}
 					}
 					catch (NMib::NException::CException const &)
@@ -975,9 +1024,7 @@ namespace
 					}
 				}
 				else
-				{
 					DMibTest(DMibExpr(false) && DMibExpr("Recursive test failed"))(Params.m_Parameters);
-				}
 
 				return;
 			}
@@ -989,6 +1036,7 @@ namespace
 					: m_This(_This)
 				{
 				}
+
 				void f_Perform(CTestPerformance &_PerfTest, ETestMeasureType _MeasureType, ch8 const *_pName, umint _MaxAllocSize, umint _nThreads)
 				{
 					m_This.f_DoTestPerform<tf_CHeap, tf_CAllocPattern>(_PerfTest, _MeasureType, _pName, _MaxAllocSize, _nThreads);
@@ -1013,17 +1061,17 @@ namespace
 #ifdef DMemoryManagerTestEnable_Malterlib
 			f_DoTest<CMalterlibMemoryMalterlib, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib", _MaxAllocSize, _nThreads);
 			f_DoTest<CMalterlibMemoryMalterlib_SubSlabLists, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_SubSlabLists", _MaxAllocSize, _nThreads);
-#if DMibPPtrBits >= 64
+#	if DMibPPtrBits >= 64
 			f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmaps, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_SubSlabBitmap", _MaxAllocSize, _nThreads);
-#endif
+#	endif
 			f_DoTest<CMalterlibMemoryMalterlib_SubSlabListsReap, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_ListsReap", _MaxAllocSize, _nThreads);
 			f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmapsReap, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_BitmapReap", _MaxAllocSize, _nThreads);
 			f_DoTest<CMalterlibMemoryMalterlib_SubSlabListsReapOrder, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_ListsOrder", _MaxAllocSize, _nThreads);
 			f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmapsReapOrder, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_BitmapOrder", _MaxAllocSize, _nThreads);
 			f_DoTest<CMalterlibMemoryMalterlib_NoCheckout, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_Checkout", _MaxAllocSize, _nThreads);
-#if DMibPPtrBits >= 64
+#	if DMibPPtrBits >= 64
 			f_DoTest<CMalterlibMemoryMalterlib_LowBranch, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_LowBranch", _MaxAllocSize, _nThreads);
-#endif
+#	endif
 
 			//f_DoTest<CMalterlibMemoryMalterlib_Tracked, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_Tracked", _MaxAllocSize, _nThreads);
 			//f_DoTest<CMalterlibMemoryMalterlib_Debug, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_Debug", _MaxAllocSize, _nThreads);
@@ -1090,24 +1138,24 @@ namespace
 			auto fRunTests = [&]
 				{
 					for
-		#if 1
-						(
-							umint i = 1
-							; i <= 1024*1024*8
-							; i = i << 1
-						)
-		#else
-						(
-							umint i = 1
-							//; i <= 1024*1024*8
-		#if DMibPPtrBits == 64
-							; i <= 12
-		#else
-							; i <= 4
-		#endif
-							; i = i < 4 ? i << 1 : i + 4
-						)
-		#endif
+#if 1
+					(
+						umint i = 1
+						; i <= 1024 * 1024 * 8
+						; i = i << 1
+					)
+#else
+					(
+						umint i = 1
+						//; i <= 1024*1024*8
+#	if DMibPPtrBits == 64
+						; i <= 12
+#	else
+						; i <= 4
+#	endif
+						; i = i < 4 ? i << 1 : i + 4
+					)
+#endif
 					{
 						DMibTestCategory(NMib::NStr::CStr::CFormat("Max Alloc({})") << i)
 						{
@@ -1149,10 +1197,10 @@ namespace
 					if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
 					{
 						if
-							(
-								(_MaxAlloc == gc_TestSize || _MaxAlloc == gc_TestSizeBig)
-								&& (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores || _nThreads == nPhysicalCores * 2)
-							)
+						(
+							(_MaxAlloc == gc_TestSize || _MaxAlloc == gc_TestSizeBig)
+							&& (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores || _nThreads == nPhysicalCores * 2)
+						)
 						{
 							DMibTestSuite(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads)
 							{
@@ -1189,16 +1237,14 @@ namespace
 			fRunTest(i);
 			i = i << 1;
 #if 0
-			umint nEndCores = NMib::fg_Min(nCores*1024, 64u); // Max 4096 threads as it taskes some time to start threads
+			umint nEndCores = NMib::fg_Min(nCores * 1024, 64u); // Max 4096 threads as it taskes some time to start threads
 			//umint nEndCores = NMib::fg_Min(nCores*1024, 4096u); // Max 4096 threads as it taskes some time to start threads
 			if (NMib::NSys::fg_System_BeingDebugged() && !(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
 				nEndCores = NMib::fg_Min(nEndCores, 128u); // Running in debugger the debugger makes creating threads really slow
 #endif
 
 			for (; i <= nEndCores; i = i << 1)
-			{
 				fRunTest(i);
-			}
 		}
 
 		void f_DoPatterns()
@@ -1219,6 +1265,5 @@ namespace
 	};
 
 	DMibTestRegister(CPerformance_Tests, Malterlib::Memory::MemoryManager);
-
 }
 

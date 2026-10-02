@@ -11,7 +11,7 @@ namespace NMib::NMemory
 		_Other.m_pThreadLocal = nullptr;
 	}
 
-	inline CMemoryManagerCheckout & CMemoryManagerCheckout::operator = (CMemoryManagerCheckout && _Other)
+	inline CMemoryManagerCheckout &CMemoryManagerCheckout::operator = (CMemoryManagerCheckout &&_Other)
 	{
 		if (m_pThreadLocal)
 			m_pThreadLocal->f_ReturnCheckoutVirtual();
@@ -24,7 +24,6 @@ namespace NMib::NMemory
 	inline CMemoryManagerCheckout::CMemoryManagerCheckout(ICMemoryManagerReturnCheckout *_pThreadLocal)
 		: m_pThreadLocal(_pThreadLocal)
 	{
-
 	}
 
 	inline CMemoryManagerCheckout::~CMemoryManagerCheckout()

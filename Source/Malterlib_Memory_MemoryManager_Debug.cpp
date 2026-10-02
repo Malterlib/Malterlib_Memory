@@ -53,8 +53,7 @@ namespace NMib::NMemory::NPrivate
 			{
 				if (!_pFunctionName)
 					return false;
-				return
-					NMib::NStr::fg_StrStartsWith(_pFunctionName, "NMib::NMemory::TCMemoryManager")
+				return NMib::NStr::fg_StrStartsWith(_pFunctionName, "NMib::NMemory::TCMemoryManager")
 					|| NMib::NStr::fg_StrStartsWith(_pFunctionName, "NMib::NMemory::CCrossModuleImplementation")
 					|| NMib::NStr::fg_StrStartsWith(_pFunctionName, "NMib::NSys::fg_System_GetStackTrace")
 				;
@@ -116,7 +115,7 @@ namespace NMib::NMemory::NPrivate
 			}
 		}
 
-		const ch8 *pFile = _pFile;
+		ch8 const *pFile = _pFile;
 		if (!pFile)
 			pFile = "";
 
@@ -126,13 +125,16 @@ namespace NMib::NMemory::NPrivate
 		TempStr = CFStr::CFormat(DMibPFileLineFormat " ") << pFile << _Line;
 
 		umint BlockSize = _Size;
-		TempStr += (CFStr::CFormat("Memory Leak, Flags = 0b{sj4,sf0,nfb}, Address = 0x{sj*4,sf0,nh}, Size = 0x{sj*4,sf0,nh}, Thread = {}{\n}")
-			<< _Flags
-			<< (umint)pCurrentBlock
-			<< BlockSize
-			<< _ThreadID
-			<< sizeof(void *)*2
-			).f_GetStr()
+		TempStr +=
+			(
+				CFStr::CFormat("Memory Leak, Flags = 0b{sj4,sf0,nfb}, Address = 0x{sj*4,sf0,nh}, Size = 0x{sj*4,sf0,nh}, Thread = {}{\n}")
+				<< _Flags
+				<< (umint)pCurrentBlock
+				<< BlockSize
+				<< _ThreadID
+				<< sizeof(void *) * 2
+			)
+			.f_GetStr()
 		;
 
 		NSys::fg_DebugOutput(TempStr.f_GetStr());
@@ -185,12 +187,7 @@ namespace NMib::NMemory::NPrivate
 			CFStr TempStr;
 			TempStr
 				= CFStr::CFormat("{sj*,a-}   {sl*,a-}   {sj*,a-}   0x{}{\n}")
-				<<
-				(
-					CFStr::CFormat(DMibPFileLineFormat)
-					<< (TraceInfo.m_pSourceFileName ? TraceInfo.m_pSourceFileName : "")
-					<< TraceInfo.m_SourceLine
-				).f_GetStr()
+				<< (CFStr::CFormat(DMibPFileLineFormat) << (TraceInfo.m_pSourceFileName ? TraceInfo.m_pSourceFileName : "") << TraceInfo.m_SourceLine).f_GetStr()
 				<< (LongestSource + 5)
 				<< (TraceInfo.m_pFunctionName ? TraceInfo.m_pFunctionName : "")
 				<< (LongestFunction)

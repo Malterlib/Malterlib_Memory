@@ -10,7 +10,7 @@ namespace NMib::NMemory
 	/// ======
 
 	template <typename tf_CMemoryManager>
-	inline CDefaultMemoryManagerNotifier::CGlobal::CGlobal(tf_CMemoryManager & _MemMan)
+	inline CDefaultMemoryManagerNotifier::CGlobal::CGlobal(tf_CMemoryManager &_MemMan)
 	{
 	}
 

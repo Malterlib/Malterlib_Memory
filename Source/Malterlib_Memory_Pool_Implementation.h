@@ -12,18 +12,16 @@ namespace NMib::NMemory
 	{
 		t_CAggregateData::f_Construct();
 		m_Pool.f_Construct(_NumaNode, t_GrowSize);
-#	if DMibConfig_Memory_Shims_Enable
+#if DMibConfig_Memory_Shims_Enable
 		if constexpr (mc_Reporting)
 		{
 			m_DebugName = (typename t_CDebugStrType::CFormat("Pool {}") << fg_GetTypeName<t_CData>()).f_GetStr();
 			DMibMemoryGoingToReportScope(this, true);
 			DMibMemoryReportAllocatorName(this, m_DebugName.f_GetStr());
 		}
-#	endif
+#endif
 		t_CAggregateData::f_InitDone();
-
 	}
-
 
 	template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 	void CPoolType_Growing::TCPool<t_CAllocator, t_DataSize, t_Alignment>::f_Destruct(ch8 const *_pTypeName)
@@ -37,7 +35,7 @@ namespace NMib::NMemory
 		m_FreeBlocks.f_Destruct();
 
 		CChunk *pChunkToDelete = m_Chunks.f_Pop();
-		while (pChunkToDelete )
+		while (pChunkToDelete)
 		{
 			pChunkToDelete->~CChunk();
 			fs_FreeChunk(pChunkToDelete);
