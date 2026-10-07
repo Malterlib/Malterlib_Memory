@@ -146,6 +146,10 @@ namespace
 				{
 					constexpr fp64 c_Timeout = 60.0;
 
+					// The blocks of the threads that still allocate at exit are not leaks, and reporting leaks would wait for the
+					// arena locks of those threads, which they take again before a waiter gets them
+					fg_GetSys()->f_MemoryManager_DisableLeakReport(true);
+
 					[[maybe_unused]] auto &WaitForLateThread = *g_SubSystem_WaitForLateThread;
 
 					// The threads are still allocating when the process exits, which destroys the memory manager
