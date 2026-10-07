@@ -155,6 +155,9 @@ namespace NMib::NMemory
 			"$sSq7SwiftUIE23makeConditionalMetadatay",
 			"AG::Graph::UpdateStack",
 			"google::protobuf::internal::OnShutdownRun",
+			// macOS 27
+			"dyld-internal", // dyld's functions have no names, so the dyld4:: and getPerThreadBufferFor_dlerror entries no longer match
+			"ptsname",
 			// Process and framework initialization that runs once
 			"_dispatch_once_callout",
 			"_NSEventThread",
