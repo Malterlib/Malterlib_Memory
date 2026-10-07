@@ -25,6 +25,7 @@
 #include <mach/exc.h>
 #include <string.h>
 #include <errno.h>
+#include <spawn.h>
 
 #include "Mig/mach_exc.h"
 #include "Mig/exc.h"
@@ -393,6 +394,8 @@ namespace
 
 		NStorage::TCSharedPointer<CExceptionHandlingState> m_pExceptionHandlingState;
 		NStorage::TCUniquePointer<NThread::CThreadObject> m_pExceptionHandlingThread;
+		CExceptionParameters m_ChildExceptionParams; // The ports the handler replaced; written before m_bChildExceptionParamsValid is set
+		NAtomic::TCAtomic<bool> m_bChildExceptionParamsValid; // Set while the handler is installed
 	};
 
 	constinit NStorage::TCAggregateSimple<CGlobalState> g_GlobalState = {DAggregateInit};
@@ -1445,7 +1448,7 @@ extern "C"
 		return KERN_FAILURE;
 	}
 
-	kern_return_t catch_mach_exception_raise_state_identity
+	static kern_return_t fg_HandleExceptionStateIdentity
 		(
 			mach_port_t _ExceptionPort
 			, mach_port_t _Thread
@@ -1460,15 +1463,15 @@ extern "C"
 			, mach_msg_type_number_t *_pNewStateCount
 		)
 	{
-		if (_Task != mach_task_self())
-			return KERN_FAILURE;
-
-		auto pThread = pthread_from_mach_thread_np(_Thread);
-
 		if (!g_MalterlibMallocOveriddenInstalled)
 			return KERN_FAILURE;
 
-		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((umint)pThread, g_LowLevelGlobalState->m_iThreadLocal);
+		// The exceptions of another task are those of a child that inherited this port. Only the handler that this one replaced
+		// can handle them, as if this process had no handler
+		auto *pJumpBuffer = _Task == mach_task_self()
+			? (jmp_buf *)NSys::fg_Thread_GetLocal((umint)pthread_from_mach_thread_np(_Thread), g_LowLevelGlobalState->m_iThreadLocal)
+			: nullptr
+		;
 		if (pJumpBuffer)
 		{
 			if (*_pFlavor != gc_StateFlavor)
@@ -1561,6 +1564,47 @@ extern "C"
 		}
 
 		return KERN_FAILURE;
+	}
+
+	kern_return_t catch_mach_exception_raise_state_identity
+		(
+			mach_port_t _ExceptionPort
+			, mach_port_t _Thread
+			, mach_port_t _Task
+			, exception_type_t _Exception
+			, mach_exception_data_t _pCodes
+			, mach_msg_type_number_t _CodesCount
+			, int *_pFlavor
+			, const thread_state_t _pOldState
+			, mach_msg_type_number_t _OldStatesCount
+			, thread_state_t _pNewState
+			, mach_msg_type_number_t *_pNewStateCount
+		)
+	{
+		kern_return_t Result = fg_HandleExceptionStateIdentity
+			(
+				_ExceptionPort
+				, _Thread
+				, _Task
+				, _Exception
+				, _pCodes
+				, _CodesCount
+				, _pFlavor
+				, _pOldState
+				, _OldStatesCount
+				, _pNewState
+				, _pNewStateCount
+			)
+		;
+
+		// A request that succeeds leaves its rights to the handler, and the message loop destroys those of one that fails
+		if (Result == KERN_SUCCESS)
+		{
+			mach_port_deallocate(mach_task_self(), _Thread);
+			mach_port_deallocate(mach_task_self(), _Task);
+		}
+
+		return Result;
 	}
 }
 
@@ -1710,9 +1754,8 @@ namespace
 			else
 			{
 				// Children inherit the exception ports, so this port also receives the exceptions of a child that crashes
-				// before it installs a handler of its own or that forwards to its previous handler. The handler fails those, and
-				// the reply is still required: the kernel or the child's handler waits for it, and only a failure lets the
-				// exception go on to the host handler that terminates the child
+				// before it installs a handler of its own or that forwards to its previous handler. The kernel or the child's
+				// handler waits for the reply, also when the handler fails, which passes the exception on to the host handler
 				CExceptionReplyMessage FullReply;
 				auto &Reply = FullReply.Reply_mach_exception_raise_state_identity;
 				auto &ReplyHeader = Reply.Head;
@@ -1841,9 +1884,15 @@ void fg_MalterlibMallocOverride_CanStartThreads()
 
 					fg_MalterlibMallocOverrideInit_UninstallHandler();
 
+					auto &State = *g_GlobalState;
+					State.m_ChildExceptionParams = ExceptionState.m_PreviousParams;
+					State.m_bChildExceptionParamsValid.f_Store(true, NAtomic::gc_MemoryOrder_Release);
+
 					ExceptionState.m_InstalledEvent.f_SetSignaled();
 
 					ExceptionState.f_HandleMessages();
+
+					State.m_bChildExceptionParamsValid.f_Store(false, NAtomic::gc_MemoryOrder_Relaxed);
 					ExceptionState.f_UnInstallHandler();
 
 					fg_MalterlibMallocOverrideInit_ReinstallHandler();
@@ -1913,6 +1962,43 @@ assure_used extern "C" DMibMalterlibOverrideMallocExport void fg_Malterlib__mall
 		g_OriginalFunctions._malloc_fork_parent();
 }
 
+// A spawned child inherits the exception ports, which point at the handler of this process. That handler forwards the
+// exceptions of other tasks to the ports it replaced, which the child gets directly instead, so its exceptions go where
+// they would have gone without the handler, also once this process has exited. A forked child cannot get them, as the
+// rights are not inherited by fork.
+//
+// The parameters are only written when the handler is installed, and a later install replaces the same ports, so they
+// can be read without a lock while the handler is being uninstalled. _pSpawnAttributes is a posix_spawnattr_t. Returns
+// an errno value
+int NMib::NSys::fg_Mem_PrepareSpawnAttributes(void *_pSpawnAttributes)
+{
+	if (!g_MalterlibMallocOveriddenInterposersInstalled)
+		return 0;
+
+	auto &State = *g_GlobalState;
+	if (!State.m_bChildExceptionParamsValid.f_Load(NAtomic::gc_MemoryOrder_Acquire))
+		return 0;
+
+	auto *pSpawnAttributes = (posix_spawnattr_t *)_pSpawnAttributes;
+	auto &Params = State.m_ChildExceptionParams;
+
+	// Only the masks the handler replaced, as the inherited ports of the others are not this process's to change
+	if (int Error = posix_spawnattr_setexceptionports_np(pSpawnAttributes, EXC_MASK_BAD_ACCESS, MACH_PORT_NULL, EXCEPTION_DEFAULT, THREAD_STATE_NONE))
+		return Error;
+
+	for (umint i = 0; i < Params.m_nTypes; ++i)
+	{
+		if (Params.m_Ports[i] == MACH_PORT_NULL || !(Params.m_Masks[i] & EXC_MASK_BAD_ACCESS))
+			continue;
+
+		exception_mask_t Mask = Params.m_Masks[i] & EXC_MASK_BAD_ACCESS;
+		if (int Error = posix_spawnattr_setexceptionports_np(pSpawnAttributes, Mask, Params.m_Ports[i], Params.m_Behaviors[i], Params.m_Flavors[i]))
+			return Error;
+	}
+
+	return 0;
+}
+
 void NMib::NSys::fg_Mem_PrepareFork()
 {
 	if (!g_MalterlibMallocOveriddenInterposersInstalled)
@@ -1976,6 +2062,7 @@ void NMib::NSys::fg_Mem_ForkedChild()
 {
 	if (!g_MalterlibMallocOveriddenInterposersInstalled)
 		return;
+
 	do
 	{
 		auto &LowLevelState = *g_LowLevelGlobalState;

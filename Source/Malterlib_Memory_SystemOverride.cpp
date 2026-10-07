@@ -41,4 +41,10 @@ void NMib::NSys::fg_Mem_ForkedChild()
 void NMib::NSys::fg_Mem_ForkedParent()
 {
 }
+#ifdef DPlatformFamily_macOS
+int NMib::NSys::fg_Mem_PrepareSpawnAttributes(void *_pSpawnAttributes)
+{
+	return 0;
+}
+#endif
 #endif
