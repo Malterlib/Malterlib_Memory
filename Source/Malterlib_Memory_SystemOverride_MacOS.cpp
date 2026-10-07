@@ -1709,15 +1709,23 @@ namespace
 			}
 			else
 			{
-				if (Message.task.name != mach_task_self())
-					continue; // Not our process, could have been forked
-
+				// Children inherit the exception ports, so this port also receives the exceptions of a child that crashes
+				// before it installs a handler of its own or that forwards to its previous handler. The handler fails those, and
+				// the reply is still required: the kernel or the child's handler waits for it, and only a failure lets the
+				// exception go on to the host handler that terminates the child
 				CExceptionReplyMessage FullReply;
 				auto &Reply = FullReply.Reply_mach_exception_raise_state_identity;
 				auto &ReplyHeader = Reply.Head;
 				ReplyHeader.msgh_size = sizeof(Reply);
 				if (!mach_exc_server(&Header, &ReplyHeader))
 					return;
+
+				if (Reply.RetCode != KERN_SUCCESS)
+				{
+					// A failed request leaves its thread and task rights with us. The reply right has moved to the reply
+					Header.msgh_remote_port = MACH_PORT_NULL;
+					mach_msg_destroy(&Header);
+				}
 
 				// Send a reply and exit
 				mach_msg
