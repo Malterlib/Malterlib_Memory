@@ -225,10 +225,14 @@ namespace NMib::NMemory
 #	define DMibMemoryReportExpression(d_Expression) d_Expression
 #	define DMibMemoryReportAlloc(d_MemoryAllocator, d_AllocatorName, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
 		fg_ReportMemoryAlloc((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
-#	define DMibMemoryReportResize(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
-		fg_ReportMemoryResize((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (umint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
-#	define DMibMemoryReportRealloc(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
-		fg_ReportMemoryRealloc((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (umint)d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+#	define DMibMemoryReportResize(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, \
+		d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
+		fg_ReportMemoryResize((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (umint)d_Address, \
+			d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+#	define DMibMemoryReportRealloc(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, \
+		d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo) \
+		fg_ReportMemoryRealloc((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_OldAddress, d_OldSize, d_pOldAllocationInfo, (umint)d_Address, \
+			d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
 #	define DMibMemoryReportFree(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_pAllocationInfo) \
 		fg_ReportMemoryFree((umint)d_MemoryAllocator, d_AllocatorName, (umint)d_Address, d_Size, d_pAllocationInfo)
 #	define DMibMemoryReportGetSize(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_pAllocationInfo) \
@@ -249,8 +253,10 @@ namespace NMib::NMemory
 #	define DMibMemoryReportSaveVar(d_Name, d_Value)
 #	define DMibMemoryReportExpression(d_Expression)
 #	define DMibMemoryReportAlloc(d_MemoryAllocator, d_AllocatorName, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
-#	define DMibMemoryReportResize(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
-#	define DMibMemoryReportRealloc(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+#	define DMibMemoryReportResize(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, \
+		d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
+#	define DMibMemoryReportRealloc(d_MemoryAllocator, d_AllocatorName, d_OldAddress, d_OldSize, d_pOldAllocationInfo, d_Address, \
+		d_RequestedAlignment, d_RequestedSize, d_ReturnedSize, d_nBytesOverhead, d_pAllocationInfo)
 #	define DMibMemoryReportFree(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_pAllocationInfo)
 #	define DMibMemoryReportGetSize(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_pAllocationInfo)
 #	define DMibMemoryReportProtect(d_MemoryAllocator, d_AllocatorName, d_Address, d_Size, d_Protect)
