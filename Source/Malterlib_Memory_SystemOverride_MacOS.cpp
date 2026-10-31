@@ -655,7 +655,8 @@ extern "C"
 #endif
 }
 
-size_t fg_Malterlib_zone_size(malloc_zone_t_known_version *_pZone, const void *_pMemory) /* returns the size of a block or 0 if not in this zone; must be fast, especially for negative answers */
+// Returns the size of a block or 0 if not in this zone; must be fast, especially for negative answers
+size_t fg_Malterlib_zone_size(malloc_zone_t_known_version *_pZone, const void *_pMemory)
 {
 	if (!_pMemory)
 		return 0;
@@ -1178,7 +1179,8 @@ void *fg_Malterlib_zone_malloc_type_malloc_with_options(malloc_zone_t_known_vers
 
 malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 	{
-		.enumerator = [](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t /* enumerates all the malloc pointers in use */
+		// Enumerates all the malloc pointers in use
+		.enumerator = [](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t
 		{
 			return KERN_FAILURE;
 		}
@@ -1224,16 +1226,18 @@ malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 	#else
 		, .enumerate_unavailable_without_blocks= nullptr
 	#endif /* __BLOCKS__ */
-		, .reinit_lock = [](malloc_zone_t_known_version *_pZone) /* Reinitialize zone locks, called only from atfork_child handler. Present in version >= 9. */
+		// Reinitialize zone locks, called only from atfork_child handler. Present in version >= 9.
+		, .reinit_lock = [](malloc_zone_t_known_version *_pZone)
 		{
 		}
-		, .print_task = [](task_t task, unsigned level, vm_address_t zone_address, memory_reader_t reader, print_task_printer_t printer) /* debug print for another process. Present in version >= 11. */
+		// Debug print for another process. Present in version >= 11.
+		, .print_task = [](task_t task, unsigned level, vm_address_t zone_address, memory_reader_t reader, print_task_printer_t printer)
 		{
 		}
 		, .task_statistics = [](task_t task, vm_address_t zone_address, memory_reader_t reader, malloc_statistics_t *stats) /* Present in version >= 12. */
 		{
 		}
-		, .zone_type = 0 /* Identifies the zone type.  0 means unknown/undefined zone type.  Present in version >= 14. */
+		, .zone_type = 0 // Identifies the zone type.  0 means unknown/undefined zone type.  Present in version >= 14.
 	}
 ;
 
@@ -3675,7 +3679,8 @@ extern "C"
 
 	malloc_introspection_t_known_version g_MalterlibMallocZoneZoneIntrospection =
 		{
-			[](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t /* enumerates all the malloc pointers in use */
+			// Enumerates all the malloc pointers in use
+			[](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t
 			{
 				return KERN_FAILURE;
 			}

@@ -10,14 +10,14 @@ public:
 	class CTestClass
 	{
 	public:
-//		CTestClass()
-//		{
-//			DMibTrace("CTestClass()\n", 0);
-//		}
-//		~CTestClass()
-//		{
-////			DMibTrace("~CTestClass()\n", 0);
-	//	}
+		// CTestClass()
+		// {
+		// 	DMibTrace("CTestClass()\n", 0);
+		// }
+		// ~CTestClass()
+		// {
+		// 	DMibTrace("~CTestClass()\n", 0);
+		// }
 		int32 m_Linkage1;
 //		int32 m_Linkage2;
 //		int32 m_Linkage3;

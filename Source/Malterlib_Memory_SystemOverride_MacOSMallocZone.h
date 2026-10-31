@@ -6,15 +6,16 @@
 typedef struct _malloc_zone_t_known_version malloc_zone_t_known_version;
 
 typedef struct malloc_introspection_t_known_version {
-	kern_return_t (* MALLOC_INTROSPECT_FN_PTR(enumerator))(task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder); /* enumerates all the malloc pointers in use */
+	// Enumerates all the malloc pointers in use
+	kern_return_t (* MALLOC_INTROSPECT_FN_PTR(enumerator))(task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder);
 	size_t	(* MALLOC_INTROSPECT_FN_PTR(good_size))(malloc_zone_t_known_version *zone, size_t size);
-	boolean_t 	(* MALLOC_INTROSPECT_FN_PTR(check))(malloc_zone_t_known_version *zone); /* Consistency checker */
-	void	(* MALLOC_INTROSPECT_FN_PTR(print))(malloc_zone_t_known_version *zone, boolean_t verbose); /* Prints zone  */
-	void	(* MALLOC_INTROSPECT_FN_PTR(log))(malloc_zone_t_known_version *zone, void * __unsafe_indexable address); /* Enables logging of activity */
-	void	(* MALLOC_INTROSPECT_FN_PTR(force_lock))(malloc_zone_t_known_version *zone); /* Forces locking zone */
-	void	(* MALLOC_INTROSPECT_FN_PTR(force_unlock))(malloc_zone_t_known_version *zone); /* Forces unlocking zone */
-	void	(* MALLOC_INTROSPECT_FN_PTR(statistics))(malloc_zone_t_known_version *zone, malloc_statistics_t *stats); /* Fills statistics */
-	boolean_t	(* MALLOC_INTROSPECT_FN_PTR(zone_locked))(malloc_zone_t_known_version *zone); /* Are any zone locks held */
+	boolean_t 	(* MALLOC_INTROSPECT_FN_PTR(check))(malloc_zone_t_known_version *zone); // Consistency checker
+	void	(* MALLOC_INTROSPECT_FN_PTR(print))(malloc_zone_t_known_version *zone, boolean_t verbose); // Prints zone
+	void	(* MALLOC_INTROSPECT_FN_PTR(log))(malloc_zone_t_known_version *zone, void * __unsafe_indexable address); // Enables logging of activity
+	void	(* MALLOC_INTROSPECT_FN_PTR(force_lock))(malloc_zone_t_known_version *zone); // Forces locking zone
+	void	(* MALLOC_INTROSPECT_FN_PTR(force_unlock))(malloc_zone_t_known_version *zone); // Forces unlocking zone
+	void	(* MALLOC_INTROSPECT_FN_PTR(statistics))(malloc_zone_t_known_version *zone, malloc_statistics_t *stats); // Fills statistics
+	boolean_t	(* MALLOC_INTROSPECT_FN_PTR(zone_locked))(malloc_zone_t_known_version *zone); // Are any zone locks held
 
 	/* Discharge checking. Present in version >= 7. */
 	boolean_t	(* MALLOC_INTROSPECT_FN_PTR(enable_discharge_checking))(malloc_zone_t_known_version *zone);
@@ -25,10 +26,11 @@ typedef struct malloc_introspection_t_known_version {
 	#else
 	void	*enumerate_unavailable_without_blocks;
 #endif /* __BLOCKS__ */
-	void	(* MALLOC_INTROSPECT_FN_PTR(reinit_lock))(malloc_zone_t_known_version *zone); /* Reinitialize zone locks, called only from atfork_child handler. Present in version >= 9. */
-	void	(* MALLOC_INTROSPECT_FN_PTR(print_task))(task_t task, unsigned level, vm_address_t zone_address, memory_reader_t reader, print_task_printer_t printer); /* debug print for another process. Present in version >= 11. */
-	void	(* MALLOC_INTROSPECT_FN_PTR(task_statistics))(task_t task, vm_address_t zone_address, memory_reader_t reader, malloc_statistics_t *stats); /* Present in version >= 12. */
-	unsigned	zone_type; /* Identifies the zone type.  0 means unknown/undefined zone type.  Present in version >= 14. */
+	void	(* MALLOC_INTROSPECT_FN_PTR(reinit_lock))(malloc_zone_t_known_version *zone); // Reinitialize zone locks, called only from atfork_child handler. Present in version >= 9.
+	// Debug print for another process. Present in version >= 11.
+	void	(* MALLOC_INTROSPECT_FN_PTR(print_task))(task_t task, unsigned level, vm_address_t zone_address, memory_reader_t reader, print_task_printer_t printer);
+	void	(* MALLOC_INTROSPECT_FN_PTR(task_statistics))(task_t task, vm_address_t zone_address, memory_reader_t reader, malloc_statistics_t *stats); // Present in version >= 12.
+	unsigned	zone_type; // Identifies the zone type.  0 means unknown/undefined zone type.  Present in version >= 14.
 } malloc_introspection_t_known_version;
 
 static_assert(sizeof(malloc_introspection_t_known_version) >= sizeof(malloc_introspection_t));

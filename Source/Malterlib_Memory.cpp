@@ -9,6 +9,7 @@ namespace NMib::NMemory
 	// Nobody should add to this list other than Mike & Erik!
 	ch8 const *gc_IgnoreFunctions[] =
 		{
+			"QMutex::QMutex",
 #ifdef DPlatformFamily_macOS
 			"_xpc_dyld_image_callback", // Possible bug in macOS, investigate later
 			"atexit_register",
@@ -227,7 +228,6 @@ namespace NMib::NMemory
 #else
 			"qt_init",
 #endif
-			"QMutex::QMutex",
 			"QMutexPool::get",
 			"QFontEngine::harfbuzzFace",
 			"qHBNewFace",
