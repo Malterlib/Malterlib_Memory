@@ -144,7 +144,7 @@ namespace NMib::NMemory
 	bool TCMemoryManagerArena<t_CParams>::fp_FreeSmallSubSlabs(TCMemoryManagerSlabShared<t_CParams> *_pSlab)
 	{
 		auto SlabType = _pSlab->m_SlabType;
-		for (auto iSubSlab = _pSlab->m_FreeSubSlabs.f_GetIterator(); iSubSlab; )
+		for (auto iSubSlab = _pSlab->m_FreeSubSlabs.f_GetIterator(); iSubSlab;)
 		{
 			auto pSubSlab = &(*iSubSlab);
 			++iSubSlab;
@@ -174,7 +174,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_small void *TCMemoryManagerArena<t_CParams>::f_AllocWithSize(umint &_Size)
 	{
-		void * pAlloc;
+		void *pAlloc;
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
 			if (_Size > t_CParams::mc_SmallSizeSlabsLargestSize) [[likely]]
@@ -189,7 +189,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManagerArena<t_CParams>::f_AllocBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+	void TCMemoryManagerArena<t_CParams>::f_AllocBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
 	{
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
@@ -254,18 +254,10 @@ namespace NMib::NMemory
 #elif DMibPPtrBits == 64
 				constexpr umint c_TooSmallBucket = 2;
 #else
-#error "Implement this"
+#	error "Implement this"
 #endif
 
-				if
-					(
-						SlabBucket <= c_TooSmallBucket
-						||
-						(
-							!t_CParams::mc_bAllowUnalignedFreeList
-							&& ((umint)_pMemory & (sizeof(void *) - 1))
-						)
-					) [[unlikely]]
+				if (SlabBucket <= c_TooSmallBucket || (!t_CParams::mc_bAllowUnalignedFreeList && ((umint)_pMemory & (sizeof(void *) - 1)))) [[unlikely]]
 				{
 					TCMemoryManagerCheckoutLight<t_CParams> Checkout(nullptr);
 					if (_pLocalArena && _pLocalArena->m_pArena == nullptr)
@@ -532,7 +524,7 @@ namespace NMib::NMemory
 				}
 			}
 
-			for (auto pToRemove = pStartRemove; pToRemove < pEnd; )
+			for (auto pToRemove = pStartRemove; pToRemove < pEnd;)
 			{
 				CMemoryManagerSubSlab_NormalLink *pFreeBlock = (CMemoryManagerSubSlab_NormalLink *)pToRemove;
 				if constexpr (t_CParams::mc_bUseFreeBlockCounting)
@@ -725,7 +717,6 @@ namespace NMib::NMemory
 					{
 						if (fp_CheckFree(&*iAlloc, _Flags))
 							bError = true;
-
 					}
 				}
 			}

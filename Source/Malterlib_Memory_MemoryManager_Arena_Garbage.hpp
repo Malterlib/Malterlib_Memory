@@ -107,7 +107,7 @@ namespace NMib::NMemory
 
 		auto pNumaArena = m_pNumaArena;
 
-		for (auto iFreeSlab = m_FreeSlabs.f_GetIterator(); iFreeSlab; )
+		for (auto iFreeSlab = m_FreeSlabs.f_GetIterator(); iFreeSlab;)
 		{
 			auto pFreeSlab = &*iFreeSlab;
 			++iFreeSlab;
@@ -145,7 +145,7 @@ namespace NMib::NMemory
 		if constexpr (!(t_CParams::mc_DeferCleanup & EDeferCleanup_Commit))
 			return NextTimestamp;
 
-		for (auto iSlab = m_SlabsNeedingDecommit.f_GetIterator(); iSlab; )
+		for (auto iSlab = m_SlabsNeedingDecommit.f_GetIterator(); iSlab;)
 		{
 			auto pSlab = &*iSlab;
 			++iSlab;
@@ -208,7 +208,7 @@ namespace NMib::NMemory
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 		DMibFastCheck(_SlabType < t_CParams::mc_NumSizesPerLevel);
 
-		for (auto iSlab = m_SlabsToGarbageCollect[_SlabType].f_GetIterator(); iSlab; )
+		for (auto iSlab = m_SlabsToGarbageCollect[_SlabType].f_GetIterator(); iSlab;)
 		{
 			auto pSlab = &*iSlab;
 			++iSlab;
@@ -292,7 +292,7 @@ namespace NMib::NMemory
 			if constexpr (c_bRetainSubSlabs)
 				nRetain = _bRetain ? t_CParams::mc_nOwnerReclaimRetainSubSlabs : 0;
 
-			for (auto iSlab = m_SlabsToGarbageCollect[i].f_GetIterator(); iSlab; )
+			for (auto iSlab = m_SlabsToGarbageCollect[i].f_GetIterator(); iSlab;)
 			{
 				auto pSlab = &*iSlab;
 				++iSlab;
@@ -331,10 +331,7 @@ namespace NMib::NMemory
 											umint SlabBucket = pData[_Bit].m_Type - 2;
 											umint AlignedSize = (umint(1) << SlabBucket) + (SlabType << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
 
-											bReusable
-												= fp_GetCurrentSubSlabSlot(SlabType, SlabBucket, AlignedSize)->m_pFreeState
-												== &Params.m_pSlab->m_pSubSlabFreeState[_Bit]
-											;
+											bReusable = fp_GetCurrentSubSlabSlot(SlabType, SlabBucket, AlignedSize)->m_pFreeState == &Params.m_pSlab->m_pSubSlabFreeState[_Bit];
 										}
 									}
 
@@ -514,7 +511,7 @@ namespace NMib::NMemory
 
 			// Reinsert as an ascending contiguous run at the head, matching the layout of a
 			// freshly carved sub-slab, so allocations walk sequential addresses again
-			for (umint iBlock = nBlocksInList; iBlock-- > 0; )
+			for (umint iBlock = nBlocksInList; iBlock-- > 0;)
 				pList->f_UnsafeInsertFirst((CMemoryManagerSubSlab_NormalLink *)(pStartRemove + iBlock * AlignedSize));
 		}
 	}
@@ -530,7 +527,7 @@ namespace NMib::NMemory
 
 		for (umint i = 0; i < t_CParams::mc_NumSizesPerLevel; ++i)
 		{
-			for (auto iSlab = m_SlabsToGarbageCollect[i].f_GetIterator(); iSlab; )
+			for (auto iSlab = m_SlabsToGarbageCollect[i].f_GetIterator(); iSlab;)
 			{
 				auto pSlab = &*iSlab;
 				++iSlab;
@@ -586,7 +583,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void TCMemoryManagerArena<t_CParams>::fp_SubSlabNoLongerPending(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab)
 	{
-//			DMibFastCheck(_pSlab->f_GetNumPendingBits() == _pSlab->m_nPendingSubSlabs);
+		// DMibFastCheck(_pSlab->f_GetNumPendingBits() == _pSlab->m_nPendingSubSlabs);
 		bool bRemoved = _pSlab->f_ClearPendingBit(_iSubSlab);
 		DMibFastCheck(bRemoved);
 		if (bRemoved)
@@ -595,6 +592,6 @@ namespace NMib::NMemory
 			--_pSlab->m_nPendingSubSlabs;
 			DMibFastCheck(_pSlab->m_nPendingSubSlabs > 0 || !_pSlab->f_HasPendingBit());
 		}
-//			DMibFastCheck(_pSlab->f_GetNumPendingBits() == _pSlab->m_nPendingSubSlabs);
+		// DMibFastCheck(_pSlab->f_GetNumPendingBits() == _pSlab->m_nPendingSubSlabs);
 	}
 }

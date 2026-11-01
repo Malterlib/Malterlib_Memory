@@ -6,8 +6,8 @@
 namespace NMib::NMemory
 {
 	template <typename t_CParams>
-	template <typename... tfp_CAllocator>
-	TCMemoryManager<t_CParams>::TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator &&..._Params)
+	template <typename ...tfp_CAllocator>
+	TCMemoryManager<t_CParams>::TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator && ..._Params)
 		: t_CParams::CNotifier::CGlobal(*this)
 		, m_Magic(_Config.m_Magic)
 		, m_nMaxArenas(fg_Min(fg_RoundPowerOfTwoUp(_Config.m_nMaxArenas), t_CParams::mc_MaxArenas))
@@ -27,8 +27,7 @@ namespace NMib::NMemory
 					pNumaArena = m_NumaArenas.f_FindEqual(NumaNode);
 					if (!pNumaArena)
 					{
-						pNumaArena =
-							new(m_Allocator.f_Alloc(sizeof(TCMemoryManagerNumaArena<t_CParams>), EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags, NumaNode))
+						pNumaArena = new(m_Allocator.f_Alloc(sizeof(TCMemoryManagerNumaArena<t_CParams>), EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags, NumaNode))
 							TCMemoryManagerNumaArena<t_CParams>(NumaNode, this, m_Magic, m_nMaxArenas != 0)
 						;
 						m_NumaArenas.f_Insert(pNumaArena);
@@ -68,9 +67,9 @@ namespace NMib::NMemory
 				DMibFastCheck(pNumaArena);
 
 				if (_bMove)
-					return new (_pMemory) TCMemoryManagerThreadLocal<t_CParams>(fg_Move(*_pParentArena), pNumaArena);
+					return new(_pMemory) TCMemoryManagerThreadLocal<t_CParams>(fg_Move(*_pParentArena), pNumaArena);
 				else
-					return new (_pMemory) TCMemoryManagerThreadLocal<t_CParams>(pNumaArena);
+					return new(_pMemory) TCMemoryManagerThreadLocal<t_CParams>(pNumaArena);
 			}
 			, [](TCMemoryManagerThreadLocal<t_CParams> *_pArena)
 			{
@@ -88,14 +87,14 @@ namespace NMib::NMemory
 			{
 				return this->m_LocalNumaNodePool.f_ReturnBlock(_Memory.m_pMemory);
 			}
-			, [] (CLocalNumaNode *_pParent, void *_pMemory, bool _bMove) -> CLocalNumaNode *
+			, [](CLocalNumaNode *_pParent, void *_pMemory, bool _bMove) -> CLocalNumaNode *
 			{
 				if (_pParent)
-					return new (_pMemory) CLocalNumaNode(*_pParent);
+					return new(_pMemory) CLocalNumaNode(*_pParent);
 				else
-					return new (_pMemory) CLocalNumaNode();
+					return new(_pMemory) CLocalNumaNode();
 			}
-			, [this] (CLocalNumaNode *_pData)
+			, [this](CLocalNumaNode *_pData)
 			{
 				this->m_LocalNumaNodePool.f_Delete(_pData);
 			}
@@ -202,9 +201,7 @@ namespace NMib::NMemory
 			m_HeapChunks.f_Clear();
 
 			for (auto &Arena : m_NumaArenas)
-			{
 				Arena.m_Heap.f_Destroy();
-			}
 		}
 
 		bool bDoneSomething = true;
@@ -469,7 +466,7 @@ namespace NMib::NMemory
 		bool bError = false;
 		fp_EnumArenas
 			(
-				[&](TCMemoryManagerArena<t_CParams> * _pArena)
+				[&](TCMemoryManagerArena<t_CParams> *_pArena)
 				{
 					if (_pArena->f_CheckFree(_Flags))
 						bError = true;
@@ -480,7 +477,7 @@ namespace NMib::NMemory
 
 		fp_EnumHeaps
 			(
-				[&](TCMemoryManagerArenaHeap<t_CParams> * _pHeap)
+				[&](TCMemoryManagerArenaHeap<t_CParams> *_pHeap)
 				{
 					if (_pHeap->f_CheckFree(_Flags))
 						bError = true;
@@ -531,7 +528,12 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchWithCheckout(umint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+	inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchWithCheckout
+		(
+			umint _Size
+			, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+		)
 	{
 		if (m_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount) [[unlikely]]
 		{
@@ -545,7 +547,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchWithTempCheckout(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+	inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchWithTempCheckout(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
 	{
 		TCMemoryManagerThreadLocal<t_CParams> TempArena{fp_GetAnyNumaArena()};
 		fp_CheckoutHelper(TempArena);
@@ -559,13 +561,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void *TCMemoryManager<t_CParams>::f_Realloc(void * _pMemory, umint &_Size, umint _OldSize)
+	inline_never void *TCMemoryManager<t_CParams>::f_Realloc(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		return f_ReallocInline(_pMemory, _Size, _OldSize);
 	}
 
 	template <typename t_CParams>
-	inline_always void *TCMemoryManager<t_CParams>::f_ReallocInline(void * _pMemory, umint &_Size, umint _OldSize)
+	inline_always void *TCMemoryManager<t_CParams>::f_ReallocInline(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		if (_pMemory)
 		{
@@ -583,13 +585,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void *TCMemoryManager<t_CParams>::f_Resize(void * _pMemory, umint &_Size, umint _OldSize)
+	inline_never void *TCMemoryManager<t_CParams>::f_Resize(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		return f_ResizeInline(_pMemory, _Size, _OldSize);
 	}
 
 	template <typename t_CParams>
-	inline_always void *TCMemoryManager<t_CParams>::f_ResizeInline(void * _pMemory, umint &_Size, umint _OldSize)
+	inline_always void *TCMemoryManager<t_CParams>::f_ResizeInline(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		if (_pMemory)
 		{
@@ -611,13 +613,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never umint TCMemoryManager<t_CParams>::f_Size(void const * _pMemory) const
+	inline_never umint TCMemoryManager<t_CParams>::f_Size(void const *_pMemory) const
 	{
 		return f_SizeInline(_pMemory);
 	}
 
 	template <typename t_CParams>
-	inline_always umint TCMemoryManager<t_CParams>::f_SizeInline(void const * _pMemory) const
+	inline_always umint TCMemoryManager<t_CParams>::f_SizeInline(void const *_pMemory) const
 	{
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
@@ -680,7 +682,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_always umint TCMemoryManager<t_CParams>::f_TrySize(void const * _pMemory) const
+	inline_always umint TCMemoryManager<t_CParams>::f_TrySize(void const *_pMemory) const
 	{
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
@@ -708,7 +710,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	fp32 TCMemoryManager<t_CParams>::f_Overhead(void const * _pMemory)
+	fp32 TCMemoryManager<t_CParams>::f_Overhead(void const *_pMemory)
 	{
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
@@ -736,7 +738,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManager<t_CParams>::f_ContainsBlock(void const * _pMemory)
+	bool TCMemoryManager<t_CParams>::f_ContainsBlock(void const *_pMemory)
 	{
 		DMibPDebugBreak; // Not implemented
 
@@ -775,7 +777,7 @@ namespace NMib::NMemory
 			Arena.m_Heap.f_ForkedChild();
 
 		for (auto &Arena : m_NumaArenas)
-			Arena.m_BackgroundCleanup.f_ForkedChild();;
+			Arena.m_BackgroundCleanup.f_ForkedChild();
 	}
 
 	template <typename t_CParams>
@@ -882,7 +884,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchSlowPath(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+	inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchSlowPath(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
 	{
 		auto *pLocalArena = m_LocalArena.f_TryGet();
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize)
@@ -1035,7 +1037,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManager<t_CParams>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+	void TCMemoryManager<t_CParams>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
 	{
 		_Size = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, _Alignment);
 
@@ -1079,7 +1081,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManager<t_CParams>::fp_FreeSlowPath(void * _pMemory, umint _Size)
+	inline_never void TCMemoryManager<t_CParams>::fp_FreeSlowPath(void *_pMemory, umint _Size)
 	{
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
@@ -1147,9 +1149,7 @@ namespace NMib::NMemory
 				return;
 			}
 			else
-			{
 				DMibFastCheck(_Size == 0);
-			}
 		}
 
 		if constexpr (mc_EnableCallbacks)
@@ -1267,7 +1267,7 @@ namespace NMib::NMemory
 		DMibFastCheck(!_ThreadLocal.m_pArena);
 		fp_CheckoutHelper(_ThreadLocal);
 
-#	if DMibEnableSafeCheck > 0
+#if DMibEnableSafeCheck > 0
 		_ThreadLocal.m_bInLightCheckout = true;
 #endif
 		return this;
@@ -1471,6 +1471,7 @@ namespace NMib::NMemory
 		auto &ThreadLocal = *m_LocalArena;
 		ThreadLocal.f_TemporaryGetBack();
 	}
+
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_TakeOwnership()
 	{
@@ -1570,7 +1571,6 @@ namespace NMib::NMemory
 	TCMemoryManagerCheckout<t_CParams>::TCMemoryManagerCheckout(TCMemoryManager<t_CParams> *_pMemoryManager)
 		: m_pMemoryManager(_pMemoryManager)
 	{
-
 	}
 
 	template <typename t_CParams>
@@ -1589,7 +1589,6 @@ namespace NMib::NMemory
 	///
 	/// Light checkout
 	/// ==============
-
 
 	template <typename t_CParams>
 	TCMemoryManagerCheckoutLight<t_CParams>::TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight &&_Other)
@@ -1613,7 +1612,6 @@ namespace NMib::NMemory
 	TCMemoryManagerCheckoutLight<t_CParams>::TCMemoryManagerCheckoutLight(TCMemoryManager<t_CParams> *_pMemoryManager)
 		: m_pMemoryManager(_pMemoryManager)
 	{
-
 	}
 
 	template <typename t_CParams>

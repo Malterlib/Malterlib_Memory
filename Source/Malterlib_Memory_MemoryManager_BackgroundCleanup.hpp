@@ -12,7 +12,7 @@ namespace NMib::NPlatform
 namespace NMib::NMemory
 {
 	template <typename t_CParams>
-	TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::TCMemoryManagerNumaArenaBackgroundCleanup(TCMemoryManagerNumaArena<t_CParams> * _pNumaArena)
+	TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::TCMemoryManagerNumaArenaBackgroundCleanup(TCMemoryManagerNumaArena<t_CParams> *_pNumaArena)
 		: mp_pNumaArena(_pNumaArena)
 		, mp_bStarted(false)
 		, mp_pMemoryManager(_pNumaArena->m_pMemoryManager)
@@ -170,13 +170,11 @@ namespace NMib::NMemory
 							// since f_RequestCleanup only signals on the flag 0 -> nonzero edge
 							bNeedUpdate = true;
 						}
-
 					}
 #ifdef DMibMemory_CleanupOnUSR1Signal
 					pSubscription.f_Clear();
 #endif
 					return 0;
-
 				}
 				, "MemMan Cleanup"
 				, NSys::fg_Thread_CanRestorePriority() ? EExecutionPriority_BelowNormal : EExecutionPriority_Normal // Raised again for shutdown

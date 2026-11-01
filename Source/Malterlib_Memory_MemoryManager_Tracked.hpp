@@ -10,8 +10,8 @@ namespace NMib::NMemory
 	/// =======
 
 	template <typename t_CSuper>
-	template <typename... tfp_CAllocator>
-	TCMemoryManagerTracked<t_CSuper, void>::TCMemoryManagerTracked(ch8 const *_pName, tfp_CAllocator &&..._Params)
+	template <typename ...tfp_CAllocator>
+	TCMemoryManagerTracked<t_CSuper, void>::TCMemoryManagerTracked(ch8 const *_pName, tfp_CAllocator && ..._Params)
 		: t_CSuper(fg_Forward<tfp_CAllocator>(_Params)...)
 		, mp_pName(_pName)
 	{
@@ -21,7 +21,6 @@ namespace NMib::NMemory
 	template <typename t_CSuper>
 	TCMemoryManagerTracked<t_CSuper, void>::~TCMemoryManagerTracked()
 	{
-
 	}
 
 	template <typename t_CSuper>
@@ -41,7 +40,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void *TCMemoryManagerTracked<t_CSuper, void>::f_AllocWithSizeDebug(umint &_Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+	void *TCMemoryManagerTracked<t_CSuper, void>::f_AllocWithSizeDebug(umint &_Size, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags)
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -79,13 +78,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void TCMemoryManagerTracked<t_CSuper, void>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+	void TCMemoryManagerTracked<t_CSuper, void>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
 	{
 		struct CFunctorOptions
 		{
 			umint m_RequestedSize;
 			umint m_Alignment;
-			NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const *m_pFunctor;
+			NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const *m_pFunctor;
 		};
 
 		CFunctorOptions Options;
@@ -98,7 +97,7 @@ namespace NMib::NMemory
 			(
 				_Size
 				, _Alignment
-				, [this, &Options](void * _pAlloc, umint _Size)
+				, [this, &Options](void *_pAlloc, umint _Size)
 				{
 					(void)this;
 					DMibMemoryGoingToReportScope(this, true);
@@ -110,16 +109,24 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void TCMemoryManagerTracked<t_CSuper, void>::f_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+	void TCMemoryManagerTracked<t_CSuper, void>::f_AllocBatchDebug
+		(
+			umint _Size
+			, umint _Alignment
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, ch8 const *_pFile
+			, uint32 _Line
+			, EHeapDebugFlag _Flags
+		)
 	{
 		struct CFunctorOptions
 		{
-			ch8 const * m_pFile;
+			ch8 const *m_pFile;
 			uint32 m_Line;
 			EHeapDebugFlag m_Flags;
 			umint m_RequestedSize;
 			umint m_Alignment;
-			NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const *m_pFunctor;
+			NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const *m_pFunctor;
 		};
 
 		CFunctorOptions Options;
@@ -135,7 +142,7 @@ namespace NMib::NMemory
 			(
 				_Size
 				, _Alignment
-				, [this, &Options](void * _pAlloc, umint _Size)
+				, [this, &Options](void *_pAlloc, umint _Size)
 				{
 					(void)this;
 					DMibMemoryGoingToReportScope(this, true);
@@ -150,7 +157,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void *TCMemoryManagerTracked<t_CSuper, void>::f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+	void *TCMemoryManagerTracked<t_CSuper, void>::f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags)
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -160,13 +167,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void *TCMemoryManagerTracked<t_CSuper, void>::f_ReallocInline(void * _pMemory, umint &_Size, umint _OldSize)
+	void *TCMemoryManagerTracked<t_CSuper, void>::f_ReallocInline(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		return f_Realloc(_pMemory, _Size, _OldSize);
 	}
 
 	template <typename t_CSuper>
-	void *TCMemoryManagerTracked<t_CSuper, void>::f_Realloc(void * _pMemory, umint &_Size, umint _OldSize)
+	void *TCMemoryManagerTracked<t_CSuper, void>::f_Realloc(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -177,7 +184,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void *TCMemoryManagerTracked<t_CSuper, void>::f_ReallocDebug(void * _pMemory, umint &_Size, umint _OldSize, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+	void *TCMemoryManagerTracked<t_CSuper, void>::f_ReallocDebug(void *_pMemory, umint &_Size, umint _OldSize, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags)
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -188,13 +195,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void *TCMemoryManagerTracked<t_CSuper, void>::f_ResizeInline(void * _pMemory, umint &_Size, umint _OldSize)
+	void *TCMemoryManagerTracked<t_CSuper, void>::f_ResizeInline(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		return f_Resize(_pMemory, _Size, _OldSize);
 	}
 
 	template <typename t_CSuper>
-	void *TCMemoryManagerTracked<t_CSuper, void>::f_Resize(void * _pMemory, umint &_Size, umint _OldSize)
+	void *TCMemoryManagerTracked<t_CSuper, void>::f_Resize(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -205,7 +212,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void *TCMemoryManagerTracked<t_CSuper, void>::f_ResizeDebug(void * _pMemory, umint &_Size, umint _OldSize, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+	void *TCMemoryManagerTracked<t_CSuper, void>::f_ResizeDebug(void *_pMemory, umint &_Size, umint _OldSize, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags)
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -216,13 +223,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	umint TCMemoryManagerTracked<t_CSuper, void>::f_SizeInline(void const * _pMemory) const
+	umint TCMemoryManagerTracked<t_CSuper, void>::f_SizeInline(void const *_pMemory) const
 	{
 		return f_Size(_pMemory);
 	}
 
 	template <typename t_CSuper>
-	umint TCMemoryManagerTracked<t_CSuper, void>::f_Size(void const * _pMemory) const
+	umint TCMemoryManagerTracked<t_CSuper, void>::f_Size(void const *_pMemory) const
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		umint Ret = t_CSuper::f_Size(_pMemory);
@@ -231,7 +238,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	umint TCMemoryManagerTracked<t_CSuper, void>::f_TrySize(void const * _pMemory) const
+	umint TCMemoryManagerTracked<t_CSuper, void>::f_TrySize(void const *_pMemory) const
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		umint Ret = t_CSuper::f_TrySize(_pMemory);
@@ -240,13 +247,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void TCMemoryManagerTracked<t_CSuper, void>::f_FreeInline(void * _pMemory, umint _Size)
+	void TCMemoryManagerTracked<t_CSuper, void>::f_FreeInline(void *_pMemory, umint _Size)
 	{
 		return f_Free(_pMemory, _Size);
 	}
 
 	template <typename t_CSuper>
-	void TCMemoryManagerTracked<t_CSuper, void>::f_Free(void * _pMemory, umint _Size)
+	void TCMemoryManagerTracked<t_CSuper, void>::f_Free(void *_pMemory, umint _Size)
 	{
 		if (!_pMemory)
 			return;
@@ -257,13 +264,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void TCMemoryManagerTracked<t_CSuper, void>::f_FreeNoSizeInline(void * _pMemory)
+	void TCMemoryManagerTracked<t_CSuper, void>::f_FreeNoSizeInline(void *_pMemory)
 	{
 		return f_FreeNoSize(_pMemory);
 	}
 
 	template <typename t_CSuper>
-	void TCMemoryManagerTracked<t_CSuper, void>::f_FreeNoSize(void * _pMemory)
+	void TCMemoryManagerTracked<t_CSuper, void>::f_FreeNoSize(void *_pMemory)
 	{
 		if (!_pMemory)
 			return;
@@ -284,10 +291,9 @@ namespace NMib::NMemory
 	// With allocation info
 	// ====================
 
-
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	template <typename... tfp_CAllocator>
-	TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::TCMemoryManagerTracked(ch8 const *_pName, tfp_CAllocator &&..._Params)
+	template <typename ...tfp_CAllocator>
+	TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::TCMemoryManagerTracked(ch8 const *_pName, tfp_CAllocator && ..._Params)
 		: t_CSuper(fg_Forward<tfp_CAllocator>(_Params)...)
 		, mp_pName(_pName)
 	{
@@ -297,7 +303,6 @@ namespace NMib::NMemory
 	template <typename t_CSuper, typename t_CAllocationInfo>
 	TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::~TCMemoryManagerTracked()
 	{
-
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
@@ -319,7 +324,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocWithSizeDebug(umint &_Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocWithSizeDebug(umint &_Size, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags)
 	{
 		return f_AllocWithSize(_Size);
 	}
@@ -363,13 +368,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
 	{
 		struct CFunctorOptions
 		{
 			umint m_RequestedSize;
 			umint m_Alignment;
-			NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const *m_pFunctor;
+			NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const *m_pFunctor;
 		};
 
 		CFunctorOptions Options;
@@ -385,7 +390,7 @@ namespace NMib::NMemory
 			(
 				Options.m_RequestedSize
 				, _Alignment
-				, [this, &Options](void * _pAlloc, umint _Size)
+				, [this, &Options](void *_pAlloc, umint _Size)
 				{
 					DMibMemoryGoingToReportScope(this, true);
 
@@ -401,7 +406,18 @@ namespace NMib::NMemory
 
 					umint Size = _Size - pPreBlock->m_HeaderSize;
 
-					DMibMemoryReportAlloc(this, mp_pName, pRet, Options.m_Alignment, Options.m_RequestedSize, Size, this->f_Overhead(_pAlloc) + pPreBlock->m_HeaderSize, &pPreBlock->m_AllocationInfo);
+					DMibMemoryReportAlloc
+						(
+							this
+							, mp_pName
+							, pRet
+							, Options.m_Alignment
+							, Options.m_RequestedSize
+							, Size
+							, this->f_Overhead(_pAlloc) + pPreBlock->m_HeaderSize
+							, &pPreBlock->m_AllocationInfo
+						)
+					;
 					return (*Options.m_pFunctor)(pRet, Size);
 				}
 			)
@@ -409,25 +425,33 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocBatchDebug
+		(
+			umint _Size
+			, umint _Alignment
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, ch8 const *_pFile
+			, uint32 _Line
+			, EHeapDebugFlag _Flags
+		)
 	{
 		return f_AllocBatch(_Size, _Alignment, _Functor);
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags)
 	{
 		return f_AllocAlignedWithSize(_Size, _Alignment);
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_ReallocInline(void * _pMemory, umint &_Size, umint _OldSize)
+	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_ReallocInline(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		return f_Realloc(_pMemory, _Size, _OldSize);
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_Realloc(void * _pMemory, umint &_Size, umint _OldSize)
+	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_Realloc(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -474,19 +498,19 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_ReallocDebug(void * _pMemory, umint &_Size, umint _OldSize, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_ReallocDebug(void *_pMemory, umint &_Size, umint _OldSize, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags)
 	{
 		return f_Realloc(_pMemory, _Size, _OldSize);
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_ResizeInline(void * _pMemory, umint &_Size, umint _OldSize)
+	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_ResizeInline(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		return f_Resize(_pMemory, _Size, _OldSize);
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_Resize(void * _pMemory, umint &_Size, umint _OldSize)
+	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_Resize(void *_pMemory, umint &_Size, umint _OldSize)
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -533,19 +557,19 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_ResizeDebug(void * _pMemory, umint &_Size, umint _OldSize, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags)
+	void *TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_ResizeDebug(void *_pMemory, umint &_Size, umint _OldSize, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags)
 	{
 		return f_Resize(_pMemory, _Size, _OldSize);
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	umint TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_SizeInline(void const * _pMemory) const
+	umint TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_SizeInline(void const *_pMemory) const
 	{
 		return f_Size(_pMemory);
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	umint TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_Size(void const * _pMemory) const
+	umint TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_Size(void const *_pMemory) const
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		CPreBlockData *pPreBlock = (CPreBlockData *)_pMemory - 1;
@@ -556,7 +580,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	umint TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_TrySize(void const * _pMemory) const
+	umint TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_TrySize(void const *_pMemory) const
 	{
 		DMibMemoryGoingToReportScope(this, true);
 		CPreBlockData *pPreBlock = (CPreBlockData *)_pMemory - 1;
@@ -567,13 +591,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_FreeInline(void * _pMemory, umint _Size)
+	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_FreeInline(void *_pMemory, umint _Size)
 	{
 		return f_Free(_pMemory, _Size);
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_Free(void * _pMemory, umint _Size)
+	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_Free(void *_pMemory, umint _Size)
 	{
 		if (!_pMemory)
 			return;
@@ -588,13 +612,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_FreeNoSizeInline(void * _pMemory)
+	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_FreeNoSizeInline(void *_pMemory)
 	{
 		return f_FreeNoSize(_pMemory);
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_FreeNoSize(void * _pMemory)
+	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_FreeNoSize(void *_pMemory)
 	{
 		if (!_pMemory)
 			return;

@@ -13,26 +13,16 @@ namespace NMib::NMemory
 	{
 	public:
 		static CCategoriesMemoryReporter *ms_pThis;
-	public:
 
+	public:
 		CCategoriesMemoryReporter();
 		~CCategoriesMemoryReporter();
 
-		void f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName) override;
+		void f_AllocatorName(umint _MemoryAllocator, ch8 const *_pAllocatorName) override;
 		void f_AllocatorDelete(umint _MemoryAllocator) override;
 		void f_ScopeEnter(umint _MemoryAllocator) override;
 		void f_ScopeExit(umint _MemoryAllocator) override;
-		void f_Alloc
-			(
-				umint _MemoryAllocator
-				, umint _Address
-				, umint _RequestedAlignment
-				, umint _RequestedSize
-				, umint _ReturnedSize
-				, fp32 _nBytesOverhead
-				, void *_pAllocationInfo
-			) override
-		;
+		void f_Alloc(umint _MemoryAllocator, umint _Address, umint _RequestedAlignment, umint _RequestedSize, umint _ReturnedSize, fp32 _nBytesOverhead, void *_pAllocationInfo) override;
 		void f_Resize
 			(
 				umint _MemoryAllocator
@@ -45,7 +35,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) override
+			)
+			override
 		;
 		void f_Realloc
 			(
@@ -59,7 +50,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) override
+			)
+			override
 		;
 
 		void f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) override;
@@ -72,7 +64,6 @@ namespace NMib::NMemory
 		void f_Report(bool _bFullReport) override;
 
 	public:
-
 		void fp_ReportAlloc(umint _Size, void *_pAllocationInfo);
 		void fp_ReportFree(umint _Size, void const *_pAllocationInfo);
 

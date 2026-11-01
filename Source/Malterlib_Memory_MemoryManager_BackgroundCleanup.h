@@ -8,7 +8,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct TCMemoryManagerNumaArenaBackgroundCleanup
 	{
-		TCMemoryManagerNumaArenaBackgroundCleanup(TCMemoryManagerNumaArena<t_CParams> * _pNumaArena);
+		TCMemoryManagerNumaArenaBackgroundCleanup(TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
 		~TCMemoryManagerNumaArenaBackgroundCleanup();
 
 		void f_OnNeedCleanup();
@@ -29,12 +29,11 @@ namespace NMib::NMemory
 		void f_Unlock();
 
 	private:
-
 		void fp_StartupThread();
 
 	private:
-		TCMemoryManager<t_CParams> * mp_pMemoryManager;
-		TCMemoryManagerNumaArena<t_CParams> * mp_pNumaArena;
+		TCMemoryManager<t_CParams> *mp_pMemoryManager;
+		TCMemoryManagerNumaArena<t_CParams> *mp_pNumaArena;
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bStarted;
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bWaiting;
 		NMib::NThread::CLowLevelLock mp_GarbageCollectLock;

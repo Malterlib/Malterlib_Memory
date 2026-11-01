@@ -7,22 +7,22 @@
 #	include <memory.h>
 #	include <malloc/malloc.h>
 #	define malloc_usable_size malloc_size
-	void *memalign(umint _Alignment, umint _Size)
-	{
-		void *pRet;
-		posix_memalign(&pRet, _Alignment, _Size);
-		return pRet;
-	}
+void *memalign(umint _Alignment, umint _Size)
+{
+	void *pRet;
+	posix_memalign(&pRet, _Alignment, _Size);
+	return pRet;
+}
 #else
 #	include <malloc.h>
 #endif
 
 #ifdef DArchitechture_x86
-	#define DMibMemoryAssumeAlignment 8
+#	define DMibMemoryAssumeAlignment 8
 #elif defined(DArchitechture_x64)
-	#define DMibMemoryAssumeAlignment 16
+#	define DMibMemoryAssumeAlignment 16
 #else
-	#define DMibMemoryAssumeAlignment 8
+#	define DMibMemoryAssumeAlignment 8
 #endif
 
 #define DMibMemoryCorrectAlignment
@@ -30,7 +30,7 @@
 
 namespace NMib
 {
-	ch8 const* g_pMemoryManagerName = "Linux system memory manager";
+	ch8 const *g_pMemoryManagerName = "Linux system memory manager";
 }
 
 namespace NMib::NMemory
@@ -78,6 +78,7 @@ namespace NMib::NMemory
 #endif
 			return pRet;
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size, umint _Alignment)
 		{
 			if (_Alignment <= DMibMemoryAssumeAlignment)
@@ -97,6 +98,7 @@ namespace NMib::NMemory
 			DMibFastCheck(fg_AlignUp((uint8 *)pRet, DMibMemoryAssumeAlignment) == (uint8 *)pRet);
 			return pRet;
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment)
 		{
 			if (_Alignment <= DMibMemoryAssumeAlignment)
@@ -106,6 +108,7 @@ namespace NMib::NMemory
 			DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
 			return pRet;
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 		{
 			void *pRet = realloc(_pMemory, _Size);
@@ -153,6 +156,7 @@ namespace NMib::NMemory
 		{
 			DMibMemoryReportAllocatorName(g_pMemoryManagerName, g_pMemoryManagerName);
 		}
+
 		inline_always static void DMibCrossmoduleAPI fs_DestroyMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
 			DMibMemoryReportAllocatorDelete(g_pMemoryManagerName, g_pMemoryManagerName);
@@ -175,10 +179,10 @@ namespace NMib::NMemory
 		inline_always static void * DMibCrossmoduleAPI fs_AllocAligned(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment)
 		{
 #ifdef DMibMemoryCorrectAlignment
-#ifdef DMibMemoryAssumeAlignment
+#	ifdef DMibMemoryAssumeAlignment
 			if (_Alignment <= DMibMemoryAssumeAlignment)
 				return CCrossModuleImplementation::fs_Alloc(_pModule, _Size);
-#endif
+#	endif
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
 			void *pRet = memalign(_Alignment, _Size);
@@ -200,6 +204,7 @@ namespace NMib::NMemory
 			return EMemoryManagerFeatureFlag_None;
 		}
 	};
+
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size)
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
@@ -221,17 +226,17 @@ namespace NMib::NMemory
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocAlignedWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size, umint _Alignment)
 	{
 #ifdef DMibMemoryCorrectAlignment
-#ifdef DMibMemoryAssumeAlignment
+#	ifdef DMibMemoryAssumeAlignment
 		if (_Alignment <= DMibMemoryAssumeAlignment)
 			return CCrossModuleImplementation::fs_AllocWithSize(_pModule, _Size);
-#endif
+#	endif
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 		void *pRet = memalign(_Alignment, _Size);
 		DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
-#ifdef DMibMemoryCorectSize
+#	ifdef DMibMemoryCorectSize
 		_Size = malloc_usable_size(pRet);
-#endif
+#	endif
 		DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, _Alignment, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 #else
@@ -239,7 +244,14 @@ namespace NMib::NMemory
 #endif
 	}
 
-	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
+	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Realloc
+		(
+			CMemoryManagerCrossModule *_pModule
+			, void *_pMemory
+			, umint &_Size
+			, umint _OldSize
+			, EAllocationFlag _AllocFlags
+		)
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -254,7 +266,14 @@ namespace NMib::NMemory
 		return pRet;
 	}
 
-	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
+	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Resize
+		(
+			CMemoryManagerCrossModule *_pModule
+			, void *_pMemory
+			, umint &_Size
+			, umint _OldSize
+			, EAllocationFlag _AllocFlags
+		)
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -291,7 +310,7 @@ namespace NMib::NMemory
 		DMibMemoryReportFree(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr);
 	}
 
-	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		umint Ret = malloc_usable_size((void *)_pMemory);
@@ -299,7 +318,7 @@ namespace NMib::NMemory
 		return Ret;
 	}
 
-	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 		DMibPDebugBreak; // Not supported
 		return 0;

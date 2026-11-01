@@ -11,7 +11,6 @@ struct CTest
 	{
 		fg_MalterlibMallocOverrideInit();
 	}
-
 };
 
 CTest g_Test;

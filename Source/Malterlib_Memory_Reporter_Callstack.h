@@ -12,9 +12,9 @@ namespace NMib::NMemory
 	{
 		enum
 		{
-			EMaxStackTraceDepth = 16,
-			EProcessQueueSize = (1 << 17),
-			EProcessQueueThreshold = (EProcessQueueSize/2),
+			EMaxStackTraceDepth      = 16
+			, EProcessQueueSize      = (1 << 17)
+			, EProcessQueueThreshold = (EProcessQueueSize / 2)
 		};
 
 	public:
@@ -23,6 +23,7 @@ namespace NMib::NMemory
 			CSize()
 			{
 			}
+
 			zuint64 m_nAllocations;
 			zuint64 m_nBytes;
 
@@ -31,39 +32,30 @@ namespace NMib::NMemory
 				return NContainer::TCMap<umint, CSize, CSort_Default, CAllocator_NonTrackedHeap>::fs_GetKey(*this);
 			}
 
-			CSize & operator += (CSize const& _Other)
+			CSize &operator += (CSize const &_Other)
 			{
 				m_nAllocations += _Other.m_nAllocations;
 				m_nBytes += _Other.m_nBytes;
 				return *this;
 			}
 
-			auto operator <=> (CSize const& _Other) const noexcept
+			auto operator <=> (CSize const &_Other) const noexcept
 			{
 				return _Other.m_nBytes <=> m_nBytes;
 			}
 		};
-		static CCallstackMemoryReporter *ms_pThis;
-	public:
 
+		static CCallstackMemoryReporter *ms_pThis;
+
+	public:
 		CCallstackMemoryReporter();
 		~CCallstackMemoryReporter();
 
-		void f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName) override;
+		void f_AllocatorName(umint _MemoryAllocator, ch8 const *_pAllocatorName) override;
 		void f_AllocatorDelete(umint _MemoryAllocator) override;
 		void f_ScopeEnter(umint _MemoryAllocator) override;
 		void f_ScopeExit(umint _MemoryAllocator) override;
-		void f_Alloc
-			(
-				umint _MemoryAllocator
-				, umint _Address
-				, umint _RequestedAlignment
-				, umint _RequestedSize
-				, umint _ReturnedSize
-				, fp32 _nBytesOverhead
-				, void *_pAllocationInfo
-			) override
-		;
+		void f_Alloc(umint _MemoryAllocator, umint _Address, umint _RequestedAlignment, umint _RequestedSize, umint _ReturnedSize, fp32 _nBytesOverhead, void *_pAllocationInfo) override;
 		void f_Resize
 			(
 				umint _MemoryAllocator
@@ -76,7 +68,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) override
+			)
+			override
 		;
 		void f_Realloc
 			(
@@ -90,7 +83,8 @@ namespace NMib::NMemory
 				, umint _ReturnedSize
 				, fp32 _nBytesOverhead
 				, void *_pAllocationInfo
-			) override
+			)
+			override
 		;
 
 		void f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo) override;
@@ -103,16 +97,17 @@ namespace NMib::NMemory
 		void f_Report(bool _bFullReport) override;
 
 	private:
-
 		void fp_Report(bool _bFullReport);
 
 		struct CAllocator
 		{
 			NStr::CStrNonTracked m_Name;
 
-			CAllocator() {};
+			CAllocator()
+			{
+			};
 
-			CAllocator(CAllocator const& _Other)
+			CAllocator(CAllocator const &_Other)
 				: m_Name(_Other.m_Name)
 			{
 				m_Name.f_MakeUnique();
@@ -120,7 +115,6 @@ namespace NMib::NMemory
 		};
 
 	private:
-
 		struct COperation
 		{
 			umint m_MemoryAllocator;
@@ -153,7 +147,7 @@ namespace NMib::NMemory
 			NStr::CStrNonTracked m_AllocatorName;
 		};
 
-		void fp_PushToQueue(COperation const& _Op);
+		void fp_PushToQueue(COperation const &_Op);
 		void fp_PushMark();
 		NContainer::TCThreadSafeQueueAtomic<COperation, CAllocator_NonTrackedHeap> m_OperationQueue;
 
@@ -168,8 +162,9 @@ namespace NMib::NMemory
 			umint m_Allocator;
 			umint m_Address;
 
-			auto operator <=> (CAllocationKey const& _Other) const noexcept = default;
+			auto operator <=> (CAllocationKey const &_Other) const noexcept = default;
 		};
+
 		NContainer::TCMap<umint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_Allocators;
 
 		NThread::CMutual m_Lock;
@@ -188,7 +183,9 @@ namespace NMib::NMemory
 
 		struct CCallstack
 		{
-			CCallstack() {};
+			CCallstack()
+			{
+			};
 
 			CCallstack(uint64 _Hash, CMibCodeAddress *_lStack, umint _nStack, umint _MemoryAllocator)
 				: m_Hash(_Hash)
@@ -204,33 +201,33 @@ namespace NMib::NMemory
 			umint m_nCallStack;
 
 			umint m_Allocator;
-			CAllocator* m_pAllocator;
+			CAllocator *m_pAllocator;
 
 			CSize m_Total;
 		};
+
 		NContainer::TCMap<uint64, CCallstack, CSort_Default, CAllocator_NonTrackedHeap> m_Callstacks;
 		NContainer::TCVector<CCallstack, NMemory::CAllocator_NonTrackedHeap> m_Errors;
 
-		CCallstack& fp_GetCallstack(umint _MemoryAllocator, umint _Hash, CMibCodeAddress *_pStack, umint _nStack);
+		CCallstack &fp_GetCallstack(umint _MemoryAllocator, umint _Hash, CMibCodeAddress *_pStack, umint _nStack);
 		static NCryptography::CHashDigest_MD5 fsp_GetStackFingerprint(CMibCodeAddress *_pStack, umint _nStack);
-
 
 		struct CAllocation
 		{
-			CAllocation(umint _Size, CCallstack* _pCallstack)
+			CAllocation(umint _Size, CCallstack *_pCallstack)
 				: m_Size(_Size)
 				, m_pCallstack(_pCallstack)
 			{
 			}
 
 			umint m_Size;
-			CCallstack* m_pCallstack;
+			CCallstack *m_pCallstack;
 			umint m_nIgnoreFree = 0;
 		};
-		NContainer::TCMap<CAllocationKey, CAllocation, CSort_Default, CAllocator_NonTrackedHeap> m_Allocations;
-		bool fp_RegisterAllocation(umint _MemoryAllocator, umint _Address, umint _Size, CCallstack* _pCallstack);
-		CCallstack* fp_RemoveAllocation(umint _MemoryAllocator, umint _Address);
 
+		NContainer::TCMap<CAllocationKey, CAllocation, CSort_Default, CAllocator_NonTrackedHeap> m_Allocations;
+		bool fp_RegisterAllocation(umint _MemoryAllocator, umint _Address, umint _Size, CCallstack *_pCallstack);
+		CCallstack *fp_RemoveAllocation(umint _MemoryAllocator, umint _Address);
 
 		void fp_StartupThread();
 		void fp_ProcessQueue();

@@ -7,8 +7,8 @@ namespace NMib::NMemory
 {
 	enum EMemoryManagerFreeStore
 	{
-		EMemoryManagerFreeStore_ArenaBlockLists // Arena-wide per-size-class lists of free blocks (doubly linked through the blocks)
-		, EMemoryManagerFreeStore_SubSlabLists // Per-size-class lists of sub-slabs; free blocks chained per sub-slab with bump carving
+		EMemoryManagerFreeStore_ArenaBlockLists  // Arena-wide per-size-class lists of free blocks (doubly linked through the blocks)
+		, EMemoryManagerFreeStore_SubSlabLists   // Per-size-class lists of sub-slabs; free blocks chained per sub-slab with bump carving
 		, EMemoryManagerFreeStore_SubSlabBitmaps // Per-size-class lists of sub-slabs; free blocks tracked per sub-slab with bitmaps returning lowest address first
 	};
 
@@ -31,6 +31,7 @@ namespace NMib::NMemory
 		DMibPPackedStruct DMibListLinkDS_Link(CMemoryManagerSubSlab_NormalLinkWithBlocks, m_Link);
 		DMibPPackedStruct uint32 m_nBlocks;
 	};
+
 	DMibPEndPackedStruct;
 
 	struct CMemoryManagerSubSlab_NormalLinkWithoutBlocks

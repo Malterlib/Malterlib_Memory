@@ -21,8 +21,7 @@ namespace NMib
 
 #ifndef DMibPSizedDestructors
 		template <typename t_CData>
-		concept cHas_m_VirtualAllocSize =
-			requires (t_CData const *_pData)
+		concept cHas_m_VirtualAllocSize = requires (t_CData const *_pData)
 			{
 				_pData->m_VirtualAllocSize;
 			}
@@ -32,8 +31,8 @@ namespace NMib
 
 	// The linker proves that every class constructed here has a deleting
 	// destructor that returns the size fg_DeleteObject frees with.
-	template <typename tf_CObjectType, typename tf_CAllocator, typename... tfp_CParams>
-	DMibSizedConstruction tf_CObjectType *fg_ConstructObject(tf_CAllocator &&_Allocator, tfp_CParams &&...p_Params)
+	template <typename tf_CObjectType, typename tf_CAllocator, typename ...tfp_CParams>
+	DMibSizedConstruction tf_CObjectType *fg_ConstructObject(tf_CAllocator &&_Allocator, tfp_CParams && ...p_Params)
 	{
 		static_assert(sizeof(tf_CObjectType) > 0);
 		static_assert(!NTraits::cIsAbstract<tf_CObjectType> || NTraits::cHasVirtualDestructor<tf_CObjectType>);
@@ -160,18 +159,18 @@ namespace NMib
 	template <typename t_CType>
 	inline_small void fg_Delete(t_CType * &_pToDelete);
 
-
-	template <typename t_CType = void, typename... tp_CParams>
+	template <typename t_CType = void, typename ...tp_CParams>
 	class TCConstruct
 	{
-		template <typename tf_CType, typename tf_CAllocator, umint... tp_Indices>
-		typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType *fp_Create(tf_CAllocator &&_Allocator, NMeta::TCIndices<tp_Indices...> const& _IndexSequnce)
+		template <typename tf_CType, typename tf_CAllocator, umint ...tp_Indices>
+		typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType *fp_Create(tf_CAllocator &&_Allocator, NMeta::TCIndices<tp_Indices...> const &_IndexSequnce)
 		{
 			return fg_ConstructObject<typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType>
 				(
 					fg_Forward<tf_CAllocator>(_Allocator)
 					, fg_Forward<tp_CParams>(fg_Get<tp_Indices>(m_Params))...
-				);
+				)
+			;
 		}
 
 	public:
@@ -182,7 +181,7 @@ namespace NMib
 
 		NStorage::TCTuple<NMib::NTraits::TCAddLValueReference<tp_CParams>...> m_Params;
 
-		TCConstruct(NMib::NTraits::TCAddLValueReference<tp_CParams>... p_Params)
+		TCConstruct(NMib::NTraits::TCAddLValueReference<tp_CParams> ...p_Params)
 			: m_Params(p_Params...)
 		{
 		}
@@ -192,49 +191,34 @@ namespace NMib
 		{
 			return fp_Create<tf_CType>(fg_Forward<tf_CAllocator>(_Allocator), NMeta::TCConsecutiveIndices<mc_nParams>());
 		}
-
 	};
 
-	template
-	<
-		template <typename t_COldType> class tf_TCTransformConstruct
-		, typename tf_CType
-		, typename... tfp_CParams
-	>
-	TCConstruct<typename tf_TCTransformConstruct<tf_CType>::CType, tfp_CParams...> &&
-	fg_TransformConstruct(TCConstruct<tf_CType, tfp_CParams...> &&_In)
+	template <template <typename t_COldType> class tf_TCTransformConstruct, typename tf_CType, typename ...tfp_CParams>
+	TCConstruct<typename tf_TCTransformConstruct<tf_CType>::CType, tfp_CParams...> &&fg_TransformConstruct(TCConstruct<tf_CType, tfp_CParams...> &&_In)
 	{
 		return fg_Move((TCConstruct<typename tf_TCTransformConstruct<tf_CType>::CType, tfp_CParams...> &)_In);
 	}
 
-	template
-	<
-		typename tf_CDefaultType
-		, typename tf_CType
-		, typename... tfp_CParams
-	>
+	template <typename tf_CDefaultType, typename tf_CType, typename ...tfp_CParams>
 	TCConstruct<tf_CType, tfp_CParams...> &&fg_MakeConcreteConstruct(TCConstruct<tf_CType, tfp_CParams...> &&_In)
 	{
 		return fg_Move(_In);
 	}
 
-	template
-	<
-		typename tf_CDefaultType
-		, typename... tfp_CParams
-	>
+	template <typename tf_CDefaultType, typename ...tfp_CParams>
 	TCConstruct<tf_CDefaultType, tfp_CParams...> &&fg_MakeConcreteConstruct(TCConstruct<void, tfp_CParams...> &&_In)
 	{
 		return fg_Move((TCConstruct<tf_CDefaultType, tfp_CParams...> &)_In);
 	}
 
-	template <typename tf_CType, typename... tfp_CParams>
-	inline_small TCConstruct<tf_CType, tfp_CParams...> fg_Construct(tfp_CParams &&... p_Params)
+	template <typename tf_CType, typename ...tfp_CParams>
+	inline_small TCConstruct<tf_CType, tfp_CParams...> fg_Construct(tfp_CParams && ...p_Params)
 	{
 		return TCConstruct<tf_CType, tfp_CParams...>((NMib::NTraits::TCAddLValueReference<tfp_CParams>)p_Params...);
 	}
-	template <typename... tfp_CParams>
-	inline_small TCConstruct<void, tfp_CParams...> fg_Construct(tfp_CParams &&... p_Params)
+
+	template <typename ...tfp_CParams>
+	inline_small TCConstruct<void, tfp_CParams...> fg_Construct(tfp_CParams && ...p_Params)
 	{
 		return TCConstruct<void, tfp_CParams...>((NMib::NTraits::TCAddLValueReference<tfp_CParams>)p_Params...);
 	}

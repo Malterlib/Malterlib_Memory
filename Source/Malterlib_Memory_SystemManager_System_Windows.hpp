@@ -2,18 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #ifdef DPlatformFamily_macOS
-#include <malloc/malloc.h>
+#	include <malloc/malloc.h>
 #endif
 
 #ifdef DPlatformFamily_Windows
-#include <windows.h>
+#	include <windows.h>
 #endif
 
 HANDLE g_pMainHeap = nullptr;
 
 namespace NMib
 {
-	ch8 const* g_pMemoryManagerName = "Windows system memory manager";
+	ch8 const *g_pMemoryManagerName = "Windows system memory manager";
 }
 
 namespace NMib::NMemory
@@ -95,7 +95,7 @@ namespace NMib::NMemory
 #endif
 
 			uint8 *pReturn = fg_AlignUp(pMemory + sizeof(CAllocationHeader), Alignment);
-			new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
+			new(pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
 
 			return pReturn;
 		}
@@ -112,7 +112,7 @@ namespace NMib::NMemory
 			Size = HeapSize(g_pMainHeap, 0, pMemory);
 #endif
 			uint8 *pReturn = fg_AlignUp(pMemory + sizeof(CAllocationHeader), Alignment);
-			new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
+			new(pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
 
 			_Size = (pMemory + Size) - pReturn;
 
@@ -135,7 +135,7 @@ namespace NMib::NMemory
 			uint8 *pMemory = (uint8 *)HeapReAlloc(g_pMainHeap, 0, OldHeader.m_pMemory, Size);
 #endif
 			uint8 *pReturn = fg_AlignUp(pMemory + sizeof(CAllocationHeader), Alignment);
-			new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
+			new(pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
 
 			return pReturn;
 		}
@@ -159,7 +159,7 @@ namespace NMib::NMemory
 #endif
 
 			uint8 *pReturn = fg_AlignUp(pMemory + sizeof(CAllocationHeader), Alignment);
-			new (pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
+			new(pReturn - sizeof(CAllocationHeader)) CAllocationHeader{.m_pMemory = pMemory, .m_Size = Size};
 
 			return pReturn;
 		}
@@ -213,14 +213,17 @@ namespace NMib::NMemory
 		{
 			return fg_Local_AllocWithSize(_Size, _Alignment);
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, umint _Size)
 		{
 			return fg_Local_Alloc(_Size, 16);
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocAligned(CMemoryManagerCrossModule *_pModule, umint _Size, umint _Alignment)
 		{
 			return fg_Local_Alloc(_Size, _Alignment);
 		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 		{
 			if (_AllocFlags & EAllocationFlag_SizeNotNeeded)
@@ -327,7 +330,14 @@ namespace NMib::NMemory
 		return pReturn;
 	}
 
-	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
+	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Realloc
+		(
+			CMemoryManagerCrossModule *_pModule
+			, void *_pMemory
+			, umint &_Size
+			, umint _OldSize
+			, EAllocationFlag _AllocFlags
+		)
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -344,7 +354,14 @@ namespace NMib::NMemory
 		return pReturn;
 	}
 
-	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
+	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_Resize
+		(
+			CMemoryManagerCrossModule *_pModule
+			, void *_pMemory
+			, umint &_Size
+			, umint _OldSize
+			, EAllocationFlag _AllocFlags
+		)
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
@@ -381,7 +398,7 @@ namespace NMib::NMemory
 		DMibMemoryReportFree(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr);
 	}
 
-	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 
@@ -392,7 +409,7 @@ namespace NMib::NMemory
 		return Ret;
 	}
 
-	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, const void *_pMemory)
+	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 		DMibPDebugBreak; // Not supported
 		return 0;

@@ -3,82 +3,82 @@
 
 #ifdef DMibMemoryInterpose
 
-#ifndef DMibMemoryInterpose0
-#	define DMibMemoryInterpose0(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (), __VA_ARGS__)
-#endif
-#ifndef DMibMemoryInterpose1
-#	define DMibMemoryInterpose1(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0), __VA_ARGS__)
-#endif
-#ifndef DMibMemoryInterposeCpp1
-#	define DMibMemoryInterposeCpp1 DMibMemoryInterpose1
-#endif
-#ifndef DMibMemoryInterposeCpp2
-#	define DMibMemoryInterposeCpp2 DMibMemoryInterpose2
-#endif
-#ifndef DMibMemoryInterposeCpp3
-#	define DMibMemoryInterposeCpp3 DMibMemoryInterpose3
-#endif
-#ifndef DMibMemoryInterpose2
-#	define DMibMemoryInterpose2(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1), __VA_ARGS__)
-#endif
-#ifndef DMibMemoryInterpose3
-#	define DMibMemoryInterpose3(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2), __VA_ARGS__)
-#endif
-#ifndef DMibMemoryInterpose4
-#	define DMibMemoryInterpose4(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3), __VA_ARGS__)
-#endif
-#ifndef DMibMemoryInterpose5
-#	define DMibMemoryInterpose5(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4), __VA_ARGS__)
-#endif
-#ifndef DMibMemoryInterpose6
-#	define DMibMemoryInterpose6(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5), __VA_ARGS__)
-#endif
-#ifndef DMibMemoryInterpose7
-#	define DMibMemoryInterpose7(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5, _6), __VA_ARGS__)
-#endif
-#ifndef DMibMemoryInterpose8
-#	define DMibMemoryInterpose8(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5, _6, _7), __VA_ARGS__)
-#endif
+#	ifndef DMibMemoryInterpose0
+#		define DMibMemoryInterpose0(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (), __VA_ARGS__)
+#	endif
+#	ifndef DMibMemoryInterpose1
+#		define DMibMemoryInterpose1(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0), __VA_ARGS__)
+#	endif
+#	ifndef DMibMemoryInterposeCpp1
+#		define DMibMemoryInterposeCpp1 DMibMemoryInterpose1
+#	endif
+#	ifndef DMibMemoryInterposeCpp2
+#		define DMibMemoryInterposeCpp2 DMibMemoryInterpose2
+#	endif
+#	ifndef DMibMemoryInterposeCpp3
+#		define DMibMemoryInterposeCpp3 DMibMemoryInterpose3
+#	endif
+#	ifndef DMibMemoryInterpose2
+#		define DMibMemoryInterpose2(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1), __VA_ARGS__)
+#	endif
+#	ifndef DMibMemoryInterpose3
+#		define DMibMemoryInterpose3(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2), __VA_ARGS__)
+#	endif
+#	ifndef DMibMemoryInterpose4
+#		define DMibMemoryInterpose4(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3), __VA_ARGS__)
+#	endif
+#	ifndef DMibMemoryInterpose5
+#		define DMibMemoryInterpose5(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4), __VA_ARGS__)
+#	endif
+#	ifndef DMibMemoryInterpose6
+#		define DMibMemoryInterpose6(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5), __VA_ARGS__)
+#	endif
+#	ifndef DMibMemoryInterpose7
+#		define DMibMemoryInterpose7(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5, _6), __VA_ARGS__)
+#	endif
+#	ifndef DMibMemoryInterpose8
+#		define DMibMemoryInterpose8(d_Return, d_Function, ...) DMibMemoryInterpose(d_Return, d_Function, (_0, _1, _2, _3, _4, _5, _6, _7), __VA_ARGS__)
+#	endif
 #else
 
-#ifndef DMibMemoryInterpose1
-#define DMibMemoryInterpose1 DMibMemoryInterpose0
-#endif
-#ifndef DMibMemoryInterposeCpp1
-#define DMibMemoryInterposeCpp1 DMibMemoryInterpose0
-#endif
-#ifndef DMibMemoryInterposeCpp2
-#define DMibMemoryInterposeCpp2 DMibMemoryInterpose0
-#endif
-#ifndef DMibMemoryInterposeCpp3
-#define DMibMemoryInterposeCpp3 DMibMemoryInterpose0
-#endif
-#ifndef DMibMemoryInterpose2
-#define DMibMemoryInterpose2 DMibMemoryInterpose0
-#endif
-#ifndef DMibMemoryInterpose3
-#define DMibMemoryInterpose3 DMibMemoryInterpose0
-#endif
-#ifndef DMibMemoryInterpose4
-#define DMibMemoryInterpose4 DMibMemoryInterpose0
-#endif
-#ifndef DMibMemoryInterpose5
-#define DMibMemoryInterpose5 DMibMemoryInterpose0
-#endif
-#ifndef DMibMemoryInterpose6
-#define DMibMemoryInterpose6 DMibMemoryInterpose0
-#endif
-#ifndef DMibMemoryInterpose7
-#define DMibMemoryInterpose7 DMibMemoryInterpose0
-#endif
-#ifndef DMibMemoryInterpose8
-#define DMibMemoryInterpose8 DMibMemoryInterpose0
-#endif
+#	ifndef DMibMemoryInterpose1
+#		define DMibMemoryInterpose1 DMibMemoryInterpose0
+#	endif
+#	ifndef DMibMemoryInterposeCpp1
+#		define DMibMemoryInterposeCpp1 DMibMemoryInterpose0
+#	endif
+#	ifndef DMibMemoryInterposeCpp2
+#		define DMibMemoryInterposeCpp2 DMibMemoryInterpose0
+#	endif
+#	ifndef DMibMemoryInterposeCpp3
+#		define DMibMemoryInterposeCpp3 DMibMemoryInterpose0
+#	endif
+#	ifndef DMibMemoryInterpose2
+#		define DMibMemoryInterpose2 DMibMemoryInterpose0
+#	endif
+#	ifndef DMibMemoryInterpose3
+#		define DMibMemoryInterpose3 DMibMemoryInterpose0
+#	endif
+#	ifndef DMibMemoryInterpose4
+#		define DMibMemoryInterpose4 DMibMemoryInterpose0
+#	endif
+#	ifndef DMibMemoryInterpose5
+#		define DMibMemoryInterpose5 DMibMemoryInterpose0
+#	endif
+#	ifndef DMibMemoryInterpose6
+#		define DMibMemoryInterpose6 DMibMemoryInterpose0
+#	endif
+#	ifndef DMibMemoryInterpose7
+#		define DMibMemoryInterpose7 DMibMemoryInterpose0
+#	endif
+#	ifndef DMibMemoryInterpose8
+#		define DMibMemoryInterpose8 DMibMemoryInterpose0
+#	endif
 
 #endif
 
 #if defined(DMibMemoryInterpose_Hooks)
-#define DMibMemoryInterpose_SomeHooks
+#	define DMibMemoryInterpose_SomeHooks
 #endif
 
 #ifndef DMibMemoryInterpose_SomeHooks
@@ -102,24 +102,24 @@ DMibMemoryInterpose1(int, malloc_make_nonpurgeable, void *_0)
 DMibMemoryInterpose1(void, malloc_zone_register, malloc_zone_t *_0)
 DMibMemoryInterpose1(void, malloc_zone_unregister, malloc_zone_t *_0)
 DMibMemoryInterpose2(void, malloc_set_zone_name, malloc_zone_t *_0, const char *_1)
-#ifndef DMibMemoryInterpose_Hooks
+#	ifndef DMibMemoryInterpose_Hooks
 DMibMemoryInterpose1(const char *, malloc_get_zone_name, malloc_zone_t *_0)
-#endif
+#	endif
 DMibMemoryInterpose2(size_t, malloc_zone_pressure_relief, malloc_zone_t *_0, size_t _1)
 DMibMemoryInterpose4(kern_return_t, malloc_get_all_zones, task_t _0, memory_reader_t _1, vm_address_t **_2, unsigned *_3)
 DMibMemoryInterpose1(void, malloc_zone_print_ptr_info, void *_0)
-#ifndef DMibMemoryInterpose_Hooks
+#	ifndef DMibMemoryInterpose_Hooks
 DMibMemoryInterpose1(boolean_t, malloc_zone_check, malloc_zone_t *_0)
-#endif
+#	endif
 DMibMemoryInterpose2(void, malloc_zone_print, malloc_zone_t *_0, boolean_t _1)
-#ifndef DMibMemoryInterpose_Hooks
+#	ifndef DMibMemoryInterpose_Hooks
 DMibMemoryInterpose2(void, malloc_zone_statistics, malloc_zone_t *_0, malloc_statistics_t *_1)
-#endif
+#	endif
 DMibMemoryInterpose2(void, malloc_zone_log, malloc_zone_t *_0, void *_1)
-#ifndef DMibMemoryInterpose_Hooks
+#	ifndef DMibMemoryInterpose_Hooks
 DMibMemoryInterpose1(boolean_t, malloc_zone_enable_discharge_checking, malloc_zone_t *_0)
 DMibMemoryInterpose1(void, malloc_zone_disable_discharge_checking, malloc_zone_t *_0)
-#endif
+#	endif
 DMibMemoryInterpose2(void, malloc_zone_discharge, malloc_zone_t *_0, void * _1)
 DMibMemoryInterpose2(void, malloc_zone_enumerate_discharged_pointers, malloc_zone_t *_0, void (^_1)(void *memory, void *info))
 
@@ -158,7 +158,7 @@ DMibMemoryInterpose4(int, malloc_type_posix_memalign, void **_0, size_t _1, size
 
 DMibMemoryInterpose1(int, malloc_jumpstart, int _0)
 
-#ifndef DMibMemoryInterpose_Hooks
+#	ifndef DMibMemoryInterpose_Hooks
 DMibMemoryInterposeCpp1(void *, _Znam, size_t _0)
 DMibMemoryInterposeCpp1(void *, _ZnamRKSt9nothrow_t, size_t _0)
 DMibMemoryInterposeCpp2(void *, _ZnamSt11align_val_t, size_t _0, size_t _1)
@@ -167,20 +167,20 @@ DMibMemoryInterposeCpp1(void *, _Znwm, size_t _0)
 DMibMemoryInterposeCpp1(void *, _ZnwmRKSt9nothrow_t, size_t _0)
 DMibMemoryInterposeCpp2(void *, _ZnwmSt11align_val_t, size_t _0, size_t _1)
 DMibMemoryInterposeCpp2(void *, _ZnwmSt11align_val_tRKSt9nothrow_t, size_t _0, size_t _1)
-DMibMemoryInterposeCpp1(void , _ZdaPv, void *_0)
-DMibMemoryInterposeCpp1(void , _ZdaPvRKSt9nothrow_t, void *_0)
-DMibMemoryInterposeCpp2(void , _ZdaPvSt11align_val_t, void *_0, size_t _1)
-DMibMemoryInterposeCpp2(void , _ZdaPvSt11align_val_tRKSt9nothrow_t, void *_0, size_t _1)
-DMibMemoryInterposeCpp2(void , _ZdaPvm, void *_0, size_t _1)
-DMibMemoryInterposeCpp3(void , _ZdaPvmSt11align_val_t, void *_0, size_t _1, size_t _2)
-DMibMemoryInterposeCpp1(void , _ZdlPv, void *_0)
-DMibMemoryInterposeCpp1(void , _ZdlPvRKSt9nothrow_t, void *_0)
-DMibMemoryInterposeCpp2(void , _ZdlPvSt11align_val_t, void *_0, size_t _1)
-DMibMemoryInterposeCpp2(void , _ZdlPvSt11align_val_tRKSt9nothrow_t, void *_0, size_t _1)
-DMibMemoryInterposeCpp2(void , _ZdlPvm, void *_0, size_t _1)
-DMibMemoryInterposeCpp3(void , _ZdlPvmSt11align_val_t, void *_0, size_t _1, size_t _2)
+DMibMemoryInterposeCpp1(void, _ZdaPv, void *_0)
+DMibMemoryInterposeCpp1(void, _ZdaPvRKSt9nothrow_t, void *_0)
+DMibMemoryInterposeCpp2(void, _ZdaPvSt11align_val_t, void *_0, size_t _1)
+DMibMemoryInterposeCpp2(void, _ZdaPvSt11align_val_tRKSt9nothrow_t, void *_0, size_t _1)
+DMibMemoryInterposeCpp2(void, _ZdaPvm, void *_0, size_t _1)
+DMibMemoryInterposeCpp3(void, _ZdaPvmSt11align_val_t, void *_0, size_t _1, size_t _2)
+DMibMemoryInterposeCpp1(void, _ZdlPv, void *_0)
+DMibMemoryInterposeCpp1(void, _ZdlPvRKSt9nothrow_t, void *_0)
+DMibMemoryInterposeCpp2(void, _ZdlPvSt11align_val_t, void *_0, size_t _1)
+DMibMemoryInterposeCpp2(void, _ZdlPvSt11align_val_tRKSt9nothrow_t, void *_0, size_t _1)
+DMibMemoryInterposeCpp2(void, _ZdlPvm, void *_0, size_t _1)
+DMibMemoryInterposeCpp3(void, _ZdlPvmSt11align_val_t, void *_0, size_t _1, size_t _2)
 
-#endif
+#	endif
 
 #endif
 
@@ -203,7 +203,7 @@ DMibMemoryInterpose0(void, _malloc_fork_prepare)
 DMibMemoryInterpose0(void, _malloc_fork_child)
 DMibMemoryInterpose0(void, _malloc_fork_parent)
 #if DMibConfig_Thread_DebugThreadLocals
-DMibMemoryInterpose2(int, pthread_key_create, pthread_key_t *_0, void (* _1)(void *))
+DMibMemoryInterpose2(int, pthread_key_create, pthread_key_t *_0, void (*_1)(void *))
 DMibMemoryInterpose1(int, pthread_key_delete, pthread_key_t _0)
 #endif
 
@@ -211,7 +211,18 @@ DMibMemoryInterpose1(void, __exit, int _0)
 DMibMemoryInterpose1(void, _exit, int _0)
 
 // This needs to be last, as it will override the function used to allocate memory vm_region_64
-DMibMemoryInterpose7(mach_msg_return_t, mach_msg, mach_msg_header_t *_0, mach_msg_option_t _1, mach_msg_size_t _2, mach_msg_size_t _3, mach_port_name_t _4, mach_msg_timeout_t _5, mach_port_name_t _6)
+DMibMemoryInterpose7
+	(
+		mach_msg_return_t
+		, mach_msg
+		, mach_msg_header_t *_0
+		, mach_msg_option_t _1
+		, mach_msg_size_t _2
+		, mach_msg_size_t _3
+		, mach_port_name_t _4
+		, mach_msg_timeout_t _5
+		, mach_port_name_t _6
+	)
 
 /* Unimplemented:
 	__mach_stack_logging_shared_memory_address

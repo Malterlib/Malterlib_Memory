@@ -12,7 +12,6 @@ using namespace NMib::NMemory;
 using namespace NMib::NStr;
 using namespace NMib;
 
-
 namespace NMib::NSys::NPrivate
 {
 	extern umint g_PageSize;

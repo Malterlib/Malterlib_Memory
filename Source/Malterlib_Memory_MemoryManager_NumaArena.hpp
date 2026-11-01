@@ -271,7 +271,7 @@ namespace NMib::NMemory
 				{
 					bTryAgain = false;
 					DMibLock(m_ArenasNeedCleanupLock);
-					for (auto pArena = m_ArenasNeedCleanup.f_GetFirst(); pArena; )
+					for (auto pArena = m_ArenasNeedCleanup.f_GetFirst(); pArena;)
 					{
 						if (!pArena->m_CleanupLink.f_IsInList())
 						{
@@ -298,7 +298,7 @@ namespace NMib::NMemory
 			DMibLock(m_FreeSlabsLock);
 
 			bool bAnotherCleanup = false;
-			for (auto iFreeSlab = m_FreeSlabs.f_GetIterator(); iFreeSlab; )
+			for (auto iFreeSlab = m_FreeSlabs.f_GetIterator(); iFreeSlab;)
 			{
 				auto pFreeSlab = &*iFreeSlab;
 				++iFreeSlab;
@@ -329,7 +329,7 @@ namespace NMib::NMemory
 
 			if (_bDecommit)
 			{
-				for (auto iSlab = m_FreeSlabsNeedingDecommit.f_GetIterator(); iSlab; )
+				for (auto iSlab = m_FreeSlabsNeedingDecommit.f_GetIterator(); iSlab;)
 				{
 					auto pSlab = &*iSlab;
 					++iSlab;
@@ -454,7 +454,7 @@ namespace NMib::NMemory
 	/// This happens when we are recreating the thread local for use in a new numa node
 	/// We need to return the checkin and check it out for the new numa node
 	template <typename t_CParams>
-	TCMemoryManagerThreadLocal<t_CParams>::TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal && _Other, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena)
+	TCMemoryManagerThreadLocal<t_CParams>::TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal &&_Other, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena)
 		: m_pNumaArena(_pNumaArena)
 		, m_TemporaryReturnCheckoutCount(_Other.m_TemporaryReturnCheckoutCount)
 		, m_bLimited(_pNumaArena->m_bLimitedArenas)
@@ -583,7 +583,6 @@ namespace NMib::NMemory
 		m_pArena = nullptr;
 		DMibFastCheck(m_bLimited || !m_pPreferredArena || m_pPreferredArena == pArena);
 		m_pPreferredArena = pArena;
-
 	}
 
 	template <typename t_CParams>

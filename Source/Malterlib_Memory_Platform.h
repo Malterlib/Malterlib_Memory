@@ -72,7 +72,7 @@ namespace NMib::NMemory::NPlatform
 }
 
 #ifndef DMibPNoShortCuts
-	using namespace NMib::NMemory;
+using namespace NMib::NMemory;
 #endif
 
 #include "Malterlib_Memory_Platform.hpp"

@@ -24,11 +24,12 @@ namespace NMib::NMemory
 		class CCompare
 		{
 		public:
-			inline_small ch8 const *operator() (CMemoryCategory const &_Node) const
+			inline_small ch8 const *operator () (CMemoryCategory const &_Node) const
 			{
 				return _Node.m_pName;
 			}
-			COrdering_Partial operator() (ch8 const *_pLeft, ch8 const *_pRight) const
+
+			COrdering_Partial operator () (ch8 const *_pLeft, ch8 const *_pRight) const
 			{
 				return NStr::fg_StrCmp(_pLeft, _pRight) <=> 0;
 			}
@@ -53,18 +54,22 @@ namespace NMib::NMemory
 			, mp_pNewCategory(_pScope)
 		{
 		}
+
 		~CMemoryCategoryScope()
 		{
 			fg_Mem_SetCategory(mp_pOldCategory);
 		}
+
 		void f_Suspend() noexcept override
 		{
 			fg_Mem_SetCategory(mp_pOldCategory);
 		}
+
 		void f_ResumeNoExcept() noexcept override
 		{
 			mp_pOldCategory = fg_Mem_SetCategory(mp_pNewCategory);
 		}
+
 	private:
 		CMemoryCategory *mp_pNewCategory;
 		CMemoryCategory *mp_pOldCategory;
@@ -92,5 +97,4 @@ namespace NMib::NMemory
 #	define DMemoryDefineDynamicCategory DMibMemoryDefineDynamicCategory
 #	define DMemoryCategory DMibMemoryCategory
 #endif
-
 }

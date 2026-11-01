@@ -66,6 +66,7 @@ namespace NMib::NMemory
 			: m_Node(_Node)
 		{
 		}
+
 		CLocalNumaNode()
 			: m_Node(ENumaNode_Default)
 		{
@@ -89,8 +90,8 @@ namespace NMib::NMemory
 	{
 		using CParams = t_CParams;
 
-		template <typename... tfp_CAllocator>
-		TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator &&..._Params);
+		template <typename ...tfp_CAllocator>
+		TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator && ..._Params);
 
 		~TCMemoryManager();
 
@@ -116,24 +117,25 @@ namespace NMib::NMemory
 		void *f_AllocAlignedWithSizeInline(umint &_Size, umint _Alignment);
 		inline_never void *f_AllocAligned(umint _Size, umint _Alignment);
 		void *f_AllocAlignedInline(umint _Size, umint _Alignment);
-		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
-		void *f_Realloc(void * _pMemory, umint &_Size, umint _OldSize);
-		void *f_ReallocInline(void * _pMemory, umint &_Size, umint _OldSize);
-		void *f_Resize(void * _pMemory, umint &_Size, umint _OldSize);
-		void *f_ResizeInline(void * _pMemory, umint &_Size, umint _OldSize);
-		umint f_Size(void const * _pMemory) const;
-		umint f_TrySize(void const * _pMemory) const; // Warning, this function will cause can cause an access violatino if _pMemory is not part of this heap, it's up to the caller to handle this exception
-		umint f_SizeInline(void const * _pMemory) const;
-		fp32 f_Overhead(void const * _pMemory);
-		bool f_ContainsBlock(void const * _pMemory);
+		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void *f_Realloc(void *_pMemory, umint &_Size, umint _OldSize);
+		void *f_ReallocInline(void *_pMemory, umint &_Size, umint _OldSize);
+		void *f_Resize(void *_pMemory, umint &_Size, umint _OldSize);
+		void *f_ResizeInline(void *_pMemory, umint &_Size, umint _OldSize);
+		umint f_Size(void const *_pMemory) const;
+		// Warning, this function will cause can cause an access violatino if _pMemory is not part of this heap, it's up to the caller to handle this exception
+		umint f_TrySize(void const *_pMemory) const;
+		umint f_SizeInline(void const *_pMemory) const;
+		fp32 f_Overhead(void const *_pMemory);
+		bool f_ContainsBlock(void const *_pMemory);
 
 		uint64 f_GetMagic() const;
 		TCMemoryManager *f_GetMemoryManager(void const *_pMemory); // Will only work between managers that share the same magic
 
-		void f_Free(void * _pMemory, umint _Size);
-		void f_FreeNoSize(void * _pMemory);
-		void f_FreeInline(void * _pMemory, umint _Size);
-		void f_FreeNoSizeInline(void * _pMemory);
+		void f_Free(void *_pMemory, umint _Size);
+		void f_FreeNoSize(void *_pMemory);
+		void f_FreeInline(void *_pMemory, umint _Size);
+		void f_FreeNoSizeInline(void *_pMemory);
 		umint f_SizePadded(umint _Size);
 
 		void f_PrepareFork();
@@ -174,9 +176,9 @@ namespace NMib::NMemory
 
 	private:
 		void *fp_AllocAlignedSlowPath(umint &_Size, umint _Alignment);
-		void fp_AllocBatchSlowPath(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
+		void fp_AllocBatchSlowPath(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
 
-		void fp_FreeSlowPath(void * _pMemory, umint _Size);
+		void fp_FreeSlowPath(void *_pMemory, umint _Size);
 
 		TCMemoryManagerNumaArena<t_CParams> *fp_GetAnyNumaArena();
 
@@ -188,8 +190,8 @@ namespace NMib::NMemory
 		void *fp_AllocWithCheckout(umint &_Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena);
 		void *fp_AllocWithTempCheckout(umint &_Size);
 
-		void fp_AllocBatchWithCheckout(umint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
-		void fp_AllocBatchWithTempCheckout(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
+		void fp_AllocBatchWithCheckout(umint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void fp_AllocBatchWithTempCheckout(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
 
 		void fp_ProcessArenaMessages();
 
@@ -253,18 +255,14 @@ namespace NMib::NMemory
 
 		TCPool<CLocalNumaNode, 8, NThread::CLowLevelLock, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_LocalNumaNodePool;
 
-		NThread::TCThreadLocalDynamic
-			<
-				CLocalNumaNode
-				, NThread::EThreadLocalFlag_Inherit
-			> m_LocalNumaNode
-		;
+		NThread::TCThreadLocalDynamic<CLocalNumaNode, NThread::EThreadLocalFlag_Inherit> m_LocalNumaNode;
 
 		NThread::TCThreadLocalDynamic
 			<
 				TCMemoryManagerThreadLocal<t_CParams>
 				, NThread::EThreadLocalFlag_AlwaysCreated | NThread::EThreadLocalFlag_FastThreadLocal | NThread::EThreadLocalFlag_Inherit
-			> m_LocalArena
+			>
+			m_LocalArena
 		;
 
 		mutable NThread::CMutualManyRead m_HeapChunksLock;

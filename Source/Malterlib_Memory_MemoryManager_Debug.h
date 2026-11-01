@@ -13,22 +13,23 @@ namespace NMib::NMemory
 	{
 		enum
 		{
-			mc_bCheckModifyAfterFree	= true
-			, mc_bAsanPoisioning		= true
-			, mc_bFillAllocated			= true
-			, mc_StackTraceDepth		= 64
-			, mc_nPreGuardBytes			= sizeof(umint) * 2
-			, mc_nPostGuardBytes		= sizeof(umint) * 2
-			, mc_Fill_Free				= 0xDD
-			, mc_Fill_Allocated			= 0xCD
-			, mc_Fill_Guard				= 0xFD
-			, mc_bCanAllocateNonTracked	= true // Used in non-tracked heap to break recursive dependency on non-tracked heap
-			, mc_bFreeValidation		= true // Enables validation of free blocks (double free)
-			, mc_bEnumeration			= true // Enables enumeration. Needed for reporting leaks.
-			, mc_bTraceLeaks			= true // Enables leak tracing
-			, mc_bAssertOnMemoryLeak	= false
+			mc_bCheckModifyAfterFree    = true
+			, mc_bAsanPoisioning        = true
+			, mc_bFillAllocated         = true
+			, mc_StackTraceDepth        = 64
+			, mc_nPreGuardBytes         = sizeof(umint) * 2
+			, mc_nPostGuardBytes        = sizeof(umint) * 2
+			, mc_Fill_Free              = 0xDD
+			, mc_Fill_Allocated         = 0xCD
+			, mc_Fill_Guard             = 0xFD
+			, mc_bCanAllocateNonTracked = true // Used in non-tracked heap to break recursive dependency on non-tracked heap
+			, mc_bFreeValidation        = true // Enables validation of free blocks (double free)
+			, mc_bEnumeration           = true // Enables enumeration. Needed for reporting leaks.
+			, mc_bTraceLeaks            = true // Enables leak tracing
+			, mc_bAssertOnMemoryLeak    = false
 		};
 	};
+
 	template <typename t_CParams, bool t_bException, typename t_COptions = CMemoryManagerDebugOptionsDefault>
 	struct TCMemoryManagerDebug;
 
@@ -64,7 +65,7 @@ namespace NMib::NMemory
 				umint m_nCallStack;
 				umint m_AllocID = 0;
 
-				uint8 * f_GetAddress() const;
+				uint8 *f_GetAddress() const;
 			};
 
 			struct CGlobal;
@@ -85,7 +86,7 @@ namespace NMib::NMemory
 				void f_OnFillFree(uint8 *_pMemory, umint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
 				bool f_OnCheckFree(uint8 *_pUntouchedMemory, umint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
 
-				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2*1024*1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
+				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2 * 1024 * 1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
 					m_Allocations
 				;
 				CGlobal *m_pGlobal;
@@ -106,7 +107,7 @@ namespace NMib::NMemory
 				void f_OnFillFree(uint8 *_pMemory, umint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
 				bool f_OnCheckFree(uint8 *_pUntouchedMemory, umint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
 
-				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2*1024*1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
+				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2 * 1024 * 1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
 					m_Allocations
 				;
 				CGlobal *m_pGlobal;
@@ -130,12 +131,11 @@ namespace NMib::NMemory
 				align_cacheline NAtomic::TCAtomic<umint> m_AllocIDCounter = 0;
 				align_cacheline NThread::CMutual m_Lock;
 
-				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2*1024*1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
+				NContainer::TCMapWithPool<uint8 *, CAllocInfo, NMib::CSort_Default, typename t_CParams::CAllocator, (2 * 1024 * 1024) / sizeof(CAllocInfo), NMib::NMemory::CPoolType_Growing>
 					m_Allocations
 				;
 			};
 		};
-
 	};
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -149,8 +149,8 @@ namespace NMib::NMemory
 		using CSuper = TCMemoryManager<CParams>;
 
 	public:
-		template <typename... tfp_CAllocator>
-		TCMemoryManagerDebug(tfp_CAllocator &&..._Params);
+		template <typename ...tfp_CAllocator>
+		TCMemoryManagerDebug(tfp_CAllocator && ..._Params);
 
 		~TCMemoryManagerDebug();
 
@@ -160,29 +160,38 @@ namespace NMib::NMemory
 		void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment);
 		void *f_AllocAligned(umint _Size, umint _Alignment);
 		void *f_AllocAlignedWithSizeInline(umint &_Size, umint _Alignment);
-		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor);
+		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
 
-		void *f_Realloc(void * _pMemory, umint &_Size, umint _OldSize);
-		void *f_ReallocInline(void * _pMemory, umint &_Size, umint _OldSize);
-		void *f_Resize(void * _pMemory, umint &_Size, umint _OldSize);
-		void *f_ResizeInline(void * _pMemory, umint &_Size, umint _OldSize);
+		void *f_Realloc(void *_pMemory, umint &_Size, umint _OldSize);
+		void *f_ReallocInline(void *_pMemory, umint &_Size, umint _OldSize);
+		void *f_Resize(void *_pMemory, umint &_Size, umint _OldSize);
+		void *f_ResizeInline(void *_pMemory, umint &_Size, umint _OldSize);
 
-		void f_Free(void * _pMemory, umint _Size);
-		void f_FreeInline(void * _pMemory, umint _Size);
-		void f_FreeNoSizeInline(void * _pMemory);
-		void f_FreeNoSize(void * _pMemory);
+		void f_Free(void *_pMemory, umint _Size);
+		void f_FreeInline(void *_pMemory, umint _Size);
+		void f_FreeNoSizeInline(void *_pMemory);
+		void f_FreeNoSize(void *_pMemory);
 
-		void *f_AllocWithSizeDebug(umint &_Size, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
-		void *f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
-		void f_AllocBatchDebug(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
-		void *f_ReallocDebug(void *_pMem, umint &_Size, umint _OldSize, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
-		void *f_ResizeDebug(void *_pMem, umint &_Size, umint _OldSize, ch8 const * _pFile, uint32 _Line, EHeapDebugFlag _Flags);
+		void *f_AllocWithSizeDebug(umint &_Size, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags);
+		void *f_AllocAlignedWithSizeDebug(umint &_Size, umint _Alignment, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags);
+		void f_AllocBatchDebug
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, ch8 const *_pFile
+				, uint32 _Line
+				, EHeapDebugFlag _Flags
+			)
+		;
+		void *f_ReallocDebug(void *_pMem, umint &_Size, umint _OldSize, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags);
+		void *f_ResizeDebug(void *_pMem, umint &_Size, umint _OldSize, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags);
 
-		umint f_Size(void const * _pMemory) const;
-		umint f_TrySize(void const * _pMemory) const;
-		umint f_SizeInline(void const * _pMemory) const;
-		fp32 f_Overhead(void const * _pMemory);
-		bool f_ContainsBlock(void const * _pMemory);
+		umint f_Size(void const *_pMemory) const;
+		umint f_TrySize(void const *_pMemory) const;
+		umint f_SizeInline(void const *_pMemory) const;
+		fp32 f_Overhead(void const *_pMemory);
+		bool f_ContainsBlock(void const *_pMemory);
 
 		void f_PrepareFork();
 		void f_ForkedChild();
@@ -200,15 +209,27 @@ namespace NMib::NMemory
 			(
 				NFunction::TCFunctionNoAlloc
 				<
-					void (uint8 *_pMemory, umint _Size, CMibCodeAddress* _pStackTrace, umint _nStackTrace, ch8 const *_pFile, uint32 _Line, EHeapDebugFlag _Flags, umint _ThreadID, umint _AllocID)
-				> const &_Functor
+					void
+					(
+						uint8 *_pMemory
+						, umint _Size
+						, CMibCodeAddress *_pStackTrace
+						, umint _nStackTrace
+						, ch8 const *_pFile
+						, uint32 _Line
+						, EHeapDebugFlag _Flags
+						, umint _ThreadID
+						, umint _AllocID
+					)
+				>
+				const &_Functor
 			)
 		;
 
 		void f_ReportLeaks();
 		bool f_ReportingLeaks();
-	private:
 
+	private:
 		struct CPreBlockData
 		{
 			umint m_Reserved; // Overwritten when put on free list of another arena
@@ -218,14 +239,14 @@ namespace NMib::NMemory
 			umint m_PostCheck;
 			umint m_Size;
 			umint m_RequestedSize;
-			ch8 const * m_pFile;
+			ch8 const *m_pFile;
 			umint m_ThreadID;
 			uint32 m_Line;
 			EHeapDebugFlag m_Flags;
 		};
 
-		constexpr static umint mc_PreBlockDataSize = sizeof(CPreBlockData) + t_COptions::mc_nPreGuardBytes;
-		constexpr static umint mc_PreBlockPadding = fg_AlignUpConstExpr(mc_PreBlockDataSize, sizeof(void *) * 2) - mc_PreBlockDataSize;
+		static constexpr umint mc_PreBlockDataSize = sizeof(CPreBlockData) + t_COptions::mc_nPreGuardBytes;
+		static constexpr umint mc_PreBlockPadding = fg_AlignUpConstExpr(mc_PreBlockDataSize, sizeof(void *) * 2) - mc_PreBlockDataSize;
 
 		struct CPreBlockNormal : public CPreBlockData
 		{
@@ -252,24 +273,16 @@ namespace NMib::NMemory
 
 		static_assert(sizeof(CPreBlock) == fg_AlignUpConstExpr(mc_PreBlockDataSize, sizeof(void *) * 2));
 
-		constexpr static umint mc_PreBlockAlignment = fg_Max(alignof(CPreBlock), sizeof(void *) * 2);
+		static constexpr umint mc_PreBlockAlignment = fg_Max(alignof(CPreBlock), sizeof(void *) * 2);
 
 		TCPool<zbool, 8, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_ReportingLeaksPool;
 		NThread::TCThreadLocalDynamic<zbool, NThread::EThreadLocalFlag_FastThreadLocal> m_bReportingLeaks;
 
 	private:
-
 		static bool fsp_CheckGuard(uint8 *_pMemory, EMemoryManagerCheckFlag _Flags);
 		static uint8 *fsp_GetRealMemory(uint8 *_pMemory);
 
-		void fp_EnumAllocations
-			(
-				NFunction::TCFunctionNoAlloc
-				<
-					void (uint8 *_pMemory, CPreBlock *_pPreAlloc, typename CParams::CNotifier::CAllocInfo &_AllocInfo)
-				> const &_Functor
-			)
-		;
+		void fp_EnumAllocations(NFunction::TCFunctionNoAlloc<void (uint8 *_pMemory, CPreBlock *_pPreAlloc, typename CParams::CNotifier::CAllocInfo &_AllocInfo)> const &_Functor);
 	};
 }
 

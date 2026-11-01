@@ -7,19 +7,19 @@
 #include <Mib/Core/SubSystem>
 
 #if defined(DPlatformFamily_macOS) || defined(DPlatformFamily_Linux)
-	#include <memory>
-	#include <string>
-	#include <stdlib.h>
-	#include <pthread.h>
-	#include <errno.h>
-	#include <signal.h>
-	#include <string.h>
-	#include <unistd.h>
+#	include <memory>
+#	include <string>
+#	include <stdlib.h>
+#	include <pthread.h>
+#	include <errno.h>
+#	include <signal.h>
+#	include <string.h>
+#	include <unistd.h>
 #endif
 
 #ifdef DPlatformFamily_macOS
-	#include <malloc/malloc.h>
-	#include <dispatch/dispatch.h>
+#	include <malloc/malloc.h>
+#	include <dispatch/dispatch.h>
 #endif
 
 #if defined(DPlatformFamily_macOS) || defined(DPlatformFamily_Linux)
@@ -136,7 +136,6 @@ namespace
 	class COverride_Tests : public CTest
 	{
 	public:
-
 		void f_DoTests()
 		{
 #if defined(DPlatformFamily_macOS) || defined(DPlatformFamily_Linux)
@@ -155,13 +154,13 @@ namespace
 					// The threads are still allocating when the process exits, which destroys the memory manager
 					for (umint i = 0; i < 4; ++i)
 					{
-	#ifdef DPlatformFamily_macOS
+#	ifdef DPlatformFamily_macOS
 						dispatch_async_f(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), nullptr, &fg_AllocateUntilProcessExits);
-	#else
+#	else
 						pthread_t Thread;
 						if (pthread_create(&Thread, nullptr, &fg_AllocateOnNewThread, nullptr) == 0)
 							pthread_detach(Thread);
-	#endif
+#	endif
 					}
 
 					NTime::CStopwatch Stopwatch(true);
@@ -313,7 +312,7 @@ namespace
 				auto Size2 = malloc_size(&pMemory);
 				DMibExpect(Size2, ==, 0);
 
-				auto *pInvalidMemory = (void* *)(umint)4096;
+				auto *pInvalidMemory = (void **)(umint)4096;
 
 				auto SizeInvalidMemory = malloc_size(pInvalidMemory);
 				DMibExpect(SizeInvalidMemory, ==, 0);
@@ -344,7 +343,6 @@ namespace
 							}
 						;
 
-
 						{
 							constexpr umint c_nTests = 5;
 							constexpr umint c_nSizeTests = 10000;
@@ -355,7 +353,7 @@ namespace
 								DMibTestScopeMeasure(MallocSizeTime, c_nSizeTests);
 								for (umint i = 0; i < c_nSizeTests; ++i)
 								{
-									auto *pInvalidMemory = (void* *)(umint)4096;
+									auto *pInvalidMemory = (void **)(umint)4096;
 									[[maybe_unused]] auto SizeInvalidMemory = malloc_size(pInvalidMemory);
 								}
 							}
@@ -375,9 +373,7 @@ namespace
 							{
 								DMibTestScopeMeasure(MallocSizeTime, c_nSizeTests);
 								for (umint i = 0; i < c_nSizeTests; ++i)
-								{
 									[[maybe_unused]] auto SizeInvalidMemory = malloc_size(pMemory);
-								}
 							}
 
 							CTestPerformance HappyCase(1.0);
@@ -390,9 +386,9 @@ namespace
 				fDoTest(0);
 				fDoTest(10);
 				fDoTest(100);
-#ifndef DMibDebug
+#	ifndef DMibDebug
 				fDoTest(200);
-#endif
+#	endif
 			};
 #endif
 		}

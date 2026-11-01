@@ -34,6 +34,7 @@ namespace NMib::NMemory
 
 		CMemoryManagerCheckout(CMemoryManagerCheckout const &_Other);
 		CMemoryManagerCheckout &operator = (CMemoryManagerCheckout const &_Other);
+
 	public:
 		CMemoryManagerCheckout(CMemoryManagerCheckout &&_Other);
 		CMemoryManagerCheckout(ICMemoryManagerReturnCheckout *_pThreadLocal);

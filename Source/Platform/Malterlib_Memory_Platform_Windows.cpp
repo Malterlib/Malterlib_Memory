@@ -6,7 +6,6 @@
 
 #include "../Malterlib_Memory_Platform.h"
 
-
 using namespace NMib::NMemory;
 using namespace NMib::NStr;
 using namespace NMib;

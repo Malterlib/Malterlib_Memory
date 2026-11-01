@@ -92,7 +92,6 @@ namespace
 	class CSizedDestruction_Tests : public CTest
 	{
 	public:
-
 		void f_DoTests()
 		{
 			DMibTestSuite("SizedDestruction")

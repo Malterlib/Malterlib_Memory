@@ -8,7 +8,6 @@ namespace
 	class CDebugMemoryManager_Tests : public CTest
 	{
 	public:
-
 		void f_DoTests()
 		{
 			DMibTestSuite("TestAlloc")

@@ -176,10 +176,7 @@ namespace NMib::NMemory
 				if (!Head)
 					return false; // Stale summary bit from an earlier reap round
 
-				bWasExhausted
-					= FreeState.m_pFreeHead == nullptr
-					&& FreeState.m_CarveOffset >= FreeState.m_CarveEnd
-				;
+				bWasExhausted = FreeState.m_pFreeHead == nullptr && FreeState.m_CarveOffset >= FreeState.m_CarveEnd;
 
 				uint16 Offset = uint16(Head - 1);
 				while (1)
@@ -357,13 +354,14 @@ namespace NMib::NMemory
 
 	template <typename t_CParams>
 	template <bool tf_bAbortable, bool tf_bFreeList>
-	inline_never bool TCMemoryManagerArena<t_CParams>::fp_ProcessMessageList
+	inline_never auto TCMemoryManagerArena<t_CParams>::fp_ProcessMessageList
 		(
 			umint &o_MessageList
 			, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena
- 			, CNormalFreeStoreList *_pFreeList
+			, CNormalFreeStoreList *_pFreeList
 			, smint &_nToProcess
 		)
+		-> bool
 	{
 		umint Messages = o_MessageList;
 

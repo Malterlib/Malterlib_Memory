@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #if defined(DPlatformFamily_Windows)
-	#define DMibPWindowsTest
+#	define DMibPWindowsTest
 #endif
 
 #ifndef DMibPWindowsTest
@@ -11,40 +11,39 @@
 #endif
 
 #ifdef DMemoryManagerTestEnable_Application
-#include <Mib/Core/Core>
+#	include <Mib/Core/Core>
 #endif
 
 #ifdef DMemoryManagerTestEnable_Malterlib
-#include <Mib/Memory/MemoryManager>
-#include <Mib/Memory/MemoryManagerDebug>
-#include <Mib/Memory/MemoryManagerTracked>
+#	include <Mib/Memory/MemoryManager>
+#	include <Mib/Memory/MemoryManagerDebug>
+#	include <Mib/Memory/MemoryManagerTracked>
 #endif
 
 #ifdef DMemoryManagerTestEnable_TcMalloc
-#include <gperftools/tcmalloc.h>
+#	include <gperftools/tcmalloc.h>
 #endif
 
 #ifdef DMemoryManagerTestEnable_MiMalloc
-#include <mimalloc.h>
+#	include <mimalloc.h>
 #endif
 
 #if defined(DMemoryManagerTestEnable_WindowsDefault) || defined(DMemoryManagerTestEnable_WindowsLF)
-#include <windows.h>
+#	include <windows.h>
 #endif
 
 #ifdef DMemoryManagerTestEnable_StdLib
-#include <stdlib.h>
+#	include <stdlib.h>
 #endif
 
 #ifdef DMemoryManagerTestEnable_MacOS
-#include <malloc/malloc.h>
+#	include <malloc/malloc.h>
 #endif
 
 #include <mutex>
 
 namespace
 {
-
 	enum
 	{
 		EUseFast = true
@@ -62,6 +61,7 @@ namespace
 			m_pMemory
 		;
 		umint m_MaxSize;
+
 	public:
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
@@ -91,7 +91,6 @@ namespace
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-
 			return NMib::fg_AlignUp((*m_pMemory), _Alignment);
 		}
 
@@ -106,8 +105,8 @@ namespace
 
 		void f_Clear()
 		{
-
 		}
+
 		void f_CheckHeap()
 		{
 		}
@@ -121,15 +120,18 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+
 	public:
 		CMalterlibMemoryMalterlib()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -139,6 +141,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -166,12 +169,13 @@ namespace
 		void f_Clear()
 		{
 		}
+
 		void f_CheckHeap()
 		{
 		}
 	};
 
-#if DMibPPtrBits >= 64
+#	if DMibPPtrBits >= 64
 	// Without reap-in-cleanup, cross-thread frees still use delete messages, which needs the
 	// small size slabs on 32 bit
 	class CMalterlibMemoryMalterlib_SubSlabBitmaps
@@ -187,15 +191,18 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+
 	public:
 		CMalterlibMemoryMalterlib_SubSlabBitmaps()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -205,6 +212,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -232,11 +240,12 @@ namespace
 		void f_Clear()
 		{
 		}
+
 		void f_CheckHeap()
 		{
 		}
 	};
-#endif
+#	endif
 
 	class CMalterlibMemoryMalterlib_SubSlabLists
 	{
@@ -250,15 +259,18 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+
 	public:
 		CMalterlibMemoryMalterlib_SubSlabLists()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -268,6 +280,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -295,6 +308,7 @@ namespace
 		void f_Clear()
 		{
 		}
+
 		void f_CheckHeap()
 		{
 		}
@@ -316,15 +330,18 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+
 	public:
 		TCMalterlibMemoryMalterlib_Reap()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -334,6 +351,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -361,6 +379,7 @@ namespace
 		void f_Clear()
 		{
 		}
+
 		void f_CheckHeap()
 		{
 		}
@@ -371,7 +390,7 @@ namespace
 	using CMalterlibMemoryMalterlib_SubSlabListsReapOrder = TCMalterlibMemoryMalterlib_Reap<NMib::NMemory::EMemoryManagerFreeStore_SubSlabLists, true>;
 	using CMalterlibMemoryMalterlib_SubSlabBitmapsReapOrder = TCMalterlibMemoryMalterlib_Reap<NMib::NMemory::EMemoryManagerFreeStore_SubSlabBitmaps, true>;
 
-#if DMibPPtrBits >= 64
+#	if DMibPPtrBits >= 64
 	class CMalterlibMemoryMalterlib_LowBranch
 	{
 		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
@@ -386,15 +405,18 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+
 	public:
 		CMalterlibMemoryMalterlib_LowBranch()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -404,6 +426,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -431,33 +454,38 @@ namespace
 		void f_Clear()
 		{
 		}
+
 		void f_CheckHeap()
 		{
 		}
 	};
-#endif
+#	endif
 
 	class CMalterlibMemoryMalterlib_Debug
 	{
-#ifdef DMibNeedDebugException
+#	ifdef DMibNeedDebugException
 		static constexpr bool mc_bHasExceptions = true;
-#else
+#	else
 		static constexpr bool mc_bHasExceptions = false;
-#endif
+#	endif
 
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
 		{
 		};
+
 		NMib::NMemory::TCMemoryManagerDebug<CParams, mc_bHasExceptions> m_MemoryManager;
+
 	public:
 		CMalterlibMemoryMalterlib_Debug()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -467,6 +495,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -493,29 +522,32 @@ namespace
 
 		void f_Clear()
 		{
-
 		}
+
 		void f_CheckHeap()
 		{
 		}
 	};
-
 
 	class CMalterlibMemoryMalterlib_Tracked
 	{
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
 		{
 		};
+
 		NMib::NMemory::TCMemoryManagerTracked<NMib::NMemory::TCMemoryManager<CParams>> m_MemoryManager;
+
 	public:
 		CMalterlibMemoryMalterlib_Tracked()
 			: m_MemoryManager("Test tracked manager", NMib::NMemory::CMemoryManagerConfig())
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -525,6 +557,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -551,8 +584,8 @@ namespace
 
 		void f_Clear()
 		{
-
 		}
+
 		void f_CheckHeap()
 		{
 		}
@@ -562,13 +595,9 @@ namespace
 	{
 		struct CLocalParams : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
-			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup
-				= NMib::NMemory::EDeferCleanup
+			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup = NMib::NMemory::EDeferCleanup
 				(
-					NMib::NMemory::EDeferCleanup_NoCleanup
-					| NMib::NMemory::EDeferCleanup_OneSizeBlocks
-					| NMib::NMemory::EDeferCleanup_Commit
-					| NMib::NMemory::EDeferCleanup_Allocs
+					NMib::NMemory::EDeferCleanup_NoCleanup | NMib::NMemory::EDeferCleanup_OneSizeBlocks | NMib::NMemory::EDeferCleanup_Commit | NMib::NMemory::EDeferCleanup_Allocs
 				)
 			;
 		};
@@ -578,15 +607,18 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+
 	public:
 		CMalterlibMemoryMalterlib_NoCleanup()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -596,6 +628,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -622,12 +655,13 @@ namespace
 
 		void f_Clear()
 		{
-
 		}
+
 		void f_CheckHeap()
 		{
 		}
 	};
+
 	class CMalterlibMemoryMalterlib_NoDeferCleanup
 	{
 		struct CLocalParams : public NMib::NMemory::CDefaultMemoryManagerParams
@@ -640,16 +674,18 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
-	public:
 
+	public:
 		CMalterlibMemoryMalterlib_NoDeferCleanup()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -659,6 +695,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -685,12 +722,13 @@ namespace
 
 		void f_Clear()
 		{
-
 		}
+
 		void f_CheckHeap()
 		{
 		}
 	};
+
 	class CMalterlibMemoryMalterlib_NoCheckout
 	{
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
@@ -698,15 +736,18 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+
 	public:
 		CMalterlibMemoryMalterlib_NoCheckout()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -749,6 +790,7 @@ namespace
 		{
 		}
 	};
+
 	class CMalterlibMemoryMalterlib_NoCommit
 	{
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<NMib::NMemory::CMemoryManagerParams_NoCommit>
@@ -756,15 +798,18 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+
 	public:
 		CMalterlibMemoryMalterlib_NoCommit()
 			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
 		}
+
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
 			m_MemoryManager.f_SetNumaNode(_Node);
@@ -774,6 +819,7 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
@@ -800,8 +846,8 @@ namespace
 
 		void f_Clear()
 		{
-
 		}
+
 		void f_CheckHeap()
 		{
 		}
@@ -815,6 +861,7 @@ namespace
 		CMalterlibMemoryTcMalloc()
 		{
 		}
+
 		~CMalterlibMemoryTcMalloc()
 		{
 		}
@@ -833,9 +880,11 @@ namespace
 			tc_free(tc_malloc(1));
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
+
 		int f_Checkout()
 		{
 			return 0;
@@ -843,7 +892,7 @@ namespace
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return tc_memalign(_Alignment, _Size);;
+			return tc_memalign(_Alignment, _Size);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
@@ -858,14 +907,13 @@ namespace
 
 		void f_Clear()
 		{
-
 		}
+
 		void f_CheckHeap()
 		{
 		}
 	};
 #endif
-
 
 #ifdef DMemoryManagerTestEnable_MiMalloc
 	class CMalterlibMemoryMiMalloc
@@ -874,6 +922,7 @@ namespace
 		CMalterlibMemoryMiMalloc()
 		{
 		}
+
 		~CMalterlibMemoryMiMalloc()
 		{
 		}
@@ -896,9 +945,11 @@ namespace
 			mi_free(mi_malloc(1));
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
+
 		int f_Checkout()
 		{
 			return 0;
@@ -921,8 +972,8 @@ namespace
 
 		void f_Clear()
 		{
-
 		}
+
 		void f_CheckHeap()
 		{
 		}
@@ -933,6 +984,7 @@ namespace
 	class CMalterlibMemoryMacOS
 	{
 		malloc_zone_t *m_pMallocZone;
+
 	public:
 		CMalterlibMemoryMacOS()
 			: m_pMallocZone(nullptr)
@@ -950,10 +1002,10 @@ namespace
 
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
-#if DPlatformVersion <= 1050
+#	if DPlatformVersion <= 1050
 			if (_bAlignment)
 				return false;
-#endif
+#	endif
 			return true;
 		}
 
@@ -963,12 +1015,14 @@ namespace
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
 		{
-			m_pMallocZone = malloc_create_zone(1024*1024, 0);
+			m_pMallocZone = malloc_create_zone(1024 * 1024, 0);
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
+
 		auto f_Checkout() -> decltype(NMib::fg_GetSys()->f_MemoryManager_Checkout())
 		{
 			return NMib::fg_GetSys()->f_MemoryManager_Checkout();
@@ -976,12 +1030,12 @@ namespace
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-#if DPlatformVersion <= 1050
+#	if DPlatformVersion <= 1050
 			return nullptr;
-#else
+#	else
 			_Alignment = NMib::fg_Max(sizeof(void *), _Alignment);
 			return m_pMallocZone->memalign(m_pMallocZone, _Alignment, _Size);
-#endif
+#	endif
 		}
 
 		inline_small void *f_Alloc(umint _Size)
@@ -997,9 +1051,11 @@ namespace
 		void f_Clear()
 		{
 		}
+
 		void f_CheckHeap()
 		{
 		}
+
 		NMib::NStr::CStr GetDesc()
 		{
 			NMib::NStr::CStr Str = "StdLib";
@@ -1014,10 +1070,10 @@ namespace
 	public:
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
-#ifdef DPlatformFamily_Windows
+#	ifdef DPlatformFamily_Windows
 			if (_bAlignment)
 				return false;
-#endif
+#	endif
 			return true;
 		}
 
@@ -1029,9 +1085,11 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
+
 		auto f_Checkout() -> decltype(NMib::fg_GetSys()->f_MemoryManager_Checkout())
 		{
 			return NMib::fg_GetSys()->f_MemoryManager_Checkout();
@@ -1039,14 +1097,14 @@ namespace
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-#ifdef DPlatformFamily_Windows
+#	ifdef DPlatformFamily_Windows
 			return nullptr;
-#else
+#	else
 			void *pPtr = nullptr;
 			posix_memalign(&pPtr, NMib::fg_Max(_Alignment, sizeof(void *)), _Size);
 
 			return pPtr;
-#endif
+#	endif
 		}
 
 		inline_small void *f_Alloc(umint _Size)
@@ -1062,9 +1120,11 @@ namespace
 		void f_Clear()
 		{
 		}
+
 		void f_CheckHeap()
 		{
 		}
+
 		NMib::NStr::CStr GetDesc()
 		{
 			NMib::NStr::CStr Str = "StdLib";
@@ -1090,9 +1150,11 @@ namespace
 		{
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
+
 		auto f_Checkout() -> decltype(NMib::fg_GetSys()->f_MemoryManager_Checkout())
 		{
 			return NMib::fg_GetSys()->f_MemoryManager_Checkout();
@@ -1116,9 +1178,11 @@ namespace
 		void f_Clear()
 		{
 		}
+
 		void f_CheckHeap()
 		{
 		}
+
 		NMib::NStr::CStr GetDesc()
 		{
 			NMib::NStr::CStr Str = "Application";
@@ -1136,11 +1200,13 @@ namespace
 			: m_Heap(nullptr)
 		{
 		}
+
 		~TCMalterlibMemoryWindows()
 		{
 			if (m_Heap)
 				HeapDestroy(m_Heap);
 		}
+
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			if (_bAlignment)
@@ -1160,9 +1226,11 @@ namespace
 			m_Heap = HeapCreate(t_bMultiThreaded ? 0 : HEAP_NO_SERIALIZE, 0, 0);
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
+
 		int f_Checkout()
 		{
 			return 0;
@@ -1192,6 +1260,7 @@ namespace
 				m_Heap = HeapCreate(t_bMultiThreaded ? 0 : HEAP_NO_SERIALIZE, 0, 0);
 			}
 		}
+
 		void f_CheckHeap()
 		{
 		}
@@ -1207,11 +1276,13 @@ namespace
 			: m_Heap(nullptr)
 		{
 		}
+
 		~TCMalterlibMemoryWindowsLF()
 		{
 			if (m_Heap)
 				HeapDestroy(m_Heap);
 		}
+
 		HANDLE m_Heap;
 
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
@@ -1230,9 +1301,11 @@ namespace
 			f_Create();
 			return true;
 		}
+
 		void f_InitThread()
 		{
 		}
+
 		int f_Checkout()
 		{
 			return 0;
@@ -1269,6 +1342,7 @@ namespace
 				f_Create();
 			}
 		}
+
 		void f_CheckHeap()
 		{
 		}
@@ -1279,7 +1353,6 @@ namespace
 	class CMalterlibMemoryVirtual
 	{
 	public:
-
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			if (_bAlignment)
@@ -1295,9 +1368,11 @@ namespace
 		{
 			return _nThreads <= 2;
 		}
+
 		void f_InitThread()
 		{
 		}
+
 		int f_Checkout()
 		{
 			return 0;
@@ -1321,11 +1396,10 @@ namespace
 		void f_Clear()
 		{
 		}
+
 		void f_CheckHeap()
 		{
 		}
-
 	};
 #endif
-
 }

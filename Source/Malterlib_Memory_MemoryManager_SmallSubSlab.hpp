@@ -135,9 +135,9 @@ namespace NMib::NMemory
 	/////////////////////////////////////////////
 	// Small -> 2 byte
 
-
 	template <typename t_CParams, umint t_AllocSize>
-	TCMemoryManagerSubSlab_SmallSize<t_CParams, t_AllocSize>::TCMemoryManagerSubSlab_SmallSize() : TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>(t_AllocSize)
+	TCMemoryManagerSubSlab_SmallSize<t_CParams, t_AllocSize>::TCMemoryManagerSubSlab_SmallSize()
+		: TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>(t_AllocSize)
 	{
 	}
 

@@ -16,13 +16,9 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void * _pAlloc, umint _Size)> const &_Functor)
+	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
 	{
-		DMibMemLightweightTrack
-			(
-				auto *pLocalArena = m_pMemoryManager->m_LocalArena.f_TryGet();
-			)
-		;
+		DMibMemLightweightTrack(auto *pLocalArena = m_pMemoryManager->m_LocalArena.f_TryGet(););
 
 		umint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
 		if (iSlab == 0) [[unlikely]]
@@ -120,18 +116,14 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	umint TCMemoryManagerArena<t_CParams>::fp_SizeSmall(void const * _pMemory, TCMemoryManagerSlab<t_CParams, 0> const * _pSlab, umint _SlabType) const
+	umint TCMemoryManagerArena<t_CParams>::fp_SizeSmall(void const *_pMemory, TCMemoryManagerSlab<t_CParams, 0> const *_pSlab, umint _SlabType) const
 	{
 		switch (_SlabType)
 		{
-		case 0:
-			return 1;
-		case 1:
-			return 2;
-		case 2:
-			return 4;
-		case 3:
-			return 8;
+		case 0: return 1;
+		case 1: return 2;
+		case 2: return 4;
+		case 3: return 8;
 		case 4:
 			if constexpr (mc_MinAlignment == 4)
 				return 12;
@@ -140,26 +132,20 @@ namespace NMib::NMemory
 		case 5:
 			if constexpr (mc_MinAlignment == 4)
 				return 16;
-		default:
-			DMibFastCheck(false);
-			break;
+		default: DMibFastCheck(false); break;
 		}
 		return 0;
 	}
 
 	template <typename t_CParams>
-	fp32 TCMemoryManagerArena<t_CParams>::fp_OverheadSmall(void const * _pMemory, TCMemoryManagerSlab<t_CParams, 0> const * _pSlab, umint _SlabType) const
+	fp32 TCMemoryManagerArena<t_CParams>::fp_OverheadSmall(void const *_pMemory, TCMemoryManagerSlab<t_CParams, 0> const *_pSlab, umint _SlabType) const
 	{
 		switch (_SlabType)
 		{
-		case 0:
-			return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>::mc_NumAllocs);
-		case 1:
-			return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 2>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 2>::mc_NumAllocs);
-		case 2:
-			return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 4>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 4>::mc_NumAllocs);
-		case 3:
-			return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 8>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 8>::mc_NumAllocs);
+		case 0: return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 1>::mc_NumAllocs);
+		case 1: return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 2>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 2>::mc_NumAllocs);
+		case 2: return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 4>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 4>::mc_NumAllocs);
+		case 3: return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 8>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 8>::mc_NumAllocs);
 		case 4:
 			if constexpr (mc_MinAlignment == 4)
 				return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 12>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 12>::mc_NumAllocs);
@@ -168,9 +154,7 @@ namespace NMib::NMemory
 		case 5:
 			if constexpr (mc_MinAlignment == 4)
 				return fp32(sizeof(TCMemoryManagerSubSlab_SmallSize<t_CParams, 16>)) / fp32(TCMemoryManagerSubSlab_SmallSize<t_CParams, 16>::mc_NumAllocs);
-		default:
-			DMibFastCheck(false);
-			break;
+		default: DMibFastCheck(false); break;
 		}
 		return 0.0;
 	}
@@ -185,22 +169,19 @@ namespace NMib::NMemory
 		else if (Size <= TCMemoryManagerArena<t_CParams>::mc_MinAlignment)
 			iSlab = NMib::fg_GetHighestBitSetNoZero(Size - 1) + 1;
 		else
-			iSlab = TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabsAligned + (Size - (TCMemoryManagerArena<t_CParams>::mc_MinAlignment + 1)) / TCMemoryManagerArena<t_CParams>::mc_MinAlignment;
+		{
+			iSlab
+				= TCMemoryManagerArena<t_CParams>::mc_nSmallSizeSlabsAligned
+				+ (Size - (TCMemoryManagerArena<t_CParams>::mc_MinAlignment + 1)) / TCMemoryManagerArena<t_CParams>::mc_MinAlignment
+			;
+		}
 
 		switch (iSlab)
 		{
-		case 0:
-			Size = 1;
-			break;
-		case 1:
-			Size = 2;
-			break;
-		case 2:
-			Size = 4;
-			break;
-		case 3:
-			Size = 8;
-			break;
+		case 0: Size = 1; break;
+		case 1: Size = 2; break;
+		case 2: Size = 4; break;
+		case 3: Size = 8; break;
 		case 4:
 			if constexpr (mc_MinAlignment == 4)
 			{
@@ -380,7 +361,7 @@ namespace NMib::NMemory
 		auto &Slabs = m_SmallSizeSlabs[CSubSlab::mc_SmallSlabIndex];
 		for (auto iSlab = Slabs.f_GetIterator(); iSlab; ++iSlab)
 		{
-			CSubSlab * pSlab = (CSubSlab *)&*iSlab;
+			CSubSlab *pSlab = (CSubSlab *)&*iSlab;
 			if (pSlab->f_CheckFree(*this, _Flags))
 				bError = true;
 		}

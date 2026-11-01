@@ -66,8 +66,8 @@ namespace NMib::NMemory
 			CRentrantScope(CRentrantScope &&_Other);
 
 			CRentrantScope(CRentrantScope const &_Other) = delete;
-			CRentrantScope &operator =(CRentrantScope &&_Other) = delete;
-			CRentrantScope &operator =(CRentrantScope const &_Other) = delete;
+			CRentrantScope &operator = (CRentrantScope &&_Other) = delete;
+			CRentrantScope &operator = (CRentrantScope const &_Other) = delete;
 
 			TCMemoryManagerThreadLocal *m_pThreadLocal;
 		};

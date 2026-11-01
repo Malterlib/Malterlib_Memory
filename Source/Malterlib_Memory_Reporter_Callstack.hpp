@@ -32,11 +32,14 @@ namespace NMib::NMemory
 	{
 		m_LockRequests.f_FetchAdd(1);
 		DMibLock(ms_pThis->m_Lock);
-		auto CleanUpLock = fg_OnScopeExit([&]
-			{
-				m_LockRequests.f_FetchSub(1);
-			}
-		);
+		auto CleanUpLock = fg_OnScopeExit
+			(
+				[&]
+				{
+					m_LockRequests.f_FetchSub(1);
+				}
+			)
+		;
 
 		NStr::CStrNonTracked ProgramDir = NFile::CFile::fs_GetProgramDirectoryNonTracked();
 
@@ -47,7 +50,7 @@ namespace NMib::NMemory
 			ExportFile.f_Open(ProgramDir + "/CrashDumps/MemoryReport.tsv", NFile::EFileOpen_Write | NFile::EFileOpen_DontTruncate);
 			ExportFile.f_SetPositionFromEnd(0);
 
-			for (auto const& Callstack : m_Callstacks)
+			for (auto const &Callstack : m_Callstacks)
 			{
 				if (!Callstack.m_Total.m_nBytes)
 					continue;
@@ -74,10 +77,9 @@ namespace NMib::NMemory
 			NFile::CFile ExportFile;
 			ExportFile.f_Open(ProgramDir + "/CrashDumps/Allocators.tsv", NFile::EFileOpen_Write);
 
-
 			for (auto iAllocator = m_Allocators.f_GetIterator(); iAllocator; ++iAllocator)
 			{
-				NStr::CStrNonTracked Data = NStr::fg_Format<NStr::CStrNonTracked>("{}\t{}\n",  iAllocator.f_GetKey(), iAllocator->m_Name);
+				NStr::CStrNonTracked Data = NStr::fg_Format<NStr::CStrNonTracked>("{}\t{}\n", iAllocator.f_GetKey(), iAllocator->m_Name);
 				ExportFile.f_Write(Data.f_GetStr(), Data.f_GetLen());
 			}
 
@@ -89,16 +91,16 @@ namespace NMib::NMemory
 			return;
 
 		// These variables will be included in dump explicitly
-		NContainer::TCVector<CCallstack, CAllocator_NonTrackedHeap>	Callstacks;
-		NContainer::TCVector<CAllocator, CAllocator_NonTrackedHeap>	Allocators;
-		auto & Errors = m_Errors;
+		NContainer::TCVector<CCallstack, CAllocator_NonTrackedHeap> Callstacks;
+		NContainer::TCVector<CAllocator, CAllocator_NonTrackedHeap> Allocators;
+		auto &Errors = m_Errors;
 
-		for (auto const& Callstack : m_Callstacks)
+		for (auto const &Callstack : m_Callstacks)
 			Callstacks.f_Insert(Callstack);
 
 		Callstacks.f_Sort
 			(
-				[&](CCallstack const& _Left, CCallstack const& _Right)
+				[&](CCallstack const &_Left, CCallstack const &_Right)
 				{
 					return _Left.m_Total < _Right.m_Total;
 				}
@@ -111,15 +113,15 @@ namespace NMib::NMemory
 		umint iRow = 0;
 		for (auto iAllocator = m_Allocators.f_GetIterator(); iAllocator; ++iAllocator, ++iRow)
 		{
-			auto & Dest = Allocators[iRow];
+			auto &Dest = Allocators[iRow];
 			Dest = *iAllocator;
 			AllocatorMap[iAllocator.f_GetKey()] = &Dest;
 		}
 
-		for (auto & Callstack : Callstacks)
+		for (auto &Callstack : Callstacks)
 			Callstack.m_pAllocator = AllocatorMap[Callstack.m_Allocator];
 
-		NMib::NContainer::TCVector<void*, NMemory::CAllocator_NonTrackedHeap> Locations;
+		NMib::NContainer::TCVector<void *, NMemory::CAllocator_NonTrackedHeap> Locations;
 		NMib::NContainer::TCVector<umint, NMib::NMemory::CAllocator_NonTrackedHeap> Sizes;
 
 		Locations.f_Insert(Callstacks.f_GetArray());
@@ -134,18 +136,17 @@ namespace NMib::NMemory
 		Locations.f_Insert(Allocators.f_GetArray());
 		Sizes.f_Insert(Allocators.f_GetLen() * sizeof(CAllocator));
 
-		for (auto & Allocator : Allocators)
+		for (auto &Allocator : Allocators)
 		{
 			if (!Allocator.m_Name.f_IsEmpty())
 			{
-				Locations.f_Insert((void*)Allocator.m_Name.f_GetStr());
+				Locations.f_Insert((void *)Allocator.m_Name.f_GetStr());
 				Sizes.f_Insert(Allocator.m_Name.f_GetLen() + 1);
 			}
 		}
 
 		NSys::fg_Debug_GenerateMemoryDump(Locations, Sizes);
 	}
-
 
 	CCallstackMemoryReporter::~CCallstackMemoryReporter()
 	{
@@ -160,7 +161,7 @@ namespace NMib::NMemory
 		ms_pThis = nullptr;
 	}
 
-	void CCallstackMemoryReporter::f_AllocatorName(umint _MemoryAllocator, ch8 const* _pAllocatorName)
+	void CCallstackMemoryReporter::f_AllocatorName(umint _MemoryAllocator, ch8 const *_pAllocatorName)
 	{
 		COperation Allocator;
 		Allocator.m_OpType = COperation::EOpType_Allocator;
@@ -270,10 +271,10 @@ namespace NMib::NMemory
 		fp_PushToQueue(Free);
 	}
 
-	static umint const gc_QueueBitReset = umint(1) << (sizeof(umint*) * 8 - 1);
-	static umint const gc_QueueBitResetFinished = umint(1) << (sizeof(umint*) * 8 - 2);
+	static umint const gc_QueueBitReset = umint(1) << (sizeof(umint *) * 8 - 1);
+	static umint const gc_QueueBitResetFinished = umint(1) << (sizeof(umint *) * 8 - 2);
 	static umint const gc_QueueBitInv = ~(gc_QueueBitReset | gc_QueueBitResetFinished);
-	void CCallstackMemoryReporter::fp_PushToQueue(COperation const& _Op)
+	void CCallstackMemoryReporter::fp_PushToQueue(COperation const &_Op)
 	{
 		umint QueueSize = ++m_QueueSize;
 		umint SizeAnd = QueueSize & gc_QueueBitInv;
@@ -311,7 +312,6 @@ namespace NMib::NMemory
 		}
 
 		m_OperationQueue.f_Push(_Op);
-
 	}
 
 	void CCallstackMemoryReporter::f_GetSize(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo)
@@ -378,14 +378,14 @@ namespace NMib::NMemory
 				QueueSize = m_QueueSize.f_FetchAnd(~gc_QueueBitResetFinished);
 			}
 
-			auto & Op = Entry.f_Get();
+			auto &Op = Entry.f_Get();
 
 			switch (Op.m_OpType)
 			{
 			case COperation::EOpType_Alloc:
 				{
 					uint64 Hash = fsp_GetStackFingerprint(Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack).f_FoldToInt<uint64>();
-					auto & Callstack = fp_GetCallstack(Op.m_MemoryAllocator, Hash, Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack);
+					auto &Callstack = fp_GetCallstack(Op.m_MemoryAllocator, Hash, Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack);
 					fp_RegisterAllocation(Op.m_MemoryAllocator, Op.m_Address, Op.m_Size, &Callstack);
 				}
 				break;
@@ -398,9 +398,16 @@ namespace NMib::NMemory
 						fp_RegisterAllocation(Op.m_MemoryAllocator, Op.m_Address, Op.m_Size, pCallstack);
 					else
 					{
-						DMibTraceSafe("Unknown allocation freed during resize/realloc {} {}, possible loss of {} bytes {\n}", Op.m_MemoryAllocator, Op.m_OldAlloc.m_Address, Op.m_OldAlloc.m_Size);
+						DMibTraceSafe
+							(
+								"Unknown allocation freed during resize/realloc {} {}, possible loss of {} bytes {\n}"
+								, Op.m_MemoryAllocator
+								, Op.m_OldAlloc.m_Address
+								, Op.m_OldAlloc.m_Size
+							)
+						;
 						uint64 Hash = fsp_GetStackFingerprint(Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack).f_FoldToInt<uint64>();
-						auto & Callstack = fp_GetCallstack(Op.m_MemoryAllocator, Hash, Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack);
+						auto &Callstack = fp_GetCallstack(Op.m_MemoryAllocator, Hash, Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack);
 						fp_RegisterAllocation(Op.m_MemoryAllocator, Op.m_Address, Op.m_Size, &Callstack);
 					}
 				}
@@ -413,18 +420,18 @@ namespace NMib::NMemory
 					{
 						DMibTraceSafe("Unknown allocation freed {} {}, possible loss of {} bytes {\n}", Op.m_MemoryAllocator, Op.m_Address, Op.m_Size);
 
-/*
+						/*
 						uint64 Hash = fsp_GetStackFingerprint(Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack).f_FoldToInt<uint64>();
 						CCallstack & ErrorCallstack = m_Errors.f_Insert(fg_Construct(Hash, Op.m_Callstack.m_Callstack, Op.m_Callstack.m_nCallstack, Op.m_MemoryAllocator));
 						++ErrorCallstack.m_Total.m_nAllocations;
 						ErrorCallstack.m_Total.m_nBytesFreed += Op.m_Size;
-*/
+						*/
 					}
 				}
 				break;
 			case COperation::EOpType_Allocator:
 				{
-					auto & Allocator = m_Allocators[Op.m_MemoryAllocator];
+					auto &Allocator = m_Allocators[Op.m_MemoryAllocator];
 					Allocator.m_Name = Op.m_AllocatorName;
 				}
 				break;
@@ -439,8 +446,7 @@ namespace NMib::NMemory
 				}
 				break;
 
-			default:
-				DMibNeverGetHere;
+			default: DMibNeverGetHere;
 			}
 			++nProcessed;
 
@@ -449,12 +455,10 @@ namespace NMib::NMemory
 		}
 
 		if (nProcessed)
-		{
 			NSys::fg_DebugOutput(NStr::fg_Format<NStr::CStrNonTracked>("Processed {} operations{\n}", nProcessed));
-		}
 	}
 
-	CCallstackMemoryReporter::CCallstack& CCallstackMemoryReporter::fp_GetCallstack(umint _MemoryAllocator, umint _Hash, CMibCodeAddress *_pStack, umint _nStack)
+	CCallstackMemoryReporter::CCallstack &CCallstackMemoryReporter::fp_GetCallstack(umint _MemoryAllocator, umint _Hash, CMibCodeAddress *_pStack, umint _nStack)
 	{
 		auto &CallStack = m_Callstacks[_Hash, _Hash, _pStack, _nStack, _MemoryAllocator];
 		return CallStack;
@@ -469,7 +473,7 @@ namespace NMib::NMemory
 		return Stream.f_GetDigest();
 	}
 
-	bool CCallstackMemoryReporter::fp_RegisterAllocation(umint _MemoryAllocator, umint _Address, umint _Size, CCallstack* _pCallstack)
+	bool CCallstackMemoryReporter::fp_RegisterAllocation(umint _MemoryAllocator, umint _Address, umint _Size, CCallstack *_pCallstack)
 	{
 		auto MapResult = m_Allocations(CAllocationKey(_MemoryAllocator, _Address), _Size, _pCallstack);
 		CAllocation &Allocation = *MapResult;
@@ -491,7 +495,7 @@ namespace NMib::NMemory
 		return bCreated;
 	}
 
-	CCallstackMemoryReporter::CCallstack* CCallstackMemoryReporter::fp_RemoveAllocation(umint _MemoryAllocator, umint _Address)
+	CCallstackMemoryReporter::CCallstack *CCallstackMemoryReporter::fp_RemoveAllocation(umint _MemoryAllocator, umint _Address)
 	{
 		CAllocationKey Key(_MemoryAllocator, _Address);
 		auto pAllocation = m_Allocations.f_FindEqual(Key);
@@ -499,7 +503,7 @@ namespace NMib::NMemory
 		if (!pAllocation)
 			return nullptr;
 
-		CCallstack* pCallstack = pAllocation->m_pCallstack;
+		CCallstack *pCallstack = pAllocation->m_pCallstack;
 
 		if (pAllocation->m_nIgnoreFree)
 		{
