@@ -1138,18 +1138,18 @@ namespace
 				{
 					for
 #if 1
-						(umint i = 1; i <= 1024 * 1024 * 8; i = i << 1)
+					(umint i = 1; i <= 1024 * 1024 * 8; i = i << 1)
 #else
-						(
-							umint i = 1
-							//; i <= 1024*1024*8
+					(
+						umint i = 1
+						//; i <= 1024*1024*8
 #	if DMibPPtrBits == 64
-							; i <= 12
+						; i <= 12
 #	else
-							; i <= 4
+						; i <= 4
 #	endif
-							; i = i < 4 ? i << 1 : i + 4
-						)
+						; i = i < 4 ? i << 1 : i + 4
+					)
 #endif
 					{
 						DMibTestCategory(NMib::NStr::CStr::CFormat("Max Alloc({})") << i)

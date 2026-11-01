@@ -757,7 +757,7 @@ namespace NMib::NMemory
 
 			auto &List = *pList;
 
-			DMibMemLightweightTrack(auto *pLocalArena = m_pMemoryManager->m_LocalArena.f_TryGet(););
+			DMibMemLightweightTrack(auto *pLocalArena = m_pMemoryManager->m_LocalArena.f_TryGet());
 
 			while (1)
 			{

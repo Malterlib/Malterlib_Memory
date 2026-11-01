@@ -302,7 +302,6 @@ namespace NMib::NMemory
 			umint SizesPerLevelBits = fg_GetHighestBitSetNoZero(t_CParams::mc_NumSizesPerLevel);
 			return t_CParams::mc_SubSlabSize * (umint(1) << (SizesPerLevelBits - LowestBitSet));
 		}
-		;
 
 		static constexpr umint mc_MinNormalSlabBucket = NMib::fg_GetHighestBitSetNoZero(mc_MinNormalAllocSize);
 		static constexpr umint mc_NumNormalSizeLevels = mc_NumSizeLevels - mc_MinNormalSlabBucket;
@@ -325,7 +324,6 @@ namespace NMib::NMemory
 				++Bucket;
 			return Bucket;
 		}
-		;
 
 		static constexpr umint mc_MaxAllocsPerSubSlabActual = []
 			{
