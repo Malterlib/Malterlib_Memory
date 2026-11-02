@@ -10,10 +10,10 @@ namespace NMib::NMemory
 #ifdef DMibNeedDebugException
 
 	DMibImpErrorClassDefine(CExceptionMemoryManagerDebug, NException::CDebugException);
-#	define DMibErrorMemoryManagerDebug(_Description) DMibImpError(NMib::NMemory::CExceptionMemoryManagerDebug, _Description)
+#	define DMibErrorMemoryManagerDebug(d_Description) DMibImpError(NMib::NMemory::CExceptionMemoryManagerDebug, d_Description)
 
 #	ifndef DMibPNoShortCuts
-#		define DErrorMemoryManagerDebug(_Description) DMibErrorMemoryManagerDebug(_Description)
+#		define DErrorMemoryManagerDebug(d_Description) DMibErrorMemoryManagerDebug(d_Description)
 #	endif
 #endif
 }

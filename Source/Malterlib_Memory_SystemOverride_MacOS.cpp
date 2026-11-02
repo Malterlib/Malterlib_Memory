@@ -561,7 +561,7 @@ malloc_zone_t_known_version g_OriginalMallocs;
 malloc_zone_t_known_version *g_pDefaultZone = nullptr;
 
 //#define DMibMacOSOverrideZoneCheck(_Z) DMibFastCheck((_malloc_zone_t_known_version *)_Z == g_pDefaultZone)
-#define DMibMacOSOverrideZoneCheck(_Z)
+#define DMibMacOSOverrideZoneCheck(d_Zone)
 
 struct sigaction g_OldSignalHandlerBus;
 struct sigaction g_OldSignalHandlerSegv;

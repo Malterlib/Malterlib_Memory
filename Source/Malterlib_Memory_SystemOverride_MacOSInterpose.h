@@ -3,10 +3,10 @@
 
 typedef unsigned long long malloc_type_id_t;
 
-#define _MALLOC_UNDERSCORE_MALLOC_TYPE_H_
+#define _MALLOC_UNDERSCORE_MALLOC_TYPE_H_ // NOLINT(malterlib-macro-naming)
 
 #if !defined(_MALLOC_TYPED)
-#	define _MALLOC_TYPED(override, type_param_pos)
+#	define _MALLOC_TYPED(d_Override, d_TypeParamPos) // NOLINT(malterlib-macro-naming)
 #endif
 
 extern "C"

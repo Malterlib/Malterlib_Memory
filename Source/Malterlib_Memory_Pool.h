@@ -794,10 +794,10 @@ namespace NMib::NMemory
 		}
 	};
 
-#define DMibMemPoolStaticImpl(_PoolType, _PoolName) _PoolType _PoolName = {0};
+#define DMibMemPoolStaticImpl(d_PoolType, d_PoolName) d_PoolType d_PoolName = {0};
 
 #ifndef DMibPNoShortCuts
-#	define DPoolStaticImpl(_PoolType, _PoolName) DMibMemPoolStaticImpl(_PoolType, _PoolName)
+#	define DPoolStaticImpl(d_PoolType, d_PoolName) DMibMemPoolStaticImpl(d_PoolType, d_PoolName)
 #endif
 
 	template <typename t_CLock>

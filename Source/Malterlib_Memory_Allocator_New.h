@@ -76,7 +76,7 @@ namespace NMib::NMemory
 
 // Placement new
 #	ifndef __PLACEMENT_NEW_INLINE
-#		define __PLACEMENT_NEW_INLINE
+#		define __PLACEMENT_NEW_INLINE // NOLINT(malterlib-macro-naming)
 
 only_parameters_aliased malloc_like inline_always void *operator new (umint _Size, void * variable_not_aliased _pPlacement) noexcept
 {
@@ -90,7 +90,7 @@ only_parameters_aliased inline_always void operator delete (void *_pToDelete, vo
 #	endif
 
 #	ifndef __PLACEMENT_VEC_NEW_INLINE
-#		define __PLACEMENT_VEC_NEW_INLINE
+#		define __PLACEMENT_VEC_NEW_INLINE // NOLINT(malterlib-macro-naming)
 
 only_parameters_aliased malloc_like inline_always void *operator new [] (umint _Size, void * variable_not_aliased _pPlacement) noexcept
 {

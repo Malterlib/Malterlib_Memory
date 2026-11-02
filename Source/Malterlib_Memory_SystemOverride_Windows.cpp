@@ -137,19 +137,19 @@ namespace
 extern "C"
 {
 #if _MSC_VER >= 1400
-#	define MemDeclNaR __declspec(noalias) __declspec(restrict)
-#	define MemDeclNa __declspec(noalias)
+#	define DMemDeclNaR __declspec(noalias) __declspec(restrict)
+#	define DMemDeclNa __declspec(noalias)
 #else
-#	define MemDeclNaR
-#	define MemDeclNa
+#	define DMemDeclNaR
+#	define DMemDeclNa
 #endif
 	size_t __crtDebugFillThreshold = SIZE_MAX;
 
-	MemDeclNaR void * DDefaultCallingConv malloc(size_t);
-	MemDeclNa void DDefaultCallingConv free(void *);
-	MemDeclNaR void * DDefaultCallingConv realloc(void *, size_t);
-	MemDeclNaR void * DDefaultCallingConv calloc(size_t, size_t);
-	MemDeclNaR void * DDefaultCallingConv memalign(size_t, size_t);
+	DMemDeclNaR void * DDefaultCallingConv malloc(size_t);
+	DMemDeclNa void DDefaultCallingConv free(void *);
+	DMemDeclNaR void * DDefaultCallingConv realloc(void *, size_t);
+	DMemDeclNaR void * DDefaultCallingConv calloc(size_t, size_t);
+	DMemDeclNaR void * DDefaultCallingConv memalign(size_t, size_t);
 
 	/*************************************************************************************************\
 	|¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
@@ -157,7 +157,7 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	MemDeclNaR void * DDefaultCallingConv malloc(size_t sz)
+	DMemDeclNaR void * DDefaultCallingConv malloc(size_t sz)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		if (!fg_TryAlignWindowsAllocationSize(sz))
@@ -187,7 +187,7 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	MemDeclNaR void * DDefaultCallingConv calloc(size_t nelem, size_t elsize)
+	DMemDeclNaR void * DDefaultCallingConv calloc(size_t nelem, size_t elsize)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint UnalignedSize;
@@ -329,7 +329,7 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	MemDeclNa void DDefaultCallingConv free(void *ptr)
+	DMemDeclNa void DDefaultCallingConv free(void *ptr)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		NMib::NMemory::fg_FreeNoSize(ptr);
@@ -353,7 +353,7 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	MemDeclNaR void * DDefaultCallingConv memalign(size_t alignment, size_t size)
+	DMemDeclNaR void * DDefaultCallingConv memalign(size_t alignment, size_t size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		if (!NMib::NMemory::NPrivate::fg_IsAllocationAlignmentValid(alignment))
@@ -372,7 +372,7 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	MemDeclNaR void * DDefaultCallingConv realloc(void *ptr, size_t sz)
+	DMemDeclNaR void * DDefaultCallingConv realloc(void *ptr, size_t sz)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		if (!fg_TryAlignWindowsAllocationSize(sz))
@@ -396,7 +396,7 @@ extern "C"
 		return NMib::NMemory::fg_ResizeDebug(ptr, sz, 0, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 	}
 
-	MemDeclNaR void * DDefaultCallingConv _recalloc(void *memblock, size_t count, size_t size)
+	DMemDeclNaR void * DDefaultCallingConv _recalloc(void *memblock, size_t count, size_t size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint Size;
@@ -408,7 +408,7 @@ extern "C"
 	}
 
 //#ifndef DArchX86_64
-// MemDeclNaR
+// DMemDeclNaR
 //#endif
 	void * DDefaultCallingConv _recalloc_dbg(void *memblock, size_t count, size_t size, int nBlockUse, char const *szFileName, int nLine)
 	{
@@ -701,17 +701,17 @@ extern "C"
 	{
 	}
 #ifdef DMibDebug
-#	define nAlignGapSize sizeof(void *)
+#	define DAlignGapSize sizeof(void *)
 
 	typedef struct _AlignMemBlockHdr
 	{
 		void *pHead;
-		unsigned char Gap[nAlignGapSize];
+		unsigned char Gap[DAlignGapSize];
 	} _AlignMemBlockHdr;
 
-#	define IS_2_POW_N(d_Value)   (((d_Value)&(d_Value-1)) == 0)
+#	define DIs2PowN(d_Value)   (((d_Value)&(d_Value-1)) == 0)
 
-#	define nNoMansLandSize 4
+#	define DNoMansLandSize 4
 
 	static unsigned char _bNoMansLandFill = 0xFD; // fill no-man's land with this
 	static unsigned char _bAlignLandFill = 0xED; // fill no-man's land for aligned routines
@@ -766,7 +766,7 @@ extern "C"
 
 		r_ptr = ((ptr + nonuser_size + offset) & ~align) - offset;
 		pHdr = (_AlignMemBlockHdr *)(r_ptr - t_ptr) - 1;
-		memset((void *)pHdr->Gap, _bAlignLandFill, nAlignGapSize);
+		memset((void *)pHdr->Gap, _bAlignLandFill, DAlignGapSize);
 		pHdr->pHead = (void *)ptr;
 		return (void *)r_ptr;
 	}
@@ -797,7 +797,7 @@ extern "C"
 
 		s_pHdr = (_AlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
 
-		if (CheckBytes((unsigned char *)memblock - nNoMansLandSize, _bNoMansLandFill, nNoMansLandSize))
+		if (CheckBytes((unsigned char *)memblock - DNoMansLandSize, _bNoMansLandFill, DNoMansLandSize))
 		{
 			// We don't know where (file, linenum) memblock was allocated
 			_RPT1(_CRT_ERROR, "The block at 0x%p was not allocated by _aligned routines, use realloc()", memblock);
@@ -805,7 +805,7 @@ extern "C"
 			return NULL;
 		}
 
-		if (!CheckBytes(s_pHdr->Gap, _bAlignLandFill, nAlignGapSize))
+		if (!CheckBytes(s_pHdr->Gap, _bAlignLandFill, DAlignGapSize))
 		{
 			// We don't know where (file, linenum) memblock was allocated
 			_RPT1(_CRT_ERROR, "Damage before 0x%p which was allocated by aligned routine\n", memblock);
@@ -828,7 +828,7 @@ extern "C"
 
 		r_ptr = ((ptr + nonuser_size + offset) & ~align) - offset;
 		pHdr = (_AlignMemBlockHdr *)(r_ptr - t_ptr) - 1;
-		memset((void *)pHdr->Gap, _bAlignLandFill, nAlignGapSize);
+		memset((void *)pHdr->Gap, _bAlignLandFill, DAlignGapSize);
 		pHdr->pHead = (void *)ptr;
 
 		memcpy((void *)r_ptr, memblock, mov_sz > size ? size : mov_sz);
@@ -876,14 +876,14 @@ extern "C"
 
 		pHdr = (_AlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
 
-		if (CheckBytes((unsigned char *)memblock - nNoMansLandSize, _bNoMansLandFill, nNoMansLandSize))
+		if (CheckBytes((unsigned char *)memblock - DNoMansLandSize, _bNoMansLandFill, DNoMansLandSize))
 		{
 			// We don't know where (file, linenum) memblock was allocated
 			_RPT1(_CRT_ERROR, "The block at 0x%p was not allocated by _aligned routines, use free()", memblock);
 			return;
 		}
 
-		if (!CheckBytes(pHdr->Gap, _bAlignLandFill, nAlignGapSize))
+		if (!CheckBytes(pHdr->Gap, _bAlignLandFill, DAlignGapSize))
 		{
 			// We don't know where (file, linenum) memblock was allocated
 			_RPT1(_CRT_ERROR, "Damage before 0x%p which was allocated by aligned routine\n", memblock);
