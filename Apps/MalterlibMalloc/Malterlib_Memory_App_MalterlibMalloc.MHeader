@@ -31,7 +31,11 @@ Property
 		%File "Source/*"
 		%File "../../Source/Malterlib_Memory_SystemOverride_MacOSLibSystem.cpp"
 		{
-			!!MalterlibMemoryManager_OverrideDll true
+			&
+			{
+				MalterlibMemoryManager_OverrideDll true
+				PlatformFamily "macOS"
+			}
 		}
 	}
 	%Dependency "Lib_Malterlib"
