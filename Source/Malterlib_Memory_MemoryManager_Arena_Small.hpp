@@ -167,7 +167,11 @@ namespace NMib::NMemory
 		if (Size < 2)
 			iSlab = 0;
 		else if (Size <= TCMemoryManagerArena<t_CParams>::mc_MinAlignment)
+		{
+			DMibFastCheck(Size - 1 != 0);
+			DMibAnalyzerAssume(Size - 1 != 0);
 			iSlab = NMib::fg_GetHighestBitSetNoZero(Size - 1) + 1;
+		}
 		else
 		{
 			iSlab

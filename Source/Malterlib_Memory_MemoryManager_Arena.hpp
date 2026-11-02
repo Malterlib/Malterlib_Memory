@@ -439,6 +439,7 @@ namespace NMib::NMemory
 			{
 				umint Size = fg_AlignUp(_Size, t_CParams::mc_MinNormalSizeAlignment);
 				DMibFastCheck(Size >= sizeof(void *) * 2);
+				DMibAnalyzerAssume(Size >= sizeof(void *) * 2);
 				umint SlabBucket = NMib::fg_GetHighestBitSetNoZero(Size);
 				umint SlabBucketGranularity = (umint(1) << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
 				return fg_AlignUp(Size, SlabBucketGranularity);
@@ -452,6 +453,8 @@ namespace NMib::NMemory
 		else
 		{
 			umint Size = fg_AlignUp(fg_Max(_Size, mc_MinAllocSize), t_CParams::mc_MinNormalSizeAlignment);
+			DMibFastCheck(Size != 0);
+			DMibAnalyzerAssume(Size != 0);
 			umint SlabBucket = NMib::fg_GetHighestBitSetNoZero(Size);
 			umint SlabBucketGranularity = (umint(1) << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
 			return fg_AlignUp(Size, SlabBucketGranularity);
@@ -541,6 +544,8 @@ namespace NMib::NMemory
 			{
 				_pSlab->f_DecommitSubSlabs(_iSubSlab, nSubSlabs);
 
+				DMibFastCheck(nSubSlabs != 0);
+				DMibAnalyzerAssume(nSubSlabs != 0);
 				umint Level = NMib::fg_GetHighestBitSetNoZero(nSubSlabs);
 
 				DMibFastCheck(((_iSubSlab >> Level) << Level) == _iSubSlab);
@@ -565,6 +570,8 @@ namespace NMib::NMemory
 		{
 			_pSlab->f_DecommitSubSlabs(_iSubSlab, nSubSlabs);
 
+			DMibFastCheck(nSubSlabs != 0);
+			DMibAnalyzerAssume(nSubSlabs != 0);
 			umint Level = NMib::fg_GetHighestBitSetNoZero(nSubSlabs);
 
 			DMibFastCheck(((_iSubSlab >> Level) << Level) == _iSubSlab);

@@ -176,6 +176,7 @@ namespace NMib::NMemory
 				else
 				{
 					DMibFastCheck(FreeState.m_Bits != 0);
+					DMibAnalyzerAssume(FreeState.m_Bits != 0);
 
 					umint iWord = NMib::fg_GetLowestBitSetNoZero(FreeState.m_Bits);
 					umint AlignedSize = (umint(1) << SlabBucket) + (_pSlab->m_SlabType << (SlabBucket - t_CParams::mc_SizesPerLevelShift));
@@ -566,9 +567,10 @@ namespace NMib::NMemory
 							}
 
 							Word = *Current.m_pWord;
-							DMibFastCheck(Word != 0);
 						}
 
+						DMibFastCheck(Word != 0);
+						DMibAnalyzerAssume(Word != 0);
 						umint iBit = NMib::fg_GetLowestBitSetNoZero(Word);
 
 						*Current.m_pWord = Word & (Word - 1);
@@ -709,6 +711,7 @@ namespace NMib::NMemory
 			Size = fg_AlignUp(_Size, t_CParams::mc_MinNormalSizeAlignment);
 
 		DMibFastCheck(Size >= t_CParams::mc_MinNormalAllocSize);
+		DMibAnalyzerAssume(Size >= t_CParams::mc_MinNormalAllocSize);
 
 		umint AlignedSize;
 		umint SubIndex;
@@ -920,6 +923,8 @@ namespace NMib::NMemory
 
 						while (1)
 						{
+							DMibFastCheck(Word != 0);
+							DMibAnalyzerAssume(Word != 0);
 							umint Index = IndexBase + NMib::fg_GetLowestBitSetNoZero(Word);
 							Word &= Word - 1;
 
@@ -1083,6 +1088,8 @@ namespace NMib::NMemory
 		if (_AlignedSize > MinSize)
 		{
 			uint32 nSubSlabs = t_CParams::fs_DivideBySlabMultiplier(_AlignedSize/t_CParams::mc_SubSlabSize, _SubIndex);
+			DMibFastCheck(nSubSlabs != 0);
+			DMibAnalyzerAssume(nSubSlabs != 0);
 			SizeType = NMib::fg_GetHighestBitSetNoZero(nSubSlabs);
 			DMibFastCheck(((umint(1) << SizeType)) == nSubSlabs);
 		}

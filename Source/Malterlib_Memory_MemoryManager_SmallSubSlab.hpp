@@ -76,6 +76,8 @@ namespace NMib::NMemory
 		m_Params.m_FirstFreeList = 0;
 		m_Params.m_nAllocated = 0;
 		m_Params.m_AllocSize = _AllocSize;
+		DMibFastCheck(_AllocSize != 0);
+		DMibAnalyzerAssume(_AllocSize != 0);
 		m_Params.m_Alignment = 1 << fg_GetLowestBitSetNoZero(_AllocSize);
 
 		uint8 *pArray = f_GetArray();
