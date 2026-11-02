@@ -115,6 +115,17 @@ namespace NMib::NMemory
 }
 
 #if defined(DMibPOverrideOperatorNew)
+namespace
+{
+	inline_always umint fg_GetOperatorNewAlignment(std::size_t _Size) noexcept
+	{
+		if (_Size == 0) // operator new(0) is valid and has to return a unique pointer
+			return 1;
+
+		return umint(1) << NMib::fg_GetLowestBitSetNoZero(_Size);
+	}
+}
+
 #	if defined(DMibSanitizerEnabled) && !defined(DPlatformFamily_macOS) && !defined(DPlatformFamily_Windows)
 // operator delete(void*, std::align_val_t)
 extern "C" void __wrap__ZdlPvSt11align_val_tRKSt9nothrow_t(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow)
@@ -154,7 +165,7 @@ extern "C" void *__wrap__Znwm(std::size_t _Size)
 extern "C" void *__wrap__Znwj(std::size_t _Size)
 #		endif
 {
-	return NMib::NMemory::fg_AllocAligned(_Size, umint(1) << NMib::fg_GetLowestBitSetNoZero(_Size));
+	return NMib::NMemory::fg_AllocAligned(_Size, fg_GetOperatorNewAlignment(_Size));
 }
 
 #		if DMibPPtrBits >= 64
@@ -166,7 +177,7 @@ extern "C" void *__wrap__ZnwjRKSt9nothrow_t(std::size_t _Size, std::nothrow_t co
 {
 	try
 	{
-		return NMib::NMemory::fg_AllocAligned(_Size, umint(1) << NMib::fg_GetLowestBitSetNoZero(_Size));
+		return NMib::NMemory::fg_AllocAligned(_Size, fg_GetOperatorNewAlignment(_Size));
 	}
 	catch (NMib::NException::CException const &)
 	{
@@ -209,7 +220,7 @@ extern "C" void *__wrap__Znam(std::size_t _Size)
 extern "C" void *__wrap__Znaj(std::size_t _Size)
 #		endif
 {
-	return NMib::NMemory::fg_AllocAligned(_Size, umint(1) << NMib::fg_GetLowestBitSetNoZero(_Size));
+	return NMib::NMemory::fg_AllocAligned(_Size, fg_GetOperatorNewAlignment(_Size));
 }
 
 #		if DMibPPtrBits >= 64
@@ -221,7 +232,7 @@ extern "C" void *__wrap__ZnajRKSt9nothrow_t(std::size_t _Size, std::nothrow_t co
 {
 	try
 	{
-		return NMib::NMemory::fg_AllocAligned(_Size, umint(1) << NMib::fg_GetLowestBitSetNoZero(_Size));
+		return NMib::NMemory::fg_AllocAligned(_Size, fg_GetOperatorNewAlignment(_Size));
 	}
 	catch (NMib::NException::CException const &)
 	{
@@ -357,7 +368,7 @@ only_parameters_aliased void calling_convention_c operator delete (void *_pMemor
 // _Znwm
 only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size)
 {
-	return NMib::NMemory::fg_AllocAligned(_Size, umint(1) << NMib::fg_GetLowestBitSetNoZero(_Size));
+	return NMib::NMemory::fg_AllocAligned(_Size, fg_GetOperatorNewAlignment(_Size));
 }
 
 // _ZnwmRKSt9nothrow_t
@@ -365,7 +376,7 @@ only_parameters_aliased malloc_like void * calling_convention_c operator new (st
 {
 	try
 	{
-		return NMib::NMemory::fg_AllocAligned(_Size, umint(1) << NMib::fg_GetLowestBitSetNoZero(_Size));
+		return NMib::NMemory::fg_AllocAligned(_Size, fg_GetOperatorNewAlignment(_Size));
 	}
 	catch (NMib::NException::CException const &)
 	{
@@ -400,7 +411,7 @@ only_parameters_aliased void calling_convention_c operator delete (void *_pMemor
 // _Znam
 only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size)
 {
-	return NMib::NMemory::fg_AllocAligned(_Size, umint(1) << NMib::fg_GetLowestBitSetNoZero(_Size));
+	return NMib::NMemory::fg_AllocAligned(_Size, fg_GetOperatorNewAlignment(_Size));
 }
 
 // _ZnamRKSt9nothrow_t
@@ -408,7 +419,7 @@ only_parameters_aliased malloc_like void * calling_convention_c operator new[] (
 {
 	try
 	{
-		return NMib::NMemory::fg_AllocAligned(_Size, umint(1) << NMib::fg_GetLowestBitSetNoZero(_Size));
+		return NMib::NMemory::fg_AllocAligned(_Size, fg_GetOperatorNewAlignment(_Size));
 	}
 	catch (NMib::NException::CException const &)
 	{
