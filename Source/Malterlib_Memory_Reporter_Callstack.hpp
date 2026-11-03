@@ -492,7 +492,7 @@ namespace NMib::NMemory
 		++_pCallstack->m_Total.m_nAllocations;
 		_pCallstack->m_Total.m_nBytes += _Size;
 
-		return bCreated;
+		return MapResult.f_WasCreated();
 	}
 
 	CCallstackMemoryReporter::CCallstack *CCallstackMemoryReporter::fp_RemoveAllocation(umint _MemoryAllocator, umint _Address)
