@@ -431,7 +431,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_small umint TCMemoryManagerArena<t_CParams>::fs_GetAllocSize(umint _Size)
+	inline_small umint TCMemoryManagerArena<t_CParams>::fsp_GetAllocSize(umint _Size)
 	{
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{

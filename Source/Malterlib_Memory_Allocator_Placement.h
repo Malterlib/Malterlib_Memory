@@ -26,6 +26,7 @@ namespace NMib::NMemory
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Placement>;
 
 		inline_always CAllocator_Placement();
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		inline_always static bool f_IsStatic(void const *_pBlock);
 		inline_always static bool f_OnlyOneAlloc();
 		inline_always static umint f_StaticAddresses();
@@ -179,6 +180,7 @@ namespace NMib::NMemory
 		inline_always only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
 		inline_always only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
 		inline_always only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
+		// NOLINTEND(malterlib-function-naming)
 	};
 }
 

@@ -201,7 +201,7 @@ namespace NMib::NMemory
 		// Flat size-class number for the per-size-class arrays. Callers that already hold the
 		// unnormalized sub index (before the align-up carry is folded into the size level) can
 		// pass it directly: class (Level, mc_NumSizesPerLevel) is class (Level + 1, 0)
-		static constexpr umint fs_NormalSizeClass(umint _SlabBucket, umint _SubIndex);
+		static constexpr umint fsp_NormalSizeClass(umint _SlabBucket, umint _SubIndex);
 		bool fp_CheckFreeSubSlabChain(TCMemoryManagerSlabShared<t_CParams> *_pSlab, umint _iSubSlab, EMemoryManagerCheckFlag _Flags);
 
 		// mc_bReapInCleanup: cross-thread frees land in per-sub-slab pending state, discovered
@@ -242,7 +242,7 @@ namespace NMib::NMemory
 		void fp_GarbageCollectConsolidate();
 		inline_never void fp_ConsolidateSubSlab(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab);
 
-		static umint fs_GetAllocSize(umint _Size);
+		static umint fsp_GetAllocSize(umint _Size);
 
 		[[nodiscard]] bool fp_FreeSubSlab(TCMemoryManagerSlabShared<t_CParams> *_pSlab, uint32 _iSubSlab);
 
@@ -260,7 +260,7 @@ namespace NMib::NMemory
 
 		bool fp_ProcessMessages(CNormalFreeStoreList *_pFreeList);
 		bool fp_ProcessMessagesAbortable(bool &o_bAborted, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
-		bool f_HasPendingMessages() const;
+		bool fp_HasPendingMessages() const;
 		template <bool tf_bAbortable, bool tf_bFreeList>
 		inline_never bool fp_ProcessMessageList(umint &o_MessageList, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena, CNormalFreeStoreList *_pFreeList, smint &_nToProcess);
 

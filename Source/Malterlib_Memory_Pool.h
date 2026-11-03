@@ -96,12 +96,6 @@ namespace NMib::NMemory
 
 			void f_Destruct(ch8 const *_pTypeName);
 
-			void fp_AddChunk(void *_pMem, umint _Size)
-			{
-				CChunk *pNewChunk = new(_pMem) CChunk(m_FreeBlocks, _Size);
-				m_Chunks.f_Insert(pNewChunk);
-			}
-
 			void *f_GetBlock()
 			{
 				TCBlock<t_CAllocator> *pBlock = m_FreeBlocks.f_Pop();
@@ -154,6 +148,13 @@ namespace NMib::NMemory
 #ifdef DMibDebug
 				--m_NumUsed;
 #endif
+			}
+
+		private:
+			void fp_AddChunk(void *_pMem, umint _Size)
+			{
+				CChunk *pNewChunk = new(_pMem) CChunk(m_FreeBlocks, _Size);
+				m_Chunks.f_Insert(pNewChunk);
 			}
 		};
 	};
@@ -648,42 +649,6 @@ namespace NMib::NMemory
 		{
 		}
 
-		inline_small void fp_ReturnBlock(void *_pBlock)
-		{
-			DMibMemoryGoingToReportScope(this, mc_Reporting);
-			{
-				DMibLockTyped(t_CLock, *this);
-				m_Pool.f_ReturnBlock(_pBlock);
-			}
-#if DMibConfig_Memory_Shims_Enable
-			if constexpr (mc_Reporting)
-				DMibMemoryReportFree(this, m_DebugName.f_GetStr(), _pBlock, sizeof(t_CData), nullptr);
-#endif
-		}
-
-		inline_medium void *fp_GetBlock()
-		{
-			DMibMemoryGoingToReportScope(this, mc_Reporting);
-
-			DMibMemoryReportExpression(fp32 Overhead);
-			void *pBlock;
-			{
-				DMibLockTyped(t_CLock, *this);
-				if (t_CAggregateData::f_ShouldInit())
-					f_Construct(ENumaNode_Default);
-
-				pBlock = m_Pool.f_GetBlock();
-				DMibFastCheck(pBlock); // Memory error ??
-				DMibMemoryReportExpression(Overhead = m_Pool.f_Overhead());
-			}
-
-#if DMibConfig_Memory_Shims_Enable
-			if constexpr (mc_Reporting)
-				DMibMemoryReportAlloc(this, m_DebugName.f_GetStr(), pBlock, 0, sizeof(t_CData), sizeof(t_CData), Overhead, nullptr);
-#endif
-			return pBlock;
-		}
-
 #if DMibConfig_Memory_Shims_Enable
 		t_CDebugStrType m_DebugName;
 #endif
@@ -756,6 +721,43 @@ namespace NMib::NMemory
 			t_CData *pObject = new(pMem) t_CData(fg_Forward<tfp_CParams>(p_Params)...);
 			return pObject;
 		}
+
+	private:
+		inline_small void fp_ReturnBlock(void *_pBlock)
+		{
+			DMibMemoryGoingToReportScope(this, mc_Reporting);
+			{
+				DMibLockTyped(t_CLock, *this);
+				m_Pool.f_ReturnBlock(_pBlock);
+			}
+#if DMibConfig_Memory_Shims_Enable
+			if constexpr (mc_Reporting)
+				DMibMemoryReportFree(this, m_DebugName.f_GetStr(), _pBlock, sizeof(t_CData), nullptr);
+#endif
+		}
+
+		inline_medium void *fp_GetBlock()
+		{
+			DMibMemoryGoingToReportScope(this, mc_Reporting);
+
+			DMibMemoryReportExpression(fp32 Overhead);
+			void *pBlock;
+			{
+				DMibLockTyped(t_CLock, *this);
+				if (t_CAggregateData::f_ShouldInit())
+					f_Construct(ENumaNode_Default);
+
+				pBlock = m_Pool.f_GetBlock();
+				DMibFastCheck(pBlock); // Memory error ??
+				DMibMemoryReportExpression(Overhead = m_Pool.f_Overhead());
+			}
+
+#if DMibConfig_Memory_Shims_Enable
+			if constexpr (mc_Reporting)
+				DMibMemoryReportAlloc(this, m_DebugName.f_GetStr(), pBlock, 0, sizeof(t_CData), sizeof(t_CData), Overhead, nullptr);
+#endif
+			return pBlock;
+		}
 	};
 
 #define DMibMemPoolStaticImpl(d_PoolType, d_PoolName) d_PoolType d_PoolName = {0};
@@ -767,11 +769,11 @@ namespace NMib::NMemory
 	template <typename t_CLock>
 	struct TCNoAggregateData : public t_CLock
 	{
-		static inline_small void f_InitDone()
+		inline_small void f_InitDone()
 		{
 		}
 
-		static inline_small bool f_ShouldInit()
+		inline_small bool f_ShouldInit()
 		{
 			return false;
 		}
@@ -884,6 +886,7 @@ namespace NMib::NMemory
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<TCStaticPoolAllocator>;
 		using CStaticPool = TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>;
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static inline_small umint f_StaticAddresses()
 		{
 			return 0;
@@ -1116,6 +1119,8 @@ namespace NMib::NMemory
 		{
 			return CAutoDestroy{_pMemory, _Size};
 		}
+
+		// NOLINTEND(malterlib-function-naming)
 	};
 
 	template <typename t_CType, umint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
@@ -1173,6 +1178,7 @@ namespace NMib::NMemory
 
 		TCPool<t_CType, t_GrowSize, t_CLockType, t_CPoolType, t_CAllocator> m_Pool;
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static inline_small umint f_StaticAddresses()
 		{
 			return 0;
@@ -1227,6 +1233,8 @@ namespace NMib::NMemory
 		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect)
 		{
 		}
+
+		// NOLINTEND(malterlib-function-naming)
 
 		inline_small auto f_AllocWithSizeDebug
 			(
@@ -1359,6 +1367,7 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static inline_small void f_Commit(void *_pMem, umint _Size)
 		{
 		}
@@ -1366,6 +1375,8 @@ namespace NMib::NMemory
 		static inline_small void f_Decommit(void *_pMem, umint _Size)
 		{
 		}
+
+		// NOLINTEND(malterlib-function-naming)
 
 		inline_small void f_Free(void *_pBlock, umint _Size)
 		{
@@ -1433,6 +1444,7 @@ namespace NMib::NMemory
 		{
 		}
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static inline_small umint f_StaticAddresses()
 		{
 			return 0;
@@ -1487,6 +1499,8 @@ namespace NMib::NMemory
 		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect)
 		{
 		}
+
+		// NOLINTEND(malterlib-function-naming)
 
 		inline_small auto f_AllocWithSizeDebug
 			(
@@ -1619,6 +1633,7 @@ namespace NMib::NMemory
 				return m_Pool.f_GetBlock();
 		}
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static inline_small void f_Commit(void *_pMem, umint _Size)
 		{
 		}
@@ -1626,6 +1641,8 @@ namespace NMib::NMemory
 		static inline_small void f_Decommit(void *_pMem, umint _Size)
 		{
 		}
+
+		// NOLINTEND(malterlib-function-naming)
 
 		inline_small void f_Free(void *_pBlock, umint _Size)
 		{

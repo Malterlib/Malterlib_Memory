@@ -29,6 +29,7 @@ namespace NMib::NMemory
 			return COrdering_Strong::equal;
 		}
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static bool f_OnlyOneAlloc();
 		static bool f_IsStatic(void const *_pBlock);
 		static umint f_StaticAddresses();
@@ -38,6 +39,7 @@ namespace NMib::NMemory
 		static constexpr bool f_CanCommit();
 		static bool f_CanProtect();
 		static bool f_DeterministicSize();
+		// NOLINTEND(malterlib-function-naming)
 		static ch8 ms_HeapName[];
 
 #if DMibConfig_Memory_Shims_Enable
@@ -49,6 +51,7 @@ namespace NMib::NMemory
 		static CHeapInit ms_HeapInit;
 #endif
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static void f_Protect(void *_pMem, umint _Size, uaint _Protect);
 		static void *f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
@@ -162,14 +165,17 @@ namespace NMib::NMemory
 		;
 		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
+		// NOLINTEND(malterlib-function-naming)
 	};
 
 	struct CAllocator_VirtualNoCommit : public CAllocator_Virtual
 	{
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static constexpr bool f_CanCommit();
 		static bool f_CanProtect();
 		static void f_Commit(void *_pMem, umint _Size);
 		static void f_Decommit(void *_pMem, umint _Size);
+		// NOLINTEND(malterlib-function-naming)
 	};
 
 	struct CAllocator_VirtualNoTracking : public CAllocator_Base
@@ -187,6 +193,7 @@ namespace NMib::NMemory
 			return COrdering_Strong::equal;
 		}
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static bool f_OnlyOneAlloc();
 		static bool f_IsStatic(void const *_pBlock);
 		static umint f_StaticAddresses();
@@ -309,13 +316,16 @@ namespace NMib::NMemory
 		;
 		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
+		// NOLINTEND(malterlib-function-naming)
 	};
 
 	struct CAllocator_VirtualNoTrackingNoCommit : public CAllocator_VirtualNoTracking
 	{
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static constexpr bool f_CanCommit();
 		static bool f_CanProtect();
 		static void f_Commit(void *_pMem, umint _Size);
 		static void f_Decommit(void *_pMem, umint _Size);
+		// NOLINTEND(malterlib-function-naming)
 	};
 }

@@ -401,7 +401,7 @@ namespace NMib::NMemory
 	///
 
 	template <umint t_AllocSize>
-	inline_small void TCAllocator_Placement<t_AllocSize>::f_DoCheck(umint _Size)
+	inline_small void TCAllocator_Placement<t_AllocSize>::fp_DoCheck(umint _Size)
 	{
 		DMibFastCheck(m_pPointer);
 #ifdef DMibDebug
@@ -538,7 +538,7 @@ namespace NMib::NMemory
 		)
 		-> void *
 	{
-		f_DoCheck(_Size);
+		fp_DoCheck(_Size);
 		return m_pPointer;
 	}
 
@@ -554,21 +554,21 @@ namespace NMib::NMemory
 		)
 		-> void *
 	{
-		f_DoCheck(_Size);
+		fp_DoCheck(_Size);
 		return m_pPointer;
 	}
 
 	template <umint t_AllocSize>
 	only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
-		f_DoCheck(_Size);
+		fp_DoCheck(_Size);
 		return m_pPointer;
 	}
 
 	template <umint t_AllocSize>
 	only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_Alloc(umint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
-		f_DoCheck(_Size);
+		fp_DoCheck(_Size);
 		return m_pPointer;
 	}
 
@@ -582,7 +582,7 @@ namespace NMib::NMemory
 		)
 		-> void *
 	{
-		f_DoCheck(_Size);
+		fp_DoCheck(_Size);
 		DMibFastCheck(((umint)m_pPointer & (_Alignment - 1)) == 0);
 		return m_pPointer;
 	}
@@ -590,7 +590,7 @@ namespace NMib::NMemory
 	template <umint t_AllocSize>
 	only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
-		f_DoCheck(_Size);
+		fp_DoCheck(_Size);
 		DMibFastCheck(((umint)m_pPointer & (_Alignment - 1)) == 0);
 		return m_pPointer;
 	}
@@ -599,7 +599,7 @@ namespace NMib::NMemory
 	only_parameters_aliased inline_small auto TCAllocator_Placement<t_AllocSize>::f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 		-> CAutoDestroy
 	{
-		f_DoCheck(_Size);
+		fp_DoCheck(_Size);
 		DMibFastCheck(((umint)m_pPointer & (_Alignment - 1)) == 0);
 
 		CAutoDestroy AutoDestroy;
@@ -612,7 +612,7 @@ namespace NMib::NMemory
 	template <umint t_AllocSize>
 	only_parameters_aliased inline_small auto TCAllocator_Placement<t_AllocSize>::f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
 	{
-		f_DoCheck(_Size);
+		fp_DoCheck(_Size);
 		DMibFastCheck(((umint)m_pPointer & (_Alignment - 1)) == 0);
 
 		CAutoDestroy AutoDestroy;
@@ -638,7 +638,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		f_DoCheck(_Size);
+		fp_DoCheck(_Size);
 		DMibFastCheck(((umint)m_pPointer & (_Alignment - 1)) == 0);
 
 		bool bRet = _Functor(m_pPointer, t_AllocSize);

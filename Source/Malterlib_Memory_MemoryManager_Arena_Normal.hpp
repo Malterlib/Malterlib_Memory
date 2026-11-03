@@ -247,12 +247,12 @@ namespace NMib::NMemory
 		else if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
 			if (_SlabBucket > 4) [[likely]]
-				return &m_CurrentSubSlabs.m_Normal[fs_NormalSizeClass(_SlabBucket, _SlabType)];
+				return &m_CurrentSubSlabs.m_Normal[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
 			else
 				return &m_CurrentSubSlabs.m_Level0[(_AlignedSize - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment];
 		}
 		else
-			return &m_CurrentSubSlabs.m_Normal[fs_NormalSizeClass(_SlabBucket, _SlabType)];
+			return &m_CurrentSubSlabs.m_Normal[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
 	}
 
 	template <typename t_CParams>
@@ -262,16 +262,16 @@ namespace NMib::NMemory
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
 			if (_SlabBucket > 4) [[likely]]
-				return &m_NormalSizeSlabs[fs_NormalSizeClass(_SlabBucket, _SlabType)];
+				return &m_NormalSizeSlabs[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
 			else
 				return &m_NormalSizeSlabsLevel0[(_AlignedSize - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment];
 		}
 		else
-			return &m_NormalSizeSlabs[fs_NormalSizeClass(_SlabBucket, _SlabType)];
+			return &m_NormalSizeSlabs[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
 	}
 
 	template <typename t_CParams>
-	inline_always constexpr umint TCMemoryManagerArena<t_CParams>::fs_NormalSizeClass(umint _SlabBucket, umint _SubIndex)
+	inline_always constexpr umint TCMemoryManagerArena<t_CParams>::fsp_NormalSizeClass(umint _SlabBucket, umint _SubIndex)
 	{
 		constexpr umint c_FirstBucket = mc_bUseSmallSizes ? 5 : t_CParams::mc_MinNormalSlabBucket;
 
@@ -502,7 +502,7 @@ namespace NMib::NMemory
 						DMibFastCheck(SlabBucket - 5 < mc_nNormalSizeLists);
 						DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-						pList = &m_NormalSizeSlabs[fs_NormalSizeClass(SlabBucket, SubIndex)];
+						pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
 					}
 					else
 					{
@@ -522,7 +522,7 @@ namespace NMib::NMemory
 					DMibFastCheck(SlabBucket - t_CParams::mc_MinNormalSlabBucket < mc_nNormalSizeLists);
 					DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-					pList = &m_NormalSizeSlabs[fs_NormalSizeClass(SlabBucket, SubIndex)];
+					pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
 				}
 			}
 
@@ -734,7 +734,7 @@ namespace NMib::NMemory
 						DMibFastCheck(SlabBucket - 5 < mc_nNormalSizeLists);
 						DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-						pList = &m_NormalSizeSlabs[fs_NormalSizeClass(SlabBucket, SubIndex)];
+						pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
 					}
 					else
 					{
@@ -754,7 +754,7 @@ namespace NMib::NMemory
 					DMibFastCheck(SlabBucket - t_CParams::mc_MinNormalSlabBucket < mc_nNormalSizeLists);
 					DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-					pList = &m_NormalSizeSlabs[fs_NormalSizeClass(SlabBucket, SubIndex)];
+					pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
 				}
 			}
 

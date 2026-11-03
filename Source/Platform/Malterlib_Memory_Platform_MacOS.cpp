@@ -31,7 +31,7 @@ namespace
 		return 0;
 	}
 
-	umint fg_SysCtl_mint(ch8 const *_pName)
+	umint fg_SysCtl_umint(ch8 const *_pName)
 	{
 		size_t Value = 0;
 		size_t DataSize = sizeof(Value);
@@ -47,7 +47,7 @@ namespace
 	{
 		// From: https://github.com/apple-oss-distributions/top/blob/a989bd5d18246e330e5feadd80958b913351f8ae/libtop.c#L851
 
-		return fg_AlignDown(fg_SysCtl_mint("machdep.memmap.Reserved") + fg_SysCtl_mint("machdep.memmap.Unusable") + fg_SysCtl_mint("machdep.memmap.Other"), 128 * 1024 * 1024);
+		return fg_AlignDown(fg_SysCtl_umint("machdep.memmap.Reserved") + fg_SysCtl_umint("machdep.memmap.Unusable") + fg_SysCtl_umint("machdep.memmap.Other"), 128 * 1024 * 1024);
 	}
 }
 

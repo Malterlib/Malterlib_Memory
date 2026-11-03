@@ -484,7 +484,7 @@ namespace NMib::NMemory
 					DMibFastCheck(SlabBucket - 5 < mc_nNormalSizeLists);
 					DMibFastCheck(SlabType < t_CParams::mc_NumSizesPerLevel);
 
-					pList = &m_NormalSizeSlabs[fs_NormalSizeClass(SlabBucket, SlabType)];
+					pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SlabType)];
 				}
 				else
 				{
@@ -501,7 +501,7 @@ namespace NMib::NMemory
 				DMibFastCheck(SlabBucket - t_CParams::mc_MinNormalSlabBucket < mc_nNormalSizeLists);
 				DMibFastCheck(SlabType < t_CParams::mc_NumSizesPerLevel);
 
-				pList = &m_NormalSizeSlabs[fs_NormalSizeClass(SlabBucket, SlabType)];
+				pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SlabType)];
 			}
 
 			umint nBlocksInList = umint(pEnd - pStartRemove) / AlignedSize;

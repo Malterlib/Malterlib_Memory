@@ -607,7 +607,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_small bool TCMemoryManagerArena<t_CParams>::f_HasPendingMessages() const
+	inline_small bool TCMemoryManagerArena<t_CParams>::fp_HasPendingMessages() const
 	{
 		if constexpr (mc_bUseFreeMessages)
 		{

@@ -230,6 +230,7 @@ namespace NMib::NMemory
 	{
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Empty>;
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static inline_small umint f_GranularityAlloc(bool _bLargePages = false)
 		{
 			return 1;
@@ -449,6 +450,8 @@ namespace NMib::NMemory
 		{
 			return CAutoDestroy{};
 		}
+
+		// NOLINTEND(malterlib-function-naming)
 	};
 
 	struct CAllocator_Disable : public CAllocator_Base
@@ -703,7 +706,7 @@ namespace NMib::NMemory
 		template <typename t_CData, typename t_CSorter>
 		struct TCHelpQSort
 		{
-			static void fpr_QuickSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
+			static void fs_QuickSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
 			{
 				aint m;
 
@@ -711,27 +714,27 @@ namespace NMib::NMemory
 				{
 					if (_High - _Low <= 12)
 					{
-						fp_InsertSort(_pArray, _Low, _High, _fCompare);
+						fsp_InsertSort(_pArray, _Low, _High, _fCompare);
 						return;
 					}
 
-					m = fp_Partition(_pArray, _Low, _High, _fCompare);
+					m = fsp_Partition(_pArray, _Low, _High, _fCompare);
 
 					if (m - _Low <= _High - m)
 					{
-						fpr_QuickSort(_pArray, _Low, m - 1, _fCompare);
+						fs_QuickSort(_pArray, _Low, m - 1, _fCompare);
 						_Low = m + 1;
 					}
 					else
 					{
-						fpr_QuickSort(_pArray, m + 1, _High, _fCompare);
+						fs_QuickSort(_pArray, m + 1, _High, _fCompare);
 						_High = m - 1;
 					}
 				}
 			}
 
 		private:
-			static void fp_InsertSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
+			static void fsp_InsertSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
 			{
 				t_CData Temp;
 				aint i, j;
@@ -747,7 +750,7 @@ namespace NMib::NMemory
 				}
 			}
 
-			static aint fp_Partition(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
+			static aint fsp_Partition(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
 			{
 				t_CData Temp, Pivot;
 				aint i, j, p;
@@ -784,7 +787,7 @@ namespace NMib::NMemory
 	template <typename tf_CType, typename tf_CCompare>
 	void fg_QSort(tf_CType *_pToSort, umint _nNumElements, tf_CCompare const &_fCompare)
 	{
-		NPrivate::TCHelpQSort<tf_CType, tf_CCompare>::fpr_QuickSort(_pToSort, 0, _nNumElements - 1, _fCompare);
+		NPrivate::TCHelpQSort<tf_CType, tf_CCompare>::fs_QuickSort(_pToSort, 0, _nNumElements - 1, _fCompare);
 	}
 }
 

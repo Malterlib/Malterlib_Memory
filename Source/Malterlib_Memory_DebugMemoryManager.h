@@ -77,30 +77,6 @@ namespace NMib::NMemory
 			m_Heap.f_DestroyCleanupThreads();
 		}
 
-		void fp_RemoveFreeBlock()
-		{
-			umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
-
-			--m_nFreeBlocks;
-			CMemoryBlock *pMemBlock = m_FreeBlocks.f_FindSmallest();
-			umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
-			m_nFreeMemBytes -= pMemBlock->m_RealSize;
-
-			uint8 *pBlock = pMemBlock->m_pStart;
-			uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
-			if (!m_bProtectOnDemand || m_bProtectionDemanded)
-				NSys::fg_Mem_VirtualProtect(pBlockStart, GranularityProtect * 2 + UserNeededSize, EProtect_ReadWrite);
-
-			umint Size = pMemBlock->m_RealSize;
-
-			m_FreeBlocks.f_Remove(pMemBlock);
-
-			{
-				DMibUnlock(m_Lock);
-				m_Heap.f_Free(pBlock, Size);
-			}
-		}
-
 		CReportMemoryLightweight *f_ReportMemoryLightweightTo(CReportMemoryLightweight *_pMemoryReporter)
 		{
 			return (CReportMemoryLightweight *)m_Heap.f_SetCustomThreadLocal(0, _pMemoryReporter);
@@ -187,45 +163,6 @@ namespace NMib::NMemory
 		void f_FreeNoSize(void *_pBlock)
 		{
 			fp_Free(_pBlock, 0);
-		}
-
-		void fp_Free(void *_pBlock, umint _Size)
-		{
-			if (!_pBlock)
-				return;
-			auto &Lock = m_Lock;
-			DMibLock(Lock);
-			uint8 *pUserBlock = (uint8 *)_pBlock;
-			CMemoryBlock *pMemBlock = m_Blocks.f_FindEqual(pUserBlock);
-			if (!pMemBlock)
-				DMibPDebugBreak;
-
-			if (_Size && _Size != pMemBlock->m_OriginalSize && _Size != pMemBlock->m_RealSize)
-				DMibPDebugBreak; // Misreported size
-
-			CReportMemoryLightweight *pReporter = (CReportMemoryLightweight *)m_Heap.f_GetCustomThreadLocal(0);
-			if (pReporter)
-				pReporter->f_Free(_Size);
-
-			umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
-
-			umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
-
-			m_FreeBlocks[m_Sequence++] = *pMemBlock;
-			++m_nFreeBlocks;
-			m_nFreeMemBytes += pMemBlock->m_RealSize;
-
-			uint8 *pBlock = pMemBlock->m_pStart;
-			uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
-			uint8 *pRetBlock = pBlockStart + GranularityProtect;
-
-			if (!m_bProtectOnDemand || m_bProtectionDemanded)
-				NSys::fg_Mem_VirtualProtect(pRetBlock, UserNeededSize, EProtect_Exec);
-
-			m_Blocks.f_Remove(pMemBlock);
-
-			while (m_nFreeMemBytes > m_nMaxFreeMemory)
-				fp_RemoveFreeBlock();
 		}
 
 		umint f_Size(void const *_pBlock) const
@@ -352,6 +289,69 @@ namespace NMib::NMemory
 				return NContainer::TCMapWithPool<uint8 *, CMemoryBlock>::fs_GetKey(this);
 			}
 		};
+
+		void fp_RemoveFreeBlock()
+		{
+			umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
+
+			--m_nFreeBlocks;
+			CMemoryBlock *pMemBlock = m_FreeBlocks.f_FindSmallest();
+			umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
+			m_nFreeMemBytes -= pMemBlock->m_RealSize;
+
+			uint8 *pBlock = pMemBlock->m_pStart;
+			uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
+			if (!m_bProtectOnDemand || m_bProtectionDemanded)
+				NSys::fg_Mem_VirtualProtect(pBlockStart, GranularityProtect * 2 + UserNeededSize, EProtect_ReadWrite);
+
+			umint Size = pMemBlock->m_RealSize;
+
+			m_FreeBlocks.f_Remove(pMemBlock);
+
+			{
+				DMibUnlock(m_Lock);
+				m_Heap.f_Free(pBlock, Size);
+			}
+		}
+
+		void fp_Free(void *_pBlock, umint _Size)
+		{
+			if (!_pBlock)
+				return;
+			auto &Lock = m_Lock;
+			DMibLock(Lock);
+			uint8 *pUserBlock = (uint8 *)_pBlock;
+			CMemoryBlock *pMemBlock = m_Blocks.f_FindEqual(pUserBlock);
+			if (!pMemBlock)
+				DMibPDebugBreak;
+
+			if (_Size && _Size != pMemBlock->m_OriginalSize && _Size != pMemBlock->m_RealSize)
+				DMibPDebugBreak; // Misreported size
+
+			CReportMemoryLightweight *pReporter = (CReportMemoryLightweight *)m_Heap.f_GetCustomThreadLocal(0);
+			if (pReporter)
+				pReporter->f_Free(_Size);
+
+			umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
+
+			umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
+
+			m_FreeBlocks[m_Sequence++] = *pMemBlock;
+			++m_nFreeBlocks;
+			m_nFreeMemBytes += pMemBlock->m_RealSize;
+
+			uint8 *pBlock = pMemBlock->m_pStart;
+			uint8 *pBlockStart = fg_AlignUp(pBlock, GranularityProtect);
+			uint8 *pRetBlock = pBlockStart + GranularityProtect;
+
+			if (!m_bProtectOnDemand || m_bProtectionDemanded)
+				NSys::fg_Mem_VirtualProtect(pRetBlock, UserNeededSize, EProtect_Exec);
+
+			m_Blocks.f_Remove(pMemBlock);
+
+			while (m_nFreeMemBytes > m_nMaxFreeMemory)
+				fp_RemoveFreeBlock();
+		}
 
 		umint m_Sequence;
 		NContainer::TCMapWithPool

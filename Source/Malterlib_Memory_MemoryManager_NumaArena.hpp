@@ -608,7 +608,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	bool TCMemoryManagerThreadLocal<t_CParams>::f_GarbageCollectLocalArenaIfPending()
 	{
-		if (!m_pArena->f_HasPendingMessages())
+		if (!m_pArena->fp_HasPendingMessages())
 			return false;
 
 		// Consolidating fully free sub-slabs into contiguous free-list runs restores the

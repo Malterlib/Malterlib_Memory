@@ -1063,7 +1063,7 @@ namespace
 		{
 		}
 
-		NMib::NStr::CStr GetDesc()
+		NMib::NStr::CStr f_GetDesc()
 		{
 			NMib::NStr::CStr Str = "StdLib";
 			return Str;
@@ -1131,7 +1131,7 @@ namespace
 		{
 		}
 
-		NMib::NStr::CStr GetDesc()
+		NMib::NStr::CStr f_GetDesc()
 		{
 			NMib::NStr::CStr Str = "StdLib";
 			return Str;
@@ -1188,7 +1188,7 @@ namespace
 		{
 		}
 
-		NMib::NStr::CStr GetDesc()
+		NMib::NStr::CStr f_GetDesc()
 		{
 			NMib::NStr::CStr Str = "Application";
 			return Str;

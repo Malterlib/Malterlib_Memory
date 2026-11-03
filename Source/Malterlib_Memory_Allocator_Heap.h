@@ -142,6 +142,7 @@ namespace NMib::NMemory
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Heap>;
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static bool f_IsStatic(void const *_pBlock);
 		static bool f_OnlyOneAlloc();
 		static umint f_StaticAddresses();
@@ -290,6 +291,7 @@ namespace NMib::NMemory
 		only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
 		only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
 		only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
+		// NOLINTEND(malterlib-function-naming)
 	};
 
 	struct CAllocator_NonTrackedHeap : public CAllocator_Base
@@ -310,6 +312,7 @@ namespace NMib::NMemory
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_NonTrackedHeap>;
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static bool f_IsStatic(void const *_pBlock);
 		static bool f_OnlyOneAlloc();
 		static umint f_StaticAddresses();
@@ -457,6 +460,7 @@ namespace NMib::NMemory
 		only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
 		only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
 		only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
+		// NOLINTEND(malterlib-function-naming)
 	};
 
 	struct CAllocator_HeapNoDelete : public CAllocator_Heap
@@ -488,6 +492,7 @@ namespace NMib::NMemory
 		TCAllocator_Placement &operator = (TCAllocator_Placement const &_Other) = delete;
 		TCAllocator_Placement(TCAllocator_Placement &&_Other) noexcept;
 		TCAllocator_Placement &operator = (TCAllocator_Placement &&_Other) noexcept;
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static bool f_IsStatic(void const *_pBlock);
 		static bool f_OnlyOneAlloc();
 		static umint f_StaticAddresses();
@@ -502,6 +507,7 @@ namespace NMib::NMemory
 		static bool f_CanProtect();
 		static bool f_DeterministicSize();
 		only_parameters_aliased static void f_Protect(void *_pMem, umint _Size, uaint _Protect);
+		// NOLINTEND(malterlib-function-naming)
 		only_parameters_aliased malloc_like auto f_AllocWithSizeDebug
 			(
 				umint &_Size
@@ -560,6 +566,7 @@ namespace NMib::NMemory
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
 		;
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		only_parameters_aliased malloc_like static auto f_Realloc
 			(
 				void *_pMem
@@ -601,6 +608,7 @@ namespace NMib::NMemory
 		only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
 		only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
 		only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
+		// NOLINTEND(malterlib-function-naming)
 
 	private:
 		void *m_pPointer;
@@ -608,7 +616,7 @@ namespace NMib::NMemory
 		bool m_bPointerTaken;
 #endif
 
-		void f_DoCheck(umint _Size);
+		void fp_DoCheck(umint _Size);
 	};
 }
 
@@ -660,7 +668,9 @@ namespace NMib::NMemory
 		TCAllocator_Static &operator = (TCAllocator_Static &&_Other);
 		TCAllocator_Static &operator = (TCAllocator_Static const &_Other);
 		bool f_IsStatic(void const *_pBlock) const;
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static bool f_OnlyOneAlloc();
+		// NOLINTEND(malterlib-function-naming)
 		umint f_StaticAddresses();
 		umint f_GranularityAlloc(bool _bLargePages = false);
 		umint f_GranularityCommit(bool _bLargePages = false);

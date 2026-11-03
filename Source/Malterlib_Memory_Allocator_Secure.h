@@ -59,6 +59,7 @@ namespace NMib::NMemory
 		using t_CBaseAllocator::operator <=>;
 		using t_CBaseAllocator::operator ==;
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static void *f_Realloc(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		static auto f_ReallocDebug
 			(
@@ -89,6 +90,7 @@ namespace NMib::NMemory
 		;
 		static void f_Free(void *_pBlock, umint _Size);
 		static void f_FreeNoSize(void *_pBlock);
+		// NOLINTEND(malterlib-function-naming)
 	};
 
 	struct CAllocator_HeapSecure : public TCAllocator_Secure<CAllocator_Heap, true>

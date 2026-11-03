@@ -671,7 +671,7 @@ extern "C"
 }
 
 // Returns the size of a block or 0 if not in this zone; must be fast, especially for negative answers
-size_t fg_Malterlib_zone_size(malloc_zone_t_known_version *_pZone, void const *_pMemory)
+size_t fg_MalterlibZoneSize(malloc_zone_t_known_version *_pZone, void const *_pMemory)
 {
 	if (!_pMemory)
 		return 0;
@@ -724,7 +724,7 @@ size_t fg_Malterlib_zone_size(malloc_zone_t_known_version *_pZone, void const *_
 #endif
 }
 
-void fg_Malterlib_zone_free(malloc_zone_t_known_version *_pZone, void *_pMemory)
+void fg_MalterlibZoneFree(malloc_zone_t_known_version *_pZone, void *_pMemory)
 {
 	if (!_pMemory)
 		return;
@@ -743,7 +743,7 @@ void fg_Malterlib_zone_free(malloc_zone_t_known_version *_pZone, void *_pMemory)
 #endif
 }
 
-void fg_Malterlib_zone_free_definite_size(malloc_zone_t_known_version *_pZone, void *_pMemory, size_t _Size)
+void fg_MalterlibZoneFreeDefiniteSize(malloc_zone_t_known_version *_pZone, void *_pMemory, size_t _Size)
 {
 	if (!_pMemory)
 		return;
@@ -766,7 +766,7 @@ void fg_Malterlib_zone_free_definite_size(malloc_zone_t_known_version *_pZone, v
 #endif
 }
 
-size_t fg_Malterlib_zone_pressure_relief(malloc_zone_t_known_version *_pZone, size_t _Goal)
+size_t fg_MalterlibZonePressureRelief(malloc_zone_t_known_version *_pZone, size_t _Goal)
 {
 	fg_GetSys()->f_MemoryManager_GarbageCollect();
 	return 0;
@@ -777,36 +777,36 @@ size_t fg_Malterlib_zone_pressure_relief(malloc_zone_t_known_version *_pZone, si
  * False positives are allowed (e.g. the pointer was freed, or it's in zone space that has
  * not yet been allocated. False negatives are not allowed.
  */
-boolean_t fg_Malterlib_zone_claimed_address(malloc_zone_t_known_version *_pZone, void *_pMemory)
+boolean_t fg_MalterlibZoneClaimedAddress(malloc_zone_t_known_version *_pZone, void *_pMemory)
 {
-	return fg_Malterlib_zone_size(_pZone, _pMemory) != 0;
+	return fg_MalterlibZoneSize(_pZone, _pMemory) != 0;
 }
 
 extern "C" void fg_Malterlib_free(void *_pMemory);
 
 /* For zone 0 implementations: try to free ptr, promising to call find_zone_and_free
  * if it turns out not to belong to us */
-void fg_Malterlib_zone_try_free_default(malloc_zone_t_known_version *_pZone, void *_pMemory)
+void fg_MalterlibZoneTryFreeDefault(malloc_zone_t_known_version *_pZone, void *_pMemory)
 {
-	if (fg_Malterlib_zone_size(_pZone, _pMemory) != 0)
-		return fg_Malterlib_zone_free(_pZone, _pMemory);
+	if (fg_MalterlibZoneSize(_pZone, _pMemory) != 0)
+		return fg_MalterlibZoneFree(_pZone, _pMemory);
 
 	fg_Malterlib_free(_pMemory);
 }
 
-void *fg_Malterlib_zone_memalign(malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size);
+void *fg_MalterlibZoneMemalign(malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size);
 
 /* memory allocation with an extensible binary flags option. Present in
  * version >= 15 */
-void *fg_Malterlib_zone_malloc_with_options(malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options)
+void *fg_MalterlibZoneMallocWithOptions(malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options)
 {
-	auto pRet = fg_Malterlib_zone_memalign(_pZone, _Align, _Size);
+	auto pRet = fg_MalterlibZoneMemalign(_pZone, _Align, _Size);
 	if (pRet && (_Options & 1))
 		fg_MemClear(pRet, _Size);
 	return pRet;
 }
 
-void *fg_Malterlib_zone_malloc(malloc_zone_t_known_version *_pZone, size_t _Size)
+void *fg_MalterlibZoneMalloc(malloc_zone_t_known_version *_pZone, size_t _Size)
 {
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
@@ -844,7 +844,7 @@ void *fg_Malterlib_zone_malloc(malloc_zone_t_known_version *_pZone, size_t _Size
 	return pMalterlibAlloc;
 }
 
-unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, size_t _Size, void **_pResults, unsigned _nRequested)
+unsigned fg_MalterlibZoneBatchMalloc(malloc_zone_t_known_version *_pZone, size_t _Size, void **_pResults, unsigned _nRequested)
 {
 	DMibMacOSOverrideZoneCheck(_pZone);
 	if (_nRequested)
@@ -965,7 +965,7 @@ unsigned fg_Malterlib_zone_batch_malloc(malloc_zone_t_known_version *_pZone, siz
 	return _nRequested;
 }
 
-void fg_Malterlib_zone_batch_free(malloc_zone_t_known_version *_pZone, void **to_be_freed, unsigned num_to_be_freed)
+void fg_MalterlibZoneBatchFree(malloc_zone_t_known_version *_pZone, void **to_be_freed, unsigned num_to_be_freed)
 {
 	if (num_to_be_freed == 0)
 		return;
@@ -995,7 +995,7 @@ void fg_Malterlib_zone_batch_free(malloc_zone_t_known_version *_pZone, void **to
 #endif
 }
 
-void *fg_Malterlib_zone_calloc(malloc_zone_t_known_version *_pZone, size_t num_items, size_t _Size) // same as malloc, but block returned is set to zero
+void *fg_MalterlibZoneCalloc(malloc_zone_t_known_version *_pZone, size_t num_items, size_t _Size) // same as malloc, but block returned is set to zero
 {
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
@@ -1032,7 +1032,7 @@ void *fg_Malterlib_zone_calloc(malloc_zone_t_known_version *_pZone, size_t num_i
 }
 
 /* aligned memory allocation. The callback may be NULL. Present in version >= 5. */
-void *fg_Malterlib_zone_memalign(malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size)
+void *fg_MalterlibZoneMemalign(malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size)
 {
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
@@ -1073,7 +1073,7 @@ void *fg_Malterlib_zone_memalign(malloc_zone_t_known_version *_pZone, size_t _Al
 	return pMalterlibAlloc;
 }
 
-void *fg_Malterlib_zone_valloc(malloc_zone_t_known_version *_pZone, size_t _Size) // same as malloc, but block returned is set to zero and is guaranteed to be page aligned
+void *fg_MalterlibZoneValloc(malloc_zone_t_known_version *_pZone, size_t _Size) // same as malloc, but block returned is set to zero and is guaranteed to be page aligned
 {
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
@@ -1112,7 +1112,7 @@ void *fg_Malterlib_zone_valloc(malloc_zone_t_known_version *_pZone, size_t _Size
 	return pMalterlibAlloc;
 }
 
-void *fg_Malterlib_zone_realloc(malloc_zone_t_known_version *_pZone, void *_pMemory, size_t _Size)
+void *fg_MalterlibZoneRealloc(malloc_zone_t_known_version *_pZone, void *_pMemory, size_t _Size)
 {
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
@@ -1149,12 +1149,12 @@ void *fg_Malterlib_zone_realloc(malloc_zone_t_known_version *_pZone, void *_pMem
 	return pMalterlibAlloc;
 }
 
-void fg_Malterlib_zone_destroy(malloc_zone_t_known_version *_pZone) // zone is destroyed and all memory reclaimed
+void fg_MalterlibZoneDestroy(malloc_zone_t_known_version *_pZone) // zone is destroyed and all memory reclaimed
 {
 	DMibPDebugBreak; // Sholud not get here
 }
 
-size_t fg_Malterlib_zone_good_size(malloc_zone_t_known_version *_pZone, size_t _Size) // zone is destroyed and all memory reclaimed
+size_t fg_MalterlibZoneGoodSize(malloc_zone_t_known_version *_pZone, size_t _Size) // zone is destroyed and all memory reclaimed
 {
 #ifdef DMemoryManagerIsSame
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -1168,29 +1168,29 @@ size_t fg_Malterlib_zone_good_size(malloc_zone_t_known_version *_pZone, size_t _
 #endif
 }
 
-void *fg_Malterlib_zone_malloc_type_malloc(malloc_zone_t_known_version *_pZone, size_t _Size, malloc_type_id_t _TypeId)
+void *fg_MalterlibZoneMallocTypeMalloc(malloc_zone_t_known_version *_pZone, size_t _Size, malloc_type_id_t _TypeId)
 {
-	return fg_Malterlib_zone_malloc(_pZone, _Size);
+	return fg_MalterlibZoneMalloc(_pZone, _Size);
 }
 
-void *fg_Malterlib_zone_malloc_type_calloc(malloc_zone_t_known_version *_pZone, size_t _nItems, size_t _Size, malloc_type_id_t _TypeId)
+void *fg_MalterlibZoneMallocTypeCalloc(malloc_zone_t_known_version *_pZone, size_t _nItems, size_t _Size, malloc_type_id_t _TypeId)
 {
-	return fg_Malterlib_zone_calloc(_pZone, _nItems, _Size);
+	return fg_MalterlibZoneCalloc(_pZone, _nItems, _Size);
 }
 
-void *fg_Malterlib_zone_malloc_type_realloc(malloc_zone_t_known_version *_pZone, void *_pMemory, size_t _Size, malloc_type_id_t _TypeId)
+void *fg_MalterlibZoneMallocTypeRealloc(malloc_zone_t_known_version *_pZone, void *_pMemory, size_t _Size, malloc_type_id_t _TypeId)
 {
-	return fg_Malterlib_zone_realloc(_pZone, _pMemory, _Size);
+	return fg_MalterlibZoneRealloc(_pZone, _pMemory, _Size);
 }
 
-void *fg_Malterlib_zone_malloc_type_memalign(malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size, malloc_type_id_t _TypeId)
+void *fg_MalterlibZoneMallocTypeMemalign(malloc_zone_t_known_version *_pZone, size_t _Alignment, size_t _Size, malloc_type_id_t _TypeId)
 {
-	return fg_Malterlib_zone_memalign(_pZone, _Alignment, _Size);
+	return fg_MalterlibZoneMemalign(_pZone, _Alignment, _Size);
 }
 
-void *fg_Malterlib_zone_malloc_type_malloc_with_options(malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options, malloc_type_id_t _TypeId)
+void *fg_MalterlibZoneMallocTypeMallocWithOptions(malloc_zone_t_known_version *_pZone, size_t _Align, size_t _Size, uint64_t _Options, malloc_type_id_t _TypeId)
 {
-	return fg_Malterlib_zone_malloc_with_options(_pZone, _Align, _Size, _Options);
+	return fg_MalterlibZoneMallocWithOptions(_pZone, _Align, _Size, _Options);
 }
 
 malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
@@ -1200,7 +1200,7 @@ malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 		{
 			return KERN_FAILURE;
 		}
-		, .good_size = &fg_Malterlib_zone_good_size
+		, .good_size = &fg_MalterlibZoneGoodSize
 		, .check = [](malloc_zone_t_known_version *_pZone) -> boolean_t // Consistency checker
 		{
 			return true;
@@ -1261,29 +1261,29 @@ malloc_zone_t_known_version g_MalterlibMallocZone =
 	{
 		.reserved1 = nullptr
 		, .reserved2 = nullptr
-		, .size = &fg_Malterlib_zone_size
-		, .malloc = &fg_Malterlib_zone_malloc
-		, .calloc = &fg_Malterlib_zone_calloc
-		, .valloc = &fg_Malterlib_zone_valloc
-		, .free = &fg_Malterlib_zone_free
-		, .realloc = &fg_Malterlib_zone_realloc
-		, .destroy = &fg_Malterlib_zone_destroy
+		, .size = &fg_MalterlibZoneSize
+		, .malloc = &fg_MalterlibZoneMalloc
+		, .calloc = &fg_MalterlibZoneCalloc
+		, .valloc = &fg_MalterlibZoneValloc
+		, .free = &fg_MalterlibZoneFree
+		, .realloc = &fg_MalterlibZoneRealloc
+		, .destroy = &fg_MalterlibZoneDestroy
 		, .zone_name = nullptr // "DefaultMallocZone" // "Malterlib malloc zone"
-		, .batch_malloc = &fg_Malterlib_zone_batch_malloc
-		, .batch_free = &fg_Malterlib_zone_batch_free
+		, .batch_malloc = &fg_MalterlibZoneBatchMalloc
+		, .batch_free = &fg_MalterlibZoneBatchFree
 		, .introspect = &g_MalterlibMallocZoneIntrospection
 		, .version = gc_KnownMallocZoneVersion
-		, .memalign = &fg_Malterlib_zone_memalign
-		, .free_definite_size = &fg_Malterlib_zone_free_definite_size
-		, .pressure_relief = &fg_Malterlib_zone_pressure_relief
-		, .claimed_address = &fg_Malterlib_zone_claimed_address
-		, .try_free_default = &fg_Malterlib_zone_try_free_default
-		, .malloc_with_options = &fg_Malterlib_zone_malloc_with_options
-		, .malloc_type_malloc = &fg_Malterlib_zone_malloc_type_malloc
-		, .malloc_type_calloc = &fg_Malterlib_zone_malloc_type_calloc
-		, .malloc_type_realloc = &fg_Malterlib_zone_malloc_type_realloc
-		, .malloc_type_memalign = &fg_Malterlib_zone_malloc_type_memalign
-		, .malloc_type_malloc_with_options = &fg_Malterlib_zone_malloc_type_malloc_with_options
+		, .memalign = &fg_MalterlibZoneMemalign
+		, .free_definite_size = &fg_MalterlibZoneFreeDefiniteSize
+		, .pressure_relief = &fg_MalterlibZonePressureRelief
+		, .claimed_address = &fg_MalterlibZoneClaimedAddress
+		, .try_free_default = &fg_MalterlibZoneTryFreeDefault
+		, .malloc_with_options = &fg_MalterlibZoneMallocWithOptions
+		, .malloc_type_malloc = &fg_MalterlibZoneMallocTypeMalloc
+		, .malloc_type_calloc = &fg_MalterlibZoneMallocTypeCalloc
+		, .malloc_type_realloc = &fg_MalterlibZoneMallocTypeRealloc
+		, .malloc_type_memalign = &fg_MalterlibZoneMallocTypeMemalign
+		, .malloc_type_malloc_with_options = &fg_MalterlibZoneMallocTypeMallocWithOptions
 	}
 ;
 
@@ -1341,7 +1341,7 @@ void fg_MalterlibMallocOverrideEnable()
 		malloc_zone_register((malloc_zone_t *)&g_MalterlibMallocZone);
 		*pDefaultZone = g_MalterlibMallocZone;
 
-		if (malloc_zones && malloc_num_zones > 1 && malloc_zones[0]->malloc != &fg_Malterlib_zone_malloc)
+		if (malloc_zones && malloc_num_zones > 1 && malloc_zones[0]->malloc != &fg_MalterlibZoneMalloc)
 		{
 			auto pDefaultRealZone = malloc_zones[0];
 			malloc_zone_unregister((malloc_zone_t *)pDefaultRealZone);
@@ -4432,7 +4432,7 @@ extern "C"
 			return g_OriginalFunctions.malloc_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options);
 
 		if (!_pZone || !_pZone->malloc_with_options)
-			return fg_Malterlib_zone_malloc_with_options(&g_MalterlibMallocZone, _Align, _Size, _Options);
+			return fg_MalterlibZoneMallocWithOptions(&g_MalterlibMallocZone, _Align, _Size, _Options);
 
 		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
 #else
@@ -4453,7 +4453,7 @@ extern "C"
 			return g_OriginalFunctions.malloc_zone_malloc_with_options((malloc_zone_t *)_pZone, _Align, _Size, _Options);
 
 		if (!_pZone || !_pZone->malloc_with_options)
-			return fg_Malterlib_zone_malloc_with_options(&g_MalterlibMallocZone, _Align, _Size, _Options);
+			return fg_MalterlibZoneMallocWithOptions(&g_MalterlibMallocZone, _Align, _Size, _Options);
 
 		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
 #else
@@ -4475,7 +4475,7 @@ extern "C"
 			return g_OriginalFunctions.malloc_type_zone_malloc_with_options_np((malloc_zone_t *)_pZone, _Align, _Size, _Options, _TypeId);
 
 		if (!_pZone || !_pZone->malloc_with_options)
-			return fg_Malterlib_zone_malloc_with_options(&g_MalterlibMallocZone, _Align, _Size, _Options);
+			return fg_MalterlibZoneMallocWithOptions(&g_MalterlibMallocZone, _Align, _Size, _Options);
 
 		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
 #else
@@ -4497,7 +4497,7 @@ extern "C"
 			return g_OriginalFunctions.malloc_type_zone_malloc_with_options((malloc_zone_t *)_pZone, _Align, _Size, _TypeId, _Options);
 
 		if (!_pZone || !_pZone->malloc_with_options)
-			return fg_Malterlib_zone_malloc_with_options(&g_MalterlibMallocZone, _Align, _Size, _Options);
+			return fg_MalterlibZoneMallocWithOptions(&g_MalterlibMallocZone, _Align, _Size, _Options);
 
 		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
 #else
@@ -4519,7 +4519,7 @@ extern "C"
 			return g_OriginalFunctions.malloc_type_zone_malloc_with_options_internal((malloc_zone_t *)_pZone, _Align, _Size, _Options, _TypeId);
 
 		if (!_pZone || !_pZone->malloc_with_options)
-			return fg_Malterlib_zone_malloc_with_options(&g_MalterlibMallocZone, _Align, _Size, _Options);
+			return fg_MalterlibZoneMallocWithOptions(&g_MalterlibMallocZone, _Align, _Size, _Options);
 
 		return _pZone->malloc_with_options(_pZone, _Align, _Size, _Options);
 #else

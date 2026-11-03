@@ -1061,7 +1061,7 @@ namespace NMib::NMemory
 	umint TCMemoryManager<t_CParams>::f_SizePadded(umint _Size)
 	{
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize)
-			return TCMemoryManagerArena<t_CParams>::fs_GetAllocSize(_Size);
+			return TCMemoryManagerArena<t_CParams>::fsp_GetAllocSize(_Size);
 		else if (_Size <= t_CParams::mc_MaxHeapAllocSize)
 			return TCMemoryManagerArenaHeap<t_CParams>::fs_GetAllocSize(_Size);
 		else

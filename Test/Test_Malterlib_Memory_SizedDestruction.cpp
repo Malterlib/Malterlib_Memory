@@ -15,6 +15,7 @@ namespace
 	{
 		static constexpr bool mc_bIsDefault = false;
 
+		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static void f_Free(void *_pBlock, umint _Size)
 		{
 			ms_pFreed = _pBlock;
@@ -22,6 +23,8 @@ namespace
 
 			NMemory::CAllocator_Heap::f_Free(_pBlock, _Size);
 		}
+
+		// NOLINTEND(malterlib-function-naming)
 
 		static void *ms_pFreed;
 		static umint ms_FreedSize;
