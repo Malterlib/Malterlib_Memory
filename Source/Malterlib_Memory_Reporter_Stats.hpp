@@ -8,6 +8,32 @@
 
 namespace NMib::NMemory
 {
+	inline CStatsMemoryReporter::CSize::CSize()
+		: m_nBytesOverhead(0.0)
+	{
+	}
+
+	inline umint CStatsMemoryReporter::CSize::f_GetSize() const
+	{
+		return NContainer::TCMap<umint, CSize, CSort_Default, CAllocator_NonTrackedHeap>::fs_GetKey(*this);
+	}
+
+	inline auto CStatsMemoryReporter::CSize::operator += (CSize const &_Other) -> CSize &
+	{
+		m_nAllocations += _Other.m_nAllocations;
+		m_nBytes += _Other.m_nBytes;
+		m_nBytesRequested += _Other.m_nBytesRequested;
+		m_nBytesOverhead += _Other.m_nBytesOverhead;
+		m_Cycles += _Other.m_Cycles;
+		m_CyclesFree += _Other.m_CyclesFree;
+		return *this;
+	}
+
+	inline CStatsMemoryReporter::CThreadLocal::CThreadLocal()
+		: m_CyclesDepth(0)
+	{
+	}
+
 	CStatsMemoryReporter *CStatsMemoryReporter::ms_pThis = nullptr;
 
 	CStatsMemoryReporter::CStatsMemoryReporter()
@@ -42,13 +68,13 @@ namespace NMib::NMemory
 	{
 		fg_ReportMemoryGloballyTo(nullptr);
 
-		m_ThreadLocal.f_Destroy(); // Collect all thread locals into global count
+		mp_ThreadLocal.f_Destroy(); // Collect all thread locals into global count
 
 		ms_pThis = nullptr;
 
 		DMibTraceSafe("Memory statistics:{\n}", 0);
 
-		for (auto iAllocator = m_GlobalAllocators.f_GetIterator(); iAllocator; ++iAllocator)
+		for (auto iAllocator = mp_GlobalAllocators.f_GetIterator(); iAllocator; ++iAllocator)
 		{
 			DMibTraceSafe("Allocator: {}{\n}", iAllocator->m_Name);
 			DMibListLinkDS_List(CSize, m_Link) SizesList;
@@ -84,10 +110,10 @@ namespace NMib::NMemory
 
 	CStatsMemoryReporter::CThreadLocal::~CThreadLocal()
 	{
-		DMibLock(ms_pThis->m_Lock);
+		DMibLock(ms_pThis->mp_Lock);
 		for (auto iAllocator = m_Allocators.f_GetIterator(); iAllocator; ++iAllocator)
 		{
-			auto &Allocator = ms_pThis->m_GlobalAllocators[iAllocator.f_GetKey()];
+			auto &Allocator = ms_pThis->mp_GlobalAllocators[iAllocator.f_GetKey()];
 			if (!iAllocator->m_Name.f_IsEmpty())
 				Allocator.m_Name = iAllocator->m_Name;
 			Allocator.m_Total += iAllocator->m_Total;
@@ -98,7 +124,7 @@ namespace NMib::NMemory
 
 	void CStatsMemoryReporter::f_AllocatorName(umint _MemoryAllocator, ch8 const *_pAllocatorName)
 	{
-		auto &ThreadLocal = *m_ThreadLocal;
+		auto &ThreadLocal = *mp_ThreadLocal;
 
 		auto &Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
 		Allocator.m_Name = _pAllocatorName;
@@ -110,7 +136,7 @@ namespace NMib::NMemory
 
 	void CStatsMemoryReporter::f_ScopeEnter(umint _MemoryAllocator)
 	{
-		auto &ThreadLocal = *m_ThreadLocal;
+		auto &ThreadLocal = *mp_ThreadLocal;
 		if (ThreadLocal.m_CyclesDepth >= 16)
 			DMibPDebugBreak;
 		ThreadLocal.m_CyclesStart[ThreadLocal.m_CyclesDepth] = NTime::NPlatform::fg_Timer_CyclesFast();
@@ -119,7 +145,7 @@ namespace NMib::NMemory
 
 	void CStatsMemoryReporter::f_ScopeExit(umint _MemoryAllocator)
 	{
-		auto &ThreadLocal = *m_ThreadLocal;
+		auto &ThreadLocal = *mp_ThreadLocal;
 		--ThreadLocal.m_CyclesDepth;
 	}
 
@@ -135,7 +161,7 @@ namespace NMib::NMemory
 		)
 	{
 		uint64 CyclesEnd = NTime::NPlatform::fg_Timer_CyclesFast();
-		auto &ThreadLocal = *m_ThreadLocal;
+		auto &ThreadLocal = *mp_ThreadLocal;
 		uint64 nCycles = CyclesEnd - ThreadLocal.m_CyclesStart[ThreadLocal.m_CyclesDepth - 1];
 
 		auto &Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
@@ -170,7 +196,7 @@ namespace NMib::NMemory
 		)
 	{
 		uint64 CyclesEnd = NTime::NPlatform::fg_Timer_CyclesFast();
-		auto &ThreadLocal = *m_ThreadLocal;
+		auto &ThreadLocal = *mp_ThreadLocal;
 		uint64 nCycles = CyclesEnd - ThreadLocal.m_CyclesStart[ThreadLocal.m_CyclesDepth - 1];
 		auto &Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
 		auto &Size = Allocator.m_Sizes[_ReturnedSize];
@@ -206,7 +232,7 @@ namespace NMib::NMemory
 		)
 	{
 		uint64 CyclesEnd = NTime::NPlatform::fg_Timer_CyclesFast();
-		auto &ThreadLocal = *m_ThreadLocal;
+		auto &ThreadLocal = *mp_ThreadLocal;
 		uint64 nCycles = CyclesEnd - ThreadLocal.m_CyclesStart[ThreadLocal.m_CyclesDepth - 1];
 		auto &Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
 		auto &Size = Allocator.m_Sizes[_ReturnedSize];
@@ -230,7 +256,7 @@ namespace NMib::NMemory
 	void CStatsMemoryReporter::f_Free(umint _MemoryAllocator, umint _Address, umint _Size, void const *_pAllocationInfo)
 	{
 		uint64 CyclesEnd = NTime::NPlatform::fg_Timer_CyclesFast();
-		auto &ThreadLocal = *m_ThreadLocal;
+		auto &ThreadLocal = *mp_ThreadLocal;
 		uint64 nCycles = CyclesEnd - ThreadLocal.m_CyclesStart[ThreadLocal.m_CyclesDepth - 1];
 		auto &Allocator = ThreadLocal.m_Allocators[_MemoryAllocator];
 		auto &Size = Allocator.m_Sizes[_Size];

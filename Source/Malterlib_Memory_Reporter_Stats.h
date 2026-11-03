@@ -11,10 +11,7 @@ namespace NMib::NMemory
 	{
 		struct CSize
 		{
-			CSize()
-				: m_nBytesOverhead(0.0)
-			{
-			}
+			CSize();
 
 			zuint64 m_nAllocations;
 			zuint64 m_nBytes;
@@ -23,21 +20,9 @@ namespace NMib::NMemory
 			zuint64 m_Cycles;
 			zuint64 m_CyclesFree;
 			DMibListLinkDS_Link(CSize, m_Link);
-			umint f_GetSize() const
-			{
-				return NContainer::TCMap<umint, CSize, CSort_Default, CAllocator_NonTrackedHeap>::fs_GetKey(*this);
-			}
+			umint f_GetSize() const;
 
-			CSize &operator += (CSize const &_Other)
-			{
-				m_nAllocations += _Other.m_nAllocations;
-				m_nBytes += _Other.m_nBytes;
-				m_nBytesRequested += _Other.m_nBytesRequested;
-				m_nBytesOverhead += _Other.m_nBytesOverhead;
-				m_Cycles += _Other.m_Cycles;
-				m_CyclesFree += _Other.m_CyclesFree;
-				return *this;
-			}
+			CSize &operator += (CSize const &_Other);
 		};
 
 		static CStatsMemoryReporter *ms_pThis;
@@ -104,18 +89,14 @@ namespace NMib::NMemory
 			umint m_CyclesDepth;
 			uint64 m_CyclesStart[16]; // 16 should be more than enough
 			NContainer::TCMap<umint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_Allocators;
-			CThreadLocal()
-				: m_CyclesDepth(0)
-			{
-			}
-
+			CThreadLocal();
 			~CThreadLocal();
 		};
 
 	private:
-		NThread::TCThreadLocal<CThreadLocal, NMemory::CAllocator_NonTrackedHeap, NThread::EThreadLocalFlag_FastThreadLocal> m_ThreadLocal;
+		NThread::TCThreadLocal<CThreadLocal, NMemory::CAllocator_NonTrackedHeap, NThread::EThreadLocalFlag_FastThreadLocal> mp_ThreadLocal;
 
-		NThread::CMutual m_Lock;
-		NContainer::TCMap<umint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_GlobalAllocators;
+		NThread::CMutual mp_Lock;
+		NContainer::TCMap<umint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> mp_GlobalAllocators;
 	};
 }

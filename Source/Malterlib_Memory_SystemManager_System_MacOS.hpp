@@ -7,7 +7,7 @@ namespace NMib
 {
 	ch8 const *g_pMemoryManagerName = "macOS system memory manager";
 
-	malloc_zone_t *g_DefaultZone = nullptr;
+	malloc_zone_t *g_pDefaultZone = nullptr;
 }
 
 namespace NMib::NMemory
@@ -35,7 +35,7 @@ namespace NMib::NMemory
 #endif
 	inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_CreateNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
 	{
-		g_DefaultZone = malloc_default_zone();
+		g_pDefaultZone = malloc_default_zone();
 	}
 
 	inline_always void DMibCrossmoduleAPI CCrossModuleImplementation::fs_DestroyNonTrackedMemoryManager(CMemoryManagerCrossModule *_pModule)
@@ -59,8 +59,8 @@ namespace NMib::NMemory
 
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size)
 		{
-			void *pRet = g_DefaultZone->malloc(g_DefaultZone, _Size);
-			_Size = g_DefaultZone->size(g_DefaultZone, pRet);
+			void *pRet = g_pDefaultZone->malloc(g_pDefaultZone, _Size);
+			_Size = g_pDefaultZone->size(g_pDefaultZone, pRet);
 			return pRet;
 		}
 
@@ -69,15 +69,15 @@ namespace NMib::NMemory
 			if (_Alignment <= 16)
 				return fs_NonTracked_AllocWithSize(_pModule, _Size);
 
-			void *pRet = g_DefaultZone->memalign(g_DefaultZone, _Alignment, _Size);
+			void *pRet = g_pDefaultZone->memalign(g_pDefaultZone, _Alignment, _Size);
 			DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
-			_Size = g_DefaultZone->size(g_DefaultZone, pRet);
+			_Size = g_pDefaultZone->size(g_pDefaultZone, pRet);
 			return pRet;
 		}
 
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Alloc(CMemoryManagerCrossModule *_pModule, umint _Size)
 		{
-			void *pRet = g_DefaultZone->malloc(g_DefaultZone, _Size);
+			void *pRet = g_pDefaultZone->malloc(g_pDefaultZone, _Size);
 			return pRet;
 		}
 
@@ -86,30 +86,30 @@ namespace NMib::NMemory
 			if (_Alignment <= 16)
 				return fs_NonTracked_Alloc(_pModule, _Size);
 
-			void *pRet = g_DefaultZone->memalign(g_DefaultZone, _Alignment, _Size);
+			void *pRet = g_pDefaultZone->memalign(g_pDefaultZone, _Alignment, _Size);
 			DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
 			return pRet;
 		}
 
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Realloc(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 		{
-			void *pRet = g_DefaultZone->realloc(g_DefaultZone, _pMemory, _Size);
+			void *pRet = g_pDefaultZone->realloc(g_pDefaultZone, _pMemory, _Size);
 			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
-				_Size = g_DefaultZone->size(g_DefaultZone, pRet);
+				_Size = g_pDefaultZone->size(g_pDefaultZone, pRet);
 			return pRet;
 		}
 
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_Resize(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags)
 		{
-			void *pRet = g_DefaultZone->realloc(g_DefaultZone, _pMemory, _Size);
+			void *pRet = g_pDefaultZone->realloc(g_pDefaultZone, _pMemory, _Size);
 			if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
-				_Size = g_DefaultZone->size(g_DefaultZone, pRet);
+				_Size = g_pDefaultZone->size(g_pDefaultZone, pRet);
 			return pRet;
 		}
 
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_Free(CMemoryManagerCrossModule *_pModule, void *_pMemory, umint _Size)
 		{
-			g_DefaultZone->free(g_DefaultZone, _pMemory);
+			g_pDefaultZone->free(g_pDefaultZone, _pMemory);
 		}
 
 		inline_always static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule)
@@ -124,24 +124,24 @@ namespace NMib::NMemory
 
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_FreeNoSize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
-			g_DefaultZone->free(g_DefaultZone, _pMemory);
+			g_pDefaultZone->free(g_pDefaultZone, _pMemory);
 		}
 
 		inline_always static umint DMibCrossmoduleAPI fs_NonTracked_Size(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
-			return g_DefaultZone->size(g_DefaultZone, _pMemory);
+			return g_pDefaultZone->size(g_pDefaultZone, _pMemory);
 		}
 
 		inline_always static umint DMibCrossmoduleAPI fs_NonTracked_TrySize(CMemoryManagerCrossModule *_pModule, void *_pMemory)
 		{
-			return g_DefaultZone->size(g_DefaultZone, _pMemory);
+			return g_pDefaultZone->size(g_pDefaultZone, _pMemory);
 		}
 
 		inline_always static void * DMibCrossmoduleAPI fs_Alloc(CMemoryManagerCrossModule *_pModule, umint _Size)
 		{
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
-			void *pRet = g_DefaultZone->malloc(g_DefaultZone, _Size);
+			void *pRet = g_pDefaultZone->malloc(g_pDefaultZone, _Size);
 			DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
 		}
@@ -158,7 +158,7 @@ namespace NMib::NMemory
 
 			DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 			DMibMemoryReportSaveVar(RequestedSize, _Size);
-			void *pRet = g_DefaultZone->memalign(g_DefaultZone, _Alignment, _Size);
+			void *pRet = g_pDefaultZone->memalign(g_pDefaultZone, _Alignment, _Size);
 			DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
 			DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, _Alignment, RequestedSize, _Size, 0.0, nullptr);
 			return pRet;
@@ -169,8 +169,8 @@ namespace NMib::NMemory
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
-		void *pRet = g_DefaultZone->malloc(g_DefaultZone, _Size);
-		_Size = g_DefaultZone->size(g_DefaultZone, pRet);
+		void *pRet = g_pDefaultZone->malloc(g_pDefaultZone, _Size);
+		_Size = g_pDefaultZone->size(g_pDefaultZone, pRet);
 		DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 	}
@@ -187,9 +187,9 @@ namespace NMib::NMemory
 
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
-		void *pRet = g_DefaultZone->memalign(g_DefaultZone, _Alignment, _Size);
+		void *pRet = g_pDefaultZone->memalign(g_pDefaultZone, _Alignment, _Size);
 		DMibFastCheck(fg_AlignUp((uint8 *)pRet, _Alignment) == (uint8 *)pRet);
-		_Size = g_DefaultZone->size(g_DefaultZone, pRet);
+		_Size = g_pDefaultZone->size(g_pDefaultZone, pRet);
 		DMibMemoryReportAlloc(g_pMemoryManagerName, g_pMemoryManagerName, pRet, _Alignment, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 	}
@@ -206,9 +206,9 @@ namespace NMib::NMemory
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 		DMibMemoryReportExpression(umint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
-		void *pRet = g_DefaultZone->realloc(g_DefaultZone, _pMemory, _Size);
+		void *pRet = g_pDefaultZone->realloc(g_pDefaultZone, _pMemory, _Size);
 		if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
-			_Size = g_DefaultZone->size(g_DefaultZone, pRet);
+			_Size = g_pDefaultZone->size(g_pDefaultZone, pRet);
 		DMibMemoryReportRealloc(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 	}
@@ -225,9 +225,9 @@ namespace NMib::NMemory
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(RequestedSize, _Size);
 		DMibMemoryReportExpression(umint Size = _OldSize ? fs_SizePadded(_pModule, _OldSize) : fs_Size(_pModule, _pMemory));
-		void *pRet = g_DefaultZone->realloc(g_DefaultZone, _pMemory, _Size);
+		void *pRet = g_pDefaultZone->realloc(g_pDefaultZone, _pMemory, _Size);
 		if (!(_AllocFlags & EAllocationFlag_SizeNotNeeded))
-			_Size = g_DefaultZone->size(g_DefaultZone, pRet);
+			_Size = g_pDefaultZone->size(g_pDefaultZone, pRet);
 		DMibMemoryReportResize(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr, pRet, 0, RequestedSize, _Size, 0.0, nullptr);
 		return pRet;
 	}
@@ -239,10 +239,10 @@ namespace NMib::NMemory
 
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
 		DMibMemoryReportSaveVar(Size, fs_SizePadded(_pModule, _Size));
-		//if (g_DefaultZone->version >= 6 && g_DefaultZone->free_definite_size)
-		//	g_DefaultZone->free_definite_size(g_DefaultZone, _pMemory, _Size);
+		//if (g_pDefaultZone->version >= 6 && g_pDefaultZone->free_definite_size)
+		//	g_pDefaultZone->free_definite_size(g_pDefaultZone, _pMemory, _Size);
 		//else
-		g_DefaultZone->free(g_DefaultZone, _pMemory);
+		g_pDefaultZone->free(g_pDefaultZone, _pMemory);
 
 		DMibMemoryReportFree(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr);
 	}
@@ -253,15 +253,15 @@ namespace NMib::NMemory
 			return;
 
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
-		DMibMemoryReportSaveVar(Size, g_DefaultZone->size(g_DefaultZone, _pMemory));
-		g_DefaultZone->free(g_DefaultZone, _pMemory);
+		DMibMemoryReportSaveVar(Size, g_pDefaultZone->size(g_pDefaultZone, _pMemory));
+		g_pDefaultZone->free(g_pDefaultZone, _pMemory);
 		DMibMemoryReportFree(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Size, nullptr);
 	}
 
 	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_Size(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
-		umint Ret = g_DefaultZone->size(g_DefaultZone, _pMemory);
+		umint Ret = g_pDefaultZone->size(g_pDefaultZone, _pMemory);
 		DMibMemoryReportGetSize(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Ret, nullptr);
 		return Ret;
 	}
@@ -269,7 +269,7 @@ namespace NMib::NMemory
 	inline_always umint DMibCrossmoduleAPI CCrossModuleImplementation::fs_TrySize(CMemoryManagerCrossModule *_pModule, void const *_pMemory)
 	{
 		DMibMemoryGoingToReportScope(g_pMemoryManagerName, true);
-		umint Ret = g_DefaultZone->size(g_DefaultZone, _pMemory);
+		umint Ret = g_pDefaultZone->size(g_pDefaultZone, _pMemory);
 		DMibMemoryReportGetSize(g_pMemoryManagerName, g_pMemoryManagerName, _pMemory, Ret, nullptr);
 		return Ret;
 	}

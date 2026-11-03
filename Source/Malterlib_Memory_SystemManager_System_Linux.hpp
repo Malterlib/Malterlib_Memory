@@ -7,7 +7,7 @@
 #	include <memory.h>
 #	include <malloc/malloc.h>
 #	define malloc_usable_size malloc_size
-void *memalign(umint _Alignment, umint _Size)
+void *memalign(umint _Alignment, umint _Size) // NOLINT(malterlib-function-naming): stands in for the memalign of glibc, which macOS lacks
 {
 	void *pRet;
 	posix_memalign(&pRet, _Alignment, _Size);
