@@ -1,7 +1,7 @@
 // Copyright © Unbroken AB
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-typedef unsigned long long malloc_type_id_t;
+typedef unsigned long long malloc_type_id_t; // NOLINT(malterlib-type-naming): the name in the macOS SDK
 
 #define _MALLOC_UNDERSCORE_MALLOC_TYPE_H_ // NOLINT(malterlib-macro-naming)
 
@@ -12,7 +12,7 @@ typedef unsigned long long malloc_type_id_t;
 extern "C"
 {
 	struct _malloc_zone_t;
-	typedef struct _malloc_zone_t malloc_zone_t;
+	typedef struct _malloc_zone_t malloc_zone_t; // NOLINT(malterlib-type-naming): the name in the macOS SDK
 }
 
 #include <malloc/malloc.h>
@@ -49,7 +49,7 @@ extern "C" void _ZdlPvmSt11align_val_t(void *, size_t, size_t) __attribute__((we
 
 extern "C" void vfree(void *) __attribute__((weak_import));
 
-using malloc_options_np_t = uint64_t;
+using malloc_options_np_t = uint64_t; // NOLINT(malterlib-type-naming): the name in the macOS SDK
 #if __MAC_OS_X_VERSION_MAX_ALLOWED < 260000
 using malloc_zone_malloc_options_t = uint64_t;
 

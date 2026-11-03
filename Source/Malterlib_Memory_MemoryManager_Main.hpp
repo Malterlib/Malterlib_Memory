@@ -101,7 +101,7 @@ namespace NMib::NMemory
 		)
 	{
 		static_assert(fg_RoundPowerOfTwoUp(t_CParams::mc_MaxArenas) == t_CParams::mc_MaxArenas);
-		ICMemoryManagerReturnCheckout::m_Version = ECMemoryManagerReturnCheckoutVersion;
+		ICMemoryManagerReturnCheckout::m_Version = gc_CMemoryManagerReturnCheckoutVersion;
 	}
 
 #if DMibConfig_Memory_Shims_Lightweight

@@ -125,13 +125,10 @@ namespace NMib::NMemory
 
 	struct CAllocator_Heap : public CAllocator_Base
 	{
-		enum
-		{
-			mc_bIsDefault       = true
-			, mc_Reporting      = true
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = true
-		};
+		static constexpr bool mc_bIsDefault = true;
+		static constexpr aint mc_Reporting = true;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = true;
 
 		constexpr bool operator == (CAllocator_Heap const &_Right) const noexcept
 		{
@@ -297,12 +294,9 @@ namespace NMib::NMemory
 
 	struct CAllocator_NonTrackedHeap : public CAllocator_Base
 	{
-		enum
-		{
-			mc_Reporting        = false
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = true
-		};
+		static constexpr aint mc_Reporting = false;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = true;
 
 		constexpr bool operator == (CAllocator_NonTrackedHeap const &_Right) const noexcept
 		{
@@ -467,21 +461,15 @@ namespace NMib::NMemory
 
 	struct CAllocator_HeapNoDelete : public CAllocator_Heap
 	{
-		enum
-		{
-			mc_bIsDefault = false
-		};
+		static constexpr bool mc_bIsDefault = false;
 	};
 
 	template <umint t_AllocSize>
 	struct TCAllocator_Placement : public CAllocator_Base
 	{
-		enum
-		{
-			mc_Reporting        = false
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = false
-		};
+		static constexpr aint mc_Reporting = false;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
 
 		constexpr bool operator == (TCAllocator_Placement const &_Right) const noexcept
 		{
@@ -651,11 +639,8 @@ namespace NMib::NMemory
 	template <umint t_StaticStorage, umint t_Alignment = gc_ConstantMax<umint, sizeof(void *), alignof(fp64)>, typename t_CFallbackAllocator = CAllocator_Heap>
 	struct TCAllocator_Static : public t_CFallbackAllocator
 	{
-		enum
-		{
-			mc_CanBeStatic      = true
-			, mc_bMethodsStatic = false
-		};
+		static constexpr aint mc_CanBeStatic = true;
+		static constexpr bool mc_bMethodsStatic = false;
 
 		constexpr bool operator == (TCAllocator_Static const &_Right) const noexcept
 		{

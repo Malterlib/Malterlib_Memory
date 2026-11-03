@@ -24,11 +24,8 @@ namespace NMib::NMemory
 			DMibListLinkAllocatorS_Link(CChunk, m_Link, t_CAllocator);
 			umint m_Size;
 
-			enum
-			{
-				EBlockSize  = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize
-				, EDataSize = (EBlockSize + t_Alignment - 1) & (~(t_Alignment - 1))
-			};
+			static constexpr aint mc_BlockSize = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize;
+			static constexpr aint mc_DataSize = (mc_BlockSize + t_Alignment - 1) & (~(t_Alignment - 1));
 
 			inline_large TCChunk(DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) &_Blocks, umint _Size)
 			{
@@ -36,16 +33,16 @@ namespace NMib::NMemory
 
 				uint8 *pStart = fg_AlignUp((uint8 *)(this + 1), t_Alignment);
 				uint8 *pEnd = (uint8 *)this + _Size;
-				umint nBlocks = (pEnd - pStart) / EDataSize;
+				umint nBlocks = (pEnd - pStart) / mc_DataSize;
 
 				uint8 *pEndBlock = pStart;
-				uint8 *pCurrentBlock = pStart + (nBlocks - 1) * EDataSize;
+				uint8 *pCurrentBlock = pStart + (nBlocks - 1) * mc_DataSize;
 
 				while (pCurrentBlock >= pEndBlock)
 				{
 					TCBlock<t_CAllocator> *pToInsert = (TCBlock<t_CAllocator> *)pCurrentBlock;
 					_Blocks.f_UnsafeInsertFirst(pToInsert);
-					pCurrentBlock -= EDataSize;
+					pCurrentBlock -= mc_DataSize;
 				}
 			}
 
@@ -84,10 +81,7 @@ namespace NMib::NMemory
 			ENumaNode m_NumaNode;
 			umint m_GrowSize;
 
-			enum
-			{
-				EDataSize = CChunk::EDataSize
-			};
+			static constexpr aint mc_DataSize = CChunk::mc_DataSize;
 
 			void f_Construct(ENumaNode _NumaNode, umint _GrowSize)
 			{
@@ -121,7 +115,7 @@ namespace NMib::NMemory
 				}
 				else
 				{
-					umint Size = ((((sizeof(CChunk) + m_GrowSize * EDataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
+					umint Size = ((((sizeof(CChunk) + m_GrowSize * mc_DataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
 					void *pMem = t_CAllocator::f_AllocWithSize(Size, EAllocationFlag_WillFreeWithSize, m_NumaNode);
 
 					if (pMem)
@@ -146,8 +140,8 @@ namespace NMib::NMemory
 
 			fp32 f_Overhead() const
 			{
-				if constexpr (EDataSize > t_DataSize)
-					return fp32(EDataSize - t_DataSize);
+				if constexpr (mc_DataSize > t_DataSize)
+					return fp32(mc_DataSize - t_DataSize);
 				else
 					return 0.0f;
 			}
@@ -191,11 +185,8 @@ namespace NMib::NMemory
 			aint m_NumUsed;
 			umint m_Size;
 
-			enum
-			{
-				EBlockSize  = (sizeof(TCBlock<t_CAllocator>) + t_Alignment - 1) & (~(t_Alignment - 1))
-				, EDataSize = ((EBlockSize + t_DataSize) + t_Alignment - 1) & (~(t_Alignment - 1))
-			};
+			static constexpr aint mc_BlockSize = (sizeof(TCBlock<t_CAllocator>) + t_Alignment - 1) & (~(t_Alignment - 1));
+			static constexpr aint mc_DataSize = ((mc_BlockSize + t_DataSize) + t_Alignment - 1) & (~(t_Alignment - 1));
 
 			inline_large TCChunk(umint _Size)
 			{
@@ -204,16 +195,16 @@ namespace NMib::NMemory
 
 				uint8 *pStart = fg_AlignUp((uint8 *)(this + 1), t_Alignment);
 				uint8 *pEnd = (uint8 *)this + _Size;
-				umint nBlocks = (pEnd - pStart) / EDataSize;
+				umint nBlocks = (pEnd - pStart) / mc_DataSize;
 
 				uint8 *pEndBlock = pStart;
-				uint8 *pCurrentBlock = pStart + (nBlocks - 1) * EDataSize;
+				uint8 *pCurrentBlock = pStart + (nBlocks - 1) * mc_DataSize;
 
 				while (pCurrentBlock >= pEndBlock)
 				{
 					TCBlock<t_CAllocator> *pToInsert = (TCBlock<t_CAllocator> *)pCurrentBlock;
 					m_FreeBlocks.f_UnsafeInsertFirst(pToInsert);
-					pCurrentBlock -= EDataSize;
+					pCurrentBlock -= mc_DataSize;
 				}
 			}
 
@@ -249,11 +240,8 @@ namespace NMib::NMemory
 			ENumaNode m_NumaNode;
 			umint m_GrowSize;
 
-			enum
-			{
-				EDataSize    = CChunk::EDataSize
-				, EBlockSize = CChunk::EBlockSize
-			};
+			static constexpr aint mc_DataSize = CChunk::mc_DataSize;
+			static constexpr aint mc_BlockSize = CChunk::mc_BlockSize;
 
 			void f_Construct(ENumaNode _NumaNode, umint _GrowSize)
 			{
@@ -312,11 +300,11 @@ namespace NMib::NMemory
 						m_FreeChunks.f_Insert(pChunk);
 					++pChunk->m_NumUsed;
 					pBlock->m_pChunk = pChunk;
-					return ((uint8 *)pBlock) + EBlockSize;
+					return ((uint8 *)pBlock) + mc_BlockSize;
 				}
 				else
 				{
-					umint Size = ((((sizeof(CChunk) + m_GrowSize * EDataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
+					umint Size = ((((sizeof(CChunk) + m_GrowSize * mc_DataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
 					void *pMem = t_CAllocator::f_AllocWithSize(Size, EAllocationFlag_WillFreeWithSize, m_NumaNode);
 
 					if (pMem)
@@ -329,7 +317,7 @@ namespace NMib::NMemory
 
 						++pNewChunk->m_NumUsed;
 						pBlock->m_pChunk = pNewChunk;
-						return ((uint8 *)pBlock) + EBlockSize;
+						return ((uint8 *)pBlock) + mc_BlockSize;
 					}
 					else
 						return nullptr;
@@ -343,14 +331,14 @@ namespace NMib::NMemory
 
 			fp32 f_Overhead() const
 			{
-				return fp32(EBlockSize);
+				return fp32(mc_BlockSize);
 			}
 
 			void f_ReturnBlock(void *_pBlock)
 			{
 				// Too slow to check this
 				// 	DMibFastCheck(f_ContainsBlock(_pBlock), "Must be part of pool");
-				TCBlock<t_CAllocator> *pBlock = (TCBlock<t_CAllocator> *)((uint8 *)_pBlock - EBlockSize);
+				TCBlock<t_CAllocator> *pBlock = (TCBlock<t_CAllocator> *)((uint8 *)_pBlock - mc_BlockSize);
 				CChunk *pChunk = ((CChunk *)(pBlock->m_pChunk));
 				if (pChunk->m_FreeBlocks.f_IsEmpty())
 				{
@@ -411,11 +399,8 @@ namespace NMib::NMemory
 			aint m_NumUsed; // 1
 			umint m_Size;
 
-			enum
-			{
-				EBlockSize  = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize
-				, EDataSize = (EBlockSize + t_Alignment - 1) & (~(t_Alignment - 1))
-			};
+			static constexpr aint mc_BlockSize = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize;
+			static constexpr aint mc_DataSize = (mc_BlockSize + t_Alignment - 1) & (~(t_Alignment - 1));
 
 			inline_large TCChunk(umint _Size)
 			{
@@ -424,16 +409,16 @@ namespace NMib::NMemory
 
 				uint8 *pStart = fg_AlignUp((uint8 *)(this + 1), t_Alignment);
 				uint8 *pEnd = (uint8 *)this + _Size;
-				umint nBlocks = (pEnd - pStart) / EDataSize;
+				umint nBlocks = (pEnd - pStart) / mc_DataSize;
 
 				uint8 *pEndBlock = pStart;
-				uint8 *pCurrentBlock = pStart + (nBlocks - 1) * EDataSize;
+				uint8 *pCurrentBlock = pStart + (nBlocks - 1) * mc_DataSize;
 
 				while (pCurrentBlock >= pEndBlock)
 				{
 					TCBlock<t_CAllocator> *pToInsert = (TCBlock<t_CAllocator> *)pCurrentBlock;
 					m_FreeBlocks.f_UnsafeInsertFirst(pToInsert);
-					pCurrentBlock -= EDataSize;
+					pCurrentBlock -= mc_DataSize;
 				}
 			}
 
@@ -472,10 +457,7 @@ namespace NMib::NMemory
 			ENumaNode m_NumaNode;
 			umint m_GrowSize;
 
-			enum
-			{
-				EDataSize = CChunk::EDataSize
-			};
+			static constexpr aint mc_DataSize = CChunk::mc_DataSize;
 
 			void f_Construct(ENumaNode _NumaNode, umint _GrowSize)
 			{
@@ -508,8 +490,8 @@ namespace NMib::NMemory
 
 			fp32 f_Overhead() const
 			{
-				if constexpr (EDataSize > t_DataSize)
-					return fp32(EDataSize - t_DataSize);
+				if constexpr (mc_DataSize > t_DataSize)
+					return fp32(mc_DataSize - t_DataSize);
 				else
 					return 0.0f;
 			}
@@ -546,7 +528,7 @@ namespace NMib::NMemory
 				}
 				else
 				{
-					umint Size = ((((sizeof(CChunk) + m_GrowSize * EDataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
+					umint Size = ((((sizeof(CChunk) + m_GrowSize * mc_DataSize) - 1) / t_CAllocator::f_GranularityAlloc()) + 1) * t_CAllocator::f_GranularityAlloc();
 					void *pMem = t_CAllocator::f_AllocWithSize(Size, EAllocationFlag_WillFreeWithSize, m_NumaNode);
 
 					if (pMem)
@@ -707,12 +689,9 @@ namespace NMib::NMemory
 #endif
 
 	public:
-		enum
-		{
-			mc_Reporting        = t_CAllocator::mc_Reporting
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = false
-		};
+		static constexpr aint mc_Reporting = t_CAllocator::mc_Reporting;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
 
 		constexpr bool operator == (TCPoolAggregate const &_Right) const noexcept
 		{
@@ -850,7 +829,7 @@ namespace NMib::NMemory
 	|						first, otherwise the delete wont work					|
 	\*_____________________________________________________________________________*/
 	template <typename t_CPool>
-	struct TBCPool
+	struct TCBCPool
 	{
 		void *operator new (umint _NumBytes, t_CPool const &_Pool)
 		{
@@ -888,12 +867,9 @@ namespace NMib::NMemory
 	>
 	struct TCStaticPoolAllocator : public CAllocator_Base
 	{
-		enum
-		{
-			mc_Reporting        = t_CAllocator::mc_Reporting
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = true
-		};
+		static constexpr aint mc_Reporting = t_CAllocator::mc_Reporting;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = true;
 
 		constexpr bool operator == (TCStaticPoolAllocator const &_Right) const noexcept
 		{
@@ -1179,12 +1155,9 @@ namespace NMib::NMemory
 	>
 	struct TCPoolAllocator : public CAllocator_Base
 	{
-		enum
-		{
-			mc_Reporting        = t_CAllocator::mc_Reporting
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = false
-		};
+		static constexpr aint mc_Reporting = t_CAllocator::mc_Reporting;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
 
 		constexpr bool operator == (TCPoolAllocator const &_Right) const noexcept
 		{
@@ -1436,12 +1409,9 @@ namespace NMib::NMemory
 	template <typename t_CPoolType>
 	struct TCPoolReferenceAllocator : public CAllocator_Base
 	{
-		enum
-		{
-			mc_Reporting        = t_CPoolType::mc_Reporting
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = false
-		};
+		static constexpr aint mc_Reporting = t_CPoolType::mc_Reporting;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
 
 		constexpr bool operator == (TCPoolReferenceAllocator const &_Right) const noexcept
 		{

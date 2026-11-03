@@ -10,12 +10,9 @@ namespace NMib::NMemory
 	{
 		using CAutoDestroy = TCAllocator_AutoDestroy<TCAllocator_MemoryManager>;
 
-		enum
-		{
-			mc_Reporting        = false
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = false
-		};
+		static constexpr aint mc_Reporting = false;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
 
 		TCAllocator_MemoryManager(TCMemoryManager<t_CParams> *_pMemoryManager);
 

@@ -137,10 +137,7 @@ namespace NMib::NMemory
 
 	struct CAllocator_Base
 	{
-		enum
-		{
-			mc_bIsDefault = false
-		};
+		static constexpr bool mc_bIsDefault = false;
 
 		constexpr bool operator == (CAllocator_Base const &_Right) const noexcept = default;
 	};

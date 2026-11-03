@@ -26,22 +26,16 @@ namespace
 
 		struct CDebugOptions : public CMemoryManagerDebugOptionsDefault
 		{
-			enum
-			{
-				mc_bAsanPoisioning   = false
-				, mc_StackTraceDepth = 0
-			};
+			static constexpr bool mc_bAsanPoisioning = false;
+			static constexpr aint mc_StackTraceDepth = 0;
 		};
 
 		struct CDebugOptionsWithoutGuard : public CDebugOptions
 		{
-			enum
-			{
-				mc_bAsanPoisioning   = false
-				, mc_nPreGuardBytes  = 0
-				, mc_nPostGuardBytes = 0
-				, mc_StackTraceDepth = 0
-			};
+			static constexpr bool mc_bAsanPoisioning = false;
+			static constexpr aint mc_nPreGuardBytes = 0;
+			static constexpr aint mc_nPostGuardBytes = 0;
+			static constexpr aint mc_StackTraceDepth = 0;
 		};
 
 		CDebug_Tests()

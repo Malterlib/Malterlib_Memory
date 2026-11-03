@@ -8,9 +8,9 @@
 #endif
 
 #ifdef DEnableVector
-using vec16uint8 = uint8 __attribute__((ext_vector_type(16)));
-using vec16bool = char __attribute__((ext_vector_type(16)));
-using vec2uint64 = uint64 __attribute__((ext_vector_type(2)));
+using CVec16Uint8 = uint8 __attribute__((ext_vector_type(16)));
+using CVec16Bool = char __attribute__((ext_vector_type(16)));
+using CVec2Uint64 = uint64 __attribute__((ext_vector_type(2)));
 #endif
 
 #ifdef DMibSanitizerEnabled_Address
@@ -33,14 +33,14 @@ namespace NMib::NMemory
 		pMemory = pEnd;
 		pEnd = fg_AlignDown(_pMemory + _nBytes, 16);
 
-		vec16uint8 VecFill = {_Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value};
-		vec16uint8 *pVecStart = (vec16uint8 *)pMemory;
-		vec16uint8 *pVecEnd = (vec16uint8 *)pEnd;
+		CVec16Uint8 VecFill = {_Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value, _Value};
+		CVec16Uint8 *pVecStart = (CVec16Uint8 *)pMemory;
+		CVec16Uint8 *pVecEnd = (CVec16Uint8 *)pEnd;
 
-		vec16bool Differs = {0};
+		CVec16Bool Differs = {0};
 
 #	if 0
-		vec16uint8 *pVecEnd4 = (vec16uint8 *)pEnd - 3;
+		CVec16Uint8 *pVecEnd4 = (CVec16Uint8 *)pEnd - 3;
 		while (pVecStart < pVecEnd4)
 		{
 			Differs = Differs || (pVecStart[0] != VecFill);
@@ -56,7 +56,7 @@ namespace NMib::NMemory
 			++pVecStart;
 		}
 
-		if ((*((vec2uint64 *)&Differs))[0] || (*((vec2uint64 *)&Differs))[1])
+		if ((*((CVec2Uint64 *)&Differs))[0] || (*((CVec2Uint64 *)&Differs))[1])
 			return true;
 
 		pMemory = pEnd;

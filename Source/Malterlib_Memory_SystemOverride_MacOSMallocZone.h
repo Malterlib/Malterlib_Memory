@@ -3,9 +3,9 @@
 
 #pragma once
 
-typedef struct _malloc_zone_t_known_version malloc_zone_t_known_version;
+typedef struct _malloc_zone_t_known_version malloc_zone_t_known_version; // NOLINT(malterlib-type-naming): the name in the macOS SDK
 
-typedef struct malloc_introspection_t_known_version
+typedef struct malloc_introspection_t_known_version // NOLINT(malterlib-type-naming): the name in the macOS SDK
 {
 	// Enumerates all the malloc pointers in use
 	kern_return_t (* MALLOC_INTROSPECT_FN_PTR(enumerator))(task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder);
@@ -32,11 +32,11 @@ typedef struct malloc_introspection_t_known_version
 	void (* MALLOC_INTROSPECT_FN_PTR(print_task))(task_t task, unsigned level, vm_address_t zone_address, memory_reader_t reader, print_task_printer_t printer);
 	void (* MALLOC_INTROSPECT_FN_PTR(task_statistics))(task_t task, vm_address_t zone_address, memory_reader_t reader, malloc_statistics_t *stats); // Present in version >= 12.
 	unsigned zone_type; // Identifies the zone type.  0 means unknown/undefined zone type.  Present in version >= 14.
-} malloc_introspection_t_known_version;
+} malloc_introspection_t_known_version; // NOLINT(malterlib-type-naming): the name in the macOS SDK
 
 static_assert(sizeof(malloc_introspection_t_known_version) >= sizeof(malloc_introspection_t));
 
-typedef struct _malloc_zone_t_known_version
+typedef struct _malloc_zone_t_known_version // NOLINT(malterlib-type-naming): the name in the macOS SDK
 {
 	void *reserved1; // RESERVED FOR CFAllocator DO NOT USE
 	void *reserved2; // RESERVED FOR CFAllocator DO NOT USE

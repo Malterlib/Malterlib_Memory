@@ -703,11 +703,11 @@ extern "C"
 #ifdef DMibDebug
 #	define DAlignGapSize sizeof(void *)
 
-	typedef struct _AlignMemBlockHdr
+	typedef struct CAlignMemBlockHdr
 	{
 		void *pHead;
 		unsigned char Gap[DAlignGapSize];
-	} _AlignMemBlockHdr;
+	} CAlignMemBlockHdr;
 
 #	define DIs2PowN(d_Value)   (((d_Value)&(d_Value-1)) == 0)
 
@@ -749,7 +749,7 @@ extern "C"
 	void * __cdecl _aligned_offset_malloc_dbg(size_t size, size_t align, size_t offset, char const *f_name, int line_n)
 	{
 		uintptr_t ptr, r_ptr, t_ptr;
-		_AlignMemBlockHdr *pHdr;
+		CAlignMemBlockHdr *pHdr;
 		size_t nonuser_size, block_size;
 
 		/* validation section */
@@ -757,7 +757,7 @@ extern "C"
 
 		t_ptr = (0 - offset) & (sizeof(uintptr_t) - 1);
 
-		nonuser_size = t_ptr + align + sizeof(_AlignMemBlockHdr); // cannot overflow
+		nonuser_size = t_ptr + align + sizeof(CAlignMemBlockHdr); // cannot overflow
 		if (!fg_TryAddWindowsAllocationSize(size, nonuser_size, block_size))
 			return NULL;
 
@@ -765,7 +765,7 @@ extern "C"
 			return NULL;
 
 		r_ptr = ((ptr + nonuser_size + offset) & ~align) - offset;
-		pHdr = (_AlignMemBlockHdr *)(r_ptr - t_ptr) - 1;
+		pHdr = (CAlignMemBlockHdr *)(r_ptr - t_ptr) - 1;
 		memset((void *)pHdr->Gap, _bAlignLandFill, DAlignGapSize);
 		pHdr->pHead = (void *)ptr;
 		return (void *)r_ptr;
@@ -784,7 +784,7 @@ extern "C"
 	void * __cdecl _aligned_offset_realloc_dbg(void *memblock, size_t size, size_t align, size_t offset, char const *f_name, int line_n)
 	{
 		uintptr_t ptr, r_ptr, t_ptr, mov_sz;
-		_AlignMemBlockHdr *pHdr, *s_pHdr;
+		CAlignMemBlockHdr *pHdr, *s_pHdr;
 		size_t nonuser_size, block_size;
 
 		if (memblock == NULL)
@@ -795,7 +795,7 @@ extern "C"
 			return NULL;
 		}
 
-		s_pHdr = (_AlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
+		s_pHdr = (CAlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
 
 		if (CheckBytes((unsigned char *)memblock - DNoMansLandSize, _bNoMansLandFill, DNoMansLandSize))
 		{
@@ -819,7 +819,7 @@ extern "C"
 
 		t_ptr = (0 - offset) & (sizeof(uintptr_t) - 1);
 
-		nonuser_size = t_ptr + align + sizeof(_AlignMemBlockHdr); // cannot overflow
+		nonuser_size = t_ptr + align + sizeof(CAlignMemBlockHdr); // cannot overflow
 		if (!fg_TryAddWindowsAllocationSize(size, nonuser_size, block_size))
 			return NULL;
 
@@ -827,7 +827,7 @@ extern "C"
 			return NULL;
 
 		r_ptr = ((ptr + nonuser_size + offset) & ~align) - offset;
-		pHdr = (_AlignMemBlockHdr *)(r_ptr - t_ptr) - 1;
+		pHdr = (CAlignMemBlockHdr *)(r_ptr - t_ptr) - 1;
 		memset((void *)pHdr->Gap, _bAlignLandFill, DAlignGapSize);
 		pHdr->pHead = (void *)ptr;
 
@@ -869,12 +869,12 @@ extern "C"
 
 	void __cdecl _aligned_free_dbg(void *memblock)
 	{
-		_AlignMemBlockHdr *pHdr;
+		CAlignMemBlockHdr *pHdr;
 
 		if (memblock == NULL)
 			return;
 
-		pHdr = (_AlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
+		pHdr = (CAlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
 
 		if (CheckBytes((unsigned char *)memblock - DNoMansLandSize, _bNoMansLandFill, DNoMansLandSize))
 		{
@@ -909,14 +909,14 @@ extern "C"
 		/* HEADER SIZE + FOOTER SIZE = GAP + ALIGN + SIZE OF A POINTER*/
 		/* HEADER SIZE + USER SIZE + FOOTER SIZE = TOTAL SIZE */
 
-		_AlignMemBlockHdr *pHdr = NULL; // points to the beginning of the allocated block
-		pHdr = (_AlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
+		CAlignMemBlockHdr *pHdr = NULL; // points to the beginning of the allocated block
+		pHdr = (CAlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
 		total_size = _msize(pHdr->pHead);
 		header_size = (uintptr_t)memblock - (uintptr_t)pHdr->pHead;
 		gap = (0 - offset) & (sizeof(uintptr_t) - 1);
 		/* The align cannot be smaller than the sizeof(uintptr_t) */
 		align = (align > sizeof(uintptr_t) ? align : sizeof(uintptr_t)) - 1;
-		footer_size = gap + align + sizeof(_AlignMemBlockHdr) - header_size;
+		footer_size = gap + align + sizeof(CAlignMemBlockHdr) - header_size;
 		user_size = total_size - header_size - footer_size;
 		return user_size;
 	}

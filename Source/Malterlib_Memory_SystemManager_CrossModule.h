@@ -7,7 +7,7 @@
 
 namespace NMib::NMemory
 {
-	enum
+	enum EMemoryManagerCrossModule
 	{
 		EMemoryManagerCrossModule_Version = 0x105
 	};

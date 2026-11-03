@@ -162,10 +162,7 @@ namespace NMib
 	template <typename t_CType = void, typename ...tp_CParams>
 	struct TCConstruct
 	{
-		enum
-		{
-			mc_nParams = sizeof...(tp_CParams)
-		};
+		static constexpr aint mc_nParams = sizeof...(tp_CParams);
 
 		NStorage::TCTuple<NMib::NTraits::TCAddLValueReference<tp_CParams>...> m_Params;
 

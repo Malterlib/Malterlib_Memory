@@ -44,10 +44,7 @@
 
 namespace
 {
-	enum
-	{
-		EUseFast = true
-	};
+	constexpr aint gc_UseFast = true;
 
 	struct CMalterlibMemoryDummy
 	{

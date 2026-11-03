@@ -13,10 +13,7 @@ namespace
 	// virtual destructor is what that destructor reported for the dynamic type.
 	struct CRecordingAllocator : public NMemory::CAllocator_Heap
 	{
-		enum
-		{
-			mc_bIsDefault = false
-		};
+		static constexpr bool mc_bIsDefault = false;
 
 		static void f_Free(void *_pBlock, umint _Size)
 		{

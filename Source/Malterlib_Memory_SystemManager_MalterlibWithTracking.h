@@ -50,35 +50,31 @@ namespace NMib
 #if DEnableDebugMemoryManager
 	struct CMemoryManagerDebugOptions : public NMemory::CMemoryManagerDebugOptionsDefault
 	{
-		enum
-		{
-			EDummy
 #	if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreedGuards
-			, mc_bCheckModifyAfterFree = false
+		static constexpr bool mc_bCheckModifyAfterFree = false;
 #	endif
 #	if !DMibConfig_MalterlibMemoryManager_Debug_EnableAllocatedFill
-			, mc_bFillAllocated = false
+		static constexpr bool mc_bFillAllocated = false;
 #	endif
 #	if !DMibConfig_MalterlibMemoryManager_Debug_EnableStackTrace
-			, mc_StackTraceDepth = 0
+		static constexpr aint mc_StackTraceDepth = 0;
 #	endif
 #	if !DMibConfig_MalterlibMemoryManager_Debug_EnableEdgeGuards
-			, mc_nPreGuardBytes  = 0
-			, mc_nPostGuardBytes = 0
+		static constexpr aint mc_nPreGuardBytes = 0;
+		static constexpr aint mc_nPostGuardBytes = 0;
 #	endif
 #	if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreeValidation
-			, mc_bFreeValidation = false
+		static constexpr bool mc_bFreeValidation = false;
 #	endif
 #	if !DMibConfig_MalterlibMemoryManager_Debug_EnableFreeValidation && !DMibConfig_MalterlibMemoryManager_Debug_EnableMemoryLeaks
-			, mc_bEnumeration = false
+		static constexpr bool mc_bEnumeration = false;
 #	endif
 #	if  !DMibConfig_MalterlibMemoryManager_Debug_EnableMemoryLeaks
-			, mc_bTraceLeaks = false
+		static constexpr bool mc_bTraceLeaks = false;
 #	endif
 #	if  DMibConfig_MalterlibMemoryManager_Debug_EnableAssertOnMemoryLeak
-			, mc_bAssertOnMemoryLeak = true
+		static constexpr bool mc_bAssertOnMemoryLeak = true;
 #	endif
-		};
 	};
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	using CMemoryManagerWithDebugSmall = NMemory::TCMemoryManagerDebug<CMemoryManagerParamsSmall, gc_bHasExceptions, CMemoryManagerDebugOptions>;
@@ -119,13 +115,10 @@ namespace NMib
 #if DEnableDebugMemoryManager
 	struct CMemoryManagerNonTrackedDebugOptions : public CMemoryManagerDebugOptions
 	{
-		enum
-		{
-			mc_bCanAllocateNonTracked = false // Threading potentially recursive allocations
+		static constexpr bool mc_bCanAllocateNonTracked = false; // Threading potentially recursive allocations
 #	ifdef DPlatformFamily_Linux
-			, mc_StackTraceDepth = 0
+		static constexpr aint mc_StackTraceDepth = 0;
 #	endif
-		};
 	};
 
 	using CMemoryManagerNonTracked = NMemory::TCMemoryManagerDebug<CMemoryManagerNonTrackedParams, false, CMemoryManagerNonTrackedDebugOptions>;

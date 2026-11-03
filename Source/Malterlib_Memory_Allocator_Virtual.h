@@ -13,12 +13,9 @@ namespace NMib::NMemory
 
 	struct CAllocator_Virtual : public CAllocator_Base
 	{
-		enum
-		{
-			mc_Reporting        = true
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = true
-		};
+		static constexpr aint mc_Reporting = true;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = true;
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Virtual>;
 
@@ -177,12 +174,9 @@ namespace NMib::NMemory
 
 	struct CAllocator_VirtualNoTracking : public CAllocator_Base
 	{
-		enum
-		{
-			mc_Reporting        = false
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = true
-		};
+		static constexpr aint mc_Reporting = false;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = true;
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_VirtualNoTracking>;
 

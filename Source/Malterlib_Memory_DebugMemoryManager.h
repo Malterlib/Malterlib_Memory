@@ -130,7 +130,7 @@ namespace NMib::NMemory
 
 		void *f_AllocWithSize(umint &_Size, umint _Alignment)
 		{
-			_Alignment = fg_Max(umint(1 << EMemoryManagerAlignment), _Alignment);
+			_Alignment = fg_Max(umint(1 << mc_MemoryManagerAlignment), _Alignment);
 			umint GranularityProtect = CAllocator_VirtualNoTracking::f_GranularityProtect();
 			if (_Size == 0)
 				_Size = 1;
@@ -180,7 +180,7 @@ namespace NMib::NMemory
 			if (!_Size)
 				DMibPDebugBreak;
 
-			_Size = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, umint(1 << EMemoryManagerAlignment));
+			_Size = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, umint(1 << mc_MemoryManagerAlignment));
 			return fp_Free(_pBlock, _Size);
 		}
 
@@ -388,16 +388,9 @@ namespace NMib::NMemory
 
 		mutable NThread::CMutual m_Lock;
 
-		enum
-		{
-//#ifdef DPlatformFamily_macOS
-			// macOS needs 16 byte alignment to handle SSE
-			EMemoryManagerAlignmentCalc = gc_HighestBitSet<sizeof(umint) * 2>
-			, EMemoryManagerAlignment   = EMemoryManagerAlignmentCalc < 4 ? 4 : EMemoryManagerAlignmentCalc
-//#else
-			// EMemoryManagerAlignment = gc_HighestBitSet<sizeof(umint) * 2>
-//#endif
-		};
+		// macOS needs 16 byte alignment to handle SSE
+		static constexpr aint mc_MemoryManagerAlignmentCalc = gc_HighestBitSet<sizeof(umint) * 2>;
+		static constexpr aint mc_MemoryManagerAlignment = mc_MemoryManagerAlignmentCalc < 4 ? 4 : mc_MemoryManagerAlignmentCalc;
 
 		struct CMemoryManagerParamsOverrides : public CDefaultMemoryManagerParams
 		{

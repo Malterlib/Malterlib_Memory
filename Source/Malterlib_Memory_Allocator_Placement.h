@@ -9,12 +9,9 @@ namespace NMib::NMemory
 {
 	struct CAllocator_Placement : public CAllocator_Base
 	{
-		enum
-		{
-			mc_Reporting        = false
-			, mc_CanBeStatic    = false
-			, mc_bMethodsStatic = false
-		};
+		static constexpr aint mc_Reporting = false;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
 
 		constexpr bool operator == (CAllocator_Placement const &_Right) const noexcept
 		{

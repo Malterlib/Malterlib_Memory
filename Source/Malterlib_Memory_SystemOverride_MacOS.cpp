@@ -132,7 +132,7 @@ void fg_MalterlibMallocOverrideDisable();
 
 extern "C"
 {
-	struct ProgramVars
+	struct ProgramVars // NOLINT(malterlib-type-naming): the name in the macOS SDK
 	{
 		void const *mh;
 		int *NXArgcPtr;

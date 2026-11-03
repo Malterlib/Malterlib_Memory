@@ -7,10 +7,7 @@ namespace NMib::NMemory
 {
 	// Keep in mind that these two classes are used in the cross module interface and has to be versioned properly if changed
 
-	enum
-	{
-		ECMemoryManagerReturnCheckoutVersion = 0x103
-	};
+	constexpr uint32 gc_CMemoryManagerReturnCheckoutVersion = 0x103;
 
 	struct ICMemoryManagerReturnCheckout
 	{

@@ -70,7 +70,7 @@ namespace NMib::NMemory
 	{
 		constexpr CMiMallocCheckout()
 		{
-			m_Version = ECMemoryManagerReturnCheckoutVersion;
+			m_Version = gc_CMemoryManagerReturnCheckoutVersion;
 		}
 
 		virtual void f_ReturnCheckoutVirtual() override

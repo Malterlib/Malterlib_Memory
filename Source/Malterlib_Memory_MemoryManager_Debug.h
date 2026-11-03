@@ -11,23 +11,20 @@ namespace NMib::NMemory
 {
 	struct CMemoryManagerDebugOptionsDefault
 	{
-		enum
-		{
-			mc_bCheckModifyAfterFree    = true
-			, mc_bAsanPoisioning        = true
-			, mc_bFillAllocated         = true
-			, mc_StackTraceDepth        = 64
-			, mc_nPreGuardBytes         = sizeof(umint) * 2
-			, mc_nPostGuardBytes        = sizeof(umint) * 2
-			, mc_Fill_Free              = 0xDD
-			, mc_Fill_Allocated         = 0xCD
-			, mc_Fill_Guard             = 0xFD
-			, mc_bCanAllocateNonTracked = true // Used in non-tracked heap to break recursive dependency on non-tracked heap
-			, mc_bFreeValidation        = true // Enables validation of free blocks (double free)
-			, mc_bEnumeration           = true // Enables enumeration. Needed for reporting leaks.
-			, mc_bTraceLeaks            = true // Enables leak tracing
-			, mc_bAssertOnMemoryLeak    = false
-		};
+		static constexpr bool mc_bCheckModifyAfterFree = true;
+		static constexpr bool mc_bAsanPoisioning = true;
+		static constexpr bool mc_bFillAllocated = true;
+		static constexpr aint mc_StackTraceDepth = 64;
+		static constexpr aint mc_nPreGuardBytes = sizeof(umint) * 2;
+		static constexpr aint mc_nPostGuardBytes = sizeof(umint) * 2;
+		static constexpr aint mc_Fill_Free = 0xDD;
+		static constexpr aint mc_Fill_Allocated = 0xCD;
+		static constexpr aint mc_Fill_Guard = 0xFD;
+		static constexpr bool mc_bCanAllocateNonTracked = true;
+		static constexpr bool mc_bFreeValidation = true;
+		static constexpr bool mc_bEnumeration = true;
+		static constexpr bool mc_bTraceLeaks = true;
+		static constexpr bool mc_bAssertOnMemoryLeak = false;
 	};
 
 	template <typename t_CParams, bool t_bException, typename t_COptions = CMemoryManagerDebugOptionsDefault>
@@ -72,10 +69,7 @@ namespace NMib::NMemory
 
 			struct CArena
 			{
-				enum
-				{
-					mc_EnableCallbacks = true
-				};
+				static constexpr aint mc_EnableCallbacks = true;
 
 				CArena(CGlobal *_pGlobal);
 
@@ -94,10 +88,7 @@ namespace NMib::NMemory
 
 			struct CHeap
 			{
-				enum
-				{
-					mc_EnableCallbacks = true
-				};
+				static constexpr aint mc_EnableCallbacks = true;
 
 				CHeap(CGlobal *_pGlobal);
 
@@ -115,10 +106,7 @@ namespace NMib::NMemory
 
 			struct CGlobal
 			{
-				enum
-				{
-					mc_EnableCallbacks = true
-				};
+				static constexpr aint mc_EnableCallbacks = true;
 
 				CGlobal(TCMemoryManager<TCMemoryManagerDebugParams> &_MemoryManager);
 
