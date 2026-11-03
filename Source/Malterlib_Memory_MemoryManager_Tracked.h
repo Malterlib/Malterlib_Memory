@@ -8,7 +8,6 @@ namespace NMib::NMemory
 	template <typename t_CSuper, typename t_CAllocationInfo = void>
 	struct TCMemoryManagerTracked : public t_CSuper
 	{
-	public:
 		template <typename ...tfp_CAllocator>
 		TCMemoryManagerTracked(ch8 const *_pName, tfp_CAllocator && ..._Params);
 
@@ -70,7 +69,6 @@ namespace NMib::NMemory
 	template <typename t_CSuper>
 	struct TCMemoryManagerTracked<t_CSuper, void> : public t_CSuper
 	{
-	public:
 		template <typename ...tfp_CAllocator>
 		TCMemoryManagerTracked(ch8 const *_pName, tfp_CAllocator && ..._Params);
 

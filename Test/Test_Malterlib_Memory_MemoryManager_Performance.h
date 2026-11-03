@@ -49,20 +49,8 @@ namespace
 		EUseFast = true
 	};
 
-	class CMalterlibMemoryDummy
+	struct CMalterlibMemoryDummy
 	{
-		NMib::NThread::TCThreadLocal<NMib::NContainer::CByteVector> m_Memory;
-		NMib::NThread::TCThreadLocal
-			<
-				uint8 *
-				, NMib::NMemory::CAllocator_Heap
-				, (NMib::NThread::EThreadLocalFlag)(NMib::NThread::EThreadLocalFlag_AlwaysCreated | NMib::NThread::EThreadLocalFlag_FastThreadLocal)
-			>
-			m_pMemory
-		;
-		umint m_MaxSize;
-
-	public:
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
@@ -110,11 +98,24 @@ namespace
 		void f_CheckHeap()
 		{
 		}
+
+	private:
+		NMib::NThread::TCThreadLocal<NMib::NContainer::CByteVector> m_Memory;
+		NMib::NThread::TCThreadLocal
+			<
+				uint8 *
+				, NMib::NMemory::CAllocator_Heap
+				, (NMib::NThread::EThreadLocalFlag)(NMib::NThread::EThreadLocalFlag_AlwaysCreated | NMib::NThread::EThreadLocalFlag_FastThreadLocal)
+			>
+			m_pMemory
+		;
+		umint m_MaxSize;
 	};
 
 #ifdef DMemoryManagerTestEnable_Malterlib
-	class CMalterlibMemoryMalterlib
+	struct CMalterlibMemoryMalterlib
 	{
+	private:
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
 		{
 		};
@@ -178,8 +179,9 @@ namespace
 #	if DMibPPtrBits >= 64
 	// Without reap-in-cleanup, cross-thread frees still use delete messages, which needs the
 	// small size slabs on 32 bit
-	class CMalterlibMemoryMalterlib_SubSlabBitmaps
+	struct CMalterlibMemoryMalterlib_SubSlabBitmaps
 	{
+	private:
 		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EMemoryManagerFreeStore mc_FreeStoreMode = NMib::NMemory::EMemoryManagerFreeStore_SubSlabBitmaps;
@@ -247,8 +249,9 @@ namespace
 	};
 #	endif
 
-	class CMalterlibMemoryMalterlib_SubSlabLists
+	struct CMalterlibMemoryMalterlib_SubSlabLists
 	{
+	private:
 		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EMemoryManagerFreeStore mc_FreeStoreMode = NMib::NMemory::EMemoryManagerFreeStore_SubSlabLists;
@@ -315,8 +318,9 @@ namespace
 	};
 
 	template <NMib::NMemory::EMemoryManagerFreeStore t_FreeStoreMode, bool t_bGlobalAddressOrder>
-	class TCMalterlibMemoryMalterlib_Reap
+	struct TCMalterlibMemoryMalterlib_Reap
 	{
+	private:
 		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EMemoryManagerFreeStore mc_FreeStoreMode = t_FreeStoreMode;
@@ -391,8 +395,9 @@ namespace
 	using CMalterlibMemoryMalterlib_SubSlabBitmapsReapOrder = TCMalterlibMemoryMalterlib_Reap<NMib::NMemory::EMemoryManagerFreeStore_SubSlabBitmaps, true>;
 
 #	if DMibPPtrBits >= 64
-	class CMalterlibMemoryMalterlib_LowBranch
+	struct CMalterlibMemoryMalterlib_LowBranch
 	{
+	private:
 		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr bool mc_bUseSmallSizes = false;
@@ -461,8 +466,9 @@ namespace
 	};
 #	endif
 
-	class CMalterlibMemoryMalterlib_Debug
+	struct CMalterlibMemoryMalterlib_Debug
 	{
+	private:
 #	ifdef DMibNeedDebugException
 		static constexpr bool mc_bHasExceptions = true;
 #	else
@@ -529,8 +535,9 @@ namespace
 		}
 	};
 
-	class CMalterlibMemoryMalterlib_Tracked
+	struct CMalterlibMemoryMalterlib_Tracked
 	{
+	private:
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
 		{
 		};
@@ -591,8 +598,9 @@ namespace
 		}
 	};
 
-	class CMalterlibMemoryMalterlib_NoCleanup
+	struct CMalterlibMemoryMalterlib_NoCleanup
 	{
+	private:
 		struct CLocalParams : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup = NMib::NMemory::EDeferCleanup
@@ -662,8 +670,9 @@ namespace
 		}
 	};
 
-	class CMalterlibMemoryMalterlib_NoDeferCleanup
+	struct CMalterlibMemoryMalterlib_NoDeferCleanup
 	{
+	private:
 		struct CLocalParams : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup = NMib::NMemory::EDeferCleanup_None;
@@ -729,8 +738,9 @@ namespace
 		}
 	};
 
-	class CMalterlibMemoryMalterlib_NoCheckout
+	struct CMalterlibMemoryMalterlib_NoCheckout
 	{
+	private:
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
 		{
 		};
@@ -791,8 +801,9 @@ namespace
 		}
 	};
 
-	class CMalterlibMemoryMalterlib_NoCommit
+	struct CMalterlibMemoryMalterlib_NoCommit
 	{
+	private:
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<NMib::NMemory::CMemoryManagerParams_NoCommit>
 		{
 		};
@@ -855,9 +866,8 @@ namespace
 #endif
 
 #ifdef DMemoryManagerTestEnable_TcMalloc
-	class CMalterlibMemoryTcMalloc
+	struct CMalterlibMemoryTcMalloc
 	{
-	public:
 		CMalterlibMemoryTcMalloc()
 		{
 		}
@@ -916,9 +926,8 @@ namespace
 #endif
 
 #ifdef DMemoryManagerTestEnable_MiMalloc
-	class CMalterlibMemoryMiMalloc
+	struct CMalterlibMemoryMiMalloc
 	{
-	public:
 		CMalterlibMemoryMiMalloc()
 		{
 		}
@@ -981,8 +990,9 @@ namespace
 #endif
 
 #ifdef DMemoryManagerTestEnable_MacOS
-	class CMalterlibMemoryMacOS
+	struct CMalterlibMemoryMacOS
 	{
+	private:
 		malloc_zone_t *m_pMallocZone;
 
 	public:
@@ -1065,9 +1075,8 @@ namespace
 #endif
 
 #ifdef DMemoryManagerTestEnable_StdLib
-	class CMalterlibMemoryStdLib
+	struct CMalterlibMemoryStdLib
 	{
-	public:
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 #	ifdef DPlatformFamily_Windows
@@ -1134,9 +1143,8 @@ namespace
 #endif
 
 #ifdef DMemoryManagerTestEnable_Application
-	class CMalterlibMemoryApplication
+	struct CMalterlibMemoryApplication
 	{
-	public:
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			return true;
@@ -1193,9 +1201,8 @@ namespace
 
 #ifdef DMemoryManagerTestEnable_WindowsDefault
 	template <bool t_bClear, bool t_bMultiThreaded>
-	class TCMalterlibMemoryWindows
+	struct TCMalterlibMemoryWindows
 	{
-	public:
 		TCMalterlibMemoryWindows()
 			: m_Heap(nullptr)
 		{
@@ -1269,9 +1276,8 @@ namespace
 
 #ifdef DMemoryManagerTestEnable_WindowsLF
 	template <bool t_bClear>
-	class TCMalterlibMemoryWindowsLF
+	struct TCMalterlibMemoryWindowsLF
 	{
-	public:
 		TCMalterlibMemoryWindowsLF()
 			: m_Heap(nullptr)
 		{
@@ -1350,9 +1356,8 @@ namespace
 #endif
 
 #ifdef DMemoryManagerTestEnable_Virtual
-	class CMalterlibMemoryVirtual
+	struct CMalterlibMemoryVirtual
 	{
-	public:
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
 			if (_bAlignment)

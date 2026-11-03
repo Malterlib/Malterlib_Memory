@@ -231,9 +231,8 @@ namespace
 
 #endif
 
-	class CPerformance_Tests : public CTest
+	struct CPerformance_Tests : public CTest
 	{
-	public:
 		umint m_nCores;
 		CPerformance_Tests()
 		{

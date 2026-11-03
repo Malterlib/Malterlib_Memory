@@ -160,20 +160,8 @@ namespace NMib
 	inline_small void fg_Delete(t_CType * &_pToDelete);
 
 	template <typename t_CType = void, typename ...tp_CParams>
-	class TCConstruct
+	struct TCConstruct
 	{
-		template <typename tf_CType, typename tf_CAllocator, umint ...tp_Indices>
-		typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType *fp_Create(tf_CAllocator &&_Allocator, NMeta::TCIndices<tp_Indices...> const &_IndexSequnce)
-		{
-			return fg_ConstructObject<typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType>
-				(
-					fg_Forward<tf_CAllocator>(_Allocator)
-					, fg_Forward<tp_CParams>(fg_Get<tp_Indices>(m_Params))...
-				)
-			;
-		}
-
-	public:
 		enum
 		{
 			mc_nParams = sizeof...(tp_CParams)
@@ -190,6 +178,18 @@ namespace NMib
 		typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType *f_Create(tf_CAllocator &&_Allocator)
 		{
 			return fp_Create<tf_CType>(fg_Forward<tf_CAllocator>(_Allocator), NMeta::TCConsecutiveIndices<mc_nParams>());
+		}
+
+	private:
+		template <typename tf_CType, typename tf_CAllocator, umint ...tp_Indices>
+		typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType *fp_Create(tf_CAllocator &&_Allocator, NMeta::TCIndices<tp_Indices...> const &_IndexSequnce)
+		{
+			return fg_ConstructObject<typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType>
+				(
+					fg_Forward<tf_CAllocator>(_Allocator)
+					, fg_Forward<tp_CParams>(fg_Get<tp_Indices>(m_Params))...
+				)
+			;
 		}
 	};
 

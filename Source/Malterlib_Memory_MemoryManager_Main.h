@@ -11,10 +11,10 @@ namespace NMib::NMemory
 	struct TCMemoryManagerThreadLocal;
 
 	template <typename t_CParams>
-	class TCMemoryManagerArenaHeapChunk;
+	struct TCMemoryManagerArenaHeapChunk;
 
 	template <typename t_CParams>
-	class TCMemoryManagerArenaHeap;
+	struct TCMemoryManagerArenaHeap;
 
 	template <typename t_CParams2, uint32 t_SlabType2>
 	struct TCMemoryManagerSlab;
@@ -26,14 +26,8 @@ namespace NMib::NMemory
 	struct TCMemoryManagerNumaArenaBackgroundCleanup;
 
 	template <typename t_CParams>
-	class TCMemoryManagerCheckout
+	struct TCMemoryManagerCheckout
 	{
-		TCMemoryManager<t_CParams> *m_pMemoryManager = nullptr;
-
-		TCMemoryManagerCheckout(TCMemoryManagerCheckout const &) = delete;
-		TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout const &) = delete;
-
-	public:
 		TCMemoryManagerCheckout() = default;
 		TCMemoryManagerCheckout(TCMemoryManagerCheckout &&_Other);
 		TCMemoryManagerCheckout(TCMemoryManager<t_CParams> *_pMemoryManager);
@@ -41,21 +35,27 @@ namespace NMib::NMemory
 		~TCMemoryManagerCheckout();
 
 		bool f_IsValid() const;
+
+	private:
+		TCMemoryManager<t_CParams> *m_pMemoryManager = nullptr;
+
+		TCMemoryManagerCheckout(TCMemoryManagerCheckout const &) = delete;
+		TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout const &) = delete;
 	};
 
 	template <typename t_CParams>
-	class TCMemoryManagerCheckoutLight
+	struct TCMemoryManagerCheckoutLight
 	{
-		TCMemoryManager<t_CParams> *m_pMemoryManager;
-
-		TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight const &) = delete;
-		TCMemoryManagerCheckoutLight &operator = (TCMemoryManagerCheckoutLight const &) = delete;
-
-	public:
 		TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight &&_Other);
 		TCMemoryManagerCheckoutLight(TCMemoryManager<t_CParams> *_pMemoryManager);
 		TCMemoryManagerCheckoutLight &operator = (TCMemoryManagerCheckoutLight<t_CParams> &&_Other);
 		~TCMemoryManagerCheckoutLight();
+
+	private:
+		TCMemoryManager<t_CParams> *m_pMemoryManager;
+
+		TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight const &) = delete;
+		TCMemoryManagerCheckoutLight &operator = (TCMemoryManagerCheckoutLight const &) = delete;
 	};
 
 	struct align_cacheline CLocalNumaNode
@@ -215,13 +215,13 @@ namespace NMib::NMemory
 
 	private:
 		template <typename t_CParams2>
-		friend class TCMemoryManagerArenaHeapChunk;
+		friend struct TCMemoryManagerArenaHeapChunk;
 
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerArena;
 
 		template <typename t_CParams2>
-		friend class TCMemoryManagerArenaHeap;
+		friend struct TCMemoryManagerArenaHeap;
 
 		template <typename t_CParams2, uint32 t_SlabType2>
 		friend struct TCMemoryManagerSlab;

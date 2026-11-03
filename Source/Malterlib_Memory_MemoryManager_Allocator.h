@@ -6,11 +6,8 @@
 namespace NMib::NMemory
 {
 	template <typename t_CParams>
-	class TCAllocator_MemoryManager : public CAllocator_Base
+	struct TCAllocator_MemoryManager : public CAllocator_Base
 	{
-		TCMemoryManager<t_CParams> *m_pMemoryManager;
-
-	public:
 		using CAutoDestroy = TCAllocator_AutoDestroy<TCAllocator_MemoryManager>;
 
 		enum
@@ -169,6 +166,9 @@ namespace NMib::NMemory
 		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		only_parameters_aliased CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
+
+	private:
+		TCMemoryManager<t_CParams> *m_pMemoryManager;
 	};
 }
 

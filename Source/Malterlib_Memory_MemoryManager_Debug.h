@@ -141,7 +141,6 @@ namespace NMib::NMemory
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	struct TCMemoryManagerDebug : public TCMemoryManager<TCMemoryManagerDebugParams<t_CParams, t_bException, t_COptions>>
 	{
-	public:
 		template <typename t_CParams2, bool t_bException2, typename t_COptions2>
 		friend struct TCMemoryManagerDebugParams;
 

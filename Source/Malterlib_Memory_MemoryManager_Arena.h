@@ -25,7 +25,6 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct align_cacheline TCMemoryManagerArena : public t_CParams::CNotifier::CArena
 	{
-	public:
 		TCMemoryManagerArena(TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic, ENumaNode _NumaNode, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena, bool _bLimitedArenas);
 		~TCMemoryManagerArena();
 

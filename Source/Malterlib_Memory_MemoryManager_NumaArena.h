@@ -17,7 +17,7 @@ namespace NMib::NMemory
 	struct TCMemoryManagerSlab;
 
 	template <typename t_CParams>
-	class TCMemoryManagerArenaHeap;
+	struct TCMemoryManagerArenaHeap;
 
 	template <typename t_CParams>
 	struct TCMemoryManagerLimitedTemporaryReturn
@@ -99,7 +99,6 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct align_cacheline TCMemoryManagerNumaArena
 	{
-	public:
 		struct CCompare
 		{
 			inline_small ENumaNode operator () (TCMemoryManagerNumaArena const &_Node) const
@@ -145,7 +144,7 @@ namespace NMib::NMemory
 		friend struct TCMemoryManagerSlab;
 
 		template <typename t_CParams2>
-		friend class TCMemoryManagerArenaHeap;
+		friend struct TCMemoryManagerArenaHeap;
 
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerNumaArenaBackgroundCleanup;

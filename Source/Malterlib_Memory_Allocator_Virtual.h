@@ -11,9 +11,8 @@ namespace NMib::NMemory
 	||______________________________________________________________________________________________||
 	\************************************************************************************************/
 
-	class CAllocator_Virtual : public CAllocator_Base
+	struct CAllocator_Virtual : public CAllocator_Base
 	{
-	public:
 		enum
 		{
 			mc_Reporting        = true
@@ -168,18 +167,16 @@ namespace NMib::NMemory
 		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
 	};
 
-	class CAllocator_VirtualNoCommit : public CAllocator_Virtual
+	struct CAllocator_VirtualNoCommit : public CAllocator_Virtual
 	{
-	public:
 		static constexpr bool f_CanCommit();
 		static bool f_CanProtect();
 		static void f_Commit(void *_pMem, umint _Size);
 		static void f_Decommit(void *_pMem, umint _Size);
 	};
 
-	class CAllocator_VirtualNoTracking : public CAllocator_Base
+	struct CAllocator_VirtualNoTracking : public CAllocator_Base
 	{
-	public:
 		enum
 		{
 			mc_Reporting        = false
@@ -320,9 +317,8 @@ namespace NMib::NMemory
 		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
 	};
 
-	class CAllocator_VirtualNoTrackingNoCommit : public CAllocator_VirtualNoTracking
+	struct CAllocator_VirtualNoTrackingNoCommit : public CAllocator_VirtualNoTracking
 	{
-	public:
 		static constexpr bool f_CanCommit();
 		static bool f_CanProtect();
 		static void f_Commit(void *_pMem, umint _Size);

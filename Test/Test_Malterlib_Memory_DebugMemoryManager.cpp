@@ -5,9 +5,8 @@
 
 namespace
 {
-	class CDebugMemoryManager_Tests : public CTest
+	struct CDebugMemoryManager_Tests : public CTest
 	{
-	public:
 		void f_DoTests()
 		{
 			DMibTestSuite("TestAlloc")

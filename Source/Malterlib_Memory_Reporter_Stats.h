@@ -7,9 +7,8 @@
 
 namespace NMib::NMemory
 {
-	class CStatsMemoryReporter : public CGlobalReportMemory
+	struct CStatsMemoryReporter : public CGlobalReportMemory
 	{
-	public:
 		struct CSize
 		{
 			CSize()

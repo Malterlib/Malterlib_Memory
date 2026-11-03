@@ -8,16 +8,8 @@
 
 namespace NMib::NMemory
 {
-	class CCallstackMemoryReporter : public CGlobalReportMemory
+	struct CCallstackMemoryReporter : public CGlobalReportMemory
 	{
-		enum
-		{
-			EMaxStackTraceDepth      = 16
-			, EProcessQueueSize      = (1 << 17)
-			, EProcessQueueThreshold = (EProcessQueueSize / 2)
-		};
-
-	public:
 		struct CSize
 		{
 			CSize()
@@ -115,6 +107,13 @@ namespace NMib::NMemory
 		};
 
 	private:
+		enum
+		{
+			EMaxStackTraceDepth      = 16
+			, EProcessQueueSize      = (1 << 17)
+			, EProcessQueueThreshold = (EProcessQueueSize / 2)
+		};
+
 		struct COperation
 		{
 			umint m_MemoryAllocator;

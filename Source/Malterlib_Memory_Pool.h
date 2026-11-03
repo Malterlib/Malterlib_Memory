@@ -9,20 +9,17 @@
 
 namespace NMib::NMemory
 {
-	class CPoolType_Growing
+	struct CPoolType_Growing
 	{
-	public:
 		template <typename t_CAllocator>
-		class TCBlock
+		struct TCBlock
 		{
-		public:
 			DMibListLinkAllocatorSA_Link(TCBlock, m_FreeLink, t_CAllocator);
 		};
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
-		class TCChunk
+		struct TCChunk
 		{
-		public:
 			using CChunk = TCChunk;
 			DMibListLinkAllocatorS_Link(CChunk, m_Link, t_CAllocator);
 			umint m_Size;
@@ -58,9 +55,8 @@ namespace NMib::NMemory
 		};
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
-		class TCPool
+		struct TCPool
 		{
-		public:
 			constexpr TCPool(EAggregateInitialization _Init)
 				: m_Chunks(_Init)
 				, m_FreeBlocks(_Init)
@@ -168,15 +164,13 @@ namespace NMib::NMemory
 		};
 	};
 
-	class CPoolType_Freeable
+	struct CPoolType_Freeable
 	{
-	public:
-		class CPool;
+		struct CPool;
 
 		template <typename t_CAllocator>
-		class TCBlock
+		struct TCBlock
 		{
-		public:
 			union
 			{
 				void *m_pChunk;
@@ -188,9 +182,8 @@ namespace NMib::NMemory
 		};
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
-		class TCChunk
+		struct TCChunk
 		{
-		public:
 			using CChunk = TCChunk;
 
 			DMibListLinkAllocatorD_Link(CChunk, m_Link, t_CAllocator);
@@ -231,9 +224,8 @@ namespace NMib::NMemory
 		};
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
-		class TCPool
+		struct TCPool
 		{
-		public:
 			constexpr TCPool(EAggregateInitialization _Init)
 				: m_Chunks(_Init)
 				, m_FreeChunks(_Init)
@@ -389,28 +381,24 @@ namespace NMib::NMemory
 		};
 	};
 
-	class CPoolType_FreeableSmall
+	struct CPoolType_FreeableSmall
 	{
-	public:
-		class CPool;
+		struct CPool;
 
 		template <typename t_CAllocator>
-		class TCBlock
+		struct TCBlock
 		{
-		public:
 			DMibListLinkAllocatorSA_Member(m_FreeLink, t_CAllocator);
 			DMibListLinkS_Trans(TCBlock, m_FreeLink);
 		};
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
-		class TCChunk
+		struct TCChunk
 		{
-		public:
 			using CChunk = TCChunk;
 
-			class CCompare
+			struct CCompare
 			{
-			public:
 				inline_small void const *operator () (TCChunk const &_Node) const
 				{
 					return (void const *)(&_Node);
@@ -456,9 +444,8 @@ namespace NMib::NMemory
 		};
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
-		class TCPool
+		struct TCPool
 		{
-		public:
 			constexpr TCPool(EAggregateInitialization _Init)
 				: m_Chunks(_Init)
 				, m_FreeChunks(_Init)
@@ -621,9 +608,8 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CLock>
-	class TCPoolAggregateData : public t_CLock
+	struct TCPoolAggregateData : public t_CLock
 	{
-	public:
 		constexpr TCPoolAggregateData(EAggregateInitialization _Init)
 			: t_CLock(_Init)
 			, m_bDoneInit(false)
@@ -665,9 +651,8 @@ namespace NMib::NMemory
 		, typename t_CAggregateData = TCPoolAggregateData<t_CLock>
 		, typename t_CDebugStrType = NStr::CFStr256
 	>
-	class TCPoolAggregate : public t_CAggregateData
+	struct TCPoolAggregate : public t_CAggregateData
 	{
-	public:
 		constexpr TCPoolAggregate(EAggregateInitialization _Init)
 			: t_CAggregateData(_Init)
 #if DMibConfig_Memory_Shims_Enable
@@ -801,9 +786,8 @@ namespace NMib::NMemory
 #endif
 
 	template <typename t_CLock>
-	class TCNoAggregateData : public t_CLock
+	struct TCNoAggregateData : public t_CLock
 	{
-	public:
 		static inline_small void f_InitDone()
 		{
 		}
@@ -815,9 +799,8 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CData, umint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CPoolType = CPoolType_Freeable, typename t_CAllocator = CAllocator_Virtual>
-	class TCPool : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, t_CPoolType, t_CAllocator, TCNoAggregateData<t_CLock>>
+	struct TCPool : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, t_CPoolType, t_CAllocator, TCNoAggregateData<t_CLock>>
 	{
-	public:
 		TCPool(ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, t_CPoolType, t_CAllocator, TCNoAggregateData<t_CLock>>::f_Construct(_NumaNode);
@@ -830,9 +813,8 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CData, umint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CAllocator = CAllocator_Virtual>
-	class TCPoolSmall : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_FreeableSmall, t_CAllocator, TCNoAggregateData<t_CLock>>
+	struct TCPoolSmall : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_FreeableSmall, t_CAllocator, TCNoAggregateData<t_CLock>>
 	{
-	public:
 		TCPoolSmall(ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_FreeableSmall, t_CAllocator, TCNoAggregateData<t_CLock>>::f_Construct(_NumaNode);
@@ -845,9 +827,8 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CData, umint t_GrowSize = 128, typename t_CLock = NMib::NThread::CNoLock, typename t_CAllocator = CAllocator_Virtual>
-	class TCPoolGrowing : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_Growing, t_CAllocator, TCNoAggregateData<t_CLock>>
+	struct TCPoolGrowing : public TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_Growing, t_CAllocator, TCNoAggregateData<t_CLock>>
 	{
-	public:
 		TCPoolGrowing(ENumaNode _NumaNode = ENumaNode_Default)
 		{
 			TCPoolAggregate<t_CData, t_GrowSize, t_CLock, CPoolType_Growing, t_CAllocator, TCNoAggregateData<t_CLock>>::f_Construct(_NumaNode);
@@ -869,9 +850,8 @@ namespace NMib::NMemory
 	|						first, otherwise the delete wont work					|
 	\*_____________________________________________________________________________*/
 	template <typename t_CPool>
-	class TBCPool
+	struct TBCPool
 	{
-	public:
 		void *operator new (umint _NumBytes, t_CPool const &_Pool)
 		{
 			return _Pool.f_GetBlock(_NumBytes);
@@ -896,7 +876,7 @@ namespace NMib::NMemory
 		, typename t_CPoolType = NMib::NMemory::CPoolType_FreeableSmall
 		, typename t_CLockType = typename NMib::NThread::CMutual
 	>
-	class TCStaticPool;
+	struct TCStaticPool;
 
 	template
 	<
@@ -906,9 +886,8 @@ namespace NMib::NMemory
 		, typename t_CPoolType = NMib::NMemory::CPoolType_FreeableSmall
 		, typename t_CLockType = typename NMib::NThread::CMutual
 	>
-	class TCStaticPoolAllocator : public CAllocator_Base
+	struct TCStaticPoolAllocator : public CAllocator_Base
 	{
-	public:
 		enum
 		{
 			mc_Reporting        = t_CAllocator::mc_Reporting
@@ -1164,9 +1143,8 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CType, umint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
-	class TCStaticPool
+	struct TCStaticPool
 	{
-	public:
 		using CPoolType = TCPool<t_CType, t_GrowSize, t_CLockType, t_CPoolType, t_CAllocator>;
 
 		static NStorage::TCAggregate<CPoolType, 16> ms_Pool;
@@ -1199,9 +1177,8 @@ namespace NMib::NMemory
 		, typename t_CPoolType = NMib::NMemory::CPoolType_FreeableSmall
 		, typename t_CLockType = NMib::NThread::CNoLock
 	>
-	class TCPoolAllocator : public CAllocator_Base
+	struct TCPoolAllocator : public CAllocator_Base
 	{
-	public:
 		enum
 		{
 			mc_Reporting        = t_CAllocator::mc_Reporting
@@ -1457,9 +1434,8 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CPoolType>
-	class TCPoolReferenceAllocator : public CAllocator_Base
+	struct TCPoolReferenceAllocator : public CAllocator_Base
 	{
-	public:
 		enum
 		{
 			mc_Reporting        = t_CPoolType::mc_Reporting

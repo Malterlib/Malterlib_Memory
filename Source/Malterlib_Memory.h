@@ -21,9 +21,8 @@ namespace NMib::NMemory
 		, EMemoryManagerFeatureFlag_AssertOnMemoryLeak   = DMibBit(7)
 	};
 
-	class CGlobalReportMemory
+	struct CGlobalReportMemory
 	{
-	public:
 		virtual void f_AllocatorName(umint _MemoryAllocator, ch8 const *_pAllocatorName) = 0;
 		virtual void f_AllocatorDelete(umint _MemoryAllocator) = 0;
 
@@ -72,9 +71,8 @@ namespace NMib::NMemory
 		};
 	};
 
-	class CReportMemory
+	struct CReportMemory
 	{
-	public:
 		virtual void f_Alloc
 			(
 				umint _MemoryAllocator
@@ -131,16 +129,14 @@ namespace NMib::NMemory
 		virtual void f_AllocatorDelete(umint _MemoryAllocator, ch8 const *_pAllocatorName, umint _AllocatorDepth) = 0;
 	};
 
-	class CReportMemoryLightweight
+	struct CReportMemoryLightweight
 	{
-	public:
 		virtual void f_Alloc(umint _ReturnedSize) = 0;
 		virtual void f_Free(umint _Size) = 0;
 	};
 
-	class CAllocator_Base
+	struct CAllocator_Base
 	{
-	public:
 		enum
 		{
 			mc_bIsDefault = false
@@ -233,9 +229,8 @@ namespace NMib::NMemory
 		t_CAllocator &m_Allocator;
 	};
 
-	class CAllocator_Empty : public CAllocator_Base
+	struct CAllocator_Empty : public CAllocator_Base
 	{
-	public:
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Empty>;
 
 		static inline_small umint f_GranularityAlloc(bool _bLargePages = false)
@@ -459,12 +454,11 @@ namespace NMib::NMemory
 		}
 	};
 
-	class CAllocator_Disable : public CAllocator_Base
+	struct CAllocator_Disable : public CAllocator_Base
 	{
-	public:
 	};
 
-	class CAllocator_Heap;
+	struct CAllocator_Heap;
 
 	/************************************************************************************************\
 	||ﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯﾯ||
@@ -710,8 +704,36 @@ namespace NMib::NMemory
 	namespace NPrivate
 	{
 		template <typename t_CData, typename t_CSorter>
-		class TCHelpQSort
+		struct TCHelpQSort
 		{
+			static void fpr_QuickSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
+			{
+				aint m;
+
+				while (_Low < _High)
+				{
+					if (_High - _Low <= 12)
+					{
+						fp_InsertSort(_pArray, _Low, _High, _fCompare);
+						return;
+					}
+
+					m = fp_Partition(_pArray, _Low, _High, _fCompare);
+
+					if (m - _Low <= _High - m)
+					{
+						fpr_QuickSort(_pArray, _Low, m - 1, _fCompare);
+						_Low = m + 1;
+					}
+					else
+					{
+						fpr_QuickSort(_pArray, m + 1, _High, _fCompare);
+						_High = m - 1;
+					}
+				}
+			}
+
+		private:
 			static void fp_InsertSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
 			{
 				t_CData Temp;
@@ -758,34 +780,6 @@ namespace NMib::NMemory
 				_pArray[j] = Pivot;
 
 				return j;
-			}
-
-		public:
-			static void fpr_QuickSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
-			{
-				aint m;
-
-				while (_Low < _High)
-				{
-					if (_High - _Low <= 12)
-					{
-						fp_InsertSort(_pArray, _Low, _High, _fCompare);
-						return;
-					}
-
-					m = fp_Partition(_pArray, _Low, _High, _fCompare);
-
-					if (m - _Low <= _High - m)
-					{
-						fpr_QuickSort(_pArray, _Low, m - 1, _fCompare);
-						_Low = m + 1;
-					}
-					else
-					{
-						fpr_QuickSort(_pArray, m + 1, _High, _fCompare);
-						_High = m - 1;
-					}
-				}
 			}
 		};
 	}

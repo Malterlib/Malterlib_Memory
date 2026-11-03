@@ -14,9 +14,8 @@ namespace NMib::NMemory
 	\************************************************************************************************/
 
 	template <typename t_CBaseAllocator, bool t_bStatic = t_CBaseAllocator::mc_bMethodsStatic>
-	class TCAllocator_Secure : public t_CBaseAllocator
+	struct TCAllocator_Secure : public t_CBaseAllocator
 	{
-	public:
 		using CBaseAllocator = t_CBaseAllocator;
 		using t_CBaseAllocator::operator <=>;
 		using t_CBaseAllocator::operator ==;
@@ -54,9 +53,8 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CBaseAllocator>
-	class TCAllocator_Secure<t_CBaseAllocator, true> : public t_CBaseAllocator
+	struct TCAllocator_Secure<t_CBaseAllocator, true> : public t_CBaseAllocator
 	{
-	public:
 		using CBaseAllocator = t_CBaseAllocator;
 		using t_CBaseAllocator::operator <=>;
 		using t_CBaseAllocator::operator ==;

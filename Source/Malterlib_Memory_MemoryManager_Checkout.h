@@ -28,14 +28,8 @@ namespace NMib::NMemory
 		virtual bool f_GarbageCollectLocalArenaIfPending() = 0;
 	};
 
-	class CMemoryManagerCheckout
+	struct CMemoryManagerCheckout
 	{
-		ICMemoryManagerReturnCheckout *m_pThreadLocal;
-
-		CMemoryManagerCheckout(CMemoryManagerCheckout const &_Other);
-		CMemoryManagerCheckout &operator = (CMemoryManagerCheckout const &_Other);
-
-	public:
 		CMemoryManagerCheckout(CMemoryManagerCheckout &&_Other);
 		CMemoryManagerCheckout(ICMemoryManagerReturnCheckout *_pThreadLocal);
 		CMemoryManagerCheckout &operator = (CMemoryManagerCheckout &&_Other);
@@ -50,6 +44,12 @@ namespace NMib::NMemory
 		void f_CheckMessages();
 		void f_GarbageCollectLocalArena(bool _bDecommit);
 		bool f_GarbageCollectLocalArenaIfPending();
+
+	private:
+		ICMemoryManagerReturnCheckout *m_pThreadLocal;
+
+		CMemoryManagerCheckout(CMemoryManagerCheckout const &_Other);
+		CMemoryManagerCheckout &operator = (CMemoryManagerCheckout const &_Other);
 	};
 }
 

@@ -3,12 +3,10 @@
 
 #if 0
 
-class CTestPool : public CMalterlibTest
+struct CTestPool : public CMalterlibTest
 {
-public:
-	class CTestClass
+	struct CTestClass
 	{
-	public:
 		// CTestClass()
 		// {
 		// 	DMibTrace("CTestClass()\n", 0);

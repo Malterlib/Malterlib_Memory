@@ -133,9 +133,8 @@ namespace
 	}
 #endif
 
-	class COverride_Tests : public CTest
+	struct COverride_Tests : public CTest
 	{
-	public:
 		void f_DoTests()
 		{
 #if defined(DPlatformFamily_macOS) || defined(DPlatformFamily_Linux)

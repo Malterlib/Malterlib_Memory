@@ -16,9 +16,8 @@ namespace
 
 	constexpr umint gc_TestPageSize = gc_OsMaxPageSize;
 
-	class CBasics_Tests : public CTest
+	struct CBasics_Tests : public CTest
 	{
-	public:
 		CBasics_Tests()
 		{
 		}

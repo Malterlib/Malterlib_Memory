@@ -7,9 +7,8 @@
 
 namespace NMib::NMemory
 {
-	class CAllocator_Placement : public CAllocator_Base
+	struct CAllocator_Placement : public CAllocator_Base
 	{
-	public:
 		enum
 		{
 			mc_Reporting        = false

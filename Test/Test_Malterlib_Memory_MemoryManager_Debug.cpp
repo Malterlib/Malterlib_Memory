@@ -16,9 +16,8 @@ namespace
 {
 	using namespace NMib::NTest;
 	using namespace NMib::NMemory;
-	class CDebug_Tests : public CTest
+	struct CDebug_Tests : public CTest
 	{
-	public:
 #ifdef DMibNeedDebugException
 		static constexpr bool mc_bHasExceptions = true;
 #else

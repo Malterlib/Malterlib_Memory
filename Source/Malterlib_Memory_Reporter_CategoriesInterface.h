@@ -21,9 +21,8 @@ namespace NMib::NMemory
 		align_cacheline NAtomic::TCAtomic<smint> m_nAllocations{0};
 		align_cacheline NAtomic::TCAtomic<bool> m_AddedToList{false};
 
-		class CCompare
+		struct CCompare
 		{
-		public:
 			inline_small ch8 const *operator () (CMemoryCategory const &_Node) const
 			{
 				return _Node.m_pName;

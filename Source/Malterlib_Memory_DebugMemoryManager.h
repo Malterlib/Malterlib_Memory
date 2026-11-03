@@ -20,83 +20,8 @@ namespace NMib::NMemory
 	};
 
 	template <CDebugMemoryManagerUnderlying t_Options>
-	class TCDebugMemoryManager
+	struct TCDebugMemoryManager
 	{
-		class CMemoryBlock
-		{
-		public:
-			uint8 *m_pStart;
-			umint m_RealSize;
-			umint m_AllocSize;
-			umint m_OriginalSize;
-
-			uint8 *f_GetUserAddress() const
-			{
-				return NContainer::TCMapWithPool<uint8 *, CMemoryBlock>::fs_GetKey(this);
-			}
-		};
-
-		umint m_Sequence;
-		NContainer::TCMapWithPool
-			<
-				uint8 *
-				, CMemoryBlock
-				, NMib::CSort_Default
-				, NMib::NMemory::CAllocator_VirtualNoTrackingNoCommit
-				, (2 * 1024 * 1024) / (sizeof(CMemoryBlock) + sizeof(void *))
-				, NMib::NMemory::CPoolType_Growing
-			>
-			m_Blocks
-		;
-
-		NContainer::TCMapWithPool
-			<
-				umint
-				, CMemoryBlock
-				, NMib::CSort_Default
-				, NMib::NMemory::CAllocator_VirtualNoTrackingNoCommit
-				, (2 * 1024 * 1024) / (sizeof(CMemoryBlock) + sizeof(umint))
-				, NMib::NMemory::CPoolType_Growing
-			>
-			m_FreeBlocks
-		;
-		umint m_nFreeBlocks;
-		umint m_nFreeMemBytes;
-		umint m_nMaxFreeMemory;
-
-		bool m_bCheckUpper;
-
-		bool m_bProtectOnDemand;
-		bool m_bProtectionDemanded;
-
-		mutable NThread::CMutual m_Lock;
-
-		enum
-		{
-//#ifdef DPlatformFamily_macOS
-			// macOS needs 16 byte alignment to handle SSE
-			EMemoryManagerAlignmentCalc = gc_HighestBitSet<sizeof(umint) * 2>
-			, EMemoryManagerAlignment   = EMemoryManagerAlignmentCalc < 4 ? 4 : EMemoryManagerAlignmentCalc
-//#else
-			// EMemoryManagerAlignment = gc_HighestBitSet<sizeof(umint) * 2>
-//#endif
-		};
-
-		struct CMemoryManagerParamsOverrides : public CDefaultMemoryManagerParams
-		{
-			static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
-			using CAllocator = NMemory::CAllocator_VirtualNoTracking;
-		};
-
-		struct CMemoryManagerParamsOverridesParams : public TCMemoryManagerParams<CMemoryManagerParamsOverrides>
-		{
-		};
-
-		using CMemoryManager = NMemory::TCMemoryManager<CMemoryManagerParamsOverridesParams>;
-
-		CMemoryManager m_Heap;
-
-	public:
 		TCDebugMemoryManager()
 			: m_Heap(CMemoryManagerConfig())
 			, m_Sequence(0)
@@ -413,5 +338,79 @@ namespace NMib::NMemory
 		{
 			m_Lock.f_ForkedParent();
 		}
+
+	private:
+		struct CMemoryBlock
+		{
+			uint8 *m_pStart;
+			umint m_RealSize;
+			umint m_AllocSize;
+			umint m_OriginalSize;
+
+			uint8 *f_GetUserAddress() const
+			{
+				return NContainer::TCMapWithPool<uint8 *, CMemoryBlock>::fs_GetKey(this);
+			}
+		};
+
+		umint m_Sequence;
+		NContainer::TCMapWithPool
+			<
+				uint8 *
+				, CMemoryBlock
+				, NMib::CSort_Default
+				, NMib::NMemory::CAllocator_VirtualNoTrackingNoCommit
+				, (2 * 1024 * 1024) / (sizeof(CMemoryBlock) + sizeof(void *))
+				, NMib::NMemory::CPoolType_Growing
+			>
+			m_Blocks
+		;
+
+		NContainer::TCMapWithPool
+			<
+				umint
+				, CMemoryBlock
+				, NMib::CSort_Default
+				, NMib::NMemory::CAllocator_VirtualNoTrackingNoCommit
+				, (2 * 1024 * 1024) / (sizeof(CMemoryBlock) + sizeof(umint))
+				, NMib::NMemory::CPoolType_Growing
+			>
+			m_FreeBlocks
+		;
+		umint m_nFreeBlocks;
+		umint m_nFreeMemBytes;
+		umint m_nMaxFreeMemory;
+
+		bool m_bCheckUpper;
+
+		bool m_bProtectOnDemand;
+		bool m_bProtectionDemanded;
+
+		mutable NThread::CMutual m_Lock;
+
+		enum
+		{
+//#ifdef DPlatformFamily_macOS
+			// macOS needs 16 byte alignment to handle SSE
+			EMemoryManagerAlignmentCalc = gc_HighestBitSet<sizeof(umint) * 2>
+			, EMemoryManagerAlignment   = EMemoryManagerAlignmentCalc < 4 ? 4 : EMemoryManagerAlignmentCalc
+//#else
+			// EMemoryManagerAlignment = gc_HighestBitSet<sizeof(umint) * 2>
+//#endif
+		};
+
+		struct CMemoryManagerParamsOverrides : public CDefaultMemoryManagerParams
+		{
+			static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
+			using CAllocator = NMemory::CAllocator_VirtualNoTracking;
+		};
+
+		struct CMemoryManagerParamsOverridesParams : public TCMemoryManagerParams<CMemoryManagerParamsOverrides>
+		{
+		};
+
+		using CMemoryManager = NMemory::TCMemoryManager<CMemoryManagerParamsOverridesParams>;
+
+		CMemoryManager m_Heap;
 	};
 }

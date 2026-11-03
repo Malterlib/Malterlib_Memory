@@ -89,9 +89,8 @@ namespace
 		long m_Plain[2] = {};
 	};
 
-	class CSizedDestruction_Tests : public CTest
+	struct CSizedDestruction_Tests : public CTest
 	{
-	public:
 		void f_DoTests()
 		{
 			DMibTestSuite("SizedDestruction")

@@ -9,9 +9,8 @@
 
 namespace NMib::NMemory
 {
-	class CCategoriesMemoryReporter : public CGlobalReportMemory
+	struct CCategoriesMemoryReporter : public CGlobalReportMemory
 	{
-	public:
 		static CCategoriesMemoryReporter *ms_pThis;
 
 	public:

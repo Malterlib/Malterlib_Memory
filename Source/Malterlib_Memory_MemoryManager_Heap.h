@@ -23,7 +23,7 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CParams>
-	class TCMemoryManagerArenaHeap;
+	struct TCMemoryManagerArenaHeap;
 
 	enum EMemoryManagerArenaHeapBlockFlag
 	{
@@ -41,10 +41,24 @@ namespace NMib::NMemory
 	};
 
 	template <typename t_CParams>
-	class TCMemoryManagerArenaHeapChunk
+	struct TCMemoryManagerArenaHeapChunk
 	{
+		TCMemoryManagerArenaHeapChunk(umint _Size, TCMemoryManagerArenaHeap<t_CParams> *_pHeap);
+		~TCMemoryManagerArenaHeapChunk();
+
+		uint8 *f_GetBlockAddress(CMemoryManagerArenaHeapBlock const *_pBlock) const;
+		umint f_GetBlockSize(CMemoryManagerArenaHeapBlock const *_pBlock) const;
+
+		uint8 *f_GetAddress() const;
+		uint8 *f_GetEndAddress() const;
+		umint f_GetSize() const;
+		TCMemoryManagerArenaHeap<t_CParams> *f_GetHeap() const;
+
+		bool f_IsEmpty();
+
+	private:
 		template <typename t_CParams2>
-		friend class TCMemoryManagerArenaHeap;
+		friend struct TCMemoryManagerArenaHeap;
 
 		umint m_Size;
 		TCMemoryManagerArenaHeap<t_CParams> *m_pHeap;
@@ -60,29 +74,37 @@ namespace NMib::NMemory
 
 		int64 m_DecommitTimestamp = 0;
 		int64 m_FreeTimestamp = 0;
-
-	public:
-		TCMemoryManagerArenaHeapChunk(umint _Size, TCMemoryManagerArenaHeap<t_CParams> *_pHeap);
-		~TCMemoryManagerArenaHeapChunk();
-
-		uint8 *f_GetBlockAddress(CMemoryManagerArenaHeapBlock const *_pBlock) const;
-		umint f_GetBlockSize(CMemoryManagerArenaHeapBlock const *_pBlock) const;
-
-		uint8 *f_GetAddress() const;
-		uint8 *f_GetEndAddress() const;
-		umint f_GetSize() const;
-		TCMemoryManagerArenaHeap<t_CParams> *f_GetHeap() const;
-
-		bool f_IsEmpty();
 	};
 
 	template <typename t_CParams>
-	class TCMemoryManagerArenaHeap : public t_CParams::CNotifier::CHeap
+	struct TCMemoryManagerArenaHeap : public t_CParams::CNotifier::CHeap
 	{
+		TCMemoryManagerArenaHeap(TCMemoryManager<t_CParams> *_pMemoryManager, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
+		~TCMemoryManagerArenaHeap();
+
+		void f_Destroy();
+
+		void *f_AllocWithSize(umint &_Size);
+		void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment);
+		void f_Free(void *_pMem, TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk);
+		umint f_Size(void const *_pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
+		fp32 f_Overhead(void const *_pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
+		static umint fs_GetAllocSize(umint _Size);
+
+		void f_Lock();
+		void f_Unlock();
+		void f_ForkedChild();
+
+		int64 f_GarbageCollect(int64 _Timestamp);
+		int64 f_DecommitDeferred(int64 _Timestamp);
+
+		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
+
+	private:
 		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CHeap::mc_EnableCallbacks;
 
 		template <typename t_CParams2>
-		friend class TCMemoryManagerArenaHeapChunk;
+		friend struct TCMemoryManagerArenaHeapChunk;
 
 		align_cacheline mutable NThread::CLowLevelLock m_Lock;
 
@@ -106,27 +128,5 @@ namespace NMib::NMemory
 		void fp_TraceBlocks(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk);
 
 		void fp_RequestCleanup(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, ENumaArenaCleanup _Cleanup);
-
-	public:
-		TCMemoryManagerArenaHeap(TCMemoryManager<t_CParams> *_pMemoryManager, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
-		~TCMemoryManagerArenaHeap();
-
-		void f_Destroy();
-
-		void *f_AllocWithSize(umint &_Size);
-		void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment);
-		void f_Free(void *_pMem, TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk);
-		umint f_Size(void const *_pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
-		fp32 f_Overhead(void const *_pMemory, TCMemoryManagerArenaHeapChunk<t_CParams> const *_pChunk) const;
-		static umint fs_GetAllocSize(umint _Size);
-
-		void f_Lock();
-		void f_Unlock();
-		void f_ForkedChild();
-
-		int64 f_GarbageCollect(int64 _Timestamp);
-		int64 f_DecommitDeferred(int64 _Timestamp);
-
-		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 	};
 }

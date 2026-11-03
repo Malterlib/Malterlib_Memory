@@ -123,9 +123,8 @@ namespace NMib::NMemory
 	}
 #endif
 
-	class CAllocator_Heap : public CAllocator_Base
+	struct CAllocator_Heap : public CAllocator_Base
 	{
-	public:
 		enum
 		{
 			mc_bIsDefault       = true
@@ -296,9 +295,8 @@ namespace NMib::NMemory
 		only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
 	};
 
-	class CAllocator_NonTrackedHeap : public CAllocator_Base
+	struct CAllocator_NonTrackedHeap : public CAllocator_Base
 	{
-	public:
 		enum
 		{
 			mc_Reporting        = false
@@ -467,9 +465,8 @@ namespace NMib::NMemory
 		only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
 	};
 
-	class CAllocator_HeapNoDelete : public CAllocator_Heap
+	struct CAllocator_HeapNoDelete : public CAllocator_Heap
 	{
-	public:
 		enum
 		{
 			mc_bIsDefault = false
@@ -477,16 +474,8 @@ namespace NMib::NMemory
 	};
 
 	template <umint t_AllocSize>
-	class TCAllocator_Placement : public CAllocator_Base
+	struct TCAllocator_Placement : public CAllocator_Base
 	{
-		void *m_pPointer;
-#ifdef DMibDebug
-		bool m_bPointerTaken;
-#endif
-
-		void f_DoCheck(umint _Size);
-
-	public:
 		enum
 		{
 			mc_Reporting        = false
@@ -624,6 +613,14 @@ namespace NMib::NMemory
 		only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
 		only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
 		only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
+
+	private:
+		void *m_pPointer;
+#ifdef DMibDebug
+		bool m_bPointerTaken;
+#endif
+
+		void f_DoCheck(umint _Size);
 	};
 }
 
@@ -652,20 +649,8 @@ namespace NMib::NMemory
 {
 	// Only support allocating one object
 	template <umint t_StaticStorage, umint t_Alignment = gc_ConstantMax<umint, sizeof(void *), alignof(fp64)>, typename t_CFallbackAllocator = CAllocator_Heap>
-	class TCAllocator_Static : public t_CFallbackAllocator
+	struct TCAllocator_Static : public t_CFallbackAllocator
 	{
-	private:
-		static umint const mcp_StorageSize = (t_StaticStorage + t_Alignment - 1) & ~umint(t_Alignment - 1);
-
-		alignas(t_Alignment) uint8 m_Storage[mcp_StorageSize];
-#if DMibEnableSafeCheck > 0
-		bool m_bAllocated = false;
-#endif
-
-		bool fp_IsStatic(void const *_pBlock) const;
-		malloc_like void *fp_GetStatic();
-
-	public:
 		enum
 		{
 			mc_CanBeStatic      = true
@@ -802,14 +787,22 @@ namespace NMib::NMemory
 		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		only_parameters_aliased CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
+
+	private:
+		static umint const mcp_StorageSize = (t_StaticStorage + t_Alignment - 1) & ~umint(t_Alignment - 1);
+
+		alignas(t_Alignment) uint8 m_Storage[mcp_StorageSize];
+#if DMibEnableSafeCheck > 0
+		bool m_bAllocated = false;
+#endif
+
+		bool fp_IsStatic(void const *_pBlock) const;
+		malloc_like void *fp_GetStatic();
 	};
 
 	template <typename t_CDeleterType, typename t_CFallbackAllocator = CAllocator_Heap>
-	class TCAllocator_FunctorDeleter : public t_CFallbackAllocator
+	struct TCAllocator_FunctorDeleter : public t_CFallbackAllocator
 	{
-		t_CDeleterType m_Deleter;
-
-	public:
 		TCAllocator_FunctorDeleter();
 		TCAllocator_FunctorDeleter(TCAllocator_FunctorDeleter const &_Other);
 		TCAllocator_FunctorDeleter(TCAllocator_FunctorDeleter &&_Other);
@@ -819,6 +812,9 @@ namespace NMib::NMemory
 		TCAllocator_FunctorDeleter(t_CParam0 &&_Param0);
 		t_CDeleterType &f_GetDeleter();
 		t_CDeleterType const &f_GetDeleter() const;
+
+	private:
+		t_CDeleterType m_Deleter;
 	};
 }
 
