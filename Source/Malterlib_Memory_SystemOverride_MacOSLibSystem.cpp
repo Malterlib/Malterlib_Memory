@@ -58,8 +58,8 @@ extern "C"
 
 	struct CInterpose
 	{
-		void (*m_Replacement)();
-		void (*m_Replacee)();
+		void (*m_fReplacement)();
+		void (*m_fReplacee)();
 	};
 
 #define DMibMacOSInterpose(d_Replacement, d_Replacee) \
@@ -122,9 +122,9 @@ namespace
 	void __attribute__((constructor(-1111111111))) fg_InitMalterlibEarly
 		(
 			int _nArguments
-			, char const *_pArguments[]
-			, char const *_pEnvironment[]
-			, char const *_pApple[]
+			, char const *_Arguments[]
+			, char const *_Environment[]
+			, char const *_Apple[]
 			, struct ProgramVars const *_pProgramVars
 		)
 	{
@@ -132,6 +132,6 @@ namespace
 		if (fg_MalterlibSystem_InitDyldDummyHelper)
 			fg_MalterlibSystem_InitDyldDummyHelper();
 #endif
-		fg_MalterlibSystem_InitEarly(g_OriginalFunctions, _nArguments, _pArguments, _pEnvironment, _pApple, _pProgramVars);
+		fg_MalterlibSystem_InitEarly(g_OriginalFunctions, _nArguments, _Arguments, _Environment, _Apple, _pProgramVars);
 	}
 }

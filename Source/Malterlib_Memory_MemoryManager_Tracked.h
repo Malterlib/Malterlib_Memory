@@ -19,7 +19,7 @@ namespace NMib::NMemory
 		void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment);
 		void *f_AllocAligned(umint _Size, umint _Alignment);
 		void *f_AllocAlignedWithSizeInline(umint &_Size, umint _Alignment);
-		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
 
 		void *f_Realloc(void *_pMemory, umint &_Size, umint _OldSize);
 		void *f_ReallocInline(void *_pMemory, umint &_Size, umint _OldSize);
@@ -37,7 +37,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, uint32 _Line
 				, EHeapDebugFlag _Flags
@@ -80,7 +80,7 @@ namespace NMib::NMemory
 		void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment);
 		void *f_AllocAligned(umint _Size, umint _Alignment);
 		void *f_AllocAlignedWithSizeInline(umint &_Size, umint _Alignment);
-		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
 
 		void *f_Realloc(void *_pMemory, umint &_Size, umint _OldSize);
 		void *f_ReallocInline(void *_pMemory, umint &_Size, umint _OldSize);
@@ -98,7 +98,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, uint32 _Line
 				, EHeapDebugFlag _Flags

@@ -19,7 +19,7 @@ namespace NMib
 
 	constinit NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
 	constinit umint g_MemoryManagerForkedCount = 0;
-	constinit bool g_MemoryManagerUnforked = false;
+	constinit bool g_bMemoryManagerUnforked = false;
 
 #	if DMibEnableSafeCheck > 0
 #		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -255,7 +255,7 @@ namespace NMib::NMemory
 #	endif
 		}
 
-		static constexpr bool mc_SupportsNonTracked = true;
+		static constexpr bool mc_bSupportsNonTracked = true;
 
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_PrepareFork(CMemoryManagerCrossModule *_pModule)
 		{
@@ -264,7 +264,7 @@ namespace NMib::NMemory
 				return;
 			g_MemoryManagerForkLock.f_PrepareFork();
 
-			g_MemoryManagerUnforked = false;
+			g_bMemoryManagerUnforked = false;
 
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
@@ -283,13 +283,13 @@ namespace NMib::NMemory
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_ForkedParent(CMemoryManagerCrossModule *_pModule)
 		{
 			--g_MemoryManagerForkedCount;
-			if (g_MemoryManagerUnforked)
+			if (g_bMemoryManagerUnforked)
 			{
 				g_MemoryManagerForkLock.f_Unlock();
 				return;
 			}
 			g_MemoryManagerForkLock.f_ForkedParent();
-			g_MemoryManagerUnforked = true;
+			g_bMemoryManagerUnforked = true;
 
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
@@ -310,13 +310,13 @@ namespace NMib::NMemory
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_ForkedChild(CMemoryManagerCrossModule *_pModule)
 		{
 			--g_MemoryManagerForkedCount;
-			if (g_MemoryManagerUnforked)
+			if (g_bMemoryManagerUnforked)
 			{
 				g_MemoryManagerForkLock.f_Unlock();
 				return;
 			}
 			g_MemoryManagerForkLock.f_ForkedChild();
-			g_MemoryManagerUnforked = true;
+			g_bMemoryManagerUnforked = true;
 
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
@@ -369,15 +369,15 @@ namespace NMib::NMemory
 				CMemoryManagerCrossModule *_pModule
 				, umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			)
 		{
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
-				DMainHeapSmall->f_AllocBatch(_Size, _Alignment, _Functor);
+				DMainHeapSmall->f_AllocBatch(_Size, _Alignment, _fFunctor);
 			else
 #	endif
-				DMainHeapMax->f_AllocBatch(_Size, _Alignment, _Functor);
+				DMainHeapMax->f_AllocBatch(_Size, _Alignment, _fFunctor);
 		}
 
 		inline_always static void DMibCrossmoduleAPI fs_AllocBatch
@@ -424,15 +424,15 @@ namespace NMib::NMemory
 				CMemoryManagerCrossModule *_pModule
 				, umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			)
 		{
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
-				DMainHeapSmall->f_AllocBatch(_Size, _Alignment, _Functor);
+				DMainHeapSmall->f_AllocBatch(_Size, _Alignment, _fFunctor);
 			else
 #	endif
-				DMainHeapMax->f_AllocBatch(_Size, _Alignment, _Functor);
+				DMainHeapMax->f_AllocBatch(_Size, _Alignment, _fFunctor);
 		}
 
 		inline_always static void DMibCrossmoduleAPI fs_NonTracked_AllocBatch
@@ -507,7 +507,7 @@ namespace NMib::NMemory
 		}
 
 #	if DEnableDebugMemoryManager
-		static constexpr bool mc_SupportsDebug = true;
+		static constexpr bool mc_bSupportsDebug = true;
 		inline_always static void * DMibCrossmoduleAPI fs_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, umint &_Size, ch8 const *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
 #		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -581,7 +581,7 @@ namespace NMib::NMemory
 				CMemoryManagerCrossModule *_pModule
 				, umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, aint _Line
 				, EHeapDebugFlag _Flags
@@ -589,10 +589,10 @@ namespace NMib::NMemory
 		{
 #		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 			if (g_bMainHeapIsSmall)
-				DMainHeapSmall->f_AllocBatchDebug(_Size, _Alignment, _Functor, _pFile, _Line, _Flags);
+				DMainHeapSmall->f_AllocBatchDebug(_Size, _Alignment, _fFunctor, _pFile, _Line, _Flags);
 			else
 #		endif
-				DMainHeapMax->f_AllocBatchDebug(_Size, _Alignment, _Functor, _pFile, _Line, _Flags);
+				DMainHeapMax->f_AllocBatchDebug(_Size, _Alignment, _fFunctor, _pFile, _Line, _Flags);
 		}
 
 		inline_always static void DMibCrossmoduleAPI fs_AllocBatchDebug
@@ -643,7 +643,7 @@ namespace NMib::NMemory
 			}
 		}
 #	else
-		static constexpr bool mc_SupportsDebug = false;
+		static constexpr bool mc_bSupportsDebug = false;
 #	endif
 	};
 

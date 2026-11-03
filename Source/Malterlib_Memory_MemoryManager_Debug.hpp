@@ -85,7 +85,7 @@ namespace NMib::NMemory
 	template <typename ...tfp_CAllocator>
 	TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::TCMemoryManagerDebug(tfp_CAllocator && ...p_Params)
 		: CSuper(fg_Forward<tfp_CAllocator>(p_Params)...)
-		, mp_bReportingLeaks
+		, mp_ReportingLeaks
 		(
 			[this]() -> NThread::CThreadLocalInterface::CSafeAllocMemory
 			{
@@ -142,14 +142,14 @@ namespace NMib::NMemory
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_DestroyThreadLocals()
 	{
-		mp_bReportingLeaks.f_Destroy();
+		mp_ReportingLeaks.f_Destroy();
 		CSuper::f_DestroyThreadLocals();
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::fp_EnumAllocations
 		(
-			NFunction::TCFunctionNoAlloc<void (uint8 *_pMemory, CPreBlock *_pPreAlloc, typename CParams::CNotifier::CAllocInfo &_AllocInfo)> const &_Functor
+			NFunction::TCFunctionNoAlloc<void (uint8 *_pMemory, CPreBlock *_pPreAlloc, typename CParams::CNotifier::CAllocInfo &_AllocInfo)> const &_fFunctor
 		)
 	{
 		if constexpr (!t_COptions::mc_bEnumeration)
@@ -166,7 +166,7 @@ namespace NMib::NMemory
 				)
 				{
 					CPreBlock *pPreBlock = (CPreBlock *)(pAddress + ((CPreBlock *)pAddress)->m_Offset);
-					_Functor(pAddress, pPreBlock, _AllocInfo);
+					_fFunctor(pAddress, pPreBlock, _AllocInfo);
 				}
 			}
 		;
@@ -238,7 +238,7 @@ namespace NMib::NMemory
 					, umint _AllocID
 				)
 			>
-			const &_Functor
+			const &_fFunctor
 		)
 	{
 		fp_EnumAllocations
@@ -246,7 +246,7 @@ namespace NMib::NMemory
 				[&](uint8 *_pMemory, CPreBlock *_pPreBlock, CParams::CNotifier::CAllocInfo &_AllocInfo)
 				{
 					auto pAddress = (uint8 *)(_pPreBlock + 1);
-					_Functor
+					_fFunctor
 						(
 							pAddress
 							, _pPreBlock->m_Size
@@ -303,12 +303,12 @@ namespace NMib::NMemory
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	bool TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ReportingLeaks()
 	{
-		auto *pReportingLeaks = mp_bReportingLeaks.f_TryGet();
+		auto *pReportingLeaks = mp_ReportingLeaks.f_TryGet();
 		if (!pReportingLeaks)
 		{
 			if (!fg_GetSys()->f_InitDone() || fg_GetSys()->f_ThreadDestroyed())
 				return false;
-			return *mp_bReportingLeaks;
+			return *mp_ReportingLeaks;
 		}
 		return *pReportingLeaks;
 	};
@@ -336,12 +336,12 @@ namespace NMib::NMemory
 		NContainer::TCMapWithPool<umint, CLocalAllocInfo, NMib::CSort_Default, NMib::NMemory::CAllocator_VirtualNoTracking> Allocations;
 
 		{
-			*mp_bReportingLeaks = true;
+			*mp_ReportingLeaks = true;
 			auto Cleanup = fg_OnScopeExit
 				(
 					[&]()
 					{
-						*mp_bReportingLeaks = false;
+						*mp_ReportingLeaks = false;
 					}
 				)
 			;
@@ -516,10 +516,10 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 		)
 	{
-		return f_AllocBatchDebug(_Size, _Alignment, _Functor, nullptr, 0, EHeapDebugFlag_None);
+		return f_AllocBatchDebug(_Size, _Alignment, _fFunctor, nullptr, 0, EHeapDebugFlag_None);
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
@@ -527,7 +527,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, uint32 _Line
 			, EHeapDebugFlag _Flags
@@ -552,7 +552,7 @@ namespace NMib::NMemory
 			Options.m_pFile = _pFile;
 			Options.m_Line = _Line;
 			Options.m_Flags = _Flags;
-			Options.m_pFunctor = &_Functor;
+			Options.m_pFunctor = &_fFunctor;
 			Options.m_Alignment = _Alignment;
 			Options.m_RequestedSize = _Size;
 
@@ -617,7 +617,7 @@ namespace NMib::NMemory
 
 			CFunctorOptions Options;
 
-			Options.m_pFunctor = &_Functor;
+			Options.m_pFunctor = &_fFunctor;
 
 			CSuper::f_AllocBatch
 				(
@@ -634,7 +634,7 @@ namespace NMib::NMemory
 
 			return;
 		}
-		return CSuper::f_AllocBatch(_Size, _Alignment, _Functor);
+		return CSuper::f_AllocBatch(_Size, _Alignment, _fFunctor);
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>

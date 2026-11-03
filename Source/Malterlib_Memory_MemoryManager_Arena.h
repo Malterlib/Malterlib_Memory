@@ -41,7 +41,7 @@ namespace NMib::NMemory
 		fp32 f_Overhead(void const *_pMemory, TCMemoryManagerSlabShared<t_CParams> const *_pSlab);
 
 		void *f_AllocWithSize(umint &_Size);
-		void f_AllocBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void f_AllocBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
 
 		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 
@@ -187,7 +187,7 @@ namespace NMib::NMemory
 
 		void *fp_AllocSmallSize(umint &_Size);
 
-		void fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
 
 		void *fp_AllocNormalUncached(CNormalFreeStoreList *_pList, CNormalFreeStoreCurrent *_pCurrent, umint _AlignedSize, umint _SubIndex, umint _SlabBucket);
 		void *fp_AllocNormal(umint &_Size);
@@ -228,7 +228,7 @@ namespace NMib::NMemory
 		static bool fsp_BitmapAdvanceCurrentWord(CNormalFreeStoreCurrent &_Current, umint _AlignedSize);
 		static bool fsp_BitmapFreeBlock(CMemoryManagerSubSlabFreeBits &_Bits, uint8 *_pBase, void *_pMemory, umint _AlignedSize, umint _SlabType, umint _SlabBucket, umint _nBlocks);
 
-		void fp_AllocNormalBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void fp_AllocNormalBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
 
 		void fp_SlabHasGarbageInline(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
 		void fp_SlabHasGarbage(TCMemoryManagerSlabShared<t_CParams> *_pSlab);
@@ -274,9 +274,9 @@ namespace NMib::NMemory
 
 	public:
 #ifdef DCompiler_MSVC_Workaround
-		static constexpr bool mc_MinArraySize = 1;
+		static constexpr umint mc_MinArraySize = 1;
 #else
-		static constexpr bool mc_MinArraySize = 0;
+		static constexpr umint mc_MinArraySize = 0;
 #endif
 
 		static constexpr bool mc_bUseFreeBlockCounting = t_CParams::mc_bUseFreeBlockCounting;
@@ -294,7 +294,7 @@ namespace NMib::NMemory
 		static constexpr umint mc_nNormalSizeClasses = mc_nNormalSizeLists * t_CParams::mc_NumSizesPerLevel;
 
 		static constexpr umint mc_Level0SmallestSize = 32 - t_CParams::mc_MinNormalSizeAlignment;
-		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CArena::mc_EnableCallbacks;
+		static constexpr bool mc_bEnableCallbacks = t_CParams::CNotifier::CArena::mc_bEnableCallbacks;
 #if defined(DArchitecture_arm64) || defined(DArchitecture_arm64e)
 		static constexpr umint mc_MessagesSpread = 16;
 #else

@@ -78,7 +78,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper>
-	void TCMemoryManagerTracked<t_CSuper, void>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
+	void TCMemoryManagerTracked<t_CSuper, void>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor)
 	{
 		struct CFunctorOptions
 		{
@@ -89,7 +89,7 @@ namespace NMib::NMemory
 
 		CFunctorOptions Options;
 
-		Options.m_pFunctor = &_Functor;
+		Options.m_pFunctor = &_fFunctor;
 		Options.m_RequestedSize = _Size;
 		Options.m_Alignment = _Alignment;
 
@@ -113,7 +113,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, uint32 _Line
 			, EHeapDebugFlag _Flags
@@ -134,7 +134,7 @@ namespace NMib::NMemory
 		Options.m_pFile = _pFile;
 		Options.m_Line = _Line;
 		Options.m_Flags = _Flags;
-		Options.m_pFunctor = &_Functor;
+		Options.m_pFunctor = &_fFunctor;
 		Options.m_RequestedSize = _Size;
 		Options.m_Alignment = _Alignment;
 
@@ -368,7 +368,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
-	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
+	void TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor)
 	{
 		struct CFunctorOptions
 		{
@@ -381,7 +381,7 @@ namespace NMib::NMemory
 
 		_Alignment = fg_Max(_Alignment, sizeof(void *) * 2, alignof(CPreBlockData));
 
-		Options.m_pFunctor = &_Functor;
+		Options.m_pFunctor = &_fFunctor;
 		umint HeaderSize = NPrivate::fg_AlignAllocationSizeOrThrow(sizeof(CPreBlockData), _Alignment);
 		Options.m_RequestedSize = NPrivate::fg_AddAllocationSizeOrThrow(NPrivate::fg_AlignAllocationSizeOrThrow(_Size, _Alignment), HeaderSize);
 		Options.m_Alignment = _Alignment;
@@ -429,13 +429,13 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, uint32 _Line
 			, EHeapDebugFlag _Flags
 		)
 	{
-		return f_AllocBatch(_Size, _Alignment, _Functor);
+		return f_AllocBatch(_Size, _Alignment, _fFunctor);
 	}
 
 	template <typename t_CSuper, typename t_CAllocationInfo>

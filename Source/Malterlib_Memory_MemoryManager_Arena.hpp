@@ -105,7 +105,7 @@ namespace NMib::NMemory
 
 		while (auto pSlab = mp_FreeSlabs.f_Pop())
 		{
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 				mp_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 
 			pSlab->~TCMemoryManagerSlabShared<t_CParams>();
@@ -119,7 +119,7 @@ namespace NMib::NMemory
 				{
 					while (auto pSlab = mp_PartiallyFreeSlabs[iSlab][iLevel].f_Pop())
 					{
-						if constexpr (mc_EnableCallbacks)
+						if constexpr (mc_bEnableCallbacks)
 							mp_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 
 						pSlab->~TCMemoryManagerSlabShared<t_CParams>();
@@ -132,7 +132,7 @@ namespace NMib::NMemory
 
 		while (auto pSlab = mp_FullSlabs.f_Pop())
 		{
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 				mp_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 
 			pSlab->~TCMemoryManagerSlabShared<t_CParams>();
@@ -189,17 +189,17 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManagerArena<t_CParams>::f_AllocBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
+	void TCMemoryManagerArena<t_CParams>::f_AllocBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor)
 	{
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
 			if (_Size > t_CParams::mc_SmallSizeSlabsLargestSize) [[likely]]
-				fp_AllocNormalBatch(_Size, _Functor);
+				fp_AllocNormalBatch(_Size, _fFunctor);
 			else
-				fp_AllocSmallSizeBatch(_Size, _Functor);
+				fp_AllocSmallSizeBatch(_Size, _fFunctor);
 		}
 		else
-			fp_AllocNormalBatch(_Size, _Functor);
+			fp_AllocNormalBatch(_Size, _fFunctor);
 
 		if (mp_bWantNumaFreeSlabsCleanup) [[unlikely]]
 			fp_CheckCleanupNumaFree();

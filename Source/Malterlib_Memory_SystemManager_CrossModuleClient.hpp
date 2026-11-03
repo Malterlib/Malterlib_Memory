@@ -263,9 +263,9 @@ namespace NMib::NMemory
 		return (*pFunctor)(_pAlloc, _Size);
 	}
 
-	DMibSuppressUndefinedSanitizer void fg_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
+	DMibSuppressUndefinedSanitizer void fg_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor)
 	{
-		return g_CrossModule.m_fAllocBatch(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_Functor);
+		return g_CrossModule.m_fAllocBatch(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_fFunctor);
 	}
 
 	DMibSuppressUndefinedSanitizer bool fg_AllocHasDeterministicSize()
@@ -282,13 +282,13 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
 		)
 	{
-		return g_CrossModule.m_fAllocBatchDebug(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_Functor, _pFile, _Line, _Flags);
+		return g_CrossModule.m_fAllocBatchDebug(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_fFunctor, _pFile, _Line, _Flags);
 	}
 
 #if DMibConfig_MalterlibMemoryManager_Debug
@@ -504,19 +504,19 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, EAllocationFlag _AllocFlags
 			, ENumaNode _NumaNode
 		)
 	{
-		return g_CrossModule.m_fNonTracked_AllocBatch(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_Functor);
+		return g_CrossModule.m_fNonTracked_AllocBatch(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_fFunctor);
 	}
 
 	DMibSuppressUndefinedSanitizer only_parameters_aliased void CAllocator_NonTrackedHeap::f_AllocBatchDebug
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -524,7 +524,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		return g_CrossModule.m_fNonTracked_AllocBatchDebug(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_Functor, _pFile, _Line, _Flags);
+		return g_CrossModule.m_fNonTracked_AllocBatchDebug(&g_CrossModule, _Size, _Alignment, &fg_CallBatchFunctor, (void *)&_fFunctor, _pFile, _Line, _Flags);
 	}
 
 	DMibSuppressUndefinedSanitizer only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_Realloc

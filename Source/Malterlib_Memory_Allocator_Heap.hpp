@@ -197,19 +197,19 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, EAllocationFlag _AllocFlags
 			, ENumaNode _NumaNode
 		)
 	{
-		return NMib::NMemory::fg_AllocBatch(_Size, _Alignment, _Functor);
+		return NMib::NMemory::fg_AllocBatch(_Size, _Alignment, _fFunctor);
 	}
 
 	only_parameters_aliased inline_small void CAllocator_Heap::f_AllocBatchDebug
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -218,9 +218,9 @@ namespace NMib::NMemory
 		)
 	{
 #if DMibConfig_MalterlibMemoryManager_Debug
-		return NMib::NMemory::fg_AllocBatchDebug(_Size, _Alignment, _Functor, _pFile, _Line, _Flags);
+		return NMib::NMemory::fg_AllocBatchDebug(_Size, _Alignment, _fFunctor, _pFile, _Line, _Flags);
 #else
-		return NMib::NMemory::fg_AllocBatch(_Size, _Alignment, _Functor);
+		return NMib::NMemory::fg_AllocBatch(_Size, _Alignment, _fFunctor);
 #endif
 	}
 
@@ -633,7 +633,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, EAllocationFlag _AllocFlags
 			, ENumaNode _NumaNode
 		)
@@ -641,7 +641,7 @@ namespace NMib::NMemory
 		fp_DoCheck(_Size);
 		DMibFastCheck(((umint)mp_pPointer & (_Alignment - 1)) == 0);
 
-		bool bRet = _Functor(mp_pPointer, t_AllocSize);
+		bool bRet = _fFunctor(mp_pPointer, t_AllocSize);
 		(void)bRet;
 		DMibFastCheck(!bRet); // Has to abort after first alloc
 	}
@@ -651,7 +651,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -659,7 +659,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		return f_AllocBatch(_Size, _Alignment, _Functor, _AllocFlags, _NumaNode);
+		return f_AllocBatch(_Size, _Alignment, _fFunctor, _AllocFlags, _NumaNode);
 	}
 
 	template <umint t_AllocSize>
@@ -1005,7 +1005,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, EAllocationFlag _AllocFlags
 			, ENumaNode _NumaNode
 		)
@@ -1017,12 +1017,12 @@ namespace NMib::NMemory
 			DMibFastCheck(!mp_bAllocated);
 			mp_bAllocated = true;
 #endif
-			bool bRet = _Functor(fp_GetStatic(), mcp_StorageSize);
+			bool bRet = _fFunctor(fp_GetStatic(), mcp_StorageSize);
 			(void)bRet;
 			DMibFastCheck(!bRet);
 			return;
 		}
-		return t_CFallbackAllocator::f_AllocBatch(_Size, _Alignment, _Functor, _AllocFlags, _NumaNode);
+		return t_CFallbackAllocator::f_AllocBatch(_Size, _Alignment, _fFunctor, _AllocFlags, _NumaNode);
 	}
 
 	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>
@@ -1030,7 +1030,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -1038,7 +1038,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		return f_AllocBatch(_Size, _Alignment, _Functor, _AllocFlags, _NumaNode);
+		return f_AllocBatch(_Size, _Alignment, _fFunctor, _AllocFlags, _NumaNode);
 	}
 
 	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>

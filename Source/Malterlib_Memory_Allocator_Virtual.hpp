@@ -93,7 +93,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, EAllocationFlag _AllocFlags
 			, ENumaNode _NumaNode
 		)
@@ -102,7 +102,7 @@ namespace NMib::NMemory
 		{
 			umint Size = _Size;
 			void *pMem = f_AllocAlignedWithSize(Size, _Alignment);
-			if (!_Functor(pMem, Size))
+			if (!_fFunctor(pMem, Size))
 				break;
 		}
 	}
@@ -111,7 +111,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -119,7 +119,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		return f_AllocBatch(_Size, _Alignment, _Functor, _AllocFlags, _NumaNode);
+		return f_AllocBatch(_Size, _Alignment, _fFunctor, _AllocFlags, _NumaNode);
 	}
 
 	inline_small void *CAllocator_Virtual::f_AllocWithSizeDebug(umint &_Size, ch8 const *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
@@ -408,7 +408,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, EAllocationFlag _AllocFlags
 			, ENumaNode _NumaNode
 		)
@@ -417,7 +417,7 @@ namespace NMib::NMemory
 		{
 			umint Size = _Size;
 			void *pMem = f_AllocAlignedWithSize(Size, _Alignment);
-			if (!_Functor(pMem, Size))
+			if (!_fFunctor(pMem, Size))
 				break;
 		}
 	}
@@ -426,7 +426,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -434,7 +434,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		return f_AllocBatch(_Size, _Alignment, _Functor, _AllocFlags, _NumaNode);
+		return f_AllocBatch(_Size, _Alignment, _fFunctor, _AllocFlags, _NumaNode);
 	}
 
 	inline_small auto CAllocator_VirtualNoTracking::f_AllocWithSizeDebug(umint &_Size, ch8 const *_pFile, aint _Line, EHeapDebugFlag _Flags, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)

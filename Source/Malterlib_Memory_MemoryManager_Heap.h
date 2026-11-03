@@ -101,7 +101,7 @@ namespace NMib::NMemory
 		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 
 	private:
-		static constexpr bool mcp_EnableCallbacks = t_CParams::CNotifier::CHeap::mc_EnableCallbacks;
+		static constexpr bool mcp_bEnableCallbacks = t_CParams::CNotifier::CHeap::mc_bEnableCallbacks;
 
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerArenaHeapChunk;

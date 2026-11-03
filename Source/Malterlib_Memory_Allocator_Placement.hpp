@@ -162,7 +162,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, EAllocationFlag _AllocFlags
 			, ENumaNode _NumaNode
 		)
@@ -174,7 +174,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -182,7 +182,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		return f_AllocBatch(_Size, _Alignment, _Functor, _AllocFlags, _NumaNode);
+		return f_AllocBatch(_Size, _Alignment, _fFunctor, _AllocFlags, _NumaNode);
 	}
 
 	only_parameters_aliased malloc_like void *CAllocator_Placement::f_Realloc(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)

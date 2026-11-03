@@ -66,7 +66,7 @@ namespace
 		void f_InitThread()
 		{
 			(*mp_Memory).f_SetLen(mp_MaxSize * 2);
-			(*mp_pMemory) = (*mp_Memory).f_GetArray();
+			(*mp_MemoryStart) = (*mp_Memory).f_GetArray();
 		}
 
 		int f_Checkout()
@@ -76,12 +76,12 @@ namespace
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return NMib::fg_AlignUp((*mp_pMemory), _Alignment);
+			return NMib::fg_AlignUp((*mp_MemoryStart), _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return (*mp_pMemory);
+			return (*mp_MemoryStart);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
@@ -104,7 +104,7 @@ namespace
 				, NMib::NMemory::CAllocator_Heap
 				, (NMib::NThread::EThreadLocalFlag)(NMib::NThread::EThreadLocalFlag_AlwaysCreated | NMib::NThread::EThreadLocalFlag_FastThreadLocal)
 			>
-			mp_pMemory
+			mp_MemoryStart
 		;
 		umint mp_MaxSize;
 	};
@@ -1201,14 +1201,14 @@ namespace
 	struct TCMalterlibMemoryWindows
 	{
 		TCMalterlibMemoryWindows()
-			: m_Heap(nullptr)
+			: m_pHeap(nullptr)
 		{
 		}
 
 		~TCMalterlibMemoryWindows()
 		{
-			if (m_Heap)
-				HeapDestroy(m_Heap);
+			if (m_pHeap)
+				HeapDestroy(m_pHeap);
 		}
 
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
@@ -1222,12 +1222,12 @@ namespace
 		{
 		}
 
-		HANDLE m_Heap;
+		HANDLE m_pHeap;
 		bool f_Init(umint _nThreads, umint _MaxSize)
 		{
 			if (_nThreads > 1 && !t_bMultiThreaded)
 				return false;
-			m_Heap = HeapCreate(t_bMultiThreaded ? 0 : HEAP_NO_SERIALIZE, 0, 0);
+			m_pHeap = HeapCreate(t_bMultiThreaded ? 0 : HEAP_NO_SERIALIZE, 0, 0);
 			return true;
 		}
 
@@ -1247,21 +1247,21 @@ namespace
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return HeapAlloc(m_Heap, 0, _Size);
+			return HeapAlloc(m_pHeap, 0, _Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			HeapFree(m_Heap, 0, _pMem);
+			HeapFree(m_pHeap, 0, _pMem);
 		}
 
 		void f_Clear()
 		{
 			if (t_bClear)
 			{
-				if (m_Heap)
-					HeapDestroy(m_Heap);
-				m_Heap = HeapCreate(t_bMultiThreaded ? 0 : HEAP_NO_SERIALIZE, 0, 0);
+				if (m_pHeap)
+					HeapDestroy(m_pHeap);
+				m_pHeap = HeapCreate(t_bMultiThreaded ? 0 : HEAP_NO_SERIALIZE, 0, 0);
 			}
 		}
 
@@ -1276,17 +1276,17 @@ namespace
 	struct TCMalterlibMemoryWindowsLF
 	{
 		TCMalterlibMemoryWindowsLF()
-			: m_Heap(nullptr)
+			: m_pHeap(nullptr)
 		{
 		}
 
 		~TCMalterlibMemoryWindowsLF()
 		{
-			if (m_Heap)
-				HeapDestroy(m_Heap);
+			if (m_pHeap)
+				HeapDestroy(m_pHeap);
 		}
 
-		HANDLE m_Heap;
+		HANDLE m_pHeap;
 
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment)
 		{
@@ -1316,9 +1316,9 @@ namespace
 
 		void f_Create()
 		{
-			m_Heap = HeapCreate(0, 0, 0);
+			m_pHeap = HeapCreate(0, 0, 0);
 			ULONG Enable = 3;
-			HeapSetInformation(m_Heap, HeapCompatibilityInformation, &Enable, sizeof(Enable));
+			HeapSetInformation(m_pHeap, HeapCompatibilityInformation, &Enable, sizeof(Enable));
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
@@ -1328,20 +1328,20 @@ namespace
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return HeapAlloc(m_Heap, 0, _Size);
+			return HeapAlloc(m_pHeap, 0, _Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			HeapFree(m_Heap, 0, _pMem);
+			HeapFree(m_pHeap, 0, _pMem);
 		}
 
 		void f_Clear()
 		{
 			if (t_bClear)
 			{
-				if (m_Heap)
-					HeapDestroy(m_Heap);
+				if (m_pHeap)
+					HeapDestroy(m_pHeap);
 				f_Create();
 			}
 		}

@@ -122,7 +122,7 @@ namespace NMib::NMemory
 
 						nFreed += fg_NumBitsSet(Pending);
 
-						if constexpr (mc_EnableCallbacks)
+						if constexpr (mc_bEnableCallbacks)
 						{
 							for (uint64 Bits = Pending; Bits; Bits &= Bits - 1)
 							{
@@ -138,7 +138,7 @@ namespace NMib::NMemory
 						// With notifier callbacks the loop calls out, and a callback that frees
 						// into this sub-slab must not observe a non-empty word whose summary bit
 						// is still missing; the free path treats that pairing as an invariant
-						if constexpr (mc_EnableCallbacks)
+						if constexpr (mc_bEnableCallbacks)
 							FreeState.m_Bits |= NewSummary;
 					}
 
@@ -156,7 +156,7 @@ namespace NMib::NMemory
 
 					nFreed = fg_NumBitsSet(HeaderBits);
 
-					if constexpr (mc_EnableCallbacks)
+					if constexpr (mc_bEnableCallbacks)
 					{
 						for (uint64 Bits = HeaderBits; Bits; Bits &= Bits - 1)
 						{
@@ -185,7 +185,7 @@ namespace NMib::NMemory
 					uint16 Next = *(uint16 *)pBlock;
 
 					++nFreed;
-					if constexpr (mc_EnableCallbacks)
+					if constexpr (mc_bEnableCallbacks)
 					{
 						this->f_OnFree(pBlock);
 

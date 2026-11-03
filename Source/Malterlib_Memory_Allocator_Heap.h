@@ -19,7 +19,13 @@ namespace NMib::NMemory
 	DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_AllocInitZeroWithSize(umint &_Size);
 	DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_AllocInitZero(umint _Size);
 	DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_AllocAlignedWithSize(umint &_Size, umint _Align);
-	DMibMemory_MemoryManagerExport only_parameters_aliased void fg_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+	DMibMemory_MemoryManagerExport only_parameters_aliased void fg_AllocBatch
+		(
+			umint _Size
+			, umint _Alignment
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
+		)
+	;
 	DMibMemory_MemoryManagerExport only_parameters_aliased malloc_like void *fg_Realloc(void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None);
 	DMibMemory_MemoryManagerExport only_parameters_aliased void *fg_Resize(void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None);
 	DMibMemory_MemoryManagerExport only_parameters_aliased umint fg_Size(void const *_pMemory);
@@ -45,7 +51,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags = EHeapDebugFlag_None
@@ -233,7 +239,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, EAllocationFlag _AllocFlags = EAllocationFlag_None
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
@@ -242,7 +248,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, aint _Line
 				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
@@ -402,7 +408,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, EAllocationFlag _AllocFlags = EAllocationFlag_None
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
@@ -411,7 +417,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, aint _Line
 				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
@@ -549,7 +555,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, EAllocationFlag _AllocFlags = EAllocationFlag_None
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
@@ -558,7 +564,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, aint _Line
 				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
@@ -721,7 +727,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, EAllocationFlag _AllocFlags = EAllocationFlag_None
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
@@ -730,7 +736,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, aint _Line
 				, EHeapDebugFlag _Flags = EHeapDebugFlag_None

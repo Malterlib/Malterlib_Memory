@@ -412,7 +412,7 @@ namespace NMib::NMemory
 			FreeState.m_pFreeHead = nullptr;
 			FreeState.m_CarveOffset = FreeState.m_CarveStart;
 
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 			{
 				umint SlabType = _pSlab->m_SlabType;
 				uint8 *pBase = _pSlab->f_GetSlabStart() + _iSubSlab * (t_CParams::mc_SlabTypeInfo[SlabType].m_SubSlabMutiplier * t_CParams::mc_SubSlabSize);

@@ -16,7 +16,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
+	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor)
 	{
 		DMibMemLightweightTrack(auto *pLocalArena = mp_pMemoryManager->mp_LocalArena.f_TryGet(););
 
@@ -35,7 +35,7 @@ namespace NMib::NMemory
 				;
 
 				auto *pAlloc = fsp_AllocSmall<1>(this);
-				if (!_Functor(pAlloc, 1))
+				if (!_fFunctor(pAlloc, 1))
 					break;
 			}
 			return;
@@ -52,7 +52,7 @@ namespace NMib::NMemory
 			;
 
 			auto *pAlloc = fsp_AllocSmallShared(this, iSlab);
-			if (!_Functor(pAlloc, _Size))
+			if (!_fFunctor(pAlloc, _Size))
 				break;
 		}
 		return;
@@ -70,13 +70,13 @@ namespace NMib::NMemory
 		{
 			Index = 0;
 			TCMemoryManagerSubSlab_SmallSize<t_CParams, 1> *pSubSlab1 = (TCMemoryManagerSubSlab_SmallSize<t_CParams, 1> *)pSubSlab;
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 				pSubSlab1->f_OnFree(*this, _pMemory);
 			SmallState = pSubSlab1->f_Free(_pMemory);
 		}
 		else
 		{
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 				pSubSlab->f_OnFree(*this, _pMemory);
 
 			umint Offset = (uint8 *)_pMemory - pSubSlab->f_GetArray();
@@ -226,7 +226,7 @@ namespace NMib::NMemory
 
 		bool bFull;
 		void *pAlloc = pSlab->f_Alloc(bFull);
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mc_bEnableCallbacks)
 		{
 			pSlab->f_OnCheckFree(*_pThis, pAlloc, EMemoryManagerCheckFlag_Default);
 			pSlab->f_OnAlloc(*_pThis, pAlloc);
@@ -254,7 +254,7 @@ namespace NMib::NMemory
 
 		bool bFull;
 		void *pAlloc = pSlab->f_Alloc(bFull);
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mc_bEnableCallbacks)
 		{
 			pSlab->f_OnCheckFree(*_pThis, pAlloc, EMemoryManagerCheckFlag_Default);
 			pSlab->f_OnAlloc(*_pThis, pAlloc);
@@ -309,7 +309,7 @@ namespace NMib::NMemory
 
 		CSubSlab *pSlab = new(pSlabAddress) CSubSlab();
 
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mc_bEnableCallbacks)
 			pSlab->f_OnFillFree(*this);
 
 		DMibFastCheck(SlabIndex < mc_nSmallSizeSlabs);

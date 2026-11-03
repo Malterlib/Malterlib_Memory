@@ -53,7 +53,7 @@ namespace NMib::NMemory
 		EMemoryReportLightweightScopeFlag m_LightweightScopeFlags = EMemoryReportLightweightScopeFlag_None;
 #endif
 #if DMibConfig_Memory_CustomThreadLocal
-		TCAutoClear<void *> m_pCustom[DMibConfig_Memory_CustomThreadLocal];
+		TCAutoClear<void *> m_Custom[DMibConfig_Memory_CustomThreadLocal];
 #endif
 		uint32 m_RandomIndex = 0;
 		uint32 m_nPendingGarbageCollects = 0;
@@ -128,7 +128,7 @@ namespace NMib::NMemory
 
 		int64 f_GarbageCollect(CMemoryManagerGarbageOptions const &_GarbageOptions, bool _bDecommit, bool _bForceCleanup);
 
-		bool f_ProcessArenaMessages(bool _bIncremental, bool &o_Deferred);
+		bool f_ProcessArenaMessages(bool _bIncremental, bool &o_bDeferred);
 
 		void f_CanStartThreads();
 		void f_ForceStartCleanupThread();

@@ -141,9 +141,9 @@ namespace NMib::NMemory
 		return CCrossModuleImplementationExtra::fs_AllocAligned(&g_CrossModule, _Size, _Alignment);
 	}
 
-	DMibMemory_MemoryManagerExport void fg_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
+	DMibMemory_MemoryManagerExport void fg_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor)
 	{
-		return CCrossModuleImplementationExtra::fs_AllocBatchInternal(&g_CrossModule, _Size, _Alignment, _Functor);
+		return CCrossModuleImplementationExtra::fs_AllocBatchInternal(&g_CrossModule, _Size, _Alignment, _fFunctor);
 	}
 
 	bool fg_AllocHasDeterministicSize()
@@ -191,13 +191,13 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
 		)
 	{
-		return CCrossModuleImplementationExtra::fs_AllocBatchDebugInternal(&g_CrossModule, _Size, _Alignment, _Functor, _pFile, _Line, _Flags);
+		return CCrossModuleImplementationExtra::fs_AllocBatchDebugInternal(&g_CrossModule, _Size, _Alignment, _fFunctor, _pFile, _Line, _Flags);
 	}
 #endif
 
@@ -374,19 +374,19 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, EAllocationFlag _AllocFlags
 			, ENumaNode _NumaNode
 		)
 	{
-		return CCrossModuleImplementationExtra::fs_NonTracked_AllocBatchInternal(&g_CrossModule, _Size, _Alignment, _Functor);
+		return CCrossModuleImplementationExtra::fs_NonTracked_AllocBatchInternal(&g_CrossModule, _Size, _Alignment, _fFunctor);
 	}
 
 	only_parameters_aliased void CAllocator_NonTrackedHeap::f_AllocBatchDebug
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -394,7 +394,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		return CCrossModuleImplementationExtra::fs_NonTracked_AllocBatchDebugInternal(&g_CrossModule, _Size, _Alignment, _Functor, _pFile, _Line, _Flags);
+		return CCrossModuleImplementationExtra::fs_NonTracked_AllocBatchDebugInternal(&g_CrossModule, _Size, _Alignment, _fFunctor, _pFile, _Line, _Flags);
 	}
 
 	only_parameters_aliased malloc_like void *CAllocator_NonTrackedHeap::f_Realloc(void *_pMemory, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)

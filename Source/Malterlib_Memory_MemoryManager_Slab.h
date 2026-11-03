@@ -206,7 +206,7 @@ namespace NMib::NMemory
 	{
 		static constexpr umint mc_SlabMultiplier = t_CParams::mc_SlabTypeInfo[t_SlabType].m_SubSlabMutiplier;
 		static constexpr umint mc_nSubSlabs = TCMemoryManagerSlabShared<t_CParams>::template fs_CalculateSubSlabs<mc_SlabMultiplier>();
-		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CArena::mc_EnableCallbacks;
+		static constexpr bool mc_bEnableCallbacks = t_CParams::CNotifier::CArena::mc_bEnableCallbacks;
 
 		alignas(16) TCMemoryManagerSubSlabDataType<t_CParams> m_SubSlabDataType[mc_nSubSlabs]; // This one has to stay first
 		TCMemoryManagerSubSlabDataAlloc<t_CParams> m_SubSlabDataAlloc[mc_nSubSlabs];

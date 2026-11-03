@@ -222,14 +222,14 @@ namespace NMib::NMemory
 
 			// The carved region is protected in whole, but chained blocks keep their link word
 			// unprotected so the chain can be threaded and popped
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 				this->f_OnCheckFree(pBlock, sizeof(void *), EMemoryManagerCheckFlag_Default);
 
 			*(void **)pBlock = pNext;
 			pBlock = pNext;
 		}
 
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mc_bEnableCallbacks)
 			this->f_OnCheckFree(pBlock, sizeof(void *), EMemoryManagerCheckFlag_Default);
 
 		*(void **)pBlock = nullptr;
@@ -430,7 +430,7 @@ namespace NMib::NMemory
 
 		umint AlignedSize = f_Size(_pLink, pSlab);
 
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mc_bEnableCallbacks)
 		{
 			uint8 *pStart = (uint8 *)(_pLink + 1);
 			uint8 *pEnd;
@@ -578,7 +578,7 @@ namespace NMib::NMemory
 
 						DMibFastCheck(pAlloc == Current.m_pBase + (Current.m_WordIndexBase + iBit) * AlignedSize);
 
-						if constexpr (mc_EnableCallbacks)
+						if constexpr (mc_bEnableCallbacks)
 							this->f_OnCheckFree(pAlloc, AlignedSize, EMemoryManagerCheckFlag_Default);
 					}
 					else
@@ -601,7 +601,7 @@ namespace NMib::NMemory
 
 						pAlloc = (uint8 *)pFree;
 						FreeState.m_pFreeHead = *(void **)pAlloc;
-						if constexpr (mc_EnableCallbacks)
+						if constexpr (mc_bEnableCallbacks)
 							this->f_OnCheckFree(pAlloc + sizeof(void *), AlignedSize - sizeof(void *), EMemoryManagerCheckFlag_Default);
 					}
 
@@ -609,7 +609,7 @@ namespace NMib::NMemory
 					if (++Current.m_pDataAlloc->m_nAllocs == 1) [[unlikely]]
 						fp_SubSlabNoLongerPending(Current.m_pSlab, Current.m_iSubSlab);
 
-					if constexpr (mc_EnableCallbacks)
+					if constexpr (mc_bEnableCallbacks)
 						this->f_OnAlloc(pAlloc, AlignedSize);
 					_Size = AlignedSize;
 					return pAlloc;
@@ -629,7 +629,7 @@ namespace NMib::NMemory
 
 							pAlloc = (CMemoryManagerSubSlab_NormalLink *)((uint8 *)pAlloc + (AlignedSize * iBlock));
 
-							if constexpr (mc_EnableCallbacks)
+							if constexpr (mc_bEnableCallbacks)
 								this->f_OnCheckFree((uint8 *)pAlloc, AlignedSize, EMemoryManagerCheckFlag_Default);
 						}
 						else
@@ -637,7 +637,7 @@ namespace NMib::NMemory
 							static_assert(mc_bSubSlabLists || sizeof(*pAlloc) == sizeof(void *) * 2 + 4, "Should be packed");
 
 							pAlloc->m_Link.f_UnsafeUnlinkFirst();
-							if constexpr (mc_EnableCallbacks)
+							if constexpr (mc_bEnableCallbacks)
 								this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), EMemoryManagerCheckFlag_Default);
 						}
 					}
@@ -645,7 +645,7 @@ namespace NMib::NMemory
 					{
 						DMibFastCheck(pAlloc->m_Link.f_IsInList());
 						pAlloc->m_Link.f_UnsafeUnlinkFirst();
-						if constexpr (mc_EnableCallbacks)
+						if constexpr (mc_bEnableCallbacks)
 							this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), EMemoryManagerCheckFlag_Default);
 					}
 
@@ -682,7 +682,7 @@ namespace NMib::NMemory
 						}
 					}
 #endif
-					if constexpr (mc_EnableCallbacks)
+					if constexpr (mc_bEnableCallbacks)
 						this->f_OnAlloc((uint8 *)pAlloc, AlignedSize);
 					_Size = AlignedSize;
 					return pAlloc;
@@ -701,7 +701,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocNormalBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
+	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocNormalBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor)
 	{
 		CNormalFreeStoreList *pList;
 		umint Size;
@@ -792,7 +792,7 @@ namespace NMib::NMemory
 						}
 						else
 						{
-							if (!_Functor(fp_AllocNormalUncached(pList, &Current, AlignedSize, SubIndex, SlabBucket), AlignedSize))
+							if (!_fFunctor(fp_AllocNormalUncached(pList, &Current, AlignedSize, SubIndex, SlabBucket), AlignedSize))
 								break;
 
 							continue;
@@ -930,13 +930,13 @@ namespace NMib::NMemory
 
 							uint8 *pStreamAlloc = pBase + Index * AlignedSize;
 
-							if constexpr (mc_EnableCallbacks)
+							if constexpr (mc_bEnableCallbacks)
 							{
 								this->f_OnCheckFree(pStreamAlloc, AlignedSize, EMemoryManagerCheckFlag_Default);
 								this->f_OnAlloc(pStreamAlloc, AlignedSize);
 							}
 
-							if (!_Functor(pStreamAlloc, AlignedSize))
+							if (!_fFunctor(pStreamAlloc, AlignedSize))
 								return;
 
 							if (!Word)
@@ -973,16 +973,16 @@ namespace NMib::NMemory
 
 						uint8 *pAlloc = (uint8 *)pFree;
 						FreeState.m_pFreeHead = *(void **)pAlloc;
-						if constexpr (mc_EnableCallbacks)
+						if constexpr (mc_bEnableCallbacks)
 							this->f_OnCheckFree(pAlloc + sizeof(void *), AlignedSize - sizeof(void *), EMemoryManagerCheckFlag_Default);
 
 						DMibFastCheck(Current.m_pDataAlloc->m_nAllocs < TCMemoryManagerSubSlabDataAlloc<t_CParams>::mc_MaxAllocs);
 						if (++Current.m_pDataAlloc->m_nAllocs == 1)
 							fp_SubSlabNoLongerPending(Current.m_pSlab, Current.m_iSubSlab);
 
-						if constexpr (mc_EnableCallbacks)
+						if constexpr (mc_bEnableCallbacks)
 							this->f_OnAlloc(pAlloc, AlignedSize);
-						if (!_Functor(pAlloc, AlignedSize))
+						if (!_fFunctor(pAlloc, AlignedSize))
 							break;
 
 						continue;
@@ -1002,7 +1002,7 @@ namespace NMib::NMemory
 
 								pAlloc = (CMemoryManagerSubSlab_NormalLink *)((uint8 *)pAlloc + (AlignedSize * iBlock));
 
-								if constexpr (mc_EnableCallbacks)
+								if constexpr (mc_bEnableCallbacks)
 									this->f_OnCheckFree((uint8 *)pAlloc, AlignedSize, EMemoryManagerCheckFlag_Default);
 							}
 							else
@@ -1010,14 +1010,14 @@ namespace NMib::NMemory
 								static_assert(sizeof(*pAlloc) == sizeof(void *) * 2 + 4, "Should be packed");
 
 								pAlloc->m_Link.f_UnsafeUnlinkFirst();
-								if constexpr (mc_EnableCallbacks)
+								if constexpr (mc_bEnableCallbacks)
 									this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), EMemoryManagerCheckFlag_Default);
 							}
 						}
 						else
 						{
 							pAlloc->m_Link.f_UnsafeUnlinkFirst();
-							if constexpr (mc_EnableCallbacks)
+							if constexpr (mc_bEnableCallbacks)
 								this->f_OnCheckFree((uint8 *)(pAlloc + 1), AlignedSize - sizeof(*pAlloc), EMemoryManagerCheckFlag_Default);
 						}
 
@@ -1054,14 +1054,14 @@ namespace NMib::NMemory
 							}
 						}
 #endif
-						if constexpr (mc_EnableCallbacks)
+						if constexpr (mc_bEnableCallbacks)
 							this->f_OnAlloc((uint8 *)pAlloc, AlignedSize);
-						if (!_Functor(pAlloc, AlignedSize))
+						if (!_fFunctor(pAlloc, AlignedSize))
 							break;
 					}
 					else
 					{
-						if (!_Functor(fp_AllocNormalUncached(pList, fp_GetCurrentSubSlabSlot(SubIndex, SlabBucket, AlignedSize), AlignedSize, SubIndex, SlabBucket), AlignedSize))
+						if (!_fFunctor(fp_AllocNormalUncached(pList, fp_GetCurrentSubSlabSlot(SubIndex, SlabBucket, AlignedSize), AlignedSize, SubIndex, SlabBucket), AlignedSize))
 							break;
 					}
 				}
@@ -1114,7 +1114,7 @@ namespace NMib::NMemory
 				iAlloc = umint((uint8 *)pSlabAddress - pSlab->f_GetSlabStart()) / t_CParams::mc_SubSlabSize;
 				iAlloc = t_CParams::fs_DivideBySlabMultiplier(iAlloc, _SubIndex);
 
-				if constexpr (mc_EnableCallbacks)
+				if constexpr (mc_bEnableCallbacks)
 					pSlab->f_OnCommitSubSlabs(iAlloc, (umint(1) << SizeType));
 			}
 			else
@@ -1239,7 +1239,7 @@ namespace NMib::NMemory
 					DMibFastCheck(_pCurrent->m_pFreeState == nullptr);
 					fp_SetCurrentSubSlab(_pCurrent, pSlab, iAlloc);
 
-					if constexpr (mc_EnableCallbacks)
+					if constexpr (mc_bEnableCallbacks)
 						this->f_OnFillFree(pSlabAddress + FirstFree * _AlignedSize, (nBlocks - FirstFree) * _AlignedSize);
 				}
 
@@ -1263,14 +1263,14 @@ namespace NMib::NMemory
 					DMibFastCheck(_pCurrent->m_pFreeState == nullptr);
 					fp_SetCurrentSubSlab(_pCurrent, pSlab, iAlloc);
 
-					if constexpr (mc_EnableCallbacks)
+					if constexpr (mc_bEnableCallbacks)
 						this->f_OnFillFree(pSlabAddress + StartOffset + _AlignedSize, EndOffset - StartOffset - _AlignedSize);
 				}
 
 				pSlabAddress += StartOffset;
 			}
 
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 				this->f_OnAlloc((uint8 *)pSlabAddress, _AlignedSize);
 
 			return pSlabAddress;
@@ -1298,14 +1298,14 @@ namespace NMib::NMemory
 					pNormalLink->m_nBlocks = nBlocks;
 					_pList->f_UnsafeInsertFirst(pNormalLink);
 
-					if constexpr (mc_EnableCallbacks)
+					if constexpr (mc_bEnableCallbacks)
 						this->f_OnFillFree((uint8 *)(pNormalLink + 1), (pSlabAddress + nBlocks * _AlignedSize) - (uint8 *)(pNormalLink + 1));
 
 					pSlabAddress = pSlabAddress + nBlocks * _AlignedSize;
 				}
 				else
 				{
-					if constexpr (mc_EnableCallbacks)
+					if constexpr (mc_bEnableCallbacks)
 						this->f_OnFillFree(pSlabAddress + _AlignedSize, nBlocks * _AlignedSize);
 
 					CMemoryManagerSubSlab_NormalFreeList TempList;
@@ -1329,7 +1329,7 @@ namespace NMib::NMemory
 				}
 			}
 
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 				this->f_OnAlloc((uint8 *)pSlabAddress, _AlignedSize);
 
 			return pSlabAddress;
@@ -1398,7 +1398,7 @@ namespace NMib::NMemory
 
 		// The notifier sees the free first so a layered debug manager can report double frees
 		// before the allocator's own consistency checks trip on them
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mc_bEnableCallbacks)
 			this->f_OnFree((uint8 *)_pMemory);
 
 		auto pDataAlloc = _pSlab->f_GetSubSlabDataAlloc();
@@ -1427,7 +1427,7 @@ namespace NMib::NMemory
 						)
 					;
 
-					if constexpr (mc_EnableCallbacks)
+					if constexpr (mc_bEnableCallbacks)
 						this->f_OnFillFree((uint8 *)_pMemory, AlignedSize);
 
 					if (bWasExhausted) [[unlikely]]
@@ -1442,7 +1442,7 @@ namespace NMib::NMemory
 					*(void **)_pMemory = FreeState.m_pFreeHead;
 					FreeState.m_pFreeHead = _pMemory;
 
-					if constexpr (mc_EnableCallbacks)
+					if constexpr (mc_bEnableCallbacks)
 						this->f_OnFillFree((uint8 *)_pMemory + sizeof(void *), AlignedSize - sizeof(void *));
 
 					if (bWasExhausted) [[unlikely]]
@@ -1468,14 +1468,14 @@ namespace NMib::NMemory
 					}
 				}
 			}
-			else if constexpr (mc_EnableCallbacks)
+			else if constexpr (mc_bEnableCallbacks)
 				this->f_OnFillFree((uint8 *)_pMemory, AlignedSize);
 		}
 		else
 		{
 			CMemoryManagerSubSlab_NormalLink *pFreeMemory = (CMemoryManagerSubSlab_NormalLink *)_pMemory;
 
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 				this->f_OnFillFree((uint8 *)(pFreeMemory + 1), AlignedSize - sizeof(*pFreeMemory));
 
 			if constexpr (t_CParams::mc_bUseFreeBlockCounting)
@@ -1553,7 +1553,7 @@ namespace NMib::NMemory
 	{
 		bool bError = false;
 
-		if constexpr (mc_EnableCallbacks && mc_bSubSlabStore)
+		if constexpr (mc_bEnableCallbacks && mc_bSubSlabStore)
 		{
 			auto pSlab = _pSlab;
 			umint iSubSlab = _iSubSlab;

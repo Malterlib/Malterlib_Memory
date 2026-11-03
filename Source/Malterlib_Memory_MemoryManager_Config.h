@@ -64,7 +64,7 @@ namespace NMib::NMemory
 		{
 			// The arena notifier is called in the context of an arena so you can safely assume that this will only be called from one thread at a time
 
-			static constexpr aint mc_EnableCallbacks = false;
+			static constexpr aint mc_bEnableCallbacks = false;
 
 			CArena(CGlobal *_pGlobal);
 
@@ -80,7 +80,7 @@ namespace NMib::NMemory
 		{
 			// The heap notifiers are called when the heap lock is taken so you can assume thread safety
 
-			static constexpr aint mc_EnableCallbacks = false;
+			static constexpr aint mc_bEnableCallbacks = false;
 
 			CHeap(CGlobal *_pGlobal);
 
@@ -95,7 +95,7 @@ namespace NMib::NMemory
 		{
 			// The global notifier is called in the global context so you have to provide thread safety
 
-			static constexpr aint mc_EnableCallbacks = false;
+			static constexpr aint mc_bEnableCallbacks = false;
 
 			template <typename tf_CMemoryManager>
 			CGlobal(tf_CMemoryManager &_MemMan);

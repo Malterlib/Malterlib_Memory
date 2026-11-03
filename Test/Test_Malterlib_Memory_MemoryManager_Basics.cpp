@@ -1672,12 +1672,12 @@ namespace
 
 				DMibTest(DMibExpr(pDll))(ETest_FailAndStop);
 
-				void (calling_convention_c *pTestFunc)() = nullptr;
+				void (calling_convention_c *fTestFunc)() = nullptr;
 
-				(void * &)pTestFunc = NMib::NSys::fg_GetLibrarySymbol(pDll, "fg_TestMemory");
-				DMibTest(DMibExpr(pTestFunc))(ETest_FailAndStop);
+				(void * &)fTestFunc = NMib::NSys::fg_GetLibrarySymbol(pDll, "fg_TestMemory");
+				DMibTest(DMibExpr(fTestFunc))(ETest_FailAndStop);
 
-				pTestFunc();
+				fTestFunc();
 
 				NMib::NSys::fg_FreeLibrary(pDll);
 			};

@@ -117,7 +117,7 @@ namespace NMib::NMemory
 		void *f_AllocAlignedWithSizeInline(umint &_Size, umint _Alignment);
 		inline_never void *f_AllocAligned(umint _Size, umint _Alignment);
 		void *f_AllocAlignedInline(umint _Size, umint _Alignment);
-		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
 		void *f_Realloc(void *_pMemory, umint &_Size, umint _OldSize);
 		void *f_ReallocInline(void *_pMemory, umint &_Size, umint _OldSize);
 		void *f_Resize(void *_pMemory, umint &_Size, umint _OldSize);
@@ -144,9 +144,9 @@ namespace NMib::NMemory
 		void f_Lock();
 		void f_Unlock();
 
-		void f_EnumArenas(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CArena *_pArena)> const &_Functor);
-		void f_EnumHeaps(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CHeap *_pHeap)> const &_Functor);
-		void f_EnumGlobal(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CGlobal *_pGlobal)> const &_Functor);
+		void f_EnumArenas(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CArena *_pArena)> const &_fFunctor);
+		void f_EnumHeaps(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CHeap *_pHeap)> const &_fFunctor);
+		void f_EnumGlobal(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CGlobal *_pGlobal)> const &_fFunctor);
 
 		void f_GarbageCollect(bool _bDecommit);
 		void f_WaitForBackgroundCleanup(); // Should only be used for unit tests
@@ -176,7 +176,7 @@ namespace NMib::NMemory
 
 	private:
 		void *fp_AllocAlignedSlowPath(umint &_Size, umint _Alignment);
-		void fp_AllocBatchSlowPath(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void fp_AllocBatchSlowPath(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
 
 		void fp_FreeSlowPath(void *_pMemory, umint _Size);
 
@@ -190,13 +190,13 @@ namespace NMib::NMemory
 		void *fp_AllocWithCheckout(umint &_Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena);
 		void *fp_AllocWithTempCheckout(umint &_Size);
 
-		void fp_AllocBatchWithCheckout(umint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
-		void fp_AllocBatchWithTempCheckout(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void fp_AllocBatchWithCheckout(umint _Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
+		void fp_AllocBatchWithTempCheckout(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
 
 		void fp_ProcessArenaMessages();
 
-		void fp_EnumArenas(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArena<t_CParams> *_pArena)> const &_Functor, bool _bCleanup);
-		void fp_EnumHeaps(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArenaHeap<t_CParams> *_pHeap)> const &_Functor);
+		void fp_EnumArenas(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArena<t_CParams> *_pArena)> const &_fFunctor, bool _bCleanup);
+		void fp_EnumHeaps(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArenaHeap<t_CParams> *_pHeap)> const &_fFunctor);
 
 #if DMibConfig_Memory_Shims_Lightweight
 		inline_always void fp_TrackAlloc(umint _Size);
@@ -241,7 +241,7 @@ namespace NMib::NMemory
 		static_assert(cIsPowerOfTwo<t_CParams::mc_SubSlabSize>, "Must be aligned to power of two");
 		static_assert(cIsPowerOfTwo<t_CParams::mc_SlabSize>, "Must be aligned to power of two");
 
-		static constexpr bool mcp_EnableCallbacks = t_CParams::CNotifier::CGlobal::mc_EnableCallbacks;
+		static constexpr bool mcp_bEnableCallbacks = t_CParams::CNotifier::CGlobal::mc_bEnableCallbacks;
 
 		typename t_CParams::CAllocator mp_Allocator;
 

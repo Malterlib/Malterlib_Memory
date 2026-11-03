@@ -66,8 +66,8 @@ namespace NMib::NMemory
 
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
 	{
-		static constexpr bool mc_SupportsNonTracked = true;
-		static constexpr bool mc_SupportsDebug = false;
+		static constexpr bool mc_bSupportsNonTracked = true;
+		static constexpr bool mc_bSupportsDebug = false;
 
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size)
 		{

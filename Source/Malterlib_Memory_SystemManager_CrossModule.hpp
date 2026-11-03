@@ -206,7 +206,7 @@ namespace NMib::NMemory
 			, EHeapDebugFlag _Flags
 		)
 	{
-		if constexpr (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
+		if constexpr (CCrossModuleImplementationExtra::mc_bSupportsNonTracked)
 			return CCrossModuleImplementationExtra::fs_NonTracked_AllocWithSize(_pModule, _Size);
 		else
 			return CCrossModuleImplementationExtra::fs_AllocWithSizeDebug(_pModule, _Size, _pFile, _Line, _Flags);
@@ -224,7 +224,7 @@ namespace NMib::NMemory
 			, EAllocationFlag _AllocFlags
 		)
 	{
-		if constexpr (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
+		if constexpr (CCrossModuleImplementationExtra::mc_bSupportsNonTracked)
 			return CCrossModuleImplementationExtra::fs_NonTracked_Realloc(_pModule, _pMemory, _Size, _OldSize, _AllocFlags);
 		else
 			return CCrossModuleImplementationExtra::fs_ReallocDebug(_pModule, _pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
@@ -242,7 +242,7 @@ namespace NMib::NMemory
 			, EAllocationFlag _AllocFlags
 		)
 	{
-		if constexpr (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
+		if constexpr (CCrossModuleImplementationExtra::mc_bSupportsNonTracked)
 			return CCrossModuleImplementationExtra::fs_NonTracked_Resize(_pModule, _pMemory, _Size, _OldSize, _AllocFlags);
 		else
 			return CCrossModuleImplementationExtra::fs_ResizeDebug(_pModule, _pMemory, _Size, _OldSize, _pFile, _Line, _Flags, _AllocFlags);
@@ -258,7 +258,7 @@ namespace NMib::NMemory
 			, EHeapDebugFlag _Flags
 		)
 	{
-		if constexpr (CCrossModuleImplementationExtra::mc_SupportsNonTracked)
+		if constexpr (CCrossModuleImplementationExtra::mc_bSupportsNonTracked)
 			return CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSize(_pModule, _Size, _Alignment);
 		else
 			return CCrossModuleImplementationExtra::fs_AllocAlignedWithSizeDebug(_pModule, _Size, _Alignment, _pFile, _Line, _Flags);
@@ -269,7 +269,7 @@ namespace NMib::NMemory
 			CMemoryManagerCrossModule *_pModule
 			, umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 		)
 	{
 		while (true)
@@ -280,7 +280,7 @@ namespace NMib::NMemory
 				pMem = CCrossModuleImplementationExtra::fs_AllocAligned(_pModule, Size, _Alignment);
 			else
 				pMem = CCrossModuleImplementationExtra::fs_AllocAlignedWithSize(_pModule, Size, _Alignment);
-			if (!_Functor(pMem, Size))
+			if (!_fFunctor(pMem, Size))
 				break;
 		}
 	}
@@ -312,7 +312,7 @@ namespace NMib::NMemory
 			CMemoryManagerCrossModule *_pModule
 			, umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -323,7 +323,7 @@ namespace NMib::NMemory
 			umint Size = _Size;
 			void *pMem;
 			pMem = CCrossModuleImplementationExtra::fs_AllocAlignedWithSizeDebug(_pModule, Size, _Alignment, _pFile, _Line, _Flags);
-			if (!_Functor(pMem, Size))
+			if (!_fFunctor(pMem, Size))
 				break;
 		}
 	}
@@ -354,7 +354,7 @@ namespace NMib::NMemory
 			CMemoryManagerCrossModule *_pModule
 			, umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 		)
 	{
 		while (true)
@@ -365,7 +365,7 @@ namespace NMib::NMemory
 				pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAligned(_pModule, Size, _Alignment);
 			else
 				pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSize(_pModule, Size, _Alignment);
-			if (!_Functor(pMem, Size))
+			if (!_fFunctor(pMem, Size))
 				break;
 		}
 	}
@@ -397,7 +397,7 @@ namespace NMib::NMemory
 			CMemoryManagerCrossModule *_pModule
 			, umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -407,7 +407,7 @@ namespace NMib::NMemory
 		{
 			umint Size = _Size;
 			void *pMem = CCrossModuleImplementationExtra::fs_NonTracked_AllocAlignedWithSizeDebug(_pModule, Size, _Alignment, _pFile, _Line, _Flags);
-			if (!_Functor(pMem, Size))
+			if (!_fFunctor(pMem, Size))
 				break;
 		}
 	}

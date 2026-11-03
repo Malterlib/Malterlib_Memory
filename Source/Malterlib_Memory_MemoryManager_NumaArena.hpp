@@ -29,7 +29,7 @@ namespace NMib::NMemory
 
 		while (auto pSlab = mp_FreeSlabs.f_Pop())
 		{
-			if constexpr (TCMemoryManagerArena<t_CParams>::mc_EnableCallbacks)
+			if constexpr (TCMemoryManagerArena<t_CParams>::mc_bEnableCallbacks)
 				mp_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 
 			pSlab->~TCMemoryManagerSlabShared<t_CParams>();
@@ -320,7 +320,7 @@ namespace NMib::NMemory
 					break;
 				}
 
-				if constexpr (TCMemoryManagerArena<t_CParams>::mc_EnableCallbacks)
+				if constexpr (TCMemoryManagerArena<t_CParams>::mc_bEnableCallbacks)
 					mp_pMemoryManager->f_OnCommit(pFreeSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 
 				pFreeSlab->~TCMemoryManagerSlabShared<t_CParams>();
@@ -365,7 +365,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	bool TCMemoryManagerNumaArena<t_CParams>::f_ProcessArenaMessages(bool _bIncremental, bool &o_Deferred)
+	bool TCMemoryManagerNumaArena<t_CParams>::f_ProcessArenaMessages(bool _bIncremental, bool &o_bDeferred)
 	{
 		auto &ThreadLocal = *mp_pMemoryManager->mp_LocalArena;
 		DMibFastCheck(ThreadLocal.m_Reentrant);
@@ -387,7 +387,7 @@ namespace NMib::NMemory
 					{
 						if (!pArena->mp_LockState.m_Lock.f_TryLockNoSanitize())
 						{
-							o_Deferred = true;
+							o_bDeferred = true;
 							continue; // Just give up if this arena is already locked by someone else
 						}
 					}
@@ -397,7 +397,7 @@ namespace NMib::NMemory
 
 				if (_bIncremental)
 				{
-					if (pArena->f_ProcessMessagesAbortable(o_Deferred, &ThreadLocal))
+					if (pArena->f_ProcessMessagesAbortable(o_bDeferred, &ThreadLocal))
 					{
 						bProcessed = true;
 						bOneProcessed = true;

@@ -133,6 +133,7 @@ void fg_MalterlibMallocOverrideDisable();
 extern "C"
 {
 	// NOLINTBEGIN(malterlib-variable-naming): the declarations of the macOS SDK, with their names
+	// NOLINTBEGIN(malterlib-conceptual-prefix): the declarations of the macOS SDK, with their names
 	struct ProgramVars // NOLINT(malterlib-type-naming): the name in the macOS SDK
 	{
 		void const *mh;
@@ -142,6 +143,7 @@ extern "C"
 		char const **__prognamePtr;
 	};
 
+	// NOLINTEND(malterlib-conceptual-prefix)
 	// NOLINTEND(malterlib-variable-naming)
 
 	// These are here so dynamic linking works on OSes where these are not defined
@@ -399,7 +401,7 @@ namespace
 #ifdef DMemoryManagerIsSame
 		NMib::NThread::CMutualAggregate m_ForkLock;
 		umint m_ForkedCount = 0;
-		bool m_Unforked = false;
+		bool m_bUnforked = false;
 		sigset_t m_ForkSigMask;
 #endif
 
@@ -2021,7 +2023,7 @@ void NMib::NSys::fg_Mem_PrepareFork()
 			break;
 		State.m_ForkLock.f_PrepareFork();
 
-		State.m_Unforked = false;
+		State.m_bUnforked = false;
 
 		State.m_ZoneListLock.f_Lock();
 		State.m_ZoneListLock.f_PrepareFork();
@@ -2067,14 +2069,14 @@ void NMib::NSys::fg_Mem_ForkedChild()
 		auto &State = *g_GlobalState;
 #ifdef DMemoryManagerIsSame
 		--State.m_ForkedCount;
-		if (State.m_Unforked)
+		if (State.m_bUnforked)
 		{
 			State.m_ForkLock.f_Unlock();
 			break;
 		}
 		State.m_ZoneListLock.f_ForkedChild();
 		State.m_ForkLock.f_ForkedChild();
-		State.m_Unforked = true;
+		State.m_bUnforked = true;
 		if (!g_bOnlyDefaultZone)
 		{
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -2122,14 +2124,14 @@ void NMib::NSys::fg_Mem_ForkedParent()
 		auto &State = *g_GlobalState;
 #ifdef DMemoryManagerIsSame
 		--State.m_ForkedCount;
-		if (State.m_Unforked)
+		if (State.m_bUnforked)
 		{
 			State.m_ForkLock.f_Unlock();
 			break;
 		}
 		State.m_ZoneListLock.f_ForkedParent();
 		State.m_ForkLock.f_ForkedParent();
-		State.m_Unforked = true;
+		State.m_bUnforked = true;
 		if (!g_bOnlyDefaultZone)
 		{
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize

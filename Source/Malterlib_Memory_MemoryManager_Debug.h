@@ -69,7 +69,7 @@ namespace NMib::NMemory
 
 			struct CArena
 			{
-				static constexpr aint mc_EnableCallbacks = true;
+				static constexpr aint mc_bEnableCallbacks = true;
 
 				CArena(CGlobal *_pGlobal);
 
@@ -88,7 +88,7 @@ namespace NMib::NMemory
 
 			struct CHeap
 			{
-				static constexpr aint mc_EnableCallbacks = true;
+				static constexpr aint mc_bEnableCallbacks = true;
 
 				CHeap(CGlobal *_pGlobal);
 
@@ -106,7 +106,7 @@ namespace NMib::NMemory
 
 			struct CGlobal
 			{
-				static constexpr aint mc_EnableCallbacks = true;
+				static constexpr aint mc_bEnableCallbacks = true;
 
 				CGlobal(TCMemoryManager<TCMemoryManagerDebugParams> &_MemoryManager);
 
@@ -147,7 +147,7 @@ namespace NMib::NMemory
 		void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment);
 		void *f_AllocAligned(umint _Size, umint _Alignment);
 		void *f_AllocAlignedWithSizeInline(umint &_Size, umint _Alignment);
-		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor);
+		void f_AllocBatch(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
 
 		void *f_Realloc(void *_pMemory, umint &_Size, umint _OldSize);
 		void *f_ReallocInline(void *_pMemory, umint &_Size, umint _OldSize);
@@ -165,7 +165,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, uint32 _Line
 				, EHeapDebugFlag _Flags
@@ -209,7 +209,7 @@ namespace NMib::NMemory
 						, umint _AllocID
 					)
 				>
-				const &_Functor
+				const &_fFunctor
 			)
 		;
 
@@ -263,13 +263,13 @@ namespace NMib::NMemory
 		static constexpr umint mcp_PreBlockAlignment = fg_Max(alignof(CPreBlock), sizeof(void *) * 2);
 
 		TCPool<zbool, 8, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> mp_ReportingLeaksPool;
-		NThread::TCThreadLocalDynamic<zbool, NThread::EThreadLocalFlag_FastThreadLocal> mp_bReportingLeaks;
+		NThread::TCThreadLocalDynamic<zbool, NThread::EThreadLocalFlag_FastThreadLocal> mp_ReportingLeaks;
 
 	private:
 		static bool fsp_CheckGuard(uint8 *_pMemory, EMemoryManagerCheckFlag _Flags);
 		static uint8 *fsp_GetRealMemory(uint8 *_pMemory);
 
-		void fp_EnumAllocations(NFunction::TCFunctionNoAlloc<void (uint8 *_pMemory, CPreBlock *_pPreAlloc, typename CParams::CNotifier::CAllocInfo &_AllocInfo)> const &_Functor);
+		void fp_EnumAllocations(NFunction::TCFunctionNoAlloc<void (uint8 *_pMemory, CPreBlock *_pPreAlloc, typename CParams::CNotifier::CAllocInfo &_AllocInfo)> const &_fFunctor);
 	};
 }
 

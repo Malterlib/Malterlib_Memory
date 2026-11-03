@@ -167,12 +167,12 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, EAllocationFlag _AllocFlags
 			, ENumaNode _NumaNode
 		)
 	{
-		return mp_pMemoryManager->f_AllocBatch(_Size, _Alignment, _Functor);
+		return mp_pMemoryManager->f_AllocBatch(_Size, _Alignment, _fFunctor);
 	}
 
 	template <typename t_CParams>
@@ -180,7 +180,7 @@ namespace NMib::NMemory
 		(
 			umint _Size
 			, umint _Alignment
-			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			, ch8 const *_pFile
 			, aint _Line
 			, EHeapDebugFlag _Flags
@@ -188,7 +188,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		return mp_pMemoryManager->f_AllocBatch(_Size, _Alignment, _Functor);
+		return mp_pMemoryManager->f_AllocBatch(_Size, _Alignment, _fFunctor);
 	}
 
 	template <typename t_CParams>

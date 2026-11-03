@@ -1000,7 +1000,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, EAllocationFlag _AllocFlags = EAllocationFlag_None
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
@@ -1010,7 +1010,7 @@ namespace NMib::NMemory
 			{
 				umint Size = _Size;
 				void *pMem = CStaticPool::ms_Pool->f_GetBlock();
-				if (!_Functor(pMem, Size))
+				if (!_fFunctor(pMem, Size))
 					break;
 			}
 		}
@@ -1294,7 +1294,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, EAllocationFlag _AllocFlags = EAllocationFlag_None
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
@@ -1304,7 +1304,7 @@ namespace NMib::NMemory
 			{
 				umint Size = _Size;
 				void *pMem = m_Pool.f_GetBlock();
-				if (!_Functor(pMem, Size))
+				if (!_fFunctor(pMem, Size))
 					break;
 			}
 		}
@@ -1560,7 +1560,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, EAllocationFlag _AllocFlags = EAllocationFlag_None
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
@@ -1570,7 +1570,7 @@ namespace NMib::NMemory
 			{
 				umint Size = _Size;
 				void *pMem = m_Pool.f_GetBlock();
-				if (!_Functor(pMem, Size))
+				if (!_fFunctor(pMem, Size))
 					break;
 			}
 		}

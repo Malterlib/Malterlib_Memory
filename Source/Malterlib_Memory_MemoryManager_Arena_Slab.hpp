@@ -30,7 +30,7 @@ namespace NMib::NMemory
 			if (nSubSlabs > nCommittedHeaderSubSlabs)
 			{
 				umint nToCommit = nSubSlabs - nCommittedHeaderSubSlabs;
-				if constexpr (mc_EnableCallbacks)
+				if constexpr (mc_bEnableCallbacks)
 					mp_pMemoryManager->f_OnCommit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nToCommit * t_CParams::mc_SubSlabSize);
 				OldCommitted.f_EnumFreeBitRanges
 					(
@@ -56,7 +56,7 @@ namespace NMib::NMemory
 		else
 		{
 			mp_pMemoryManager->mp_Allocator.f_Commit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nSubSlabs * t_CParams::mc_SubSlabSize);
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 				mp_pMemoryManager->f_OnCommit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nSubSlabs * t_CParams::mc_SubSlabSize);
 			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, tf_SlabType>(mp_Magic, this, nSubSlabs);
 		}
@@ -193,7 +193,7 @@ namespace NMib::NMemory
 				)
 			;
 
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mc_bEnableCallbacks)
 				mp_pMemoryManager->f_OnDecommit((uint8 *)pMemory, t_CParams::mc_SlabSize);
 		}
 

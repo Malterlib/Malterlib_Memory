@@ -37,7 +37,7 @@ namespace NMib::NMemory
 				CMemoryManagerCrossModule *_pModule
 				, umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			)
 		;
 		static void DMibCrossmoduleAPI fs_AllocBatch
@@ -54,7 +54,7 @@ namespace NMib::NMemory
 				CMemoryManagerCrossModule *_pModule
 				, umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, aint _Line
 				, EHeapDebugFlag _Flags
@@ -119,7 +119,7 @@ namespace NMib::NMemory
 				CMemoryManagerCrossModule *_pModule
 				, umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 			)
 		;
 		static void DMibCrossmoduleAPI fs_NonTracked_AllocBatch
@@ -136,7 +136,7 @@ namespace NMib::NMemory
 				CMemoryManagerCrossModule *_pModule
 				, umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, aint _Line
 				, EHeapDebugFlag _Flags

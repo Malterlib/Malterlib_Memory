@@ -44,8 +44,8 @@ namespace NMib::NMemory
 
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
 	{
-		static constexpr bool mc_SupportsNonTracked = true;
-		static constexpr bool mc_SupportsDebug = false;
+		static constexpr bool mc_bSupportsNonTracked = true;
+		static constexpr bool mc_bSupportsDebug = false;
 		inline_always static void DMibCrossmoduleAPI fs_CreateMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
 			DMibMemoryReportAllocatorName(g_pMemoryManagerName, g_pMemoryManagerName);

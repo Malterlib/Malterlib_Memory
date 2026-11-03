@@ -17,7 +17,7 @@ namespace NMib
 
 	constinit NMib::NThread::CMutualAggregate g_MemoryManagerForkLock = {DAggregateInit};
 	constinit umint g_MemoryManagerForkedCount = 0;
-	constinit bool g_MemoryManagerUnforked = false;
+	constinit bool g_bMemoryManagerUnforked = false;
 
 	NThread::TCMutual<NThread::CEventAutoResetAggregate, true> &fg_GetDebugMemoryManagerLock()
 	{
@@ -66,8 +66,8 @@ namespace NMib::NMemory
 
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
 	{
-		static constexpr bool mc_SupportsNonTracked = false;
-		static constexpr bool mc_SupportsDebug = false;
+		static constexpr bool mc_bSupportsNonTracked = false;
+		static constexpr bool mc_bSupportsDebug = false;
 
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_PrepareFork(CMemoryManagerCrossModule *_pModule)
 		{
@@ -76,7 +76,7 @@ namespace NMib::NMemory
 				return;
 			g_MemoryManagerForkLock.f_PrepareFork();
 
-			g_MemoryManagerUnforked = false;
+			g_bMemoryManagerUnforked = false;
 
 			g_DebugMemoryManager->f_Lock();
 			g_DebugMemoryManager->f_PrepareFork();
@@ -85,13 +85,13 @@ namespace NMib::NMemory
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_ForkedParent(CMemoryManagerCrossModule *_pModule)
 		{
 			--g_MemoryManagerForkedCount;
-			if (g_MemoryManagerUnforked)
+			if (g_bMemoryManagerUnforked)
 			{
 				g_MemoryManagerForkLock.f_Unlock();
 				return;
 			}
 			g_MemoryManagerForkLock.f_ForkedParent();
-			g_MemoryManagerUnforked = true;
+			g_bMemoryManagerUnforked = true;
 
 			g_DebugMemoryManager->f_ForkedParent();
 			g_DebugMemoryManager->f_Unlock();
@@ -102,13 +102,13 @@ namespace NMib::NMemory
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_ForkedChild(CMemoryManagerCrossModule *_pModule)
 		{
 			--g_MemoryManagerForkedCount;
-			if (g_MemoryManagerUnforked)
+			if (g_bMemoryManagerUnforked)
 			{
 				g_MemoryManagerForkLock.f_Unlock();
 				return;
 			}
 			g_MemoryManagerForkLock.f_ForkedChild();
-			g_MemoryManagerUnforked = true;
+			g_bMemoryManagerUnforked = true;
 
 			g_DebugMemoryManager->f_ForkedChild();
 			g_DebugMemoryManager->f_Unlock();

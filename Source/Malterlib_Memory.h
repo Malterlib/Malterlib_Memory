@@ -339,7 +339,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, EAllocationFlag _AllocFlags = EAllocationFlag_None
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
@@ -350,7 +350,7 @@ namespace NMib::NMemory
 			(
 				umint _Size
 				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, aint _Line
 				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
@@ -703,10 +703,10 @@ namespace NMib::NMemory
 
 	namespace NPrivate
 	{
-		template <typename t_CData, typename t_CSorter>
+		template <typename t_CData, typename t_FSorter>
 		struct TCHelpQSort
 		{
-			static void fs_QuickSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
+			static void fs_QuickSort(t_CData *_pArray, aint _Low, aint _High, t_FSorter const &_fCompare)
 			{
 				aint iPivot;
 
@@ -734,7 +734,7 @@ namespace NMib::NMemory
 			}
 
 		private:
-			static void fsp_InsertSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
+			static void fsp_InsertSort(t_CData *_pArray, aint _Low, aint _High, t_FSorter const &_fCompare)
 			{
 				t_CData Temp;
 				aint iItem, iInsert;
@@ -750,7 +750,7 @@ namespace NMib::NMemory
 				}
 			}
 
-			static aint fsp_Partition(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
+			static aint fsp_Partition(t_CData *_pArray, aint _Low, aint _High, t_FSorter const &_fCompare)
 			{
 				t_CData Temp, Pivot;
 				aint iLeft, iRight, iPivot;
@@ -784,10 +784,10 @@ namespace NMib::NMemory
 		};
 	}
 
-	template <typename tf_CType, typename tf_CCompare>
-	void fg_QSort(tf_CType *_pToSort, umint _nNumElements, tf_CCompare const &_fCompare)
+	template <typename tf_CType, typename tf_FCompare>
+	void fg_QSort(tf_CType *_pToSort, umint _nNumElements, tf_FCompare const &_fCompare)
 	{
-		NPrivate::TCHelpQSort<tf_CType, tf_CCompare>::fs_QuickSort(_pToSort, 0, _nNumElements - 1, _fCompare);
+		NPrivate::TCHelpQSort<tf_CType, tf_FCompare>::fs_QuickSort(_pToSort, 0, _nNumElements - 1, _fCompare);
 	}
 }
 

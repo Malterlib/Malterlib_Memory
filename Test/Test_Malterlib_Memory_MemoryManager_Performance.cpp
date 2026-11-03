@@ -326,10 +326,10 @@ namespace
 			template <typename tf_CHeap>
 			uint64 f_Iterations(tf_CHeap &_Heap)
 			{
-				auto End = m_pAllocations + m_ArraySize + 1;
-				for (auto Iter = m_pAllocations; Iter != End; ++Iter)
+				auto pEnd = m_pAllocations + m_ArraySize + 1;
+				for (auto pAllocation = m_pAllocations; pAllocation != pEnd; ++pAllocation)
 				{
-					auto &Info = *Iter;
+					auto &Info = *pAllocation;
 					if (Info.m_pAddress)
 					{
 						_Heap.f_FreeNoSize(Info.m_pAddress);
@@ -440,10 +440,10 @@ namespace
 			template <typename tf_CHeap>
 			uint64 f_Iterations(tf_CHeap &_Heap)
 			{
-				auto End = m_pAllocations + m_ArraySize + 1;
-				for (auto Iter = m_pAllocations; Iter != End; ++Iter)
+				auto pEnd = m_pAllocations + m_ArraySize + 1;
+				for (auto pAllocation = m_pAllocations; pAllocation != pEnd; ++pAllocation)
 				{
-					auto &Info = *Iter;
+					auto &Info = *pAllocation;
 					if (Info.m_pAddress)
 					{
 						_Heap.f_FreeNoSize(Info.m_pAddress);
@@ -538,10 +538,10 @@ namespace
 			template <typename tf_CHeap>
 			uint64 f_Iterations(tf_CHeap &_Heap)
 			{
-				auto End = m_pAllocations + m_ArraySize + 1;
-				for (auto Iter = m_pAllocations; Iter != End; ++Iter)
+				auto pEnd = m_pAllocations + m_ArraySize + 1;
+				for (auto pAllocation = m_pAllocations; pAllocation != pEnd; ++pAllocation)
 				{
-					auto &Info = *Iter;
+					auto &Info = *pAllocation;
 					if (Info.m_pAddress)
 					{
 						_Heap.f_FreeNoSize(Info.m_pAddress);
@@ -847,33 +847,33 @@ namespace
 
 				auto fAddStats = [&](NMib::NProcess::CProcessStatistics const &_Stats)
 					{
-						for (auto Iter = _Stats.m_Statistics.f_GetIterator(); Iter; ++Iter)
+						for (auto iStatistic = _Stats.m_Statistics.f_GetIterator(); iStatistic; ++iStatistic)
 						{
-							fp64 Value = Iter->m_Value;
-							NMib::NStr::CStr Name = Iter.f_GetKey();
-							switch (Iter->m_Unit)
+							fp64 Value = iStatistic->m_Value;
+							NMib::NStr::CStr Name = iStatistic.f_GetKey();
+							switch (iStatistic->m_Unit)
 							{
 							case NMib::NProcess::EProcessStatUnit_GeneralNumber:
 								{
-									if (!Iter->m_CustomUnit.f_IsEmpty())
-										Name += NMib::NStr::CStr::CFormat(" ({})") << Iter->m_CustomUnit;
+									if (!iStatistic->m_CustomUnit.f_IsEmpty())
+										Name += NMib::NStr::CStr::CFormat(" ({})") << iStatistic->m_CustomUnit;
 								}
 								break;
 							case NMib::NProcess::EProcessStatUnit_Bytes:
 								{
-									if (Iter->m_IdealScale == fp64(1024 * 1024 * 1024))
+									if (iStatistic->m_IdealScale == fp64(1024 * 1024 * 1024))
 									{
-										Value /= Iter->m_IdealScale;
+										Value /= iStatistic->m_IdealScale;
 										Name += " (GiB)";
 									}
-									else if (Iter->m_IdealScale == fp64(1024 * 1024))
+									else if (iStatistic->m_IdealScale == fp64(1024 * 1024))
 									{
-										Value /= Iter->m_IdealScale;
+										Value /= iStatistic->m_IdealScale;
 										Name += " (MiB)";
 									}
-									else if (Iter->m_IdealScale == fp64(1024))
+									else if (iStatistic->m_IdealScale == fp64(1024))
 									{
-										Value /= Iter->m_IdealScale;
+										Value /= iStatistic->m_IdealScale;
 										Name += " (KiB)";
 									}
 									else
@@ -887,19 +887,19 @@ namespace
 								break;
 							case NMib::NProcess::EProcessStatUnit_Seconds:
 								{
-									if (Iter->m_IdealScale == fp64(0.000000001))
+									if (iStatistic->m_IdealScale == fp64(0.000000001))
 									{
-										Value /= Iter->m_IdealScale;
+										Value /= iStatistic->m_IdealScale;
 										Name += " (ns)";
 									}
-									else if (Iter->m_IdealScale == fp64(0.000001))
+									else if (iStatistic->m_IdealScale == fp64(0.000001))
 									{
-										Value /= Iter->m_IdealScale;
+										Value /= iStatistic->m_IdealScale;
 										Name += " (µs)";
 									}
-									else if (Iter->m_IdealScale == fp64(0.001))
+									else if (iStatistic->m_IdealScale == fp64(0.001))
 									{
-										Value /= Iter->m_IdealScale;
+										Value /= iStatistic->m_IdealScale;
 										Name += " (ms)";
 									}
 									else
@@ -912,7 +912,7 @@ namespace
 									Name += " (%)";
 								}
 								break;
-							default: DMibNeverGetHere(Iter->m_Unit); break;
+							default: DMibNeverGetHere(iStatistic->m_Unit); break;
 							}
 							Result.m_PerformanceCounters[Name] = CTestStats(Value);
 						}
