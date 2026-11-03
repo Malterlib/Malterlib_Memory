@@ -63,9 +63,6 @@ namespace NMib::NMemory
 		void f_Report(bool _bFullReport) override;
 
 	public:
-		void fp_ReportAlloc(umint _Size, void *_pAllocationInfo);
-		void fp_ReportFree(umint _Size, void const *_pAllocationInfo);
-
 		struct CThreadLocal
 		{
 			CMemoryCategory *m_pCurrentCategory;
@@ -74,5 +71,9 @@ namespace NMib::NMemory
 		};
 
 		NThread::TCThreadLocal<CThreadLocal, CAllocator_NonTrackedHeap> m_ThreadLocal;
+
+	private:
+		void fp_ReportAlloc(umint _Size, void *_pAllocationInfo);
+		void fp_ReportFree(umint _Size, void const *_pAllocationInfo);
 	};
 }

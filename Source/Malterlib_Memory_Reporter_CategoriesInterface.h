@@ -9,29 +9,18 @@ namespace NMib::NMemory
 #if DMibConfig_MemoryManager_Stats_EnableCategories
 	struct CMemoryCategory
 	{
-		constexpr CMemoryCategory(ch8 const *_pName)
-			: m_pName(_pName)
-			, m_Link()
-		{
-		}
+		constexpr CMemoryCategory(ch8 const *_pName);
 
 		ch8 const *m_pName;
 		NIntrusive::TCAVLLinkAggregate<> m_Link;
 		align_cacheline NAtomic::TCAtomic<smint> m_nBytes{0};
 		align_cacheline NAtomic::TCAtomic<smint> m_nAllocations{0};
-		align_cacheline NAtomic::TCAtomic<bool> m_AddedToList{false};
+		align_cacheline NAtomic::TCAtomic<bool> m_bAddedToList{false};
 
 		struct CCompare
 		{
-			inline_small ch8 const *operator () (CMemoryCategory const &_Node) const
-			{
-				return _Node.m_pName;
-			}
-
-			COrdering_Partial operator () (ch8 const *_pLeft, ch8 const *_pRight) const
-			{
-				return NStr::fg_StrCmp(_pLeft, _pRight) <=> 0;
-			}
+			inline_small ch8 const *operator () (CMemoryCategory const &_Node) const;
+			COrdering_Partial operator () (ch8 const *_pLeft, ch8 const *_pRight) const;
 		};
 	};
 
@@ -48,26 +37,11 @@ namespace NMib::NMemory
 
 	struct CMemoryCategoryScope final : public CCoroutineThreadLocalHandler
 	{
-		CMemoryCategoryScope(CMemoryCategory *_pScope)
-			: mp_pOldCategory(fg_Mem_SetCategory(_pScope))
-			, mp_pNewCategory(_pScope)
-		{
-		}
+		CMemoryCategoryScope(CMemoryCategory *_pScope);
+		~CMemoryCategoryScope();
 
-		~CMemoryCategoryScope()
-		{
-			fg_Mem_SetCategory(mp_pOldCategory);
-		}
-
-		void f_Suspend() noexcept override
-		{
-			fg_Mem_SetCategory(mp_pOldCategory);
-		}
-
-		void f_ResumeNoExcept() noexcept override
-		{
-			mp_pOldCategory = fg_Mem_SetCategory(mp_pNewCategory);
-		}
+		void f_Suspend() noexcept override;
+		void f_ResumeNoExcept() noexcept override;
 
 	private:
 		CMemoryCategory *mp_pNewCategory;
@@ -97,3 +71,5 @@ namespace NMib::NMemory
 #	define DMemoryCategory DMibMemoryCategory
 #endif
 }
+
+#include "Malterlib_Memory_Reporter_CategoriesInterface.hpp"

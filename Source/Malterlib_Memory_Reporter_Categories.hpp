@@ -293,7 +293,7 @@ namespace NMib::NMemory
 
 		g_AllCategories.f_Insert(Category);
 
-		Category.m_AddedToList.f_Exchange(true);
+		Category.m_bAddedToList.f_Exchange(true);
 
 		return &Category;
 	}
@@ -455,9 +455,9 @@ namespace NMib::NMemory
 		}
 		AllocationInfo.m_pCategory = pCurrentCategory;
 
-		if (!pCurrentCategory->m_AddedToList.f_Load(NAtomic::gc_MemoryOrder_Relaxed))
+		if (!pCurrentCategory->m_bAddedToList.f_Load(NAtomic::gc_MemoryOrder_Relaxed))
 		{
-			if (!pCurrentCategory->m_AddedToList.f_Exchange(true))
+			if (!pCurrentCategory->m_bAddedToList.f_Exchange(true))
 			{
 				pCurrentCategory->m_Link.f_Construct();
 				if (g_bAllCategoriesInit)
