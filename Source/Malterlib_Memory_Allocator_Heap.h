@@ -803,8 +803,8 @@ namespace NMib::NMemory
 		TCAllocator_FunctorDeleter(TCAllocator_FunctorDeleter &&_Other);
 		TCAllocator_FunctorDeleter &operator = (TCAllocator_FunctorDeleter const &_Other);
 		TCAllocator_FunctorDeleter &operator = (TCAllocator_FunctorDeleter &&_Other);
-		template <typename t_CParam0>
-		TCAllocator_FunctorDeleter(t_CParam0 &&_Param0);
+		template <typename tf_CParam0>
+		TCAllocator_FunctorDeleter(tf_CParam0 &&_Param0);
 		t_CDeleterType &f_GetDeleter();
 		t_CDeleterType const &f_GetDeleter() const;
 
@@ -815,20 +815,20 @@ namespace NMib::NMemory
 
 namespace NMib
 {
-	template <typename tf_CObjectType, typename t_CDeleterType, typename t_CFallbackAllocator>
-	static void fg_DeleteObject(NMemory::TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator> &_Allocator, tf_CObjectType *_pObject)
+	template <typename tf_CObjectType, typename tf_CDeleterType, typename tf_CFallbackAllocator>
+	static void fg_DeleteObject(NMemory::TCAllocator_FunctorDeleter<tf_CDeleterType, tf_CFallbackAllocator> &_Allocator, tf_CObjectType *_pObject)
 	{
 		_Allocator.f_GetDeleter()(_pObject);
 	}
 
-	template <typename tf_CObjectType, typename t_CDeleterType, typename t_CFallbackAllocator>
-	static void fg_DeleteObjectDefiniteType(NMemory::TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator> &_Allocator, tf_CObjectType *_pObject)
+	template <typename tf_CObjectType, typename tf_CDeleterType, typename tf_CFallbackAllocator>
+	static void fg_DeleteObjectDefiniteType(NMemory::TCAllocator_FunctorDeleter<tf_CDeleterType, tf_CFallbackAllocator> &_Allocator, tf_CObjectType *_pObject)
 	{
 		_Allocator.f_GetDeleter()(_pObject);
 	}
 
-	template <typename tf_CObjectType, typename t_CDeleterType, typename t_CFallbackAllocator>
-	static void fg_DeleteObjectDefiniteType(NMemory::TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator> &_Allocator, tf_CObjectType *_pObject, umint _Alignment)
+	template <typename tf_CObjectType, typename tf_CDeleterType, typename tf_CFallbackAllocator>
+	static void fg_DeleteObjectDefiniteType(NMemory::TCAllocator_FunctorDeleter<tf_CDeleterType, tf_CFallbackAllocator> &_Allocator, tf_CObjectType *_pObject, umint _Alignment)
 	{
 		_Allocator.f_GetDeleter()(_pObject);
 	}

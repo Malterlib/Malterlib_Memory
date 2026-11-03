@@ -1138,16 +1138,16 @@ namespace NMib::NMemory
 		TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>::ms_Pool = {DAggregateInit}
 	;
 
-	template <typename t_CType>
-	void fg_StaticPoolDelete(t_CType *_pToDelete)
+	template <typename tf_CType>
+	void fg_StaticPoolDelete(tf_CType *_pToDelete)
 	{
-		TCStaticPool<t_CType>::ms_Pool->f_Delete(_pToDelete);
+		TCStaticPool<tf_CType>::ms_Pool->f_Delete(_pToDelete);
 	}
 
-	template <typename t_CType, typename ...tfp_CParams>
-	void fg_StaticPoolNew(t_CType * &_pDestPtr, tfp_CParams && ...p_Params)
+	template <typename tf_CType, typename ...tfp_CParams>
+	void fg_StaticPoolNew(tf_CType * &_pDestPtr, tfp_CParams && ...p_Params)
 	{
-		_pDestPtr = TCStaticPool<t_CType>::ms_Pool->f_New(fg_Forward<tfp_CParams>(p_Params)...);
+		_pDestPtr = TCStaticPool<tf_CType>::ms_Pool->f_New(fg_Forward<tfp_CParams>(p_Params)...);
 	}
 
 	template

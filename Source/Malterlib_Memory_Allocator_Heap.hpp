@@ -1333,9 +1333,9 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CDeleterType, typename t_CFallbackAllocator>
-	template <typename t_CParam0>
-	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::TCAllocator_FunctorDeleter(t_CParam0 &&_Param0)
-		: m_Deleter(fg_Forward<t_CParam0>(_Param0))
+	template <typename tf_CParam0>
+	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::TCAllocator_FunctorDeleter(tf_CParam0 &&_Param0)
+		: m_Deleter(fg_Forward<tf_CParam0>(_Param0))
 	{
 	}
 
@@ -1354,10 +1354,10 @@ namespace NMib::NMemory
 
 namespace NMib
 {
-	template <typename t_CType>
-	inline_small void fg_Delete(t_CType * &_pToDelete)
+	template <typename tf_CType>
+	inline_small void fg_Delete(tf_CType * &_pToDelete)
 	{
-		static_assert(!NTraits::cIsAbstract<t_CType> || NTraits::cHasVirtualDestructor<t_CType>);
+		static_assert(!NTraits::cIsAbstract<tf_CType> || NTraits::cHasVirtualDestructor<tf_CType>);
 		if (_pToDelete)
 		{
 			fg_DeleteObject(NMemory::CDefaultAllocator(), _pToDelete);

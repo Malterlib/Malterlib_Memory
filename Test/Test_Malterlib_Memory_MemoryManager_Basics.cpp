@@ -138,14 +138,14 @@ namespace
 		{
 		}
 
-		template <typename tf_CParams>
-		struct TCParamsNoCleanup : public tf_CParams
+		template <typename t_CParams>
+		struct TCParamsNoCleanup : public t_CParams
 		{
 			static constexpr bool mc_bBackgroundCleanup = false; // Background cleanups will hurt predictability
 		};
 
-		template <typename tf_CParams>
-		struct TCParamsBackgroundTest : public tf_CParams
+		template <typename t_CParams>
+		struct TCParamsBackgroundTest : public t_CParams
 		{
 			static constexpr uint32 mc_BackgroundCleanupLifetime = 1;
 			static constexpr uint32 mc_BackgroundCleanupLifetimeDecommit = 1;
@@ -229,7 +229,7 @@ namespace
 
 					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread = NMib::NThread::CThreadObject::fs_StartThread
 						(
-							[&](NMib::NThread::CThreadObject *) -> aint
+							[&](NMib::NThread::CThreadObject *_pThread) -> aint
 							{
 								for (auto &Surface : OldSurfaces)
 									MemoryManager.f_Free(Surface.m_pAlloc, Surface.m_Size);
@@ -327,7 +327,7 @@ namespace
 
 					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread = NMib::NThread::CThreadObject::fs_StartThread
 						(
-							[&](NMib::NThread::CThreadObject *) -> aint
+							[&](NMib::NThread::CThreadObject *_pThread) -> aint
 							{
 								for (auto &Surface : OldSurfaces)
 									MemoryManager.f_Free(Surface.m_pAlloc, Surface.m_Size);
@@ -433,7 +433,7 @@ namespace
 
 					NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject> pThread = NMib::NThread::CThreadObject::fs_StartThread
 						(
-							[&](NMib::NThread::CThreadObject *) -> aint
+							[&](NMib::NThread::CThreadObject *_pThread) -> aint
 							{
 								for (auto &Surface : OldSurfaces)
 									MemoryManager.f_Free(Surface.m_pAlloc, Surface.m_Size);
@@ -470,7 +470,7 @@ namespace
 #endif
 		}
 
-		template <typename tf_CParams, umint t_PageSize>
+		template <typename tf_CParams, umint tf_PageSize>
 		void f_TestMemory()
 		{
 			using CParams = TCMemoryManagerParams<tf_CParams>;
@@ -481,7 +481,7 @@ namespace
 				// Just run for checking the asserts
 				auto fCheckParams = [=]<umint tf_nSizesPerLevel>(umint _nSizesPerLevel)
 					{
-						using CParams = TCMemoryManagerParams<TCParams<t_PageSize, tf_nSizesPerLevel>>;
+						using CParams = TCMemoryManagerParams<TCParams<tf_PageSize, tf_nSizesPerLevel>>;
 						// Just run for checking the asserts
 						for (int i = 0; i < CParams::mc_SlabSize / CParams::mc_SubSlabSize; ++i)
 						{
@@ -497,7 +497,7 @@ namespace
 				fCheckParams.template operator ()<1>(1);
 
 				{
-					using CParams = TCMemoryManagerParams<TCParams<t_PageSize, 16>>;
+					using CParams = TCMemoryManagerParams<TCParams<tf_PageSize, 16>>;
 					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
 					static_assert(CParams::mc_NumAllocsPerSubSlab[1] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 16);
 					static_assert(CParams::mc_NumAllocsPerSubSlab[2] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
@@ -516,7 +516,7 @@ namespace
 					static_assert(CParams::mc_NumAllocsPerSubSlab[15] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 16);
 				}
 				{
-					using CParams = TCMemoryManagerParams<TCParams<t_PageSize, 8>>;
+					using CParams = TCMemoryManagerParams<TCParams<tf_PageSize, 8>>;
 					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
 					static_assert(CParams::mc_NumAllocsPerSubSlab[1] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
 					static_assert(CParams::mc_NumAllocsPerSubSlab[2] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 4);
@@ -527,19 +527,19 @@ namespace
 					static_assert(CParams::mc_NumAllocsPerSubSlab[7] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 8);
 				}
 				{
-					using CParams = TCMemoryManagerParams<TCParams<t_PageSize, 4>>;
+					using CParams = TCMemoryManagerParams<TCParams<tf_PageSize, 4>>;
 					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
 					static_assert(CParams::mc_NumAllocsPerSubSlab[1] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 4);
 					static_assert(CParams::mc_NumAllocsPerSubSlab[2] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 2);
 					static_assert(CParams::mc_NumAllocsPerSubSlab[3] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 4);
 				}
 				{
-					using CParams = TCMemoryManagerParams<TCParams<t_PageSize, 2>>;
+					using CParams = TCMemoryManagerParams<TCParams<tf_PageSize, 2>>;
 					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
 					static_assert(CParams::mc_NumAllocsPerSubSlab[1] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize * 2);
 				}
 				{
-					using CParams = TCMemoryManagerParams<TCParams<t_PageSize, 1>>;
+					using CParams = TCMemoryManagerParams<TCParams<tf_PageSize, 1>>;
 					static_assert(CParams::mc_NumAllocsPerSubSlab[0] << CParams::mc_MinNormalSlabBucket == CParams::mc_SubSlabSize);
 				}
 
@@ -644,7 +644,7 @@ namespace
 				}
 				{
 					DMibTestPath("Sizes 4");
-					TCMemoryManager<TCMemoryManagerParams<TCParams<t_PageSize, 4>>> Manager{CMemoryManagerConfig()};
+					TCMemoryManager<TCMemoryManagerParams<TCParams<tf_PageSize, 4>>> Manager{CMemoryManagerConfig()};
 
 					DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(1));
 					DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(1));
@@ -685,7 +685,7 @@ namespace
 				}
 				{
 					DMibTestPath("Sizes 2");
-					TCMemoryManager<TCMemoryManagerParams<TCParams<t_PageSize, 2>>> Manager{CMemoryManagerConfig()};
+					TCMemoryManager<TCMemoryManagerParams<TCParams<tf_PageSize, 2>>> Manager{CMemoryManagerConfig()};
 
 					DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(1));
 					DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(1));
@@ -718,7 +718,7 @@ namespace
 				}
 				{
 					DMibTestPath("Sizes 1");
-					TCMemoryManager<TCMemoryManagerParams<TCParams<t_PageSize, 1>>> Manager{CMemoryManagerConfig()};
+					TCMemoryManager<TCMemoryManagerParams<TCParams<tf_PageSize, 1>>> Manager{CMemoryManagerConfig()};
 
 					DMibTest(DMibExpr(Manager.f_SizePadded(0)) == DMibExpr(1));
 					DMibTest(DMibExpr(Manager.f_SizePadded(1)) == DMibExpr(1));

@@ -118,12 +118,19 @@ extern "C"
 
 namespace
 {
-	void __attribute__((constructor(-1111111111))) fg_InitMalterlibEarly(int argc, char const *argv[], char const *envp[], char const *apple[], struct ProgramVars const *vars)
+	void __attribute__((constructor(-1111111111))) fg_InitMalterlibEarly
+		(
+			int _nArguments
+			, char const *_pArguments[]
+			, char const *_pEnvironment[]
+			, char const *_pApple[]
+			, struct ProgramVars const *_pProgramVars
+		)
 	{
 #if !defined(DMibMemoryOverrideDll)
 		if (fg_MalterlibSystem_InitDyldDummyHelper)
 			fg_MalterlibSystem_InitDyldDummyHelper();
 #endif
-		fg_MalterlibSystem_InitEarly(g_OriginalFunctions, argc, argv, envp, apple, vars);
+		fg_MalterlibSystem_InitEarly(g_OriginalFunctions, _nArguments, _pArguments, _pEnvironment, _pApple, _pProgramVars);
 	}
 }

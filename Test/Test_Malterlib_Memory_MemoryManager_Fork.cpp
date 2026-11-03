@@ -94,7 +94,7 @@ namespace
 					NAtomic::TCAtomic<bool> bStop{false};
 					auto pAllocatorThread = CThreadObject::fs_StartThread
 						(
-							[&](CThreadObject *) -> aint
+							[&](CThreadObject *_pThread) -> aint
 							{
 								while (!bStop.f_Load())
 									fAllocate(_Size, _nBlocks, _Pace);
@@ -122,7 +122,7 @@ namespace
 							// The new thread inherits the preferred arena, and only a busy preferred arena makes it pick another
 							auto pThread = CThreadObject::fs_StartThread
 								(
-									[&](CThreadObject *) -> aint
+									[&](CThreadObject *_pThread) -> aint
 									{
 										return fAllocate(_Size, _nBlocks, 0.0f) ? 0 : 1;
 									}

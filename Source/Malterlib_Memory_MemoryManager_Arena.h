@@ -28,7 +28,7 @@ namespace NMib::NMemory
 		TCMemoryManagerArena(TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic, ENumaNode _NumaNode, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena, bool _bLimitedArenas);
 		~TCMemoryManagerArena();
 
-		int64 f_GarbageCollect(ENumaArenaCleanup &_oCleanup, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
+		int64 f_GarbageCollect(ENumaArenaCleanup &o_Cleanup, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena);
 		int64 f_DecommitDeferred(int64 _Timestamp);
 
 		bool f_ProcessMessages();
@@ -161,7 +161,7 @@ namespace NMib::NMemory
 		DMibMemoryManagerLink(TCMemoryManagerArena, m_CleanupLink);
 
 	private:
-		template <uint32 t_SlabType>
+		template <uint32 tf_SlabType>
 		TCMemoryManagerSlabShared<t_CParams> *fp_CreateSlab(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
 
 		TCMemoryManagerSlabShared<t_CParams> *fp_CreateSlabDynamic(uint32 _SlabType, void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
@@ -216,7 +216,7 @@ namespace NMib::NMemory
 		// mc_bGlobalAddressOrder: cleanup-side re-sort of the per-size-class sub-slab lists
 		void fp_SortSubSlabListsIfDirty();
 		static void fsp_SortSubSlabList(CNormalFreeStoreList &_List);
-		static void fsp_MergeSubSlabLists(CNormalFreeStoreList &_A, CNormalFreeStoreList &_B, CNormalFreeStoreList &o_Out);
+		static void fsp_MergeSubSlabLists(CNormalFreeStoreList &_ListA, CNormalFreeStoreList &_ListB, CNormalFreeStoreList &o_Out);
 
 		// SubSlabLists helper: thread the next batch of carved blocks into the free chain
 		bool fp_ExtendSubSlabChain(CMemoryManagerSubSlabFreeState &_FreeState, uint8 *_pBase, umint _AlignedSize);
@@ -314,7 +314,7 @@ namespace NMib::NMemory
 	private:
 		static constexpr umint mc_SmallAllocCategoryJumpTableSize = mc_bUseSmallSizes ? (t_CParams::mc_SmallSizeSlabsLargestSize == 16 ? 6 : 5) : 1;
 
-		using FSmallAllocJump = void *(*)(TCMemoryManagerArena *);
+		using FSmallAllocJump = void *(*)(TCMemoryManagerArena *_pThis);
 		struct CSmallAllocJumbTable
 		{
 			FSmallAllocJump m_Table[mc_SmallAllocCategoryJumpTableSize];

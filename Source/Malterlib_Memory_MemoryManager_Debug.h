@@ -137,7 +137,7 @@ namespace NMib::NMemory
 
 	public:
 		template <typename ...tfp_CAllocator>
-		TCMemoryManagerDebug(tfp_CAllocator && ..._Params);
+		TCMemoryManagerDebug(tfp_CAllocator && ...p_Params);
 
 		~TCMemoryManagerDebug();
 

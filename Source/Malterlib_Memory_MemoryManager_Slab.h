@@ -175,10 +175,10 @@ namespace NMib::NMemory
 
 		static constexpr umint mc_SubSlabRemoteFreeEntrySize = t_CParams::mc_bReapInCleanup ? sizeof(TCSubSlabRemoteFreeStore<t_CParams>) : 0;
 
-		template <umint t_SlabMultiplier>
+		template <umint tf_SlabMultiplier>
 		static constexpr umint fs_CalculateSubSlabs()
 		{
-			constexpr umint c_TheoreticalSubSlabs = (t_CParams::mc_SlabSize - 1) / (t_CParams::mc_SubSlabSize * t_SlabMultiplier);
+			constexpr umint c_TheoreticalSubSlabs = (t_CParams::mc_SlabSize - 1) / (t_CParams::mc_SubSlabSize * tf_SlabMultiplier);
 			constexpr umint c_RemoteFreeFixedSize = t_CParams::mc_bReapInCleanup ? DMibPMemoryCacheLineSize * 2 + ((c_TheoreticalSubSlabs + 63) / 64) * sizeof(NAtomic::TCAtomic<uint64>) : 0;
 			return
 				(
@@ -196,7 +196,7 @@ namespace NMib::NMemory
 						+ sizeof(CMemoryManagerSlabSharedPostfixHeader)
 					)
 				)
-				/ (t_CParams::mc_SubSlabSize * t_SlabMultiplier)
+				/ (t_CParams::mc_SubSlabSize * tf_SlabMultiplier)
 			;
 		}
 	};
@@ -291,9 +291,9 @@ namespace NMib::NMemory
 		static TCMemoryManagerSlab *fs_CalcSlabLocation(uint8 *_pLocation);
 	};
 
-	template <typename t_CParams, umint t_Index>
+	template <typename tf_CParams, umint tf_Index>
 	static constexpr umint fg_MemoryManagerSlabSize()
 	{
-		return sizeof(TCMemoryManagerSlab<t_CParams, t_Index>);
+		return sizeof(TCMemoryManagerSlab<tf_CParams, tf_Index>);
 	}
 }

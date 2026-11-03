@@ -6,17 +6,17 @@
 namespace NMib::NMemory
 {
 	template <typename t_CParams>
-	template <uint32 t_SlabType>
+	template <uint32 tf_SlabType>
 	TCMemoryManagerSlabShared<t_CParams> *TCMemoryManagerArena<t_CParams>::fp_CreateSlab(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab)
 	{
 		uint8 *pMemory = (uint8 *)_pMemory;
-		umint AlignedSize = fg_AlignUp(sizeof(TCMemoryManagerSlab<t_CParams, t_SlabType>), t_CParams::mc_SubSlabSize);
-		TCMemoryManagerSlab<t_CParams, t_SlabType> *pSlabMem = TCMemoryManagerSlab<t_CParams, t_SlabType>::fs_CalcSlabLocation((uint8 *)(pMemory + t_CParams::mc_SlabSize - AlignedSize));
+		umint AlignedSize = fg_AlignUp(sizeof(TCMemoryManagerSlab<t_CParams, tf_SlabType>), t_CParams::mc_SubSlabSize);
+		TCMemoryManagerSlab<t_CParams, tf_SlabType> *pSlabMem = TCMemoryManagerSlab<t_CParams, tf_SlabType>::fs_CalcSlabLocation((uint8 *)(pMemory + t_CParams::mc_SlabSize - AlignedSize));
 
 		umint iSubSlab = ((uint8 *)pSlabMem - pMemory) / t_CParams::mc_SubSlabSize;
 		umint nSubSlabs = AlignedSize / t_CParams::mc_SubSlabSize;
 
-		TCMemoryManagerSlab<t_CParams, t_SlabType> *pSlab;
+		TCMemoryManagerSlab<t_CParams, tf_SlabType> *pSlab;
 
 		if (_pOldSlab)
 		{
@@ -50,7 +50,7 @@ namespace NMib::NMemory
 				umint nAlreadyCommitted = nCommittedHeaderSubSlabs - nSubSlabs;
 				OldCommitted.template f_SetBitRange<true>(iSubSlab - nAlreadyCommitted, nAlreadyCommitted);
 			}
-			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, t_SlabType>(m_Magic, this, nSubSlabs);
+			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, tf_SlabType>(m_Magic, this, nSubSlabs);
 			pSlab->f_SetCommitted(OldCommitted);
 		}
 		else
@@ -58,7 +58,7 @@ namespace NMib::NMemory
 			m_pMemoryManager->m_Allocator.f_Commit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nSubSlabs * t_CParams::mc_SubSlabSize);
 			if constexpr (mc_EnableCallbacks)
 				m_pMemoryManager->f_OnCommit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nSubSlabs * t_CParams::mc_SubSlabSize);
-			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, t_SlabType>(m_Magic, this, nSubSlabs);
+			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, tf_SlabType>(m_Magic, this, nSubSlabs);
 		}
 
 		return pSlab;

@@ -11,8 +11,8 @@ namespace NMib::NMemory
 
 	template <typename t_CSuper>
 	template <typename ...tfp_CAllocator>
-	TCMemoryManagerTracked<t_CSuper, void>::TCMemoryManagerTracked(ch8 const *_pName, tfp_CAllocator && ..._Params)
-		: t_CSuper(fg_Forward<tfp_CAllocator>(_Params)...)
+	TCMemoryManagerTracked<t_CSuper, void>::TCMemoryManagerTracked(ch8 const *_pName, tfp_CAllocator && ...p_Params)
+		: t_CSuper(fg_Forward<tfp_CAllocator>(p_Params)...)
 		, mp_pName(_pName)
 	{
 		DMibMemoryReportAllocatorName(this, _pName);
@@ -293,8 +293,8 @@ namespace NMib::NMemory
 
 	template <typename t_CSuper, typename t_CAllocationInfo>
 	template <typename ...tfp_CAllocator>
-	TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::TCMemoryManagerTracked(ch8 const *_pName, tfp_CAllocator && ..._Params)
-		: t_CSuper(fg_Forward<tfp_CAllocator>(_Params)...)
+	TCMemoryManagerTracked<t_CSuper, t_CAllocationInfo>::TCMemoryManagerTracked(ch8 const *_pName, tfp_CAllocator && ...p_Params)
+		: t_CSuper(fg_Forward<tfp_CAllocator>(p_Params)...)
 		, mp_pName(_pName)
 	{
 		DMibMemoryReportAllocatorName(this, _pName);

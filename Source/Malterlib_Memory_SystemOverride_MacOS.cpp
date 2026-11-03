@@ -566,7 +566,7 @@ malloc_zone_t_known_version *g_pDefaultZone = nullptr;
 struct sigaction g_OldSignalHandlerBus;
 struct sigaction g_OldSignalHandlerSegv;
 
-void fg_HandleCrashSignalBus(int signal)
+void fg_HandleCrashSignalBus(int _Signal)
 {
 	auto *pJumpBuffer = g_LowLevelGlobalState->f_GetJumpBuffer();
 	if (pJumpBuffer)
@@ -575,7 +575,7 @@ void fg_HandleCrashSignalBus(int signal)
 		// Unblock this signal so it's called again the next time
 		sigset_t ToUnblock;
 		sigemptyset(&ToUnblock);
-		sigaddset(&ToUnblock, signal);
+		sigaddset(&ToUnblock, _Signal);
 		sigprocmask(SIG_UNBLOCK, &ToUnblock, nullptr);
 		_longjmp(*pJumpBuffer, 1);
 #else
@@ -584,11 +584,11 @@ void fg_HandleCrashSignalBus(int signal)
 	}
 
 	struct sigaction Old;
-	sigaction(signal, &g_OldSignalHandlerBus, &Old);
-	raise(signal);
+	sigaction(_Signal, &g_OldSignalHandlerBus, &Old);
+	raise(_Signal);
 }
 
-void fg_HandleCrashSignalSegv(int signal)
+void fg_HandleCrashSignalSegv(int _Signal)
 {
 	auto *pJumpBuffer = g_LowLevelGlobalState->f_GetJumpBuffer();
 	if (pJumpBuffer)
@@ -597,7 +597,7 @@ void fg_HandleCrashSignalSegv(int signal)
 		// Unblock this signal so it's called again the next time
 		sigset_t ToUnblock;
 		sigemptyset(&ToUnblock);
-		sigaddset(&ToUnblock, signal);
+		sigaddset(&ToUnblock, _Signal);
 		sigprocmask(SIG_UNBLOCK, &ToUnblock, nullptr);
 		_longjmp(*pJumpBuffer, 1);
 #else
@@ -606,8 +606,8 @@ void fg_HandleCrashSignalSegv(int signal)
 	}
 
 	struct sigaction Old;
-	sigaction(signal, &g_OldSignalHandlerSegv, &Old);
-	raise(signal);
+	sigaction(_Signal, &g_OldSignalHandlerSegv, &Old);
+	raise(_Signal);
 }
 
 #ifdef DEmulateCrash
@@ -965,9 +965,9 @@ unsigned fg_MalterlibZoneBatchMalloc(malloc_zone_t_known_version *_pZone, size_t
 	return _nRequested;
 }
 
-void fg_MalterlibZoneBatchFree(malloc_zone_t_known_version *_pZone, void **to_be_freed, unsigned num_to_be_freed)
+void fg_MalterlibZoneBatchFree(malloc_zone_t_known_version *_pZone, void **_pToBeFreed, unsigned _nToBeFreed)
 {
-	if (num_to_be_freed == 0)
+	if (_nToBeFreed == 0)
 		return;
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 
@@ -977,30 +977,30 @@ void fg_MalterlibZoneBatchFree(malloc_zone_t_known_version *_pZone, void **to_be
 	{
 		auto &MainHeap = *DMainHeapSmall;
 		auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
-		for (umint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
-			return MainHeap.f_FreeNoSize(to_be_freed[iToFree]);
+		for (umint iToFree = 0; iToFree < _nToBeFreed; ++iToFree)
+			return MainHeap.f_FreeNoSize(_pToBeFreed[iToFree]);
 	}
 	else
 #	endif
 	{
 		auto &MainHeap = *DMainHeapMax;
 		auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
-		for (umint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
-			return MainHeap.f_FreeNoSize(to_be_freed[iToFree]);
+		for (umint iToFree = 0; iToFree < _nToBeFreed; ++iToFree)
+			return MainHeap.f_FreeNoSize(_pToBeFreed[iToFree]);
 	}
 #else
 	auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
-	for (umint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
-		fg_FreeNoSize(to_be_freed[iToFree]);
+	for (umint iToFree = 0; iToFree < _nToBeFreed; ++iToFree)
+		fg_FreeNoSize(_pToBeFreed[iToFree]);
 #endif
 }
 
-void *fg_MalterlibZoneCalloc(malloc_zone_t_known_version *_pZone, size_t num_items, size_t _Size) // same as malloc, but block returned is set to zero
+void *fg_MalterlibZoneCalloc(malloc_zone_t_known_version *_pZone, size_t _nItems, size_t _Size) // same as malloc, but block returned is set to zero
 {
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	DMibMacOSOverrideZoneCheck(_pZone);
 	umint Size;
-	if (!fg_TryMultiplyMacOSAllocationSize(num_items, _Size, Size))
+	if (!fg_TryMultiplyMacOSAllocationSize(_nItems, _Size, Size))
 		return nullptr;
 #ifdef DMemoryManagerIsSame
 #	if DEnableDebugMemoryManager
@@ -1196,7 +1196,7 @@ void *fg_MalterlibZoneMallocTypeMallocWithOptions(malloc_zone_t_known_version *_
 malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 	{
 		// Enumerates all the malloc pointers in use
-		.enumerator = [](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t
+		.enumerator = [](task_t _Task, void *_pContext, unsigned _TypeMask, vm_address_t _ZoneAddress, memory_reader_t _fReader, vm_range_recorder_t _fRecorder) -> kern_return_t
 		{
 			return KERN_FAILURE;
 		}
@@ -1205,10 +1205,10 @@ malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 		{
 			return true;
 		}
-		, .print = [](malloc_zone_t_known_version *_pZone, boolean_t verbose) // Prints zone
+		, .print = [](malloc_zone_t_known_version *_pZone, boolean_t _bVerbose) // Prints zone
 		{
 		}
-		, .log = [](malloc_zone_t_known_version *_pZone, void *address) // Enables logging of activity
+		, .log = [](malloc_zone_t_known_version *_pZone, void *_pAddress) // Enables logging of activity
 		{
 		}
 		, .force_lock = [](malloc_zone_t_known_version *_pZone) // Forces locking zone
@@ -1217,9 +1217,9 @@ malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 		, .force_unlock = [](malloc_zone_t_known_version *_pZone) // Forces unlocking zone
 		{
 		}
-		, .statistics = [](malloc_zone_t_known_version *_pZone, malloc_statistics_t *stats) // Fills statistics
+		, .statistics = [](malloc_zone_t_known_version *_pZone, malloc_statistics_t *o_pStatistics) // Fills statistics
 		{
-			fg_MemClear(*stats);
+			fg_MemClear(*o_pStatistics);
 		}
 		, .zone_locked = [](malloc_zone_t_known_version *_pZone) -> boolean_t // Are any zone locks held
 		{
@@ -1232,11 +1232,11 @@ malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 		, .disable_discharge_checking = [](malloc_zone_t_known_version *_pZone)
 		{
 		}
-		, .discharge = [](malloc_zone_t_known_version *_pZone, void *memory)
+		, .discharge = [](malloc_zone_t_known_version *_pZone, void *_pMemory)
 		{
 		}
 #ifdef __BLOCKS__
-		, .enumerate_discharged_pointers = [](malloc_zone_t_known_version *_pZone, void (^report_discharged)(void *memory, void *info))
+		, .enumerate_discharged_pointers = [](malloc_zone_t_known_version *_pZone, void (^_fReportDischarged)(void *_pMemory, void *_pInfo))
 		{
 		}
 #else
@@ -1247,10 +1247,10 @@ malloc_introspection_t_known_version g_MalterlibMallocZoneIntrospection =
 		{
 		}
 		// Debug print for another process. Present in version >= 11.
-		, .print_task = [](task_t task, unsigned level, vm_address_t zone_address, memory_reader_t reader, print_task_printer_t printer)
+		, .print_task = [](task_t _Task, unsigned _Level, vm_address_t _ZoneAddress, memory_reader_t _fReader, print_task_printer_t _fPrinter)
 		{
 		}
-		, .task_statistics = [](task_t task, vm_address_t zone_address, memory_reader_t reader, malloc_statistics_t *stats) // Present in version >= 12.
+		, .task_statistics = [](task_t _Task, vm_address_t _ZoneAddress, memory_reader_t _fReader, malloc_statistics_t *o_pStatistics) // Present in version >= 12.
 		{
 		}
 		, .zone_type = 0 // Identifies the zone type.  0 means unknown/undefined zone type.  Present in version >= 14.
@@ -3670,7 +3670,7 @@ extern "C"
 	malloc_introspection_t_known_version g_MalterlibMallocZoneZoneIntrospection =
 		{
 			// Enumerates all the malloc pointers in use
-			[](task_t task, void *, unsigned type_mask, vm_address_t zone_address, memory_reader_t reader, vm_range_recorder_t recorder) -> kern_return_t
+			[](task_t _Task, void *_pContext, unsigned _TypeMask, vm_address_t _ZoneAddress, memory_reader_t _fReader, vm_range_recorder_t _fRecorder) -> kern_return_t
 			{
 				return KERN_FAILURE;
 			}
@@ -3693,10 +3693,10 @@ extern "C"
 			{
 				return true;
 			}
-			, [](malloc_zone_t_known_version *_pZone, boolean_t verbose) // Prints zone
+			, [](malloc_zone_t_known_version *_pZone, boolean_t _bVerbose) // Prints zone
 			{
 			}
-			, [](malloc_zone_t_known_version *_pZone, void *address) // Enables logging of activity
+			, [](malloc_zone_t_known_version *_pZone, void *_pAddress) // Enables logging of activity
 			{
 			}
 			, [](malloc_zone_t_known_version *_pZone) // Forces locking zone
@@ -3720,10 +3720,10 @@ extern "C"
 			, [](malloc_zone_t_known_version *_pZone)
 			{
 			}
-			, [](malloc_zone_t_known_version *_pZone, void *memory)
+			, [](malloc_zone_t_known_version *_pZone, void *_pMemory)
 			{
 			}
-			, [](malloc_zone_t_known_version *_pZone, void (^report_discharged)(void *memory, void *info))
+			, [](malloc_zone_t_known_version *_pZone, void (^_fReportDischarged)(void *_pMemory, void *_pInfo))
 			{
 			}
 		}
@@ -3884,15 +3884,15 @@ extern "C"
 
 							return _nRequested;
 						}
-						, .batch_free = [](malloc_zone_t_known_version *_pZone, void **to_be_freed, unsigned num_to_be_freed)
+						, .batch_free = [](malloc_zone_t_known_version *_pZone, void **_pToBeFreed, unsigned _nToBeFreed)
 						{
-							if (num_to_be_freed == 0)
+							if (_nToBeFreed == 0)
 								return;
 							DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 							auto *pZone = (tf_CZone *)_pZone;
 							auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
-							for (umint iToFree = 0; iToFree < num_to_be_freed; ++iToFree)
-								pZone->m_MemoryManager.f_FreeNoSize(to_be_freed[iToFree]);
+							for (umint iToFree = 0; iToFree < _nToBeFreed; ++iToFree)
+								pZone->m_MemoryManager.f_FreeNoSize(_pToBeFreed[iToFree]);
 						}
 						, .introspect = &g_MalterlibMallocZoneZoneIntrospection
 						, .version = gc_KnownMallocZoneVersion
@@ -4629,7 +4629,7 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_enumerate_discharged_pointers
 		(
 			malloc_zone_t_known_version *_pZone
-			, void (^report_discharged)(void *memory, void *info)
+			, void (^report_discharged)(void *_pMemory, void *_pInfo)
 		)
 	{
 #ifdef DMemoryManagerIsSame
@@ -4955,7 +4955,7 @@ namespace NMib
 
 extern "C"
 {
-	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_pthread_key_create(pthread_key_t *_pKey, void (*_fDestructor)(void *))
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_pthread_key_create(pthread_key_t *_pKey, void (*_fDestructor)(void *_pValue))
 	{
 		if (!g_bCreatedSystem)
 			return g_OriginalFunctions.pthread_key_create(_pKey, _fDestructor);

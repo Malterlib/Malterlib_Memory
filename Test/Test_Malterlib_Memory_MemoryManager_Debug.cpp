@@ -147,7 +147,8 @@ namespace
 				uint8 *pAlloc = nullptr;
 				bool bFoundAlloc = false;
 
-				auto fl_AllocFunctor = [&](uint8 *_pAlloc, umint, CMibCodeAddress *, umint, ch8 const *, uint32, uint32, umint, umint)
+				auto fl_AllocFunctor = [&]
+					(uint8 *_pAlloc, umint _Size, CMibCodeAddress *_pStackTrace, umint _nStackTrace, ch8 const *_pFile, uint32 _Line, uint32 _Flags, umint _ThreadID, umint _AllocID)
 					{
 						if (pAlloc == _pAlloc)
 							bFoundAlloc = true;

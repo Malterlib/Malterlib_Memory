@@ -192,8 +192,8 @@ namespace NMib::NMemory
 		{
 		}
 
-		TCAllocator_AutoDestroyStatic(TCAllocator_AutoDestroyStatic &&) = default;
-		TCAllocator_AutoDestroyStatic &operator = (TCAllocator_AutoDestroyStatic &&) = default;
+		TCAllocator_AutoDestroyStatic(TCAllocator_AutoDestroyStatic &&_Other) = default;
+		TCAllocator_AutoDestroyStatic &operator = (TCAllocator_AutoDestroyStatic &&_Other) = default;
 		TCAllocator_AutoDestroyStatic() = default;
 		~TCAllocator_AutoDestroyStatic()
 		{
@@ -211,8 +211,8 @@ namespace NMib::NMemory
 		{
 		}
 
-		TCAllocator_AutoDestroy(TCAllocator_AutoDestroy &&) = default;
-		TCAllocator_AutoDestroy &operator = (TCAllocator_AutoDestroy &&) = default;
+		TCAllocator_AutoDestroy(TCAllocator_AutoDestroy &&_Other) = default;
+		TCAllocator_AutoDestroy &operator = (TCAllocator_AutoDestroy &&_Other) = default;
 		TCAllocator_AutoDestroy(t_CAllocator &_Allocator)
 			: m_Allocator(_Allocator)
 		{
@@ -467,14 +467,14 @@ namespace NMib::NMemory
 	\************************************************************************************************/
 
 #ifdef	DMibPIntrinsicMemCopy
-	template <typename t_CData1, typename t_CData2>
-	inline_small t_CData1 *fg_MemCopy(t_CData1 *_pDest, t_CData2 const *_pSource, umint _Size) noexcept
+	template <typename tf_CData1, typename tf_CData2>
+	inline_small tf_CData1 *fg_MemCopy(tf_CData1 *_pDest, tf_CData2 const *_pSource, umint _Size) noexcept
 	{
-		return (t_CData1 *)DMibPIntrinsicMemCopy(_pDest, _pSource, _Size);
+		return (tf_CData1 *)DMibPIntrinsicMemCopy(_pDest, _pSource, _Size);
 	}
 #else
-	template <typename t_CData1, typename t_CData2>
-	inline_medium t_CData1 *fg_MemCopy(t_CData1 *_pDest, t_CData2 const *_pSource, umint _Size) noexcept
+	template <typename tf_CData1, typename tf_CData2>
+	inline_medium tf_CData1 *fg_MemCopy(tf_CData1 *_pDest, tf_CData2 const *_pSource, umint _Size) noexcept
 	{
 		/*
 		for (umint i = 0; i < _Size; ++i)
@@ -511,27 +511,27 @@ namespace NMib::NMemory
 	}
 #endif
 
-	template <typename t_CData1, typename t_CData2>
-	inline_medium t_CData1 *fg_ObjectCopy(t_CData1 *_pDest, t_CData2 const *_pSource, umint _nObjects) noexcept(noexcept(fg_GetType<t_CData1 &>() = fg_GetType<t_CData2 const &>()))
+	template <typename tf_CData1, typename tf_CData2>
+	inline_medium tf_CData1 *fg_ObjectCopy(tf_CData1 *_pDest, tf_CData2 const *_pSource, umint _nObjects) noexcept(noexcept(fg_GetType<tf_CData1 &>() = fg_GetType<tf_CData2 const &>()))
 	{
 		for (umint i = 0; i < _nObjects; ++i)
 			_pDest[i] = _pSource[i];
 		return _pDest;
 	}
 
-	template <typename t_CData1, umint _ListSize>
-	inline_medium t_CData1 *fg_ObjectCopy(t_CData1 _Dest[_ListSize], t_CData1 const _Source[_ListSize]) noexcept(noexcept(fg_GetType<t_CData1 &>() = fg_GetType<t_CData1 const &>()))
+	template <typename tf_CData1, umint tf_ListSize>
+	inline_medium tf_CData1 *fg_ObjectCopy(tf_CData1 _Dest[tf_ListSize], tf_CData1 const _Source[tf_ListSize]) noexcept(noexcept(fg_GetType<tf_CData1 &>() = fg_GetType<tf_CData1 const &>()))
 	{
-		for (umint i = 0; i < _ListSize; ++i)
+		for (umint i = 0; i < tf_ListSize; ++i)
 			_Dest[i] = _Source[i];
 		return _Dest;
 	}
 
-	template <typename t_CData1, typename t_CData2>
-	inline_medium t_CData1 *fg_ObjectSet(t_CData1 *_pDest, t_CData2 const _SetValue, umint _NumElements) noexcept(noexcept(fg_GetType<t_CData1 &>() = fg_GetType<t_CData2 const &>()))
+	template <typename tf_CData1, typename tf_CData2>
+	inline_medium tf_CData1 *fg_ObjectSet(tf_CData1 *_pDest, tf_CData2 const _SetValue, umint _NumElements) noexcept(noexcept(fg_GetType<tf_CData1 &>() = fg_GetType<tf_CData2 const &>()))
 	{
-		t_CData1 *pDest = _pDest;
-		t_CData1 *pEnd = pDest + _NumElements;
+		tf_CData1 *pDest = _pDest;
+		tf_CData1 *pEnd = pDest + _NumElements;
 		while (pEnd - pDest)
 			(*pDest++) = _SetValue;
 
@@ -539,23 +539,23 @@ namespace NMib::NMemory
 	}
 
 #ifdef	DMibPIntrinsicMemSet
-	template <typename t_CData2>
-	inline_always uint8 *fg_ObjectSet(uint8 *_pDest, t_CData2 _SetValue, umint _NumElements) noexcept
+	template <typename tf_CData2>
+	inline_always uint8 *fg_ObjectSet(uint8 *_pDest, tf_CData2 _SetValue, umint _NumElements) noexcept
 	{
 		return (uint8 *)DMibPIntrinsicMemSet(_pDest, uint8(_SetValue), _NumElements);
 	}
 #endif
 
 #ifdef	DMibPIntrinsicMemSet
-	template <typename t_CData1>
-	inline_always t_CData1 *fg_MemClear(t_CData1 *_pFirst, umint _Size) noexcept
+	template <typename tf_CData1>
+	inline_always tf_CData1 *fg_MemClear(tf_CData1 *_pFirst, umint _Size) noexcept
 	{
 		DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
 		return _pFirst;
 	}
 #else
-	template <typename t_CData1>
-	inline_large t_CData1 *fg_MemClear(t_CData1 *_pFirst, umint _Size) noexcept
+	template <typename tf_CData1>
+	inline_large tf_CData1 *fg_MemClear(tf_CData1 *_pFirst, umint _Size) noexcept
 	{
 		umint DoSize = _Size / sizeof(umint);
 		fg_ObjectSet((umint *)_pFirst, 0, DoSize);
@@ -564,32 +564,32 @@ namespace NMib::NMemory
 	}
 #endif
 
-	template <typename t_CData1>
-	inline_always t_CData1 &fg_MemClear(t_CData1 &_First) noexcept
+	template <typename tf_CData1>
+	inline_always tf_CData1 &fg_MemClear(tf_CData1 &_First) noexcept
 	{
-		fg_MemClear(&_First, sizeof(t_CData1));
+		fg_MemClear(&_First, sizeof(tf_CData1));
 		return _First;
 	}
 
-	template <typename t_CData1, umint _nElem>
-	inline_always t_CData1 *fg_MemClear(t_CData1 _Data[_nElem]) noexcept
+	template <typename tf_CData1, umint tf_nElements>
+	inline_always tf_CData1 *fg_MemClear(tf_CData1 _Data[tf_nElements]) noexcept
 	{
-		fg_MemClear(&_Data, sizeof(t_CData1) * _nElem);
+		fg_MemClear(&_Data, sizeof(tf_CData1) * tf_nElements);
 		return _Data;
 	}
 
 #ifdef	DMibPIntrinsicMemSet
 #	ifdef DCompiler_MSVC
-	template <typename t_CData1>
-	inline_always t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, umint _Size) noexcept
+	template <typename tf_CData1>
+	inline_always tf_CData1 *fg_SecureMemClear(tf_CData1 * volatile _pFirst, umint _Size) noexcept
 	{
 		DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
 		NAtomic::fg_CompilerFence();
 		return _pFirst;
 	}
 #	else
-	template <typename t_CData1>
-	inline_always t_CData1 *fg_SecureMemClear(t_CData1 *_pFirst, umint _Size) noexcept
+	template <typename tf_CData1>
+	inline_always tf_CData1 *fg_SecureMemClear(tf_CData1 *_pFirst, umint _Size) noexcept
 	{
 		DMibPIntrinsicMemSet((uint8 *)_pFirst, uint8(0), _Size);
 		__asm__ __volatile__("" :: "r"(_pFirst) : "memory");
@@ -597,8 +597,8 @@ namespace NMib::NMemory
 	}
 #	endif
 #else
-	template <typename t_CData1>
-	inline_large t_CData1 *fg_SecureMemClear(t_CData1 * volatile _pFirst, umint _Size) noexcept
+	template <typename tf_CData1>
+	inline_large tf_CData1 *fg_SecureMemClear(tf_CData1 * volatile _pFirst, umint _Size) noexcept
 	{
 		umint DoSize = _Size / sizeof(umint);
 		fg_ObjectSet((umint *)_pFirst, 0, DoSize);
@@ -608,17 +608,17 @@ namespace NMib::NMemory
 	}
 #endif
 
-	template <typename t_CData1>
-	inline_always t_CData1 &fg_SecureMemClear(t_CData1 &_First) noexcept
+	template <typename tf_CData1>
+	inline_always tf_CData1 &fg_SecureMemClear(tf_CData1 &_First) noexcept
 	{
-		fg_SecureMemClear(&_First, sizeof(t_CData1));
+		fg_SecureMemClear(&_First, sizeof(tf_CData1));
 		return _First;
 	}
 
-	template <typename t_CData1, umint _nElem>
-	inline_always t_CData1 *fg_SecureMemClear(t_CData1 _Data[_nElem]) noexcept
+	template <typename tf_CData1, umint tf_nElements>
+	inline_always tf_CData1 *fg_SecureMemClear(tf_CData1 _Data[tf_nElements]) noexcept
 	{
-		fg_SecureMemClear(&_Data, sizeof(t_CData1) * _nElem);
+		fg_SecureMemClear(&_Data, sizeof(tf_CData1) * tf_nElements);
 		return _Data;
 	}
 
@@ -662,14 +662,14 @@ namespace NMib::NMemory
 	}
 
 #ifdef	DMibPIntrinsicMemMove
-	template <typename t_CData1, typename t_CData2>
-	inline_small t_CData1 *fg_MemMove(t_CData1 *_pDest, t_CData2 const *_pSource, umint _Size) noexcept
+	template <typename tf_CData1, typename tf_CData2>
+	inline_small tf_CData1 *fg_MemMove(tf_CData1 *_pDest, tf_CData2 const *_pSource, umint _Size) noexcept
 	{
-		return (t_CData1 *)DMibPIntrinsicMemMove(_pDest, _pSource, _Size);
+		return (tf_CData1 *)DMibPIntrinsicMemMove(_pDest, _pSource, _Size);
 	}
 #else
-	template <typename t_CData1, typename t_CData2>
-	inline_extralarge t_CData1 *fg_MemMove(t_CData1 *_pDest, t_CData2 const *_pSource, umint _Size) noexcept
+	template <typename tf_CData1, typename tf_CData2>
+	inline_extralarge tf_CData1 *fg_MemMove(tf_CData1 *_pDest, tf_CData2 const *_pSource, umint _Size) noexcept
 	{
 		uint8 *pSrc = (uint8 *)_pSource;
 		uint8 *pDest = (uint8 *)_pDest;

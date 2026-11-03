@@ -7,12 +7,12 @@ namespace NMib::NMemory
 {
 	template <typename t_CParams>
 	template <typename ...tfp_CAllocator>
-	TCMemoryManager<t_CParams>::TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator && ..._Params)
+	TCMemoryManager<t_CParams>::TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator && ...p_Params)
 		: t_CParams::CNotifier::CGlobal(*this)
 		, m_Magic(_Config.m_Magic)
 		, m_nMaxArenas(fg_Min(fg_RoundPowerOfTwoUp(_Config.m_nMaxArenas), t_CParams::mc_MaxArenas))
 		, m_HeapChunks(CAllocatorConstructTag(), this)
-		, m_Allocator(fg_Forward<tfp_CAllocator>(_Params)...)
+		, m_Allocator(fg_Forward<tfp_CAllocator>(p_Params)...)
 		, m_LocalArena
 		(
 			[this]() -> NThread::CThreadLocalInterface::CSafeAllocMemory
@@ -261,7 +261,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManager<t_CParams>::fp_EnumArenas(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArena<t_CParams> *)> const &_Functor, bool _bCleanup)
+	void TCMemoryManager<t_CParams>::fp_EnumArenas(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArena<t_CParams> *_pArena)> const &_Functor, bool _bCleanup)
 	{
 		auto &ThreadLocal = *m_LocalArena;
 		auto ReentrantScope = ThreadLocal.f_Reentrant();
@@ -415,7 +415,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManager<t_CParams>::fp_EnumHeaps(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArenaHeap<t_CParams> *)> const &_Functor)
+	void TCMemoryManager<t_CParams>::fp_EnumHeaps(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArenaHeap<t_CParams> *_pHeap)> const &_Functor)
 	{
 		TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
 		DMibLock(m_NumaArenasLock);
@@ -428,7 +428,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManager<t_CParams>::f_EnumArenas(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CArena *)> const &_Functor)
+	void TCMemoryManager<t_CParams>::f_EnumArenas(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CArena *_pArena)> const &_Functor)
 	{
 		fp_EnumArenas
 			(
@@ -442,13 +442,13 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManager<t_CParams>::f_EnumGlobal(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CGlobal *)> const &_Functor)
+	void TCMemoryManager<t_CParams>::f_EnumGlobal(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CGlobal *_pGlobal)> const &_Functor)
 	{
 		_Functor(this);
 	}
 
 	template <typename t_CParams>
-	void TCMemoryManager<t_CParams>::f_EnumHeaps(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CHeap *)> const &_Functor)
+	void TCMemoryManager<t_CParams>::f_EnumHeaps(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CHeap *_pHeap)> const &_Functor)
 	{
 		TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
 		DMibLock(m_NumaArenasLock);

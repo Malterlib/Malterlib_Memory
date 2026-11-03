@@ -105,15 +105,15 @@ only_parameters_aliased inline_always void operator delete [] (void *_pToDelete,
 
 #endif
 
-template <umint t_ArraySize>
-only_parameters_aliased malloc_like inline_always void *operator new (umint _Size, uint8 _Placement[t_ArraySize]) noexcept
+template <umint tf_ArraySize>
+only_parameters_aliased malloc_like inline_always void *operator new (umint _Size, uint8 _Placement[tf_ArraySize]) noexcept
 {
 	void * variable_not_aliased pValue = _Placement;
 	return pValue;
 }
 
-template <umint t_ArraySize>
-only_parameters_aliased inline_always void operator delete (void *_pToDelete, uint8 _Placement[t_ArraySize]) noexcept
+template <umint tf_ArraySize>
+only_parameters_aliased inline_always void operator delete (void *_pToDelete, uint8 _Placement[tf_ArraySize]) noexcept
 {
 }
 
@@ -125,7 +125,7 @@ inline_always only_parameters_aliased malloc_like void * calling_convention_c op
 	return NMib::NMemory::fg_Alloc(_Size);
 }
 
-only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::nothrow_t const &) noexcept;
+only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::nothrow_t const &_NoThrow) noexcept;
 
 inline_always only_parameters_aliased void calling_convention_c operator delete (void *_pMemory) noexcept
 {
@@ -134,7 +134,7 @@ inline_always only_parameters_aliased void calling_convention_c operator delete 
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
 
-inline_always only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::nothrow_t const &) noexcept
+inline_always only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::nothrow_t const &_NoThrow) noexcept
 {
 	DMibReturnIfDeleteCaptured(_pMemory, 0);
 
@@ -153,14 +153,14 @@ inline_always only_parameters_aliased malloc_like void * calling_convention_c op
 	return NMib::NMemory::fg_Alloc(_Size);
 }
 
-only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::nothrow_t const &) noexcept;
+only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::nothrow_t const &_NoThrow) noexcept;
 
 inline_always only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory) noexcept
 {
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
 
-inline_always only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::nothrow_t const &) noexcept
+inline_always only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::nothrow_t const &_NoThrow) noexcept
 {
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
@@ -175,7 +175,7 @@ inline_always only_parameters_aliased malloc_like void * calling_convention_c op
 	return NMib::NMemory::fg_AllocAligned(_Size, (umint)_Alignment);
 }
 
-only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept;
 
 inline_always only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::align_val_t _Alignment) noexcept
 {
@@ -184,7 +184,7 @@ inline_always only_parameters_aliased void calling_convention_c operator delete 
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
 
-inline_always only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+inline_always only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 {
 	DMibReturnIfDeleteCaptured(_pMemory, 0);
 
@@ -212,14 +212,14 @@ inline_always only_parameters_aliased malloc_like void * calling_convention_c op
 	return NMib::NMemory::fg_AllocAligned(_Size, (umint)_Alignment);
 }
 
-only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept;
 
 inline_always only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::align_val_t _Alignment) noexcept
 {
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
 
-inline_always only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+inline_always only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 {
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
@@ -242,25 +242,25 @@ inline_always only_parameters_aliased void calling_convention_c operator delete[
 #		ifdef DMalterlibUseStaticLibCxx
 #			ifdef _LIBCPP_DISABLE_NEW_DELETE
 DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size);
-DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::nothrow_t const &) noexcept;
+DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::nothrow_t const &_NoThrow) noexcept;
 DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete (void *_pMemory) noexcept;
-DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::nothrow_t const &) noexcept;
+DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::nothrow_t const &_NoThrow) noexcept;
 DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::size_t _Size) noexcept;
 DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size);
-DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::nothrow_t const &) noexcept;
+DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::nothrow_t const &_NoThrow) noexcept;
 DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory) noexcept;
-DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::nothrow_t const &) noexcept;
+DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::nothrow_t const &_NoThrow) noexcept;
 DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::size_t _Size) noexcept;
 DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::align_val_t _Alignment);
-DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept;
 DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::align_val_t _Alignment) noexcept;
-DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept;
 DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept;
 DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::align_val_t _Alignment);
-DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
+DMibNewVisibility only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept;
 DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::align_val_t _Alignment) noexcept;
-DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept;
-DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::size_t _Size, std::align_val_t) noexcept;
+DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept;
+DMibNewVisibility only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::size_t _Size, std::align_val_t _Alignment) noexcept;
 #			endif
 #		endif
 #	endif

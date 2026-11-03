@@ -42,7 +42,7 @@ namespace
 	constexpr ch8 gc_LateThreadNotCreated[] = "LateThreadNotCreated\n";
 
 	void fg_AllocateOnce();
-	void fg_AllocateUntilProcessExits(void *);
+	void fg_AllocateUntilProcessExits(void *_pContext);
 
 	// Reports to the supervising process without anything from the destroyed system
 	void fg_ReportLate(ch8 const *_pMessage, umint _Length)
@@ -58,14 +58,14 @@ namespace
 		}
 	}
 
-	void *fg_AllocateOnNewThread(void *)
+	void *fg_AllocateOnNewThread(void *_pContext)
 	{
 		fg_AllocateUntilProcessExits(nullptr);
 
 		return nullptr;
 	}
 
-	void *fg_AllocateOnLateThread(void *)
+	void *fg_AllocateOnLateThread(void *_pContext)
 	{
 		fg_AllocateOnce();
 		fg_ReportLate(gc_LateThreadAllocated, sizeof(gc_LateThreadAllocated) - 1);
@@ -123,7 +123,7 @@ namespace
 	}
 
 	// Runs on a thread of the system, as the work that frameworks of the system leave running when the process exits.
-	void fg_AllocateUntilProcessExits(void *)
+	void fg_AllocateUntilProcessExits(void *_pContext)
 	{
 		while (true)
 		{
@@ -216,7 +216,7 @@ namespace
 					Params.m_bMergeEnvironment = true;
 					Params.m_bSeparateStdErr = true;
 
-					Params.m_fOnStateChange = [pChild](NProcess::CProcessLaunchStateChangeVariant const &_State, fp64)
+					Params.m_fOnStateChange = [pChild](NProcess::CProcessLaunchStateChangeVariant const &_State, fp64 _TimeSinceStart)
 						{
 							switch (_State.f_GetTypeID())
 							{
@@ -249,7 +249,7 @@ namespace
 						}
 					;
 
-					Params.m_fOnOutput = [pChild](NProcess::EProcessLaunchOutputType, CStr const &_Output)
+					Params.m_fOnOutput = [pChild](NProcess::EProcessLaunchOutputType _OutputType, CStr const &_Output)
 						{
 							DMibLock(pChild->m_Lock);
 							pChild->m_Output += _Output;

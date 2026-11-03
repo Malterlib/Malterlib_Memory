@@ -83,8 +83,8 @@ namespace NMib::NMemory
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	template <typename ...tfp_CAllocator>
-	TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::TCMemoryManagerDebug(tfp_CAllocator && ..._Params)
-		: CSuper(fg_Forward<tfp_CAllocator>(_Params)...)
+	TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::TCMemoryManagerDebug(tfp_CAllocator && ...p_Params)
+		: CSuper(fg_Forward<tfp_CAllocator>(p_Params)...)
 		, m_bReportingLeaks
 		(
 			[this]() -> NThread::CThreadLocalInterface::CSafeAllocMemory

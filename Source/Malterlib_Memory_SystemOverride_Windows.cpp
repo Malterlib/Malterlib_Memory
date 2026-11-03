@@ -557,7 +557,7 @@ extern "C"
 	{
 	}
 
-	typedef int (DDefaultCallingConv *_CRT_ALLOC_HOOK)(int, void *, umint, int, long, unsigned char const *, int);
+	typedef int (DDefaultCallingConv *_CRT_ALLOC_HOOK)(int _AllocationType, void *_pData, umint _Size, int _BlockUse, long _Request, unsigned char const *_pFileName, int _LineNumber);
 
 	_CRT_ALLOC_HOOK DDefaultCallingConv _CrtSetAllocHook(_CRT_ALLOC_HOOK pfnNewHook)
 	{
@@ -586,7 +586,7 @@ extern "C"
 		return _CRTDBG_LEAK_CHECK_DF;
 	}
 
-	void DDefaultCallingConv _CrtDoForAllClientObjects(void (DDefaultCallingConv *pfn)(void *, void *), void *pContext)
+	void DDefaultCallingConv _CrtDoForAllClientObjects(void (DDefaultCallingConv *pfn)(void *_pData, void *_pContext), void *pContext)
 	{
 	}
 
@@ -613,7 +613,7 @@ extern "C"
 		return false;
 	}
 
-	typedef void (DDefaultCallingConv *_CRT_DUMP_CLIENT)(void *, umint);
+	typedef void (DDefaultCallingConv *_CRT_DUMP_CLIENT)(void *_pUserPortion, umint _BlockSize);
 
 	_CRT_DUMP_CLIENT DDefaultCallingConv _CrtSetDumpClient(_CRT_DUMP_CLIENT pfnNewDump)
 	{

@@ -91,7 +91,7 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
-	int64 TCMemoryManagerArena<t_CParams>::f_GarbageCollect(ENumaArenaCleanup &_oCleanup, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
+	int64 TCMemoryManagerArena<t_CParams>::f_GarbageCollect(ENumaArenaCleanup &o_Cleanup, int64 _Timestamp, TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena)
 	{
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 
@@ -131,7 +131,7 @@ namespace NMib::NMemory
 			if (bPendingDecommit)
 				pNumaArena->m_FreeSlabsNeedingDecommit.f_Insert(pFreeSlab);
 			if (bPendingDecommit || !bWasEmpty)
-				_oCleanup |= ENumaArenaCleanup_FreeSlabs;
+				o_Cleanup |= ENumaArenaCleanup_FreeSlabs;
 		}
 
 		return NextTimestamp;

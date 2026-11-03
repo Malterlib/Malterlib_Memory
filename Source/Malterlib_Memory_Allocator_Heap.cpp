@@ -350,7 +350,7 @@ only_parameters_aliased void calling_convention_c operator delete (void *_pMemor
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
 
-only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 {
 	DMibReturnIfDeleteCaptured(_pMemory, 0);
 
@@ -372,7 +372,7 @@ only_parameters_aliased malloc_like void * calling_convention_c operator new (st
 }
 
 // _ZnwmRKSt9nothrow_t
-only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::nothrow_t const &) noexcept
+only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::nothrow_t const &_NoThrow) noexcept
 {
 	try
 	{
@@ -393,7 +393,7 @@ only_parameters_aliased void calling_convention_c operator delete (void *_pMemor
 }
 
 // _ZdlPvRKSt9nothrow_t
-only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::nothrow_t const &) noexcept
+only_parameters_aliased void calling_convention_c operator delete (void *_pMemory, std::nothrow_t const &_NoThrow) noexcept
 {
 	DMibReturnIfDeleteCaptured(_pMemory, 0);
 
@@ -415,7 +415,7 @@ only_parameters_aliased malloc_like void * calling_convention_c operator new[] (
 }
 
 // _ZnamRKSt9nothrow_t
-only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::nothrow_t const &) noexcept
+only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::nothrow_t const &_NoThrow) noexcept
 {
 	try
 	{
@@ -434,7 +434,7 @@ only_parameters_aliased void calling_convention_c operator delete[] (void *_pMem
 }
 
 // _ZdaPvRKSt9nothrow_t
-only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::nothrow_t const &) noexcept
+only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::nothrow_t const &_NoThrow) noexcept
 {
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
@@ -452,7 +452,7 @@ only_parameters_aliased malloc_like void * calling_convention_c operator new (st
 }
 
 // _ZnwmSt11align_val_tRKSt9nothrow_t
-only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+only_parameters_aliased malloc_like void * calling_convention_c operator new (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 {
 	try
 	{
@@ -471,7 +471,7 @@ only_parameters_aliased malloc_like void * calling_convention_c operator new[] (
 }
 
 // _ZnamSt11align_val_tRKSt9nothrow_t
-only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+only_parameters_aliased malloc_like void * calling_convention_c operator new[] (std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 {
 	try
 	{
@@ -490,7 +490,7 @@ only_parameters_aliased void calling_convention_c operator delete[] (void *_pMem
 }
 
 // _ZdaPvSt11align_val_tRKSt9nothrow_t
-only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+only_parameters_aliased void calling_convention_c operator delete[] (void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 {
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
