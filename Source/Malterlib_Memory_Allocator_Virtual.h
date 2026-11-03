@@ -19,15 +19,8 @@ namespace NMib::NMemory
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Virtual>;
 
-		constexpr bool operator == (CAllocator_Virtual const &_Right) const noexcept
-		{
-			return true;
-		}
-
-		constexpr auto operator <=> (CAllocator_Virtual const &_Right) const noexcept
-		{
-			return COrdering_Strong::equal;
-		}
+		constexpr bool operator == (CAllocator_Virtual const &_Right) const noexcept;
+		constexpr auto operator <=> (CAllocator_Virtual const &_Right) const noexcept;
 
 		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static bool f_OnlyOneAlloc();
@@ -187,11 +180,7 @@ namespace NMib::NMemory
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_VirtualNoTracking>;
 
 		constexpr bool operator == (CAllocator_VirtualNoTracking const &_Right) const noexcept = default;
-
-		constexpr auto operator <=> (CAllocator_VirtualNoTracking const &_Right) const noexcept
-		{
-			return COrdering_Strong::equal;
-		}
+		constexpr auto operator <=> (CAllocator_VirtualNoTracking const &_Right) const noexcept;
 
 		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static bool f_OnlyOneAlloc();

@@ -87,6 +87,8 @@
 // NOLINTBEGIN(malterlib-variable-naming): the members of COriginalFunctions are named after the macOS functions they point to, and the
 // interpose macros also use each name to take the address of the function and to name its replacement
 // NOLINTBEGIN(malterlib-conceptual-prefix): the members of COriginalFunctions point to functions but keep the names of the macOS functions
+// NOLINTBEGIN(malterlib-header-declarations-only): this is a list of entries that each includer expands with its own macros, and the
+// interpose functions that Malterlib_Memory_SystemOverride_MacOSLibSystem.cpp defines from it forward the parameter names listed here
 #ifndef DMibMemoryInterpose_SomeHooks
 DMibMemoryInterpose0(malloc_zone_t *, malloc_default_zone)
 DMibMemoryInterpose2(malloc_zone_t *, malloc_create_zone, (_StartSize, _Flags), vm_size_t _StartSize, unsigned _Flags)
@@ -334,6 +336,7 @@ DMibMemoryInterpose7
 		, mach_msg_timeout_t _Timeout
 		, mach_port_name_t _Notify
 	)
+// NOLINTEND(malterlib-header-declarations-only)
 // NOLINTEND(malterlib-conceptual-prefix)
 // NOLINTEND(malterlib-variable-naming)
 

@@ -5,6 +5,12 @@
 namespace NMib::NMemory
 {
 	template <typename t_CParams>
+	inline_small ENumaNode TCMemoryManagerNumaArena<t_CParams>::CCompare::operator () (TCMemoryManagerNumaArena const &_Node) const
+	{
+		return _Node.mp_NumaNode;
+	}
+
+	template <typename t_CParams>
 	TCMemoryManagerNumaArena<t_CParams>::TCMemoryManagerNumaArena(ENumaNode _NumaNode, TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic, bool _bLimitedArenas)
 		: mp_pMemoryManager(_pMemoryManager)
 		, mp_Heap(_pMemoryManager, this)

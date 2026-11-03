@@ -12,6 +12,682 @@
 
 namespace
 {
+	bool CMalterlibMemoryDummy::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryDummy::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+	}
+
+	bool CMalterlibMemoryDummy::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		mp_MaxSize = _MaxSize;
+		return true;
+	}
+
+	void CMalterlibMemoryDummy::f_InitThread()
+	{
+		(*mp_Memory).f_SetLen(mp_MaxSize * 2);
+		(*mp_MemoryStart) = (*mp_Memory).f_GetArray();
+	}
+
+	int CMalterlibMemoryDummy::f_Checkout()
+	{
+		return 0;
+	}
+
+	void CMalterlibMemoryDummy::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryDummy::f_CheckHeap()
+	{
+	}
+
+#ifdef DMemoryManagerTestEnable_Malterlib
+	CMalterlibMemoryMalterlib::CMalterlibMemoryMalterlib()
+		: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+	{
+	}
+
+	bool CMalterlibMemoryMalterlib::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+		mp_MemoryManager.f_SetNumaNode(_Node);
+	}
+
+	bool CMalterlibMemoryMalterlib::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryMalterlib::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	{
+		return mp_MemoryManager.f_Checkout();
+	}
+
+	void CMalterlibMemoryMalterlib::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMalterlib::f_CheckHeap()
+	{
+	}
+
+#	if DMibPPtrBits >= 64
+	CMalterlibMemoryMalterlib_SubSlabBitmaps::CMalterlibMemoryMalterlib_SubSlabBitmaps()
+		: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+	{
+	}
+
+	bool CMalterlibMemoryMalterlib_SubSlabBitmaps::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_SubSlabBitmaps::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+		mp_MemoryManager.f_SetNumaNode(_Node);
+	}
+
+	bool CMalterlibMemoryMalterlib_SubSlabBitmaps::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_SubSlabBitmaps::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryMalterlib_SubSlabBitmaps::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	{
+		return mp_MemoryManager.f_Checkout();
+	}
+
+	void CMalterlibMemoryMalterlib_SubSlabBitmaps::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMalterlib_SubSlabBitmaps::f_CheckHeap()
+	{
+	}
+#	endif
+
+	CMalterlibMemoryMalterlib_SubSlabLists::CMalterlibMemoryMalterlib_SubSlabLists()
+		: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+	{
+	}
+
+	bool CMalterlibMemoryMalterlib_SubSlabLists::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_SubSlabLists::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+		mp_MemoryManager.f_SetNumaNode(_Node);
+	}
+
+	bool CMalterlibMemoryMalterlib_SubSlabLists::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_SubSlabLists::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryMalterlib_SubSlabLists::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	{
+		return mp_MemoryManager.f_Checkout();
+	}
+
+	void CMalterlibMemoryMalterlib_SubSlabLists::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMalterlib_SubSlabLists::f_CheckHeap()
+	{
+	}
+
+#	if DMibPPtrBits >= 64
+	CMalterlibMemoryMalterlib_LowBranch::CMalterlibMemoryMalterlib_LowBranch()
+		: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+	{
+	}
+
+	bool CMalterlibMemoryMalterlib_LowBranch::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_LowBranch::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+		mp_MemoryManager.f_SetNumaNode(_Node);
+	}
+
+	bool CMalterlibMemoryMalterlib_LowBranch::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_LowBranch::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryMalterlib_LowBranch::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	{
+		return mp_MemoryManager.f_Checkout();
+	}
+
+	void CMalterlibMemoryMalterlib_LowBranch::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMalterlib_LowBranch::f_CheckHeap()
+	{
+	}
+#	endif
+
+	CMalterlibMemoryMalterlib_Debug::CMalterlibMemoryMalterlib_Debug()
+		: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+	{
+	}
+
+	bool CMalterlibMemoryMalterlib_Debug::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_Debug::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+		mp_MemoryManager.f_SetNumaNode(_Node);
+	}
+
+	bool CMalterlibMemoryMalterlib_Debug::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_Debug::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryMalterlib_Debug::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	{
+		return mp_MemoryManager.f_Checkout();
+	}
+
+	void CMalterlibMemoryMalterlib_Debug::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMalterlib_Debug::f_CheckHeap()
+	{
+	}
+
+	CMalterlibMemoryMalterlib_Tracked::CMalterlibMemoryMalterlib_Tracked()
+		: mp_MemoryManager("Test tracked manager", NMib::NMemory::CMemoryManagerConfig())
+	{
+	}
+
+	bool CMalterlibMemoryMalterlib_Tracked::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_Tracked::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+		mp_MemoryManager.f_SetNumaNode(_Node);
+	}
+
+	bool CMalterlibMemoryMalterlib_Tracked::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_Tracked::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryMalterlib_Tracked::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	{
+		return mp_MemoryManager.f_Checkout();
+	}
+
+	void CMalterlibMemoryMalterlib_Tracked::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMalterlib_Tracked::f_CheckHeap()
+	{
+	}
+
+	CMalterlibMemoryMalterlib_NoCleanup::CMalterlibMemoryMalterlib_NoCleanup()
+		: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+	{
+	}
+
+	bool CMalterlibMemoryMalterlib_NoCleanup::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_NoCleanup::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+		mp_MemoryManager.f_SetNumaNode(_Node);
+	}
+
+	bool CMalterlibMemoryMalterlib_NoCleanup::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_NoCleanup::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryMalterlib_NoCleanup::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	{
+		return mp_MemoryManager.f_Checkout();
+	}
+
+	void CMalterlibMemoryMalterlib_NoCleanup::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMalterlib_NoCleanup::f_CheckHeap()
+	{
+	}
+
+	CMalterlibMemoryMalterlib_NoDeferCleanup::CMalterlibMemoryMalterlib_NoDeferCleanup()
+		: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+	{
+	}
+
+	bool CMalterlibMemoryMalterlib_NoDeferCleanup::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_NoDeferCleanup::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+		mp_MemoryManager.f_SetNumaNode(_Node);
+	}
+
+	bool CMalterlibMemoryMalterlib_NoDeferCleanup::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_NoDeferCleanup::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryMalterlib_NoDeferCleanup::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	{
+		return mp_MemoryManager.f_Checkout();
+	}
+
+	void CMalterlibMemoryMalterlib_NoDeferCleanup::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMalterlib_NoDeferCleanup::f_CheckHeap()
+	{
+	}
+
+	CMalterlibMemoryMalterlib_NoCheckout::CMalterlibMemoryMalterlib_NoCheckout()
+		: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+	{
+	}
+
+	bool CMalterlibMemoryMalterlib_NoCheckout::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_NoCheckout::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+		mp_MemoryManager.f_SetNumaNode(_Node);
+	}
+
+	bool CMalterlibMemoryMalterlib_NoCheckout::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_NoCheckout::f_InitThread()
+	{
+	}
+
+	int CMalterlibMemoryMalterlib_NoCheckout::f_Checkout()
+	{
+		return 0;
+	}
+
+	void CMalterlibMemoryMalterlib_NoCheckout::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMalterlib_NoCheckout::f_CheckHeap()
+	{
+	}
+
+	CMalterlibMemoryMalterlib_NoCommit::CMalterlibMemoryMalterlib_NoCommit()
+		: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+	{
+	}
+
+	bool CMalterlibMemoryMalterlib_NoCommit::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_NoCommit::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+		mp_MemoryManager.f_SetNumaNode(_Node);
+	}
+
+	bool CMalterlibMemoryMalterlib_NoCommit::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryMalterlib_NoCommit::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryMalterlib_NoCommit::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	{
+		return mp_MemoryManager.f_Checkout();
+	}
+
+	void CMalterlibMemoryMalterlib_NoCommit::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMalterlib_NoCommit::f_CheckHeap()
+	{
+	}
+#endif
+
+#ifdef DMemoryManagerTestEnable_TcMalloc
+	CMalterlibMemoryTcMalloc::CMalterlibMemoryTcMalloc()
+	{
+	}
+
+	CMalterlibMemoryTcMalloc::~CMalterlibMemoryTcMalloc()
+	{
+	}
+
+	void CMalterlibMemoryTcMalloc::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+	}
+
+	bool CMalterlibMemoryTcMalloc::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	bool CMalterlibMemoryTcMalloc::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		tc_free(tc_malloc(1));
+		return true;
+	}
+
+	void CMalterlibMemoryTcMalloc::f_InitThread()
+	{
+	}
+
+	int CMalterlibMemoryTcMalloc::f_Checkout()
+	{
+		return 0;
+	}
+
+	void CMalterlibMemoryTcMalloc::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryTcMalloc::f_CheckHeap()
+	{
+	}
+#endif
+
+#ifdef DMemoryManagerTestEnable_MiMalloc
+	CMalterlibMemoryMiMalloc::CMalterlibMemoryMiMalloc()
+	{
+	}
+
+	CMalterlibMemoryMiMalloc::~CMalterlibMemoryMiMalloc()
+	{
+	}
+
+	void CMalterlibMemoryMiMalloc::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+	}
+
+	bool CMalterlibMemoryMiMalloc::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		if (_bAlignment)
+			return true;
+		return true;
+	}
+
+	bool CMalterlibMemoryMiMalloc::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		mi_process_load();
+		mi_process_init();
+		mi_free(mi_malloc(1));
+		return true;
+	}
+
+	void CMalterlibMemoryMiMalloc::f_InitThread()
+	{
+	}
+
+	int CMalterlibMemoryMiMalloc::f_Checkout()
+	{
+		return 0;
+	}
+
+	void CMalterlibMemoryMiMalloc::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMiMalloc::f_CheckHeap()
+	{
+	}
+#endif
+
+#ifdef DMemoryManagerTestEnable_MacOS
+	CMalterlibMemoryMacOS::CMalterlibMemoryMacOS()
+		: mp_pMallocZone(nullptr)
+	{
+	}
+
+	CMalterlibMemoryMacOS::~CMalterlibMemoryMacOS()
+	{
+		if (mp_pMallocZone)
+		{
+			malloc_destroy_zone(mp_pMallocZone);
+			mp_pMallocZone = nullptr;
+		}
+	}
+
+	bool CMalterlibMemoryMacOS::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+#	if DPlatformVersion <= 1050
+		if (_bAlignment)
+			return false;
+#	endif
+		return true;
+	}
+
+	void CMalterlibMemoryMacOS::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+	}
+
+	bool CMalterlibMemoryMacOS::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		mp_pMallocZone = malloc_create_zone(1024 * 1024, 0);
+		return true;
+	}
+
+	void CMalterlibMemoryMacOS::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryMacOS::f_Checkout() -> decltype(NMib::fg_GetSys()->f_MemoryManager_Checkout())
+	{
+		return NMib::fg_GetSys()->f_MemoryManager_Checkout();
+	}
+
+	void CMalterlibMemoryMacOS::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryMacOS::f_CheckHeap()
+	{
+	}
+
+	NMib::NStr::CStr CMalterlibMemoryMacOS::f_GetDesc()
+	{
+		NMib::NStr::CStr Str = "StdLib";
+		return Str;
+	}
+#endif
+
+#ifdef DMemoryManagerTestEnable_StdLib
+	bool CMalterlibMemoryStdLib::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+#	ifdef DPlatformFamily_Windows
+		if (_bAlignment)
+			return false;
+#	endif
+		return true;
+	}
+
+	void CMalterlibMemoryStdLib::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+	}
+
+	bool CMalterlibMemoryStdLib::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryStdLib::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryStdLib::f_Checkout() -> decltype(NMib::fg_GetSys()->f_MemoryManager_Checkout())
+	{
+		return NMib::fg_GetSys()->f_MemoryManager_Checkout();
+	}
+
+	void CMalterlibMemoryStdLib::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryStdLib::f_CheckHeap()
+	{
+	}
+
+	NMib::NStr::CStr CMalterlibMemoryStdLib::f_GetDesc()
+	{
+		NMib::NStr::CStr Str = "StdLib";
+		return Str;
+	}
+#endif
+
+#ifdef DMemoryManagerTestEnable_Application
+	bool CMalterlibMemoryApplication::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryApplication::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+	}
+
+	bool CMalterlibMemoryApplication::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return true;
+	}
+
+	void CMalterlibMemoryApplication::f_InitThread()
+	{
+	}
+
+	auto CMalterlibMemoryApplication::f_Checkout() -> decltype(NMib::fg_GetSys()->f_MemoryManager_Checkout())
+	{
+		return NMib::fg_GetSys()->f_MemoryManager_Checkout();
+	}
+
+	void CMalterlibMemoryApplication::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryApplication::f_CheckHeap()
+	{
+	}
+
+	NMib::NStr::CStr CMalterlibMemoryApplication::f_GetDesc()
+	{
+		NMib::NStr::CStr Str = "Application";
+		return Str;
+	}
+#endif
+
+#ifdef DMemoryManagerTestEnable_Virtual
+	bool CMalterlibMemoryVirtual::fs_ShouldRun(umint _nThreads, bool _bAlignment)
+	{
+		if (_bAlignment)
+			return false;
+		return true;
+	}
+
+	void CMalterlibMemoryVirtual::f_SetNumaNode(NMib::ENumaNode _Node)
+	{
+	}
+
+	bool CMalterlibMemoryVirtual::f_Init(umint _nThreads, umint _MaxSize)
+	{
+		return _nThreads <= 2;
+	}
+
+	void CMalterlibMemoryVirtual::f_InitThread()
+	{
+	}
+
+	int CMalterlibMemoryVirtual::f_Checkout()
+	{
+		return 0;
+	}
+
+	void CMalterlibMemoryVirtual::f_Clear()
+	{
+	}
+
+	void CMalterlibMemoryVirtual::f_CheckHeap()
+	{
+	}
+#endif
+}
+
+namespace
+{
 	using namespace NMib::NTest;
 	using namespace NMib::NMemory;
 

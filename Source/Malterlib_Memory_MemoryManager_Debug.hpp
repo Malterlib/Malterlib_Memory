@@ -691,6 +691,18 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
+	uint8 *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::CPreBlockNormal::f_GetPreGuard()
+	{
+		return (uint8 *)(this + 1) - t_COptions::mc_nPreGuardBytes;
+	}
+
+	template <typename t_CParams, bool t_bException, typename t_COptions>
+	uint8 *TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::CPreBlockPadded::f_GetPreGuard()
+	{
+		return (uint8 *)(this + 1) - t_COptions::mc_nPreGuardBytes;
+	}
+
+	template <typename t_CParams, bool t_bException, typename t_COptions>
 	bool TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::fsp_CheckGuard(uint8 *_pMemory, EMemoryManagerCheckFlag _Flags)
 	{
 		CPreBlock *pPreBlock = ((CPreBlock *)_pMemory) - 1;

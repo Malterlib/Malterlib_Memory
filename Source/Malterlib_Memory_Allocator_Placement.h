@@ -13,15 +13,8 @@ namespace NMib::NMemory
 		static constexpr aint mc_CanBeStatic = false;
 		static constexpr bool mc_bMethodsStatic = false;
 
-		constexpr bool operator == (CAllocator_Placement const &_Right) const noexcept
-		{
-			return true;
-		}
-
-		constexpr auto operator <=> (CAllocator_Placement const &_Right) const noexcept
-		{
-			return COrdering_Strong::equal;
-		}
+		constexpr bool operator == (CAllocator_Placement const &_Right) const noexcept;
+		constexpr auto operator <=> (CAllocator_Placement const &_Right) const noexcept;
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Placement>;
 

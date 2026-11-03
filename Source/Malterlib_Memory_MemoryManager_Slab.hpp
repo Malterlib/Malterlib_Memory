@@ -5,6 +5,11 @@
 
 namespace NMib::NMemory
 {
+	inline uint64 CMemoryManagerSlabSharedPostfixHeader::f_GetMagic() const
+	{
+		return m_Magic;
+	}
+
 	////////////////////////////////
 	// Shared
 
@@ -375,5 +380,11 @@ namespace NMib::NMemory
 			return (TCMemoryManagerSlab *)pFinalLocation;
 		}
 		return (TCMemoryManagerSlab *)_pLocation;
+	}
+
+	template <typename tf_CParams, umint tf_Index>
+	static constexpr umint fg_MemoryManagerSlabSize()
+	{
+		return sizeof(TCMemoryManagerSlab<tf_CParams, tf_Index>);
 	}
 }

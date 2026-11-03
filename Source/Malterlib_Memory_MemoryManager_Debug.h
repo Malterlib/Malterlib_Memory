@@ -239,10 +239,7 @@ namespace NMib::NMemory
 		{
 			uint8 m_GuardBytes[t_COptions::mc_nPreGuardBytes];
 
-			uint8 *f_GetPreGuard()
-			{
-				return (uint8 *)(this + 1) - t_COptions::mc_nPreGuardBytes;
-			}
+			uint8 *f_GetPreGuard();
 		};
 
 		struct CPreBlockPadded : public CPreBlockData
@@ -250,10 +247,7 @@ namespace NMib::NMemory
 			TCMemoryManagerDebugPaddingHelper<mcp_PreBlockPadding> m_Padding;
 			uint8 m_GuardBytes[t_COptions::mc_nPreGuardBytes];
 
-			uint8 *f_GetPreGuard()
-			{
-				return (uint8 *)(this + 1) - t_COptions::mc_nPreGuardBytes;
-			}
+			uint8 *f_GetPreGuard();
 		};
 
 		using CPreBlock = TCConditional<(mcp_PreBlockPadding > 0), CPreBlockPadded, CPreBlockNormal>;

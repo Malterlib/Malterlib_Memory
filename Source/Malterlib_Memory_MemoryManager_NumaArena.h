@@ -101,10 +101,7 @@ namespace NMib::NMemory
 	{
 		struct CCompare
 		{
-			inline_small ENumaNode operator () (TCMemoryManagerNumaArena const &_Node) const
-			{
-				return _Node.mp_NumaNode;
-			}
+			inline_small ENumaNode operator () (TCMemoryManagerNumaArena const &_Node) const;
 		};
 
 		NIntrusive::TCAVLLink<> m_Link;

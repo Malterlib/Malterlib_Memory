@@ -9,6 +9,16 @@ namespace NMib::NMemory
 	/// CAllocator_Virtual
 	///
 
+	constexpr bool CAllocator_Virtual::operator == (CAllocator_Virtual const &_Right) const noexcept
+	{
+		return true;
+	}
+
+	constexpr auto CAllocator_Virtual::operator <=> (CAllocator_Virtual const &_Right) const noexcept
+	{
+		return COrdering_Strong::equal;
+	}
+
 	inline_small bool CAllocator_Virtual::f_OnlyOneAlloc()
 	{
 		return false;
@@ -334,6 +344,11 @@ namespace NMib::NMemory
 	///
 	/// CAllocator_VirtualNoTracking
 	///
+	constexpr auto CAllocator_VirtualNoTracking::operator <=> (CAllocator_VirtualNoTracking const &_Right) const noexcept
+	{
+		return COrdering_Strong::equal;
+	}
+
 	inline_small bool CAllocator_VirtualNoTracking::f_OnlyOneAlloc()
 	{
 		return false;

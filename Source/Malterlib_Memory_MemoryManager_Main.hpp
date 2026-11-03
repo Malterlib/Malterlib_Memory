@@ -5,6 +5,16 @@
 
 namespace NMib::NMemory
 {
+	inline CLocalNumaNode::CLocalNumaNode(ENumaNode _Node)
+		: m_Node(_Node)
+	{
+	}
+
+	inline CLocalNumaNode::CLocalNumaNode()
+		: m_Node(ENumaNode_Default)
+	{
+	}
+
 	template <typename t_CParams>
 	template <typename ...tfp_CAllocator>
 	TCMemoryManager<t_CParams>::TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator && ...p_Params)

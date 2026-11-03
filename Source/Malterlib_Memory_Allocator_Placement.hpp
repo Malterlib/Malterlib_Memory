@@ -5,6 +5,16 @@
 
 namespace NMib::NMemory
 {
+	constexpr bool CAllocator_Placement::operator == (CAllocator_Placement const &_Right) const noexcept
+	{
+		return true;
+	}
+
+	constexpr auto CAllocator_Placement::operator <=> (CAllocator_Placement const &_Right) const noexcept
+	{
+		return COrdering_Strong::equal;
+	}
+
 	CAllocator_Placement::CAllocator_Placement()
 	{
 	}

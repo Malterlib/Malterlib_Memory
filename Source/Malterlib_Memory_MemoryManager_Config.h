@@ -284,7 +284,7 @@ namespace NMib::NMemory
 
 		using CSubSlabIndex = NTraits::TCUnsigned<NTraits::TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(mc_MaxNumSubSlabs - 1) + 1 + 7) / 8>>;
 
-		static constexpr umint fs_CalculateNumAllocsPerSubSlab(umint _Index)
+		static constexpr umint fs_CalculateNumAllocsPerSubSlab(umint _Index) // NOLINT(malterlib-header-declarations-only): the static constexpr members below use it in their initializers
 		{
 			if (_Index == 0)
 				return t_CParams::mc_SubSlabSize;
@@ -308,7 +308,7 @@ namespace NMib::NMemory
 		// requested sizes are aligned to mc_MinNormalSizeAlignment before classing, so classes
 		// whose size 2^Bucket + Index * 2^(Bucket - mc_SizesPerLevelShift) is not a multiple of
 		// that alignment are unreachable and must not inflate the per-sub-slab block bound
-		static constexpr umint fs_MinReachableSlabBucket(umint _Index)
+		static constexpr umint fs_MinReachableSlabBucket(umint _Index) // NOLINT(malterlib-header-declarations-only): the initializer of mc_MaxAllocsPerSubSlabActual below uses it
 		{
 			umint Bucket = mc_MinNormalSlabBucket;
 			while (((umint(1) << Bucket) + (_Index << (Bucket - mc_SizesPerLevelShift))) % mc_MinNormalSizeAlignment != 0)

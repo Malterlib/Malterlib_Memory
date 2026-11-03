@@ -7,6 +7,58 @@
 
 namespace NMib::NMemory
 {
+#if !DMibConfig_MalterlibMemoryManager_Debug
+	only_parameters_aliased malloc_like static inline_small void *fg_AllocWithSizeDebug(umint &_Size, ch8 const *_pFile, aint _Line, EHeapDebugFlag _Flags)
+	{
+		return fg_AllocWithSize(_Size);
+	}
+
+	only_parameters_aliased malloc_like static inline_small auto fg_AllocAlignedWithSizeDebug(umint &_Size, umint _Align, ch8 const *_pFile, aint _Line, EHeapDebugFlag _Flags) -> void *
+	{
+		return fg_AllocAlignedWithSize(_Size, _Align);
+	}
+
+	only_parameters_aliased malloc_like static inline_small auto fg_ReallocDebug
+		(
+			void *_pMemory
+			, umint &_Size
+			, umint _OldSize
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+		)
+		-> void *
+	{
+		return fg_Realloc(_pMemory, _Size, _OldSize, _AllocFlags);
+	}
+
+	only_parameters_aliased static inline_small auto fg_ResizeDebug
+		(
+			void *_pMemory
+			, umint &_Size
+			, umint _OldSize
+			, ch8 const *_pFile
+			, aint _Line
+			, EHeapDebugFlag _Flags
+			, EAllocationFlag _AllocFlags
+		)
+		-> void *
+	{
+		return fg_Resize(_pMemory, _Size, _OldSize, _AllocFlags);
+	}
+#endif
+
+	constexpr bool CAllocator_Heap::operator == (CAllocator_Heap const &_Right) const noexcept
+	{
+		return true;
+	}
+
+	constexpr auto CAllocator_Heap::operator <=> (CAllocator_Heap const &_Right) const noexcept
+	{
+		return COrdering_Strong::equal;
+	}
+
 	inline_small bool CAllocator_Heap::f_IsStatic(void const *_pBlock)
 	{
 		return false;
@@ -288,6 +340,16 @@ namespace NMib::NMemory
 	/// CAllocator_NonTrackedHeap
 	///
 
+	constexpr bool CAllocator_NonTrackedHeap::operator == (CAllocator_NonTrackedHeap const &_Right) const noexcept
+	{
+		return true;
+	}
+
+	constexpr auto CAllocator_NonTrackedHeap::operator <=> (CAllocator_NonTrackedHeap const &_Right) const noexcept
+	{
+		return COrdering_Strong::equal;
+	}
+
 	inline_small bool CAllocator_NonTrackedHeap::f_IsStatic(void const *_pBlock)
 	{
 		return false;
@@ -399,6 +461,18 @@ namespace NMib::NMemory
 	///
 	/// TCAllocator_Placement
 	///
+
+	template <umint t_AllocSize>
+	constexpr bool TCAllocator_Placement<t_AllocSize>::operator == (TCAllocator_Placement const &_Right) const noexcept
+	{
+		return mp_pPointer == _Right.mp_pPointer;
+	}
+
+	template <umint t_AllocSize>
+	constexpr auto TCAllocator_Placement<t_AllocSize>::operator <=> (TCAllocator_Placement const &_Right) const noexcept
+	{
+		return mp_pPointer <=> _Right.mp_pPointer;
+	}
 
 	template <umint t_AllocSize>
 	inline_small void TCAllocator_Placement<t_AllocSize>::fp_DoCheck(umint _Size)
@@ -731,6 +805,18 @@ namespace NMib::NMemory
 	///
 	/// TCAllocator_Static
 	///
+
+	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>
+	constexpr bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::operator == (TCAllocator_Static const &_Right) const noexcept
+	{
+		return static_cast<t_CFallbackAllocator const &>(*this) == static_cast<t_CFallbackAllocator const &>(_Right);
+	}
+
+	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>
+	constexpr auto TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::operator <=> (TCAllocator_Static const &_Right) const noexcept
+	{
+		return static_cast<t_CFallbackAllocator const &>(*this) <=> static_cast<t_CFallbackAllocator const &>(_Right);
+	}
 
 	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>
 	bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::fp_IsStatic(void const *_pBlock) const
@@ -1354,6 +1440,42 @@ namespace NMib::NMemory
 
 namespace NMib
 {
+	template <typename tf_CObjectType>
+	static void fg_DeleteObject(NMemory::CAllocator_HeapNoDelete &_Allocator, tf_CObjectType *_pObject)
+	{
+		DMibFastCheck(0); // Delete not supported
+	}
+
+	template <typename tf_CObjectType, typename tf_CAllocator>
+	static void fg_DeleteObjectDefiniteType(NMemory::CAllocator_HeapNoDelete &_Allocator, tf_CObjectType *_pObject)
+	{
+		DMibFastCheck(0); // Delete not supported
+	}
+
+	template <typename tf_CObjectType, typename tf_CAllocator>
+	static void fg_DeleteObjectDefiniteType(NMemory::CAllocator_HeapNoDelete &_Allocator, tf_CObjectType *_pObject, umint _Alignment)
+	{
+		DMibFastCheck(0); // Delete not supported
+	}
+
+	template <typename tf_CObjectType, typename tf_CDeleterType, typename tf_CFallbackAllocator>
+	static void fg_DeleteObject(NMemory::TCAllocator_FunctorDeleter<tf_CDeleterType, tf_CFallbackAllocator> &_Allocator, tf_CObjectType *_pObject)
+	{
+		_Allocator.f_GetDeleter()(_pObject);
+	}
+
+	template <typename tf_CObjectType, typename tf_CDeleterType, typename tf_CFallbackAllocator>
+	static void fg_DeleteObjectDefiniteType(NMemory::TCAllocator_FunctorDeleter<tf_CDeleterType, tf_CFallbackAllocator> &_Allocator, tf_CObjectType *_pObject)
+	{
+		_Allocator.f_GetDeleter()(_pObject);
+	}
+
+	template <typename tf_CObjectType, typename tf_CDeleterType, typename tf_CFallbackAllocator>
+	static void fg_DeleteObjectDefiniteType(NMemory::TCAllocator_FunctorDeleter<tf_CDeleterType, tf_CFallbackAllocator> &_Allocator, tf_CObjectType *_pObject, umint _Alignment)
+	{
+		_Allocator.f_GetDeleter()(_pObject);
+	}
+
 	template <typename tf_CType>
 	inline_small void fg_Delete(tf_CType * &_pToDelete)
 	{

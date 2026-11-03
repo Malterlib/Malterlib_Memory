@@ -12,6 +12,18 @@ namespace NMib::NMemory
 	}
 
 	template <typename t_CParams>
+	constexpr bool TCAllocator_MemoryManager<t_CParams>::operator == (TCAllocator_MemoryManager const &_Right) const noexcept
+	{
+		return mp_pMemoryManager == _Right.mp_pMemoryManager;
+	}
+
+	template <typename t_CParams>
+	constexpr auto TCAllocator_MemoryManager<t_CParams>::operator <=> (TCAllocator_MemoryManager const &_Right) const noexcept
+	{
+		return mp_pMemoryManager <=> _Right.mp_pMemoryManager;
+	}
+
+	template <typename t_CParams>
 	inline bool TCAllocator_MemoryManager<t_CParams>::f_IsStatic(void const *_pBlock)
 	{
 		return false;

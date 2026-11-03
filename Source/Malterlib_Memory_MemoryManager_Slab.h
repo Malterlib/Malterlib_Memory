@@ -26,10 +26,7 @@ namespace NMib::NMemory
 #else
 		inline_always
 #endif
-		uint64 f_GetMagic() const
-		{
-			return m_Magic;
-		}
+		uint64 f_GetMagic() const;
 	};
 
 	template <typename t_CParams>
@@ -176,7 +173,7 @@ namespace NMib::NMemory
 		static constexpr umint mc_SubSlabRemoteFreeEntrySize = t_CParams::mc_bReapInCleanup ? sizeof(TCSubSlabRemoteFreeStore<t_CParams>) : 0;
 
 		template <umint tf_SlabMultiplier>
-		static constexpr umint fs_CalculateSubSlabs()
+		static constexpr umint fs_CalculateSubSlabs() // NOLINT(malterlib-header-declarations-only): mc_nSubSlabs and the mc_NumSubSlabs of the config use it in constant expressions
 		{
 			constexpr umint c_TheoreticalSubSlabs = (t_CParams::mc_SlabSize - 1) / (t_CParams::mc_SubSlabSize * tf_SlabMultiplier);
 			constexpr umint c_RemoteFreeFixedSize = t_CParams::mc_bReapInCleanup ? DMibPMemoryCacheLineSize * 2 + ((c_TheoreticalSubSlabs + 63) / 64) * sizeof(NAtomic::TCAtomic<uint64>) : 0;
@@ -292,8 +289,5 @@ namespace NMib::NMemory
 	};
 
 	template <typename tf_CParams, umint tf_Index>
-	static constexpr umint fg_MemoryManagerSlabSize()
-	{
-		return sizeof(TCMemoryManagerSlab<tf_CParams, tf_Index>);
-	}
+	static constexpr umint fg_MemoryManagerSlabSize();
 }

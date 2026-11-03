@@ -16,15 +16,8 @@ namespace NMib::NMemory
 
 		TCAllocator_MemoryManager(TCMemoryManager<t_CParams> *_pMemoryManager);
 
-		constexpr bool operator == (TCAllocator_MemoryManager const &_Right) const noexcept
-		{
-			return mp_pMemoryManager == _Right.mp_pMemoryManager;
-		}
-
-		constexpr auto operator <=> (TCAllocator_MemoryManager const &_Right) const noexcept
-		{
-			return mp_pMemoryManager <=> _Right.mp_pMemoryManager;
-		}
+		constexpr bool operator == (TCAllocator_MemoryManager const &_Right) const noexcept;
+		constexpr auto operator <=> (TCAllocator_MemoryManager const &_Right) const noexcept;
 
 		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
 		static bool f_IsStatic(void const *_pBlock);

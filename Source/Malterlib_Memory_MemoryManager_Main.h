@@ -62,15 +62,8 @@ namespace NMib::NMemory
 	{
 		ENumaNode m_Node;
 
-		CLocalNumaNode(ENumaNode _Node)
-			: m_Node(_Node)
-		{
-		}
-
-		CLocalNumaNode()
-			: m_Node(ENumaNode_Default)
-		{
-		}
+		CLocalNumaNode(ENumaNode _Node);
+		CLocalNumaNode();
 	};
 
 	struct CMemoryManagerConfig
