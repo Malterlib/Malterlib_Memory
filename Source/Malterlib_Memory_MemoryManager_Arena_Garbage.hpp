@@ -75,18 +75,18 @@ namespace NMib::NMemory
 	{
 		if constexpr (mc_bSubSlabStore && t_CParams::mc_bGlobalAddressOrder)
 		{
-			if (!m_bSubSlabListsDirty)
+			if (!mp_bSubSlabListsDirty)
 				return;
 
-			m_bSubSlabListsDirty = false;
+			mp_bSubSlabListsDirty = false;
 
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 			{
-				for (umint i = 0; i < mc_nLevel0Lists; ++i)
-					fsp_SortSubSlabList(m_NormalSizeSlabsLevel0[i]);
+				for (umint iList = 0; iList < mc_nLevel0Lists; ++iList)
+					fsp_SortSubSlabList(mp_NormalSizeSlabsLevel0[iList]);
 			}
-			for (umint i = 0; i < mc_nNormalSizeClasses; ++i)
-				fsp_SortSubSlabList(m_NormalSizeSlabs[i]);
+			for (umint iSizeClass = 0; iSizeClass < mc_nNormalSizeClasses; ++iSizeClass)
+				fsp_SortSubSlabList(mp_NormalSizeSlabs[iSizeClass]);
 		}
 	}
 
@@ -105,9 +105,9 @@ namespace NMib::NMemory
 				return 0;
 		}
 
-		auto pNumaArena = m_pNumaArena;
+		auto pNumaArena = mp_pNumaArena;
 
-		for (auto iFreeSlab = m_FreeSlabs.f_GetIterator(); iFreeSlab;)
+		for (auto iFreeSlab = mp_FreeSlabs.f_GetIterator(); iFreeSlab;)
 		{
 			auto pFreeSlab = &*iFreeSlab;
 			++iFreeSlab;
@@ -120,16 +120,16 @@ namespace NMib::NMemory
 			}
 #endif
 
-			DMibLock(pNumaArena->m_FreeSlabsLock);
+			DMibLock(pNumaArena->mp_FreeSlabsLock);
 
-			bool bWasEmpty = pNumaArena->m_FreeSlabs.f_IsEmpty();
+			bool bWasEmpty = pNumaArena->mp_FreeSlabs.f_IsEmpty();
 			pFreeSlab->m_pArena = nullptr;
 			if constexpr (t_CParams::mc_bBackgroundCleanup)
 				DMibFastCheck(pFreeSlab->m_FreeTimestamp != 0);
-			pNumaArena->m_FreeSlabs.f_Insert(pFreeSlab);
+			pNumaArena->mp_FreeSlabs.f_Insert(pFreeSlab);
 			bool bPendingDecommit = pFreeSlab->m_LinkNeedDecommit.f_IsInList();
 			if (bPendingDecommit)
-				pNumaArena->m_FreeSlabsNeedingDecommit.f_Insert(pFreeSlab);
+				pNumaArena->mp_FreeSlabsNeedingDecommit.f_Insert(pFreeSlab);
 			if (bPendingDecommit || !bWasEmpty)
 				o_Cleanup |= ENumaArenaCleanup_FreeSlabs;
 		}
@@ -145,7 +145,7 @@ namespace NMib::NMemory
 		if constexpr (!(t_CParams::mc_DeferCleanup & EDeferCleanup_Commit))
 			return NextTimestamp;
 
-		for (auto iSlab = m_SlabsNeedingDecommit.f_GetIterator(); iSlab;)
+		for (auto iSlab = mp_SlabsNeedingDecommit.f_GetIterator(); iSlab;)
 		{
 			auto pSlab = &*iSlab;
 			++iSlab;
@@ -164,7 +164,7 @@ namespace NMib::NMemory
 	{
 		DMibFastCheck(_SlabType < t_CParams::mc_NumSizesPerLevel);
 
-		while (auto pSlab = m_SlabsToGarbageCollect[_SlabType].f_GetFirst())
+		while (auto pSlab = mp_SlabsToGarbageCollect[_SlabType].f_GetFirst())
 		{
 			bool bAborted = false;
 			pSlab->f_EnumPendingBits
@@ -188,12 +188,12 @@ namespace NMib::NMemory
 
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 			{
-				auto pNewFirst = m_SlabsToGarbageCollect[_SlabType].f_GetFirst();
+				auto pNewFirst = mp_SlabsToGarbageCollect[_SlabType].f_GetFirst();
 
 				if (pNewFirst == pSlab)
 					fp_FreeSmallSubSlabs(pSlab);
 
-				DMibFastCheck(m_SlabsToGarbageCollect[_SlabType].f_GetFirst() != pSlab);
+				DMibFastCheck(mp_SlabsToGarbageCollect[_SlabType].f_GetFirst() != pSlab);
 			}
 
 			return true;
@@ -208,7 +208,7 @@ namespace NMib::NMemory
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 		DMibFastCheck(_SlabType < t_CParams::mc_NumSizesPerLevel);
 
-		for (auto iSlab = m_SlabsToGarbageCollect[_SlabType].f_GetIterator(); iSlab;)
+		for (auto iSlab = mp_SlabsToGarbageCollect[_SlabType].f_GetIterator(); iSlab;)
 		{
 			auto pSlab = &*iSlab;
 			++iSlab;
@@ -286,13 +286,13 @@ namespace NMib::NMemory
 		// removes the release hysteresis from the pending-bit walk entirely
 		constexpr bool c_bRetainSubSlabs = t_CParams::mc_nOwnerReclaimRetainSubSlabs != 0;
 
-		for (umint i = 0; i < t_CParams::mc_NumSizesPerLevel; ++i)
+		for (umint iSlabType = 0; iSlabType < t_CParams::mc_NumSizesPerLevel; ++iSlabType)
 		{
 			[[maybe_unused]] umint nRetain = 0;
 			if constexpr (c_bRetainSubSlabs)
 				nRetain = _bRetain ? t_CParams::mc_nOwnerReclaimRetainSubSlabs : 0;
 
-			for (auto iSlab = m_SlabsToGarbageCollect[i].f_GetIterator(); iSlab;)
+			for (auto iSlab = mp_SlabsToGarbageCollect[iSlabType].f_GetIterator(); iSlab;)
 			{
 				auto pSlab = &*iSlab;
 				++iSlab;
@@ -484,7 +484,7 @@ namespace NMib::NMemory
 					DMibFastCheck(SlabBucket - 5 < mc_nNormalSizeLists);
 					DMibFastCheck(SlabType < t_CParams::mc_NumSizesPerLevel);
 
-					pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SlabType)];
+					pList = &mp_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SlabType)];
 				}
 				else
 				{
@@ -493,7 +493,7 @@ namespace NMib::NMemory
 
 					DMibFastCheck(SlabIndex < mc_nLevel0Lists);
 
-					pList = &m_NormalSizeSlabsLevel0[SlabIndex];
+					pList = &mp_NormalSizeSlabsLevel0[SlabIndex];
 				}
 			}
 			else
@@ -501,7 +501,7 @@ namespace NMib::NMemory
 				DMibFastCheck(SlabBucket - t_CParams::mc_MinNormalSlabBucket < mc_nNormalSizeLists);
 				DMibFastCheck(SlabType < t_CParams::mc_NumSizesPerLevel);
 
-				pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SlabType)];
+				pList = &mp_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SlabType)];
 			}
 
 			umint nBlocksInList = umint(pEnd - pStartRemove) / AlignedSize;
@@ -525,9 +525,9 @@ namespace NMib::NMemory
 		if constexpr (t_CParams::mc_bUseFreeBlockCounting || mc_bSubSlabBitmaps) // Does not support fp_ConsolidateSubSlab
 			return;
 
-		for (umint i = 0; i < t_CParams::mc_NumSizesPerLevel; ++i)
+		for (umint iSlabType = 0; iSlabType < t_CParams::mc_NumSizesPerLevel; ++iSlabType)
 		{
-			for (auto iSlab = m_SlabsToGarbageCollect[i].f_GetIterator(); iSlab;)
+			for (auto iSlab = mp_SlabsToGarbageCollect[iSlabType].f_GetIterator(); iSlab;)
 			{
 				auto pSlab = &*iSlab;
 				++iSlab;
@@ -560,7 +560,7 @@ namespace NMib::NMemory
 	inline_always void TCMemoryManagerArena<t_CParams>::fp_SlabHasGarbageInline(TCMemoryManagerSlabShared<t_CParams> *_pSlab)
 	{
 		if (_pSlab->m_nPendingSubSlabs + _pSlab->m_nFreeSubSlabs == 0)
-			m_SlabsToGarbageCollect[_pSlab->m_SlabType].f_Insert(_pSlab);
+			mp_SlabsToGarbageCollect[_pSlab->m_SlabType].f_Insert(_pSlab);
 
 		if constexpr (t_CParams::mc_bBackgroundCleanup)
 			_pSlab->m_HasGarbageTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();

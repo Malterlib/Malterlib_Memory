@@ -232,8 +232,8 @@ namespace NMib::NMemory
 			EHeapDebugFlag m_Flags;
 		};
 
-		static constexpr umint mc_PreBlockDataSize = sizeof(CPreBlockData) + t_COptions::mc_nPreGuardBytes;
-		static constexpr umint mc_PreBlockPadding = fg_AlignUpConstExpr(mc_PreBlockDataSize, sizeof(void *) * 2) - mc_PreBlockDataSize;
+		static constexpr umint mcp_PreBlockDataSize = sizeof(CPreBlockData) + t_COptions::mc_nPreGuardBytes;
+		static constexpr umint mcp_PreBlockPadding = fg_AlignUpConstExpr(mcp_PreBlockDataSize, sizeof(void *) * 2) - mcp_PreBlockDataSize;
 
 		struct CPreBlockNormal : public CPreBlockData
 		{
@@ -247,7 +247,7 @@ namespace NMib::NMemory
 
 		struct CPreBlockPadded : public CPreBlockData
 		{
-			TCMemoryManagerDebugPaddingHelper<mc_PreBlockPadding> m_Padding;
+			TCMemoryManagerDebugPaddingHelper<mcp_PreBlockPadding> m_Padding;
 			uint8 m_GuardBytes[t_COptions::mc_nPreGuardBytes];
 
 			uint8 *f_GetPreGuard()
@@ -256,14 +256,14 @@ namespace NMib::NMemory
 			}
 		};
 
-		using CPreBlock = TCConditional<(mc_PreBlockPadding > 0), CPreBlockPadded, CPreBlockNormal>;
+		using CPreBlock = TCConditional<(mcp_PreBlockPadding > 0), CPreBlockPadded, CPreBlockNormal>;
 
-		static_assert(sizeof(CPreBlock) == fg_AlignUpConstExpr(mc_PreBlockDataSize, sizeof(void *) * 2));
+		static_assert(sizeof(CPreBlock) == fg_AlignUpConstExpr(mcp_PreBlockDataSize, sizeof(void *) * 2));
 
-		static constexpr umint mc_PreBlockAlignment = fg_Max(alignof(CPreBlock), sizeof(void *) * 2);
+		static constexpr umint mcp_PreBlockAlignment = fg_Max(alignof(CPreBlock), sizeof(void *) * 2);
 
-		TCPool<zbool, 8, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_ReportingLeaksPool;
-		NThread::TCThreadLocalDynamic<zbool, NThread::EThreadLocalFlag_FastThreadLocal> m_bReportingLeaks;
+		TCPool<zbool, 8, NThread::CMutual, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> mp_ReportingLeaksPool;
+		NThread::TCThreadLocalDynamic<zbool, NThread::EThreadLocalFlag_FastThreadLocal> mp_bReportingLeaks;
 
 	private:
 		static bool fsp_CheckGuard(uint8 *_pMemory, EMemoryManagerCheckFlag _Flags);

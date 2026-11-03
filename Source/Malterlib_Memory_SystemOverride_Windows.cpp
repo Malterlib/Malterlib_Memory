@@ -196,9 +196,9 @@ extern "C"
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 			return nullptr;
-		void *addr = NMib::NMemory::fg_Alloc(Size);
-		memset(addr, 0, UnalignedSize);
-		return addr;
+		void *pMemory = NMib::NMemory::fg_Alloc(Size);
+		memset(pMemory, 0, UnalignedSize);
+		return pMemory;
 	}
 
 	void * DDefaultCallingConv _calloc_dbg(size_t nelem, size_t elsize, int BlockType, char const *Filename, int Line)
@@ -210,9 +210,9 @@ extern "C"
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 			return nullptr;
-		void *addr = NMib::NMemory::fg_AllocDebug(Size, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
-		memset(addr, 0, UnalignedSize);
-		return addr;
+		void *pMemory = NMib::NMemory::fg_AllocDebug(Size, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
+		memset(pMemory, 0, UnalignedSize);
+		return pMemory;
 	}
 
 	void * __cdecl _calloc_dbg_impl(size_t nNum, size_t nSize, int nBlockUse, char const *szFileName, int nLine, int *errno_tmp)
@@ -228,9 +228,9 @@ extern "C"
 				*errno_tmp = ENOMEM;
 			return nullptr;
 		}
-		void *addr = NMib::NMemory::fg_AllocDebug(Size, szFileName, nLine, (nBlockUse == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
-		memset(addr, 0, UnalignedSize);
-		return addr;
+		void *pMemory = NMib::NMemory::fg_AllocDebug(Size, szFileName, nLine, (nBlockUse == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
+		memset(pMemory, 0, UnalignedSize);
+		return pMemory;
 	}
 
 	void * DDefaultCallingConv _calloc_impl(size_t nelem, size_t elsize, int *errno_tmp)
@@ -246,9 +246,9 @@ extern "C"
 				*errno_tmp = ENOMEM;
 			return nullptr;
 		}
-		void *addr = NMib::NMemory::fg_Alloc(Size);
-		memset(addr, 0, UnalignedSize);
-		return addr;
+		void *pMemory = NMib::NMemory::fg_Alloc(Size);
+		memset(pMemory, 0, UnalignedSize);
+		return pMemory;
 	}
 
 	void * DDefaultCallingConv _calloc_base(size_t nelem, size_t elsize)
@@ -260,9 +260,9 @@ extern "C"
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 			return nullptr;
-		void *addr = NMib::NMemory::fg_Alloc(Size);
-		memset(addr, 0, UnalignedSize);
-		return addr;
+		void *pMemory = NMib::NMemory::fg_Alloc(Size);
+		memset(pMemory, 0, UnalignedSize);
+		return pMemory;
 	}
 
 	_CRTIMP __checkReturn __bcount_opt(_Size) void * __cdecl _malloc_crt(__in size_t _Size)
@@ -270,8 +270,8 @@ extern "C"
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		if (!fg_TryAlignWindowsAllocationSize(_Size))
 			return nullptr;
-		void *addr = NMib::NMemory::fg_Alloc(_Size);
-		return addr;
+		void *pMemory = NMib::NMemory::fg_Alloc(_Size);
+		return pMemory;
 	}
 
 	_CRTIMP void * __cdecl _calloc_crt(size_t count, size_t size)
@@ -283,9 +283,9 @@ extern "C"
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 			return nullptr;
-		void *addr = NMib::NMemory::fg_Alloc(Size);
-		memset(addr, 0, UnalignedSize);
-		return addr;
+		void *pMemory = NMib::NMemory::fg_Alloc(Size);
+		memset(pMemory, 0, UnalignedSize);
+		return pMemory;
 	}
 
 	_CRTIMP __checkReturn __bcount_opt(_Size) void * __cdecl _realloc_crt(__inout_opt void *_Ptr, __in size_t _Size)
@@ -293,8 +293,8 @@ extern "C"
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		if (!fg_TryAlignWindowsAllocationSize(_Size))
 			return nullptr;
-		void *addr = NMib::NMemory::fg_Resize(_Ptr, _Size, 0, EAllocationFlag_SizeNotNeeded);
-		return addr;
+		void *pMemory = NMib::NMemory::fg_Resize(_Ptr, _Size, 0, EAllocationFlag_SizeNotNeeded);
+		return pMemory;
 	}
 
 	_CRTIMP __checkReturn __bcount_opt(_Size *_Count) void * __cdecl _recalloc_crt(__inout_opt void *_Ptr, __in size_t _Count, __in size_t _Size)
@@ -305,8 +305,8 @@ extern "C"
 			return nullptr;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 			return nullptr;
-		void *addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
-		return addr;
+		void *pMemory = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
+		return pMemory;
 	}
 
 	_Success_(return != 0) _Check_return_ _Ret_maybenull_ _Post_writable_byte_size_(_Count * _Size)
@@ -319,8 +319,8 @@ extern "C"
 			return nullptr;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 			return nullptr;
-		void *addr = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
-		return addr;
+		void *pMemory = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
+		return pMemory;
 	}
 
 	/*************************************************************************************************\
@@ -412,12 +412,12 @@ extern "C"
 //#endif
 	void * DDefaultCallingConv _recalloc_dbg(void *memblock, size_t count, size_t size, int nBlockUse, char const *szFileName, int nLine)
 	{
-		size_t size_orig = 0;
+		size_t TotalSize = 0;
 
-		if (!fg_TryMultiplyWindowsAllocationSize(count, size, size_orig))
+		if (!fg_TryMultiplyWindowsAllocationSize(count, size, TotalSize))
 			return nullptr;
 
-		return _realloc_dbg(memblock, size_orig, nBlockUse, szFileName, nLine);
+		return _realloc_dbg(memblock, TotalSize, nBlockUse, szFileName, nLine);
 	}
 
 	/*************************************************************************************************\
@@ -705,16 +705,16 @@ extern "C"
 
 	typedef struct CAlignMemBlockHdr
 	{
-		void *pHead;
-		unsigned char Gap[DAlignGapSize];
+		void *m_pHead;
+		unsigned char m_Gap[DAlignGapSize];
 	} CAlignMemBlockHdr;
 
 #	define DIs2PowN(d_Value)   (((d_Value)&(d_Value-1)) == 0)
 
 #	define DNoMansLandSize 4
 
-	static unsigned char _bNoMansLandFill = 0xFD; // fill no-man's land with this
-	static unsigned char _bAlignLandFill = 0xED; // fill no-man's land for aligned routines
+	static unsigned char gs_NoMansLandFill = 0xFD; // fill no-man's land with this
+	static unsigned char gs_AlignLandFill = 0xED; // fill no-man's land for aligned routines
 
 	void * __cdecl _aligned_malloc(size_t size, size_t align)
 	{
@@ -748,27 +748,27 @@ extern "C"
 
 	void * __cdecl _aligned_offset_malloc_dbg(size_t size, size_t align, size_t offset, char const *f_name, int line_n)
 	{
-		uintptr_t ptr, r_ptr, t_ptr;
+		uintptr_t BlockAddress, AlignedAddress, HeaderGap;
 		CAlignMemBlockHdr *pHdr;
-		size_t nonuser_size, block_size;
+		size_t NonUserSize, BlockSize;
 
 		/* validation section */
 		align = (align > sizeof(uintptr_t) ? align : sizeof(uintptr_t)) - 1;
 
-		t_ptr = (0 - offset) & (sizeof(uintptr_t) - 1);
+		HeaderGap = (0 - offset) & (sizeof(uintptr_t) - 1);
 
-		nonuser_size = t_ptr + align + sizeof(CAlignMemBlockHdr); // cannot overflow
-		if (!fg_TryAddWindowsAllocationSize(size, nonuser_size, block_size))
+		NonUserSize = HeaderGap + align + sizeof(CAlignMemBlockHdr); // cannot overflow
+		if (!fg_TryAddWindowsAllocationSize(size, NonUserSize, BlockSize))
 			return NULL;
 
-		if ((ptr = (uintptr_t)_malloc_dbg(block_size, _NORMAL_BLOCK, f_name, line_n)) == (uintptr_t)NULL)
+		if ((BlockAddress = (uintptr_t)_malloc_dbg(BlockSize, _NORMAL_BLOCK, f_name, line_n)) == (uintptr_t)NULL)
 			return NULL;
 
-		r_ptr = ((ptr + nonuser_size + offset) & ~align) - offset;
-		pHdr = (CAlignMemBlockHdr *)(r_ptr - t_ptr) - 1;
-		memset((void *)pHdr->Gap, _bAlignLandFill, DAlignGapSize);
-		pHdr->pHead = (void *)ptr;
-		return (void *)r_ptr;
+		AlignedAddress = ((BlockAddress + NonUserSize + offset) & ~align) - offset;
+		pHdr = (CAlignMemBlockHdr *)(AlignedAddress - HeaderGap) - 1;
+		memset((void *)pHdr->m_Gap, gs_AlignLandFill, DAlignGapSize);
+		pHdr->m_pHead = (void *)BlockAddress;
+		return (void *)AlignedAddress;
 	}
 
 	void * __cdecl _aligned_offset_realloc(void *memblock, size_t size, size_t align, size_t offset)
@@ -783,9 +783,9 @@ extern "C"
 
 	void * __cdecl _aligned_offset_realloc_dbg(void *memblock, size_t size, size_t align, size_t offset, char const *f_name, int line_n)
 	{
-		uintptr_t ptr, r_ptr, t_ptr, mov_sz;
-		CAlignMemBlockHdr *pHdr, *s_pHdr;
-		size_t nonuser_size, block_size;
+		uintptr_t BlockAddress, AlignedAddress, HeaderGap, MoveSize;
+		CAlignMemBlockHdr *pHdr, *pOldHeader;
+		size_t NonUserSize, BlockSize;
 
 		if (memblock == NULL)
 			return _aligned_offset_malloc_dbg(size, align, offset, f_name, line_n);
@@ -795,9 +795,9 @@ extern "C"
 			return NULL;
 		}
 
-		s_pHdr = (CAlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
+		pOldHeader = (CAlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
 
-		if (CheckBytes((unsigned char *)memblock - DNoMansLandSize, _bNoMansLandFill, DNoMansLandSize))
+		if (CheckBytes((unsigned char *)memblock - DNoMansLandSize, gs_NoMansLandFill, DNoMansLandSize))
 		{
 			// We don't know where (file, linenum) memblock was allocated
 			_RPT1(_CRT_ERROR, "The block at 0x%p was not allocated by _aligned routines, use realloc()", memblock);
@@ -805,7 +805,7 @@ extern "C"
 			return NULL;
 		}
 
-		if (!CheckBytes(s_pHdr->Gap, _bAlignLandFill, DAlignGapSize))
+		if (!CheckBytes(pOldHeader->m_Gap, gs_AlignLandFill, DAlignGapSize))
 		{
 			// We don't know where (file, linenum) memblock was allocated
 			_RPT1(_CRT_ERROR, "Damage before 0x%p which was allocated by aligned routine\n", memblock);
@@ -813,53 +813,53 @@ extern "C"
 
 		/* validation section */
 
-		mov_sz = _msize(s_pHdr->pHead) - ((uintptr_t)memblock - (uintptr_t)s_pHdr->pHead);
+		MoveSize = _msize(pOldHeader->m_pHead) - ((uintptr_t)memblock - (uintptr_t)pOldHeader->m_pHead);
 
 		align = (align > sizeof(uintptr_t) ? align : sizeof(uintptr_t)) - 1;
 
-		t_ptr = (0 - offset) & (sizeof(uintptr_t) - 1);
+		HeaderGap = (0 - offset) & (sizeof(uintptr_t) - 1);
 
-		nonuser_size = t_ptr + align + sizeof(CAlignMemBlockHdr); // cannot overflow
-		if (!fg_TryAddWindowsAllocationSize(size, nonuser_size, block_size))
+		NonUserSize = HeaderGap + align + sizeof(CAlignMemBlockHdr); // cannot overflow
+		if (!fg_TryAddWindowsAllocationSize(size, NonUserSize, BlockSize))
 			return NULL;
 
-		if ((ptr = (uintptr_t)_malloc_dbg(block_size, _NORMAL_BLOCK, f_name, line_n)) == (uintptr_t)NULL)
+		if ((BlockAddress = (uintptr_t)_malloc_dbg(BlockSize, _NORMAL_BLOCK, f_name, line_n)) == (uintptr_t)NULL)
 			return NULL;
 
-		r_ptr = ((ptr + nonuser_size + offset) & ~align) - offset;
-		pHdr = (CAlignMemBlockHdr *)(r_ptr - t_ptr) - 1;
-		memset((void *)pHdr->Gap, _bAlignLandFill, DAlignGapSize);
-		pHdr->pHead = (void *)ptr;
+		AlignedAddress = ((BlockAddress + NonUserSize + offset) & ~align) - offset;
+		pHdr = (CAlignMemBlockHdr *)(AlignedAddress - HeaderGap) - 1;
+		memset((void *)pHdr->m_Gap, gs_AlignLandFill, DAlignGapSize);
+		pHdr->m_pHead = (void *)BlockAddress;
 
-		memcpy((void *)r_ptr, memblock, mov_sz > size ? size : mov_sz);
-		_free_dbg(s_pHdr->pHead, _NORMAL_BLOCK);
+		memcpy((void *)AlignedAddress, memblock, MoveSize > size ? size : MoveSize);
+		_free_dbg(pOldHeader->m_pHead, _NORMAL_BLOCK);
 
-		return (void *)r_ptr;
+		return (void *)AlignedAddress;
 	}
 
 	void * __cdecl _aligned_offset_recalloc_dbg(void *memblock, size_t count, size_t size, size_t align, size_t offset, char const *f_name, int line_n)
 	{
-		size_t user_size = 0; // wanted size, passed to aligned realoc
-		size_t start_fill = 0; // location where aligned recalloc starts to fill with 0
-							   /* filling must start from the end of the previous user block */
-							   /* and must stop at the end of the new user block */
-		void *retp = NULL; // result of aligned recalloc
+		size_t UserSize = 0; // wanted size, passed to aligned realoc
+		size_t FillStart = 0; // location where aligned recalloc starts to fill with 0
+							  /* filling must start from the end of the previous user block */
+							  /* and must stop at the end of the new user block */
+		void *pResult = NULL; // result of aligned recalloc
 
 		/* ensure that (size * count) does not overflow */
-		if (!fg_TryMultiplyWindowsAllocationSize(count, size, user_size))
+		if (!fg_TryMultiplyWindowsAllocationSize(count, size, UserSize))
 			return NULL;
 
 		if (memblock != NULL)
-			start_fill = _aligned_msize(memblock, align, offset);
+			FillStart = _aligned_msize(memblock, align, offset);
 
-		retp = _aligned_offset_realloc_dbg(memblock, user_size, align, offset, f_name, line_n);
+		pResult = _aligned_offset_realloc_dbg(memblock, UserSize, align, offset, f_name, line_n);
 
-		if (retp != NULL)
+		if (pResult != NULL)
 		{
-			if (start_fill < user_size)
-				memset((char *)retp + start_fill, 0, user_size - start_fill);
+			if (FillStart < UserSize)
+				memset((char *)pResult + FillStart, 0, UserSize - FillStart);
 		}
-		return retp;
+		return pResult;
 	}
 
 	void __cdecl _aligned_free(void *memblock)
@@ -876,19 +876,19 @@ extern "C"
 
 		pHdr = (CAlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
 
-		if (CheckBytes((unsigned char *)memblock - DNoMansLandSize, _bNoMansLandFill, DNoMansLandSize))
+		if (CheckBytes((unsigned char *)memblock - DNoMansLandSize, gs_NoMansLandFill, DNoMansLandSize))
 		{
 			// We don't know where (file, linenum) memblock was allocated
 			_RPT1(_CRT_ERROR, "The block at 0x%p was not allocated by _aligned routines, use free()", memblock);
 			return;
 		}
 
-		if (!CheckBytes(pHdr->Gap, _bAlignLandFill, DAlignGapSize))
+		if (!CheckBytes(pHdr->m_Gap, gs_AlignLandFill, DAlignGapSize))
 		{
 			// We don't know where (file, linenum) memblock was allocated
 			_RPT1(_CRT_ERROR, "Damage before 0x%p which was allocated by aligned routine\n", memblock);
 		}
-		_free_dbg((void *)pHdr->pHead, _NORMAL_BLOCK);
+		_free_dbg((void *)pHdr->m_pHead, _NORMAL_BLOCK);
 	}
 
 	size_t __cdecl _aligned_msize(void *memblock, size_t align, size_t offset)
@@ -898,11 +898,11 @@ extern "C"
 
 	size_t __cdecl _aligned_msize_dbg(void *memblock, size_t align, size_t offset)
 	{
-		size_t header_size = 0; // Size of the header block
-		size_t footer_size = 0; // Size of the footer block
-		size_t total_size = 0; // total size of the allocated block
-		size_t user_size = 0; // size of the user block
-		uintptr_t gap = 0; // keep the alignment of the data block
+		size_t HeaderSize = 0; // Size of the header block
+		size_t FooterSize = 0; // Size of the footer block
+		size_t TotalSize = 0; // total size of the allocated block
+		size_t UserSize = 0; // size of the user block
+		uintptr_t Gap = 0; // keep the alignment of the data block
 						   /* after the sizeof(void*) aligned pointer */
 						   /* to the beginning of the allocated block */
 
@@ -911,14 +911,14 @@ extern "C"
 
 		CAlignMemBlockHdr *pHdr = NULL; // points to the beginning of the allocated block
 		pHdr = (CAlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
-		total_size = _msize(pHdr->pHead);
-		header_size = (uintptr_t)memblock - (uintptr_t)pHdr->pHead;
-		gap = (0 - offset) & (sizeof(uintptr_t) - 1);
+		TotalSize = _msize(pHdr->m_pHead);
+		HeaderSize = (uintptr_t)memblock - (uintptr_t)pHdr->m_pHead;
+		Gap = (0 - offset) & (sizeof(uintptr_t) - 1);
 		/* The align cannot be smaller than the sizeof(uintptr_t) */
 		align = (align > sizeof(uintptr_t) ? align : sizeof(uintptr_t)) - 1;
-		footer_size = gap + align + sizeof(CAlignMemBlockHdr) - header_size;
-		user_size = total_size - header_size - footer_size;
-		return user_size;
+		FooterSize = Gap + align + sizeof(CAlignMemBlockHdr) - HeaderSize;
+		UserSize = TotalSize - HeaderSize - FooterSize;
+		return UserSize;
 	}
 #endif
 }

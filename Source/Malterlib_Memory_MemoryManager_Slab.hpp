@@ -13,7 +13,7 @@ namespace NMib::NMemory
 		: m_pArena(_pArena)
 		, m_SlabType(_SlabType)
 		, m_nCommittedHeaderSubSlabs(_nCommittedHeaderSubSlabs)
-		, m_pMemoryManager(_pArena->m_pMemoryManager)
+		, m_pMemoryManager(_pArena->mp_pMemoryManager)
 		, m_nAllocatedSubSlabs(0)
 		, m_nFreeSubSlabs(0)
 		, m_nPendingSubSlabs(0)
@@ -105,23 +105,23 @@ namespace NMib::NMemory
 
 		DMibFastCheck(this->f_GetNumSubSlabs() == mc_nSubSlabs);
 
-		for (umint i = 0; i < mc_nSubSlabs; ++i)
-			m_SubSlabDataType[i].m_Type = 0;
-		for (umint i = 0; i < mc_nSubSlabs; ++i)
-			m_SubSlabDataAlloc[i].m_nAllocs = 0;
+		for (umint iSubSlab = 0; iSubSlab < mc_nSubSlabs; ++iSubSlab)
+			m_SubSlabDataType[iSubSlab].m_Type = 0;
+		for (umint iSubSlab = 0; iSubSlab < mc_nSubSlabs; ++iSubSlab)
+			m_SubSlabDataAlloc[iSubSlab].m_nAllocs = 0;
 		this->m_pSubSlabDataAlloc = m_SubSlabDataAlloc;
 
 		if constexpr (t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabLists)
 		{
-			for (umint i = 0; i < mc_nSubSlabs; ++i)
-				m_SubSlabListStore.m_FreeState[i] = {nullptr, 0, 0, 0};
+			for (umint iSubSlab = 0; iSubSlab < mc_nSubSlabs; ++iSubSlab)
+				m_SubSlabListStore.m_FreeState[iSubSlab] = {nullptr, 0, 0, 0};
 			this->m_pSubSlabNodes = m_SubSlabListStore.m_Nodes;
 			this->m_pSubSlabFreeState = m_SubSlabListStore.m_FreeState;
 		}
 		else if constexpr (t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps)
 		{
-			for (umint i = 0; i < mc_nSubSlabs; ++i)
-				m_SubSlabListStore.m_FreeState[i] = {0};
+			for (umint iSubSlab = 0; iSubSlab < mc_nSubSlabs; ++iSubSlab)
+				m_SubSlabListStore.m_FreeState[iSubSlab] = {0};
 			this->m_pSubSlabNodes = m_SubSlabListStore.m_Nodes;
 			this->m_pSubSlabFreeState = m_SubSlabListStore.m_FreeState;
 		}
@@ -130,17 +130,17 @@ namespace NMib::NMemory
 		{
 			m_SubSlabRemoteFreeStore.m_Notify.m_SummaryTop.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
 			m_SubSlabRemoteFreeStore.m_Notify.m_StackNext.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
-			for (umint i = 0; i < (mc_nSubSlabs + 63) / 64; ++i)
-				m_SubSlabRemoteFreeStore.m_Summary[i].f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
+			for (umint iSummary = 0; iSummary < (mc_nSubSlabs + 63) / 64; ++iSummary)
+				m_SubSlabRemoteFreeStore.m_Summary[iSummary].f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
 			if constexpr (t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps)
 			{
-				for (umint i = 0; i < mc_nSubSlabs; ++i)
-					m_SubSlabRemoteFreeStore.m_Remote[i].m_Bits.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
+				for (umint iSubSlab = 0; iSubSlab < mc_nSubSlabs; ++iSubSlab)
+					m_SubSlabRemoteFreeStore.m_Remote[iSubSlab].m_Bits.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
 			}
 			else
 			{
-				for (umint i = 0; i < mc_nSubSlabs; ++i)
-					m_SubSlabRemoteFreeStore.m_Remote[i].m_Head.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
+				for (umint iSubSlab = 0; iSubSlab < mc_nSubSlabs; ++iSubSlab)
+					m_SubSlabRemoteFreeStore.m_Remote[iSubSlab].m_Head.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed);
 			}
 			this->m_pRemoteFreeNotify = &m_SubSlabRemoteFreeStore.m_Notify;
 			this->m_pRemoteFreeSummary = m_SubSlabRemoteFreeStore.m_Summary;
@@ -221,7 +221,7 @@ namespace NMib::NMemory
 			this->m_LinkToGarbageCollect.f_Unlink();
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 				this->m_FreeSubSlabs.f_Clear();
-			auto pNumaArena = pArena->m_pNumaArena;
+			auto pNumaArena = pArena->mp_pNumaArena;
 			if constexpr (t_CParams::mc_bBackgroundCleanup)
 				this->m_FreeTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 			auto FullySetLevel = this->m_FullySetLevel;
@@ -229,35 +229,35 @@ namespace NMib::NMemory
 
 			bool bReturn = false;
 
-			if (pArena->m_FreeSlabs.f_IsEmpty())
+			if (pArena->mp_FreeSlabs.f_IsEmpty())
 			{
-				pArena->m_FreeSlabs.f_Insert(this);
+				pArena->mp_FreeSlabs.f_Insert(this);
 				pArena->fp_RequestCleanup();
 			}
 			else
 			{
-				DMibLock(pNumaArena->m_FreeSlabsLock);
+				DMibLock(pNumaArena->mp_FreeSlabsLock);
 				this->m_pArena = nullptr;
-				bool bWasEmpty = pNumaArena->m_FreeSlabs.f_IsEmpty();
+				bool bWasEmpty = pNumaArena->mp_FreeSlabs.f_IsEmpty();
 
 				this->m_LinkToGarbageCollect.f_Unlink();
 
 				if constexpr (t_CParams::mc_bBackgroundCleanup)
 					DMibFastCheck(this->m_FreeTimestamp != 0);
 
-				pNumaArena->m_FreeSlabs.f_InsertFirst(this);
+				pNumaArena->mp_FreeSlabs.f_InsertFirst(this);
 				bool bPendingDecommit = this->m_LinkNeedDecommit.f_IsInList();
 				if (bPendingDecommit)
-					pNumaArena->m_FreeSlabsNeedingDecommit.f_InsertFirst(this);
+					pNumaArena->mp_FreeSlabsNeedingDecommit.f_InsertFirst(this);
 
 				if (bPendingDecommit || !bWasEmpty)
-					pArena->m_bWantNumaFreeSlabsCleanup = true;
+					pArena->mp_bWantNumaFreeSlabsCleanup = true;
 
 				bReturn = true;
 			}
 
-			if (pArena->m_PartiallyFreeSlabs[t_SlabType][FullySetLevel].f_IsEmpty())
-				pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<false>(FullySetLevel);
+			if (pArena->mp_PartiallyFreeSlabs[t_SlabType][FullySetLevel].f_IsEmpty())
+				pArena->mp_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<false>(FullySetLevel);
 
 			return bReturn;
 		}
@@ -270,12 +270,12 @@ namespace NMib::NMemory
 
 		if (iNewLevel != this->m_FullySetLevel)
 		{
-			pArena->m_PartiallyFreeSlabs[t_SlabType][iNewLevel].f_Insert(this);
+			pArena->mp_PartiallyFreeSlabs[t_SlabType][iNewLevel].f_Insert(this);
 			DMibFastCheck(m_Allocated.f_FindFreeBit(iNewLevel) >= 0);
-			pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<true>(iNewLevel);
+			pArena->mp_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<true>(iNewLevel);
 
-			if (pArena->m_PartiallyFreeSlabs[t_SlabType][this->m_FullySetLevel].f_IsEmpty())
-				pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<false>(this->m_FullySetLevel);
+			if (pArena->mp_PartiallyFreeSlabs[t_SlabType][this->m_FullySetLevel].f_IsEmpty())
+				pArena->mp_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<false>(this->m_FullySetLevel);
 
 			DMibFastCheck(iNewLevel < 128);
 			this->m_FullySetLevel = iNewLevel;
@@ -323,8 +323,8 @@ namespace NMib::NMemory
 
 		if (this->m_FullySetLevel == t_CParams::mc_NumSubSlabSizeLevels)
 		{
-			pArena->m_PartiallyFreeSlabs[t_SlabType][t_CParams::mc_NumSubSlabSizeLevels - 1].f_Insert(this);
-			pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<true>(t_CParams::mc_NumSubSlabSizeLevels - 1);
+			pArena->mp_PartiallyFreeSlabs[t_SlabType][t_CParams::mc_NumSubSlabSizeLevels - 1].f_Insert(this);
+			pArena->mp_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<true>(t_CParams::mc_NumSubSlabSizeLevels - 1);
 			this->m_FullySetLevel = t_CParams::mc_NumSubSlabSizeLevels - 1;
 			return Ret;
 		}
@@ -337,16 +337,16 @@ namespace NMib::NMemory
 		if (iNewLevel != iOldLevel)
 		{
 			if (iNewLevel < 0)
-				pArena->m_FullSlabs.f_Insert(this);
+				pArena->mp_FullSlabs.f_Insert(this);
 			else
 			{
-				pArena->m_PartiallyFreeSlabs[t_SlabType][iNewLevel].f_Insert(this);
-				pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<true>(iNewLevel);
+				pArena->mp_PartiallyFreeSlabs[t_SlabType][iNewLevel].f_Insert(this);
+				pArena->mp_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<true>(iNewLevel);
 				DMibFastCheck(m_Allocated.f_FindFreeBit(iNewLevel) >= 0);
 			}
 
-			if (pArena->m_PartiallyFreeSlabs[t_SlabType][iOldLevel].f_IsEmpty())
-				pArena->m_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<false>(iOldLevel);
+			if (pArena->mp_PartiallyFreeSlabs[t_SlabType][iOldLevel].f_IsEmpty())
+				pArena->mp_PartiallyFreeSlabsAvailable[t_SlabType].template f_SetBit<false>(iOldLevel);
 
 			DMibFastCheck(iNewLevel < 128);
 			this->m_FullySetLevel = fg_Max(iNewLevel, 0);

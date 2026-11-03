@@ -43,7 +43,7 @@ namespace NMib::NMemory
 		bool f_GarbageCollectLocalArenaIfPending();
 
 	private:
-		ICMemoryManagerReturnCheckout *m_pThreadLocal;
+		ICMemoryManagerReturnCheckout *mp_pThreadLocal;
 
 		CMemoryManagerCheckout(CMemoryManagerCheckout const &_Other);
 		CMemoryManagerCheckout &operator = (CMemoryManagerCheckout const &_Other);

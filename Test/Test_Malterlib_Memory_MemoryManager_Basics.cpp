@@ -39,7 +39,7 @@ namespace
 				NMib::NContainer::TCLinkedList<void *> Allocated;
 				for (int i = 0; i <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++i)
 				{
-					umint Size = (*MemoryManager.m_LocalArena).f_SizePadded(i);
+					umint Size = (*MemoryManager.mp_LocalArena).f_SizePadded(i);
 					if (i < 1024)
 						Size = i;
 					if (Size != LastSlab)
@@ -66,7 +66,7 @@ namespace
 					{
 						for (int i = 0; i <= CParamsNoCleanup::mc_MaxSlabAllocSize; ++i)
 						{
-							umint Size = (*MemoryManager.m_LocalArena).f_SizePadded(i);
+							umint Size = (*MemoryManager.mp_LocalArena).f_SizePadded(i);
 							if (i < 1024)
 								Size = i;
 							if (Size != LastSlab)
@@ -483,10 +483,10 @@ namespace
 					{
 						using CParams = TCMemoryManagerParams<TCParams<tf_PageSize, tf_nSizesPerLevel>>;
 						// Just run for checking the asserts
-						for (int i = 0; i < CParams::mc_SlabSize / CParams::mc_SubSlabSize; ++i)
+						for (int iSubSlab = 0; iSubSlab < CParams::mc_SlabSize / CParams::mc_SubSlabSize; ++iSubSlab)
 						{
 							for (umint iSize = 0; iSize < _nSizesPerLevel; ++iSize)
-								CParams::fs_DivideBySlabMultiplier(i, iSize);
+								CParams::fs_DivideBySlabMultiplier(iSubSlab, iSize);
 						}
 					}
 				;
@@ -937,9 +937,9 @@ namespace
 						if (AllocSize >= sizeof(void *) * 2 && AllocSize * 8 <= CParamsNoCleanup::mc_SubSlabSize)
 						{
 							bool bContiguous = true;
-							for (umint i = 1; i < 8; ++i)
+							for (umint iAlloc = 1; iAlloc < 8; ++iAlloc)
 							{
-								if (Allocs[i].m_pAlloc != (uint8 *)Allocs[0].m_pAlloc + i * AllocSize)
+								if (Allocs[iAlloc].m_pAlloc != (uint8 *)Allocs[0].m_pAlloc + iAlloc * AllocSize)
 									bContiguous = false;
 							}
 
@@ -953,9 +953,9 @@ namespace
 						for (auto &Alloc : Allocs)
 							Sorted.f_Insert(Alloc.m_pAlloc);
 						Sorted.f_Sort();
-						for (umint i = 1; i < Sorted.f_GetLen(); ++i)
+						for (umint iSorted = 1; iSorted < Sorted.f_GetLen(); ++iSorted)
 						{
-							if (Sorted[i] == Sorted[i - 1])
+							if (Sorted[iSorted] == Sorted[iSorted - 1])
 								bDistinct = false;
 						}
 					}
@@ -1006,13 +1006,13 @@ namespace
 						auto Checkout = MemoryManager.f_CheckoutForce();
 						NMib::NContainer::TCVector<void *> Allocs;
 						Allocs.f_SetLen(nAlloc);
-						for (umint i = 0; i < nAlloc; ++i)
+						for (umint iAlloc = 0; iAlloc < nAlloc; ++iAlloc)
 						{
 							umint Size = AllocSize;
-							Allocs[i] = MemoryManager.f_AllocWithSize(Size);
+							Allocs[iAlloc] = MemoryManager.f_AllocWithSize(Size);
 						}
-						for (umint i = 0; i < nAlloc; ++i)
-							MemoryManager.f_Free(Allocs[i], AllocSize);
+						for (umint iAlloc = 0; iAlloc < nAlloc; ++iAlloc)
+							MemoryManager.f_Free(Allocs[iAlloc], AllocSize);
 						DMibTest(DMibExpr(true));
 					}
 				}
@@ -1038,13 +1038,13 @@ namespace
 						umint nAlloc = (CParamsNoCleanup::mc_SlabSize * 4) / MemorySize;
 						NMib::NContainer::TCVector<void *> Allocs;
 						Allocs.f_SetLen(nAlloc);
-						for (umint i = 0; i < nAlloc; ++i)
+						for (umint iAlloc = 0; iAlloc < nAlloc; ++iAlloc)
 						{
 							umint Size = AllocSize;
-							Allocs[i] = MemoryManager.f_AllocWithSize(Size);
+							Allocs[iAlloc] = MemoryManager.f_AllocWithSize(Size);
 						}
-						for (umint i = 0; i < nAlloc; ++i)
-							MemoryManager.f_Free(Allocs[i], AllocSize);
+						for (umint iAlloc = 0; iAlloc < nAlloc; ++iAlloc)
+							MemoryManager.f_Free(Allocs[iAlloc], AllocSize);
 						DMibTest(DMibExpr(true));
 					}
 				}
@@ -1097,14 +1097,14 @@ namespace
 
 					MeasureMemory.f_Start();
 
-					for (umint i = 0; i < nAllocs; ++i)
+					for (umint iAlloc = 0; iAlloc < nAllocs; ++iAlloc)
 					{
 						umint Size = 256;
-						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
+						Allocs[iAlloc] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
-					for (umint i = 0; i < nAllocs; ++i)
-						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
+					for (umint iAlloc = 0; iAlloc < nAllocs; ++iAlloc)
+						MemoryManager.f_Free(Allocs[iAlloc].m_pAlloc, Allocs[iAlloc].m_Size);
 
 					MeasureMemory.f_Stop(1);
 
@@ -1131,14 +1131,14 @@ namespace
 
 					MeasureMemory.f_Start();
 
-					for (umint i = 0; i < nAllocs; ++i)
+					for (umint iAlloc = 0; iAlloc < nAllocs; ++iAlloc)
 					{
 						umint Size = 384;
-						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
+						Allocs[iAlloc] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
-					for (umint i = 0; i < nAllocs; ++i)
-						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
+					for (umint iAlloc = 0; iAlloc < nAllocs; ++iAlloc)
+						MemoryManager.f_Free(Allocs[iAlloc].m_pAlloc, Allocs[iAlloc].m_Size);
 
 					MeasureMemory.f_Stop(1);
 
@@ -1181,14 +1181,14 @@ namespace
 
 					MeasureMemory.f_Start();
 
-					for (umint i = 0; i < nAllocs; ++i)
+					for (umint iAlloc = 0; iAlloc < nAllocs; ++iAlloc)
 					{
 						umint Size = 256;
-						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
+						Allocs[iAlloc] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
-					for (umint i = 0; i < nAllocs; ++i)
-						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
+					for (umint iAlloc = 0; iAlloc < nAllocs; ++iAlloc)
+						MemoryManager.f_Free(Allocs[iAlloc].m_pAlloc, Allocs[iAlloc].m_Size);
 
 					MeasureMemory.f_Stop(1);
 
@@ -1217,14 +1217,14 @@ namespace
 
 					MeasureMemory.f_Start();
 
-					for (umint i = 0; i < nAllocs; ++i)
+					for (umint iAlloc = 0; iAlloc < nAllocs; ++iAlloc)
 					{
 						umint Size = AllocSize;
-						Allocs[i] = {MemoryManager.f_AllocWithSize(Size), Size};
+						Allocs[iAlloc] = {MemoryManager.f_AllocWithSize(Size), Size};
 					}
 
-					for (umint i = 0; i < nAllocs; ++i)
-						MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
+					for (umint iAlloc = 0; iAlloc < nAllocs; ++iAlloc)
+						MemoryManager.f_Free(Allocs[iAlloc].m_pAlloc, Allocs[iAlloc].m_Size);
 
 					MeasureMemory.f_Stop(1);
 
@@ -1251,10 +1251,10 @@ namespace
 					TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 					MemoryManager.f_ForceStartCleanupThreads();
 
-					for (umint i = 0; i < 2; ++i)
+					for (umint iPass = 0; iPass < 2; ++iPass)
 					{
 						ch8 const *pPath = "First Pass";
-						if (i == 1)
+						if (iPass == 1)
 							pPath = "Second Pass";
 						DMibTestPath(pPath);
 						NMib::NContainer::TCVector<CAlloc> Allocs;
@@ -1316,10 +1316,10 @@ namespace
 					TCMemoryManager<CParamsNoCleanup> MemoryManager{CMemoryManagerConfig()};
 					MemoryManager.f_ForceStartCleanupThreads();
 
-					for (umint i = 0; i < 2; ++i)
+					for (umint iPass = 0; iPass < 2; ++iPass)
 					{
 						ch8 const *pPath = "First Pass";
-						if (i == 1)
+						if (iPass == 1)
 							pPath = "Second Pass";
 						DMibTestPath(pPath);
 						NMib::NContainer::TCVector<CAlloc> Allocs;
@@ -1356,8 +1356,8 @@ namespace
 						DMibTest(DMibExpr(MemoryManager.f_GetNumUsedSlabs()) > DMibExpr(2u));
 						DMibTest(DMibExpr(MemoryManager.f_GetNumFreeSlabs()) == DMibExpr(0));
 
-						for (umint i = 1; i < Allocs.f_GetLen(); ++i)
-							MemoryManager.f_Free(Allocs[i].m_pAlloc, Allocs[i].m_Size);
+						for (umint iAlloc = 1; iAlloc < Allocs.f_GetLen(); ++iAlloc)
+							MemoryManager.f_Free(Allocs[iAlloc].m_pAlloc, Allocs[iAlloc].m_Size);
 
 						{
 							CTestMemoryMeasure MeasureMemory("Alloc");
@@ -1371,8 +1371,8 @@ namespace
 #endif
 						}
 
-						for (umint i = 0; i < BigAllocs.f_GetLen(); ++i)
-							MemoryManager.f_Free(BigAllocs[i].m_pAlloc, BigAllocs[i].m_Size);
+						for (umint iAlloc = 0; iAlloc < BigAllocs.f_GetLen(); ++iAlloc)
+							MemoryManager.f_Free(BigAllocs[iAlloc].m_pAlloc, BigAllocs[iAlloc].m_Size);
 
 						CTestMemoryMeasure MeasureMemory("Alloc");
 						MeasureMemory.f_Start();
@@ -1424,7 +1424,7 @@ namespace
 #	if DMibPPtrBits <= 32
 				nThreads = 4;
 #	endif
-				for (umint i = 0; i < nThreads; ++i)
+				for (umint iThread = 0; iThread < nThreads; ++iThread)
 				{
 					StartedThreads.f_Insert
 						(
@@ -1434,7 +1434,7 @@ namespace
 								{
 									NMib::NSys::fg_Thread_Sleep(fp64(0.1) + NMib::NMisc::fg_GetRandomFloat() * 0.1);
 
-									for (int i = 0; i < 64; ++i)
+									for (int iRepetition = 0; iRepetition < 64; ++iRepetition)
 									{
 										NMib::NContainer::TCVector<CAlloc> Allocs;
 										NMib::NContainer::TCVector<CAlloc> BigAllocs;

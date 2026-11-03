@@ -4,6 +4,7 @@
 #pragma once
 
 // NOLINTBEGIN(malterlib-parameter-naming): the declarations of the macOS SDK, with its parameter names
+// NOLINTBEGIN(malterlib-variable-naming): the declarations of the macOS SDK, with their names
 typedef struct _malloc_zone_t_known_version malloc_zone_t_known_version; // NOLINT(malterlib-type-naming): the name in the macOS SDK
 
 typedef struct malloc_introspection_t_known_version // NOLINT(malterlib-type-naming): the name in the macOS SDK
@@ -138,6 +139,7 @@ typedef struct _malloc_zone_t_known_version // NOLINT(malterlib-type-naming): th
 	void * (* MALLOC_ZONE_FN_PTR(malloc_type_malloc_with_options))(struct _malloc_zone_t_known_version *zone, size_t align, size_t size, uint64_t options, malloc_type_id_t type_id);
 } malloc_zone_t_known_version;
 
+// NOLINTEND(malterlib-variable-naming)
 // NOLINTEND(malterlib-parameter-naming)
 
 static_assert(sizeof(malloc_zone_t_known_version) >= sizeof(malloc_zone_t));

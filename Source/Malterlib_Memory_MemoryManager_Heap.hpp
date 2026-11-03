@@ -20,17 +20,17 @@ namespace NMib::NMemory
 	umint TCMemoryManagerArenaHeapChunk<t_CParams>::f_GetBlockSize(CMemoryManagerArenaHeapBlock const *_pBlock) const
 	{
 		uint8 *pAddress = f_GetBlockAddress(_pBlock);
-		auto pNextBlock = m_Blocks.f_FindSmallestGreaterThanEqual(pAddress + 1);
+		auto pNextBlock = mp_Blocks.f_FindSmallestGreaterThanEqual(pAddress + 1);
 		if (pNextBlock)
 			return f_GetBlockAddress(pNextBlock) - pAddress;
 
-		return m_Size - (pAddress - f_GetAddress());
+		return mp_Size - (pAddress - f_GetAddress());
 	}
 
 	template <typename t_CParams>
 	bool TCMemoryManagerArenaHeapChunk<t_CParams>::f_IsEmpty()
 	{
-		auto iBlock = m_Blocks.f_GetIterator();
+		auto iBlock = mp_Blocks.f_GetIterator();
 		if (!iBlock)
 			return true;
 
@@ -47,10 +47,10 @@ namespace NMib::NMemory
 
 	template <typename t_CParams>
 	TCMemoryManagerArenaHeapChunk<t_CParams>::TCMemoryManagerArenaHeapChunk(umint _Size, TCMemoryManagerArenaHeap<t_CParams> *_pHeap)
-		: m_Size(_Size)
-		, m_pHeap(_pHeap)
-		, m_Blocks(CAllocatorConstructTag(), _pHeap->m_pMemoryManager)
-		, m_RequestedCleanup(ENumaArenaCleanup_None)
+		: mp_Size(_Size)
+		, mp_pHeap(_pHeap)
+		, mp_Blocks(CAllocatorConstructTag(), _pHeap->mp_pMemoryManager)
+		, mp_RequestedCleanup(ENumaArenaCleanup_None)
 	{
 	}
 
@@ -59,32 +59,32 @@ namespace NMib::NMemory
 	{
 		DMibMemLightweightTrackDisableScope;
 
-		for (auto iBlock = m_Blocks.f_GetIterator(); iBlock; ++iBlock)
+		for (auto iBlock = mp_Blocks.f_GetIterator(); iBlock; ++iBlock)
 		{
 			auto *pBlock = &*iBlock;
 			if (!(pBlock->m_Flags & EMemoryManagerArenaHeapBlockFlag_Allocated))
 			{
 				DMibFastCheck(pBlock->m_Link.f_IsInList());
 				umint BlockSize = f_GetBlockSize(pBlock);
-				auto pFreeBucket = m_pHeap->m_FreeBuckets.f_FindEqual(BlockSize);
+				auto pFreeBucket = mp_pHeap->mp_FreeBuckets.f_FindEqual(BlockSize);
 				DMibFastCheck(pFreeBucket);
 				pBlock->m_Link.f_UnlinkLinked();
 				if (pFreeBucket && pFreeBucket->f_IsEmpty())
-					m_pHeap->m_FreeBuckets.f_Remove(pFreeBucket);
+					mp_pHeap->mp_FreeBuckets.f_Remove(pFreeBucket);
 			}
 			else
 				DMibFastCheck(!pBlock->m_Link.f_IsInList());
 		}
 
-		m_Blocks.f_Clear();
+		mp_Blocks.f_Clear();
 
 		umint Size = f_GetSize();
 		uint8 *pAddress = f_GetAddress();
 
 		if constexpr (TCMemoryManagerArena<t_CParams>::mc_EnableCallbacks)
-			m_pHeap->m_pMemoryManager->f_OnCommit(pAddress, Size);
+			mp_pHeap->mp_pMemoryManager->f_OnCommit(pAddress, Size);
 
-		m_pHeap->m_pMemoryManager->m_Allocator.f_Free(pAddress, Size);
+		mp_pHeap->mp_pMemoryManager->mp_Allocator.f_Free(pAddress, Size);
 	}
 
 	template <typename t_CParams>
@@ -102,13 +102,13 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	umint TCMemoryManagerArenaHeapChunk<t_CParams>::f_GetSize() const
 	{
-		return m_Size;
+		return mp_Size;
 	}
 
 	template <typename t_CParams>
 	TCMemoryManagerArenaHeap<t_CParams> *TCMemoryManagerArenaHeapChunk<t_CParams>::f_GetHeap() const
 	{
-		return m_pHeap;
+		return mp_pHeap;
 	}
 
 	////////////////////////////////////////////////////
@@ -116,9 +116,9 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	TCMemoryManagerArenaHeap<t_CParams>::TCMemoryManagerArenaHeap(TCMemoryManager<t_CParams> *_pMemoryManager, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena)
 		: t_CParams::CNotifier::CHeap(_pMemoryManager)
-		, m_FreeBuckets(CAllocatorConstructTag(), _pMemoryManager)
-		, m_pNumaArena(_pNumaArena)
-		, m_pMemoryManager(_pMemoryManager)
+		, mp_FreeBuckets(CAllocatorConstructTag(), _pMemoryManager)
+		, mp_pNumaArena(_pNumaArena)
+		, mp_pMemoryManager(_pMemoryManager)
 	{
 	}
 
@@ -126,22 +126,22 @@ namespace NMib::NMemory
 	TCMemoryManagerArenaHeap<t_CParams>::~TCMemoryManagerArenaHeap()
 	{
 		DMibMemLightweightTrackDisableScope;
-		for (auto iChunk = m_Chunks.f_GetIterator(); iChunk;)
+		for (auto iChunk = mp_Chunks.f_GetIterator(); iChunk;)
 		{
 			auto pChunk = &*iChunk;
 			++iChunk;
-			m_pMemoryManager->m_HeapChunks.f_Remove(pChunk);
+			mp_pMemoryManager->mp_HeapChunks.f_Remove(pChunk);
 		}
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManagerArenaHeap<t_CParams>::fp_RequestCleanup(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, ENumaArenaCleanup _Cleanup)
 	{
-		if ((_pChunk->m_RequestedCleanup & _Cleanup) != _Cleanup)
+		if ((_pChunk->mp_RequestedCleanup & _Cleanup) != _Cleanup)
 		{
-			_pChunk->m_RequestedCleanup |= _Cleanup;
-			m_ChunksNeedingCleanup.f_Insert(_pChunk);
-			m_pNumaArena->f_RequestCleanup(_Cleanup);
+			_pChunk->mp_RequestedCleanup |= _Cleanup;
+			mp_ChunksNeedingCleanup.f_Insert(_pChunk);
+			mp_pNumaArena->f_RequestCleanup(_Cleanup);
 		}
 	}
 
@@ -150,7 +150,7 @@ namespace NMib::NMemory
 	{
 		DMibMemLightweightTrackDisableScope;
 
-		m_FreeBuckets.f_Clear();
+		mp_FreeBuckets.f_Clear();
 	}
 
 	template <typename t_CParams>
@@ -159,13 +159,13 @@ namespace NMib::NMemory
 		// Make sure that the end of every slab is commited. This allows the free logic to work at O(1) complexity for small allocations because it can assume that the end of each
 		// slab is a valid memory address
 
-		auto Granularity = m_pMemoryManager->m_Allocator.f_GranularityCommit();
+		auto Granularity = mp_pMemoryManager->mp_Allocator.f_GranularityCommit();
 		uint8 *pEndAddress = _pAddress + _Size;
 		for (uint8 *pAddress = fg_AlignUp(_pAddress + 1, t_CParams::mc_SlabSize) - Granularity; pAddress < pEndAddress; pAddress += t_CParams::mc_SlabSize)
 		{
-			m_pMemoryManager->m_Allocator.f_Commit(pAddress, Granularity);
-			if constexpr (mc_EnableCallbacks)
-				m_pMemoryManager->f_OnCommit(pAddress, Granularity);
+			mp_pMemoryManager->mp_Allocator.f_Commit(pAddress, Granularity);
+			if constexpr (mcp_EnableCallbacks)
+				mp_pMemoryManager->f_OnCommit(pAddress, Granularity);
 		}
 	}
 
@@ -177,11 +177,11 @@ namespace NMib::NMemory
 		umint StartBit = (_pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
 		umint nBits = _Size / t_CParams::mc_HeapBlockSize;
 
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mcp_EnableCallbacks)
 		{
-			m_pMemoryManager->f_OnCommit(pChunkAddress + StartBit * t_CParams::mc_HeapBlockSize, nBits * t_CParams::mc_HeapBlockSize);
+			mp_pMemoryManager->f_OnCommit(pChunkAddress + StartBit * t_CParams::mc_HeapBlockSize, nBits * t_CParams::mc_HeapBlockSize);
 
-			_pChunk->m_Committed.f_EnumSetBitRanges
+			_pChunk->mp_Committed.f_EnumSetBitRanges
 				(
 					[&](umint _Bit, umint _nBits) -> bool
 					{
@@ -194,19 +194,19 @@ namespace NMib::NMemory
 			;
 		}
 
-		_pChunk->m_Committed.f_EnumFreeBitRanges
+		_pChunk->mp_Committed.f_EnumFreeBitRanges
 			(
 				[&](umint _Bit, umint _nBits) -> bool
 				{
-					m_pMemoryManager->m_Allocator.f_Commit(pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize, _nBits * t_CParams::mc_HeapBlockSize);
+					mp_pMemoryManager->mp_Allocator.f_Commit(pChunkAddress + _Bit * t_CParams::mc_HeapBlockSize, _nBits * t_CParams::mc_HeapBlockSize);
 					return true;
 				}
 				, StartBit
 				, StartBit + nBits
 			)
 		;
-		_pChunk->m_Committed.template f_SetBitRange<true>(StartBit, nBits);
-		_pChunk->m_DeferredDecommit.template f_SetBitRange<false>(StartBit, nBits);
+		_pChunk->mp_Committed.template f_SetBitRange<true>(StartBit, nBits);
+		_pChunk->mp_DeferredDecommit.template f_SetBitRange<false>(StartBit, nBits);
 	}
 
 	template <typename t_CParams>
@@ -216,7 +216,7 @@ namespace NMib::NMemory
 		umint StartBit = (_pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
 		umint nBits = _Size / t_CParams::mc_HeapBlockSize;
 
-		_pChunk->m_Committed.f_EnumSetBitRanges
+		_pChunk->mp_Committed.f_EnumSetBitRanges
 			(
 				[&](umint _Bit, umint _nBits) -> bool
 				{
@@ -234,7 +234,7 @@ namespace NMib::NMemory
 
 						uint8 *pThisEnd = fg_Min(pEndAddress, pMaxEnd);
 
-						m_pMemoryManager->m_Allocator.f_Decommit(pAddress, pThisEnd - pAddress);
+						mp_pMemoryManager->mp_Allocator.f_Decommit(pAddress, pThisEnd - pAddress);
 
 						pAddress = pThisEnd;
 					}
@@ -244,7 +244,7 @@ namespace NMib::NMemory
 				, StartBit + nBits
 			)
 		;
-		_pChunk->m_Committed.template f_SetBitRange<false>(StartBit, nBits);
+		_pChunk->mp_Committed.template f_SetBitRange<false>(StartBit, nBits);
 	}
 
 	template <typename t_CParams>
@@ -256,9 +256,9 @@ namespace NMib::NMemory
 
 		if constexpr ((t_CParams::mc_DeferCleanup & EDeferCleanup_Commit) != 0)
 		{
-			if constexpr (mc_EnableCallbacks)
+			if constexpr (mcp_EnableCallbacks)
 			{
-				_pChunk->m_Committed.f_EnumSetBitRanges
+				_pChunk->mp_Committed.f_EnumSetBitRanges
 					(
 						[&](umint _Bit, umint _nBits) -> bool
 						{
@@ -290,14 +290,14 @@ namespace NMib::NMemory
 				;
 			}
 
-			_pChunk->m_DeferredDecommit.template f_SetBitRange<true>(StartBit, nBits);
+			_pChunk->mp_DeferredDecommit.template f_SetBitRange<true>(StartBit, nBits);
 
-			_pChunk->m_DecommitTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
+			_pChunk->mp_DecommitTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 			fp_RequestCleanup(_pChunk, ENumaArenaCleanup_HeapCommit);
 			return;
 		}
-		else if constexpr (mc_EnableCallbacks)
-			m_pMemoryManager->f_OnDecommit(pChunkAddress + StartBit * t_CParams::mc_HeapBlockSize, nBits * t_CParams::mc_HeapBlockSize);
+		else if constexpr (mcp_EnableCallbacks)
+			mp_pMemoryManager->f_OnDecommit(pChunkAddress + StartBit * t_CParams::mc_HeapBlockSize, nBits * t_CParams::mc_HeapBlockSize);
 
 		fp_DecommitBlockForReal(_pChunk, _pAddress, _Size);
 	}
@@ -308,24 +308,24 @@ namespace NMib::NMemory
 		int64 NextTimestamp = TCLimitsInt<int64>::mc_Max;
 		DMibMemLightweightTrackDisableScope;
 
-		for (auto iChunk = m_ChunksNeedingCleanup.f_GetIterator(); iChunk;)
+		for (auto iChunk = mp_ChunksNeedingCleanup.f_GetIterator(); iChunk;)
 		{
 			auto pChunk = &*iChunk;
 			++iChunk;
 
-			if (pChunk->m_FreeTimestamp > _Timestamp)
+			if (pChunk->mp_FreeTimestamp > _Timestamp)
 			{
-				NextTimestamp = fg_Min(NextTimestamp, pChunk->m_FreeTimestamp);
+				NextTimestamp = fg_Min(NextTimestamp, pChunk->mp_FreeTimestamp);
 				continue;
 			}
 
 			if (pChunk->f_IsEmpty())
 			{
-				DMibLock(m_pMemoryManager->m_HeapChunksLock);
-				m_pMemoryManager->m_HeapChunks.f_Remove(pChunk);
+				DMibLock(mp_pMemoryManager->mp_HeapChunksLock);
+				mp_pMemoryManager->mp_HeapChunks.f_Remove(pChunk);
 			}
-			else if ((pChunk->m_RequestedCleanup &= ~ENumaArenaCleanup_HeapGarbage) == 0)
-				pChunk->m_CleanupLink.f_Unlink();
+			else if ((pChunk->mp_RequestedCleanup &= ~ENumaArenaCleanup_HeapGarbage) == 0)
+				pChunk->mp_CleanupLink.f_Unlink();
 		}
 
 		return NextTimestamp;
@@ -339,20 +339,20 @@ namespace NMib::NMemory
 		if constexpr (!t_CParams::CAllocator::f_CanCommit())
 			return NextTimestamp;
 
-		for (auto iChunk = m_ChunksNeedingCleanup.f_GetIterator(); iChunk;)
+		for (auto iChunk = mp_ChunksNeedingCleanup.f_GetIterator(); iChunk;)
 		{
 			auto pChunk = &*iChunk;
 			++iChunk;
 
-			if (pChunk->m_DecommitTimestamp > _Timestamp)
+			if (pChunk->mp_DecommitTimestamp > _Timestamp)
 			{
-				NextTimestamp = fg_Min(NextTimestamp, pChunk->m_DecommitTimestamp);
+				NextTimestamp = fg_Min(NextTimestamp, pChunk->mp_DecommitTimestamp);
 				continue;
 			}
 
 			auto pChunkAddress = pChunk->f_GetAddress();
-			umint nBits = pChunk->m_Size / t_CParams::mc_HeapBlockSize;
-			pChunk->m_DeferredDecommit.f_EnumSetBitRanges
+			umint nBits = pChunk->mp_Size / t_CParams::mc_HeapBlockSize;
+			pChunk->mp_DeferredDecommit.f_EnumSetBitRanges
 				(
 					[&](umint _Bit, umint _nBits) -> bool
 					{
@@ -365,9 +365,9 @@ namespace NMib::NMemory
 					, nBits
 				)
 			;
-			pChunk->m_DeferredDecommit.template f_SetBitRange<false>(0, nBits);
-			if ((pChunk->m_RequestedCleanup &= ~ENumaArenaCleanup_HeapCommit) == 0)
-				pChunk->m_CleanupLink.f_Unlink();
+			pChunk->mp_DeferredDecommit.template f_SetBitRange<false>(0, nBits);
+			if ((pChunk->mp_RequestedCleanup &= ~ENumaArenaCleanup_HeapCommit) == 0)
+				pChunk->mp_CleanupLink.f_Unlink();
 		}
 
 		return NextTimestamp;
@@ -383,31 +383,31 @@ namespace NMib::NMemory
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			Flags |= EAllocationFlag_NoCommit;
 
-		uint8 *pMemory = (uint8 *)m_pMemoryManager->m_Allocator.f_AllocAlignedWithSize(Size, t_CParams::mc_SlabSize, Flags, m_pNumaArena->m_NumaNode);
+		uint8 *pMemory = (uint8 *)mp_pMemoryManager->mp_Allocator.f_AllocAlignedWithSize(Size, t_CParams::mc_SlabSize, Flags, mp_pNumaArena->mp_NumaNode);
 
 		TCMemoryManagerArenaHeapChunk<t_CParams> *pChunk;
 		{
-			DMibLock(m_pMemoryManager->m_HeapChunksLock);
-			pChunk = &*m_pMemoryManager->m_HeapChunks(pMemory, Size, this);
+			DMibLock(mp_pMemoryManager->mp_HeapChunksLock);
+			pChunk = &*mp_pMemoryManager->mp_HeapChunks(pMemory, Size, this);
 		}
 
-		m_Chunks.f_Insert(pChunk);
+		mp_Chunks.f_Insert(pChunk);
 
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 		{
-			if constexpr (mc_EnableCallbacks)
-				m_pMemoryManager->f_OnDecommit(pMemory, t_CParams::mc_SlabSize);
+			if constexpr (mcp_EnableCallbacks)
+				mp_pMemoryManager->f_OnDecommit(pMemory, t_CParams::mc_SlabSize);
 
 			fp_InitBlockCommit(pChunk, pMemory, Size);
 		}
-		else if constexpr (mc_EnableCallbacks)
+		else if constexpr (mcp_EnableCallbacks)
 			this->f_OnFillFree(pMemory, Size);
 
-		auto &Block = pChunk->m_Blocks[pMemory];
+		auto &Block = pChunk->mp_Blocks[pMemory];
 
 		Block.m_pChunk = pChunk;
 
-		m_FreeBuckets[Size].f_Insert(Block);
+		mp_FreeBuckets[Size].f_Insert(Block);
 	}
 
 	template <typename t_CParams>
@@ -422,23 +422,23 @@ namespace NMib::NMemory
 		DMibLock(*this);
 		umint Size = (_Size + t_CParams::mc_HeapBlockSize - 1) & ~umint(t_CParams::mc_HeapBlockSize - 1);
 
-		DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(Size));
+		DMibMemLightweightTrack(mp_pMemoryManager->fp_TrackAlloc(Size));
 		DMibMemLightweightTrackDisableScope;
 
-		auto pBucket = m_FreeBuckets.f_FindSmallestGreaterThanEqual(Size);
+		auto pBucket = mp_FreeBuckets.f_FindSmallestGreaterThanEqual(Size);
 		if (!pBucket)
 		{
 			fp_AddNewChunk();
-			pBucket = m_FreeBuckets.f_FindSmallestGreaterThanEqual(Size);
+			pBucket = mp_FreeBuckets.f_FindSmallestGreaterThanEqual(Size);
 			DMibFastCheck(pBucket);
 		}
 
-		umint FoundSize = m_FreeBuckets.fs_GetKey(pBucket);
+		umint FoundSize = mp_FreeBuckets.fs_GetKey(pBucket);
 
 		auto pBlock = pBucket->f_Pop();
 
 		if (pBucket->f_IsEmpty())
-			m_FreeBuckets.f_Remove(pBucket);
+			mp_FreeBuckets.f_Remove(pBucket);
 
 		umint LeftOverSize = FoundSize - Size;
 
@@ -451,17 +451,17 @@ namespace NMib::NMemory
 		if (LeftOverSize > 0)
 		{
 			uint8 *pLeftOverAddress = pRetAddress + Size;
-			auto &LeftOverBlock = pChunk->m_Blocks[pLeftOverAddress];
+			auto &LeftOverBlock = pChunk->mp_Blocks[pLeftOverAddress];
 			LeftOverBlock.m_pChunk = pChunk;
-			m_FreeBuckets[LeftOverSize].f_Insert(LeftOverBlock);
+			mp_FreeBuckets[LeftOverSize].f_Insert(LeftOverBlock);
 		}
 
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			fp_CommitBlock(pChunk, pRetAddress, Size);
-		else if constexpr (mc_EnableCallbacks)
+		else if constexpr (mcp_EnableCallbacks)
 			this->f_OnCheckFree(pRetAddress, Size, EMemoryManagerCheckFlag_Default);
 
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mcp_EnableCallbacks)
 			this->f_OnAlloc(pRetAddress, Size);
 
 		_Size = Size;
@@ -476,10 +476,10 @@ namespace NMib::NMemory
 		umint Size = fg_AlignUp(_Size, _Alignment);
 		Size = (Size + t_CParams::mc_HeapBlockSize - 1) & ~umint(t_CParams::mc_HeapBlockSize - 1);
 
-		DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(Size));
+		DMibMemLightweightTrack(mp_pMemoryManager->fp_TrackAlloc(Size));
 		DMibMemLightweightTrackDisableScope;
 
-		auto pBucket = m_FreeBuckets.f_FindEqual(Size);
+		auto pBucket = mp_FreeBuckets.f_FindEqual(Size);
 
 		uint8 *pRetAddress = nullptr;
 		TCMemoryManagerArenaHeapChunk<t_CParams> *pChunk = nullptr;
@@ -502,7 +502,7 @@ namespace NMib::NMemory
 					pBlock = pFreeBlock;
 
 					if (pBucket->f_IsEmpty())
-						m_FreeBuckets.f_Remove(pBucket);
+						mp_FreeBuckets.f_Remove(pBucket);
 					break;
 				}
 			}
@@ -521,20 +521,20 @@ namespace NMib::NMemory
 		{
 			umint NeededSize = Size + _Alignment - t_CParams::mc_HeapBlockSize; // Find enough for aligning pointer
 
-			pBucket = m_FreeBuckets.f_FindSmallestGreaterThanEqual(NeededSize);
+			pBucket = mp_FreeBuckets.f_FindSmallestGreaterThanEqual(NeededSize);
 			if (!pBucket)
 			{
 				fp_AddNewChunk();
-				pBucket = m_FreeBuckets.f_FindSmallestGreaterThanEqual(NeededSize);
+				pBucket = mp_FreeBuckets.f_FindSmallestGreaterThanEqual(NeededSize);
 				DMibFastCheck(pBucket);
 			}
 
-			umint FoundSize = m_FreeBuckets.fs_GetKey(pBucket);
+			umint FoundSize = mp_FreeBuckets.fs_GetKey(pBucket);
 
 			auto pBlock = pBucket->f_Pop();
 
 			if (pBucket->f_IsEmpty())
-				m_FreeBuckets.f_Remove(pBucket);
+				mp_FreeBuckets.f_Remove(pBucket);
 
 			pChunk = fg_AutoStaticCast(pBlock->m_pChunk);
 			uint8 *pStartOfBlock = pChunk->f_GetBlockAddress(pBlock);
@@ -545,9 +545,9 @@ namespace NMib::NMemory
 			if (LeftOverSizeStart)
 			{
 				FoundSize -= LeftOverSizeStart;
-				auto &NewBlock = pChunk->m_Blocks[pRetAddress];
+				auto &NewBlock = pChunk->mp_Blocks[pRetAddress];
 				NewBlock.m_pChunk = pChunk;
-				m_FreeBuckets[LeftOverSizeStart].f_Insert(*pBlock);
+				mp_FreeBuckets[LeftOverSizeStart].f_Insert(*pBlock);
 
 				pBlock = &NewBlock;
 			}
@@ -559,18 +559,18 @@ namespace NMib::NMemory
 			if (LeftOverSize > 0)
 			{
 				uint8 *pLeftOverAddress = pRetAddress + Size;
-				auto &LeftOverBlock = pChunk->m_Blocks[pLeftOverAddress];
+				auto &LeftOverBlock = pChunk->mp_Blocks[pLeftOverAddress];
 				LeftOverBlock.m_pChunk = pChunk;
-				m_FreeBuckets[LeftOverSize].f_Insert(LeftOverBlock);
+				mp_FreeBuckets[LeftOverSize].f_Insert(LeftOverBlock);
 			}
 		}
 
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			fp_CommitBlock(pChunk, pRetAddress, Size);
-		else if constexpr (mc_EnableCallbacks)
+		else if constexpr (mcp_EnableCallbacks)
 			this->f_OnCheckFree(pRetAddress, Size, EMemoryManagerCheckFlag_Default);
 
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mcp_EnableCallbacks)
 			this->f_OnAlloc(pRetAddress, Size);
 
 		_Size = Size;
@@ -583,21 +583,21 @@ namespace NMib::NMemory
 	{
 		umint BlockSize = _pChunk->f_GetBlockSize(_pBlock);
 
-		auto pBucket = m_FreeBuckets.f_FindEqual(BlockSize);
+		auto pBucket = mp_FreeBuckets.f_FindEqual(BlockSize);
 
 		DMibFastCheck(pBucket);
 
 		pBucket->f_Remove(_pBlock);
 
 		if (pBucket->f_IsEmpty())
-			m_FreeBuckets.f_Remove(pBucket);
+			mp_FreeBuckets.f_Remove(pBucket);
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManagerArenaHeap<t_CParams>::fp_TraceBlocks(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk)
 	{
 		DMibTrace("Blocks start\n", 0);
-		for (auto &Block : _pChunk->m_Blocks)
+		for (auto &Block : _pChunk->mp_Blocks)
 			DMibTrace("0x{}: {}\n", (void *)(_pChunk->f_GetBlockAddress(&Block)), Block.m_Flags);
 		DMibTrace("Blocks end\n", 0);
 	}
@@ -608,7 +608,7 @@ namespace NMib::NMemory
 		DMibLock(fg_RemoveQualifiers(*this));
 
 		uint8 *pMem = (uint8 *)_pMemory;
-		auto *pBlock = _pChunk->m_Blocks.f_FindEqual(pMem);
+		auto *pBlock = _pChunk->mp_Blocks.f_FindEqual(pMem);
 
 		DMibFastCheck(pBlock);
 
@@ -618,20 +618,20 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerArenaHeap<t_CParams>::f_Lock()
 	{
-		DMibFastCheck(!m_pMemoryManager->m_LocalArena->m_pNumaArena->m_bLimitedArenas || !m_pMemoryManager->m_LocalArena->m_pArena);
-		m_Lock.f_Lock();
+		DMibFastCheck(!mp_pMemoryManager->mp_LocalArena->m_pNumaArena->mp_bLimitedArenas || !mp_pMemoryManager->mp_LocalArena->m_pArena);
+		mp_Lock.f_Lock();
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManagerArenaHeap<t_CParams>::f_Unlock()
 	{
-		m_Lock.f_Unlock();
+		mp_Lock.f_Unlock();
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManagerArenaHeap<t_CParams>::f_ForkedChild()
 	{
-		m_Lock.f_ForkedChildLocked();
+		mp_Lock.f_ForkedChildLocked();
 	}
 
 	template <typename t_CParams>
@@ -639,11 +639,11 @@ namespace NMib::NMemory
 	{
 		DMibLock(fg_RemoveQualifiers(*this));
 		uint8 *pMem = (uint8 *)_pMemory;
-		auto *pBlock = _pChunk->m_Blocks.f_FindEqual(pMem);
+		auto *pBlock = _pChunk->mp_Blocks.f_FindEqual(pMem);
 
 		DMibFastCheck(pBlock);
 
-		fp32 OverheadPerByte = fp32(sizeof(TCMemoryManagerArenaHeapChunk<t_CParams>)) / fp32(_pChunk->m_Size);
+		fp32 OverheadPerByte = fp32(sizeof(TCMemoryManagerArenaHeapChunk<t_CParams>)) / fp32(_pChunk->mp_Size);
 		umint Size = _pChunk->f_GetBlockSize(pBlock);
 
 		return fp32(Size) * OverheadPerByte
@@ -660,10 +660,10 @@ namespace NMib::NMemory
 
 		uint8 *pMem = (uint8 *)_pMem;
 
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mcp_EnableCallbacks)
 			this->f_OnFree(pMem);
 
-		auto *pBlock = _pChunk->m_Blocks.f_FindEqual(pMem);
+		auto *pBlock = _pChunk->mp_Blocks.f_FindEqual(pMem);
 
 		DMibFastCheck(pBlock);
 
@@ -671,37 +671,37 @@ namespace NMib::NMemory
 
 		if constexpr (t_CParams::CAllocator::f_CanCommit())
 			fp_DecommitBlock(_pChunk, pMem, BlockSize);
-		else if constexpr (mc_EnableCallbacks)
+		else if constexpr (mcp_EnableCallbacks)
 			this->f_OnFillFree(pMem, BlockSize);
 
 		pBlock->m_Flags &= ~EMemoryManagerArenaHeapBlockFlag_Allocated;
 		auto pNewFreeBlock = pBlock;
 
-		auto pPrevBlock = _pChunk->m_Blocks.f_FindLargestLessThanEqual(pMem - 1);
-		auto pNextBlock = _pChunk->m_Blocks.f_FindSmallestGreaterThanEqual(pMem + 1);
+		auto pPrevBlock = _pChunk->mp_Blocks.f_FindLargestLessThanEqual(pMem - 1);
+		auto pNextBlock = _pChunk->mp_Blocks.f_FindSmallestGreaterThanEqual(pMem + 1);
 
 		if (pPrevBlock && !(pPrevBlock->m_Flags & EMemoryManagerArenaHeapBlockFlag_Allocated))
 		{
 			fp_RemoveFreeBlock(pPrevBlock, _pChunk);
 			pNewFreeBlock = pPrevBlock;
-			_pChunk->m_Blocks.f_Remove(pBlock);
+			_pChunk->mp_Blocks.f_Remove(pBlock);
 		}
 
 		if (pNextBlock && !(pNextBlock->m_Flags & EMemoryManagerArenaHeapBlockFlag_Allocated))
 		{
 			fp_RemoveFreeBlock(pNextBlock, _pChunk);
-			_pChunk->m_Blocks.f_Remove(pNextBlock);
+			_pChunk->mp_Blocks.f_Remove(pNextBlock);
 		}
 
 		umint NewSize = _pChunk->f_GetBlockSize(pNewFreeBlock);
 
-		m_FreeBuckets[NewSize].f_Insert(*pNewFreeBlock);
+		mp_FreeBuckets[NewSize].f_Insert(*pNewFreeBlock);
 
 		if (NewSize == t_CParams::mc_HeapChunkSize)
 		{
 			// Totally free chunk, add for cleanup
 			if constexpr (t_CParams::mc_bBackgroundCleanup)
-				_pChunk->m_FreeTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
+				_pChunk->mp_FreeTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 			fp_RequestCleanup(_pChunk, ENumaArenaCleanup_HeapGarbage);
 		}
 	}
@@ -711,7 +711,7 @@ namespace NMib::NMemory
 	{
 		bool bError = false;
 
-		for (auto iBucket = m_FreeBuckets.f_GetIterator(); iBucket; ++iBucket)
+		for (auto iBucket = mp_FreeBuckets.f_GetIterator(); iBucket; ++iBucket)
 		{
 			umint Size = iBucket.f_GetKey();
 
@@ -722,7 +722,7 @@ namespace NMib::NMemory
 				uint8 *pAddress = pChunk->f_GetBlockAddress(iBlock);
 				DMibFastCheck(Size == pChunk->f_GetBlockSize(iBlock));
 
-				if constexpr (mc_EnableCallbacks)
+				if constexpr (mcp_EnableCallbacks)
 				{
 					if constexpr (t_CParams::CAllocator::f_CanCommit())
 					{
@@ -731,9 +731,9 @@ namespace NMib::NMemory
 						umint StartBit = (pAddress - pChunkAddress) / t_CParams::mc_HeapBlockSize;
 						umint nBits = Size / t_CParams::mc_HeapBlockSize;
 
-						if constexpr (mc_EnableCallbacks)
+						if constexpr (mcp_EnableCallbacks)
 						{
-							pChunk->m_Committed.f_EnumSetBitRanges
+							pChunk->mp_Committed.f_EnumSetBitRanges
 								(
 									[&](umint _Bit, umint _nBits) -> bool
 									{

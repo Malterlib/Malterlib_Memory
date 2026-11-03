@@ -132,6 +132,7 @@ void fg_MalterlibMallocOverrideDisable();
 
 extern "C"
 {
+	// NOLINTBEGIN(malterlib-variable-naming): the declarations of the macOS SDK, with their names
 	struct ProgramVars // NOLINT(malterlib-type-naming): the name in the macOS SDK
 	{
 		void const *mh;
@@ -140,6 +141,8 @@ extern "C"
 		char const ***environPtr;
 		char const **__prognamePtr;
 	};
+
+	// NOLINTEND(malterlib-variable-naming)
 
 	// These are here so dynamic linking works on OSes where these are not defined
 #if !defined(DMibMemoryOverrideDll)
@@ -1524,11 +1527,11 @@ extern "C"
 		auto &ExceptionHandlingState = *State.m_pExceptionHandlingState;
 
 		smint iNextHandler = -1;
-		for (umint i = 0; i < ExceptionHandlingState.m_PreviousParams.m_nTypes; ++i)
+		for (umint iType = 0; iType < ExceptionHandlingState.m_PreviousParams.m_nTypes; ++iType)
 		{
-			if (ExceptionHandlingState.m_PreviousParams.m_Masks[i] & (1 << _Exception))
+			if (ExceptionHandlingState.m_PreviousParams.m_Masks[iType] & (1 << _Exception))
 			{
-				iNextHandler = i;
+				iNextHandler = iType;
 				break;
 			}
 		}
@@ -1713,21 +1716,21 @@ namespace
 		mach_port_t CurrentTask = mach_task_self();
 		bool bReturn = true;
 
-		for (umint i = 0; i < m_PreviousParams.m_nTypes; ++i)
+		for (umint iType = 0; iType < m_PreviousParams.m_nTypes; ++iType)
 		{
 			kern_return_t Result = task_set_exception_ports
 				(
 					CurrentTask
-					, m_PreviousParams.m_Masks[i]
-					, m_PreviousParams.m_Ports[i]
-					, m_PreviousParams.m_Behaviors[i]
-					, m_PreviousParams.m_Flavors[i]
+					, m_PreviousParams.m_Masks[iType]
+					, m_PreviousParams.m_Ports[iType]
+					, m_PreviousParams.m_Behaviors[iType]
+					, m_PreviousParams.m_Flavors[iType]
 				)
 			;
 			if (Result != KERN_SUCCESS)
 			{
 				bReturn = false;
-				DMibConErrOut("Failed to uninstall exception handler (task_set_exception_ports, {}): {}\n", i, Result);
+				DMibConErrOut("Failed to uninstall exception handler (task_set_exception_ports, {}): {}\n", iType, Result);
 			}
 		}
 
@@ -1980,13 +1983,13 @@ int NMib::NSys::fg_Mem_PrepareSpawnAttributes(void *_pSpawnAttributes)
 	if (int Error = posix_spawnattr_setexceptionports_np(pSpawnAttributes, EXC_MASK_BAD_ACCESS, MACH_PORT_NULL, EXCEPTION_DEFAULT, THREAD_STATE_NONE))
 		return Error;
 
-	for (umint i = 0; i < Params.m_nTypes; ++i)
+	for (umint iType = 0; iType < Params.m_nTypes; ++iType)
 	{
-		if (Params.m_Ports[i] == MACH_PORT_NULL || !(Params.m_Masks[i] & EXC_MASK_BAD_ACCESS))
+		if (Params.m_Ports[iType] == MACH_PORT_NULL || !(Params.m_Masks[iType] & EXC_MASK_BAD_ACCESS))
 			continue;
 
-		exception_mask_t Mask = Params.m_Masks[i] & EXC_MASK_BAD_ACCESS;
-		if (int Error = posix_spawnattr_setexceptionports_np(pSpawnAttributes, Mask, Params.m_Ports[i], Params.m_Behaviors[i], Params.m_Flavors[i]))
+		exception_mask_t Mask = Params.m_Masks[iType] & EXC_MASK_BAD_ACCESS;
+		if (int Error = posix_spawnattr_setexceptionports_np(pSpawnAttributes, Mask, Params.m_Ports[iType], Params.m_Behaviors[iType], Params.m_Flavors[iType]))
 			return Error;
 	}
 
@@ -4917,18 +4920,18 @@ namespace NMib
 		NContainer::TCMap<pthread_key_t, CKeyInfo, CSort_Default, CAllocator_Virtual> m_LastSnapshot;
 	};
 
-	static constinit TCSubSystem<CThreadLocalDebug, ESubSystemDestruction_Last> g_ThreadLocalDebug{EAggregateInitialization_Force};
+	static constinit TCSubSystem<CThreadLocalDebug, ESubSystemDestruction_Last> gs_ThreadLocalDebug{EAggregateInitialization_Force};
 
 	assure_used void fg_MalterlibThreadLocalDebug_Snapshot()
 	{
-		auto &ThreadLocalDebug = *g_ThreadLocalDebug;
+		auto &ThreadLocalDebug = *gs_ThreadLocalDebug;
 		DMibLock(ThreadLocalDebug.m_Lock);
 		ThreadLocalDebug.m_LastSnapshot = ThreadLocalDebug.m_ThreadLocals;
 	}
 
 	assure_used void fg_MalterlibThreadLocalDebug_Diff(bool _bIncludeRemoved)
 	{
-		auto &ThreadLocalDebug = *g_ThreadLocalDebug;
+		auto &ThreadLocalDebug = *gs_ThreadLocalDebug;
 		DMibLock(ThreadLocalDebug.m_Lock);
 		for (auto &InfoEntry : ThreadLocalDebug.m_ThreadLocals.f_Entries())
 		{
@@ -4960,7 +4963,7 @@ extern "C"
 		if (!g_bCreatedSystem)
 			return g_OriginalFunctions.pthread_key_create(_pKey, _fDestructor);
 
-		auto &ThreadLocalDebug = *g_ThreadLocalDebug;
+		auto &ThreadLocalDebug = *gs_ThreadLocalDebug;
 
 		DMibLock(ThreadLocalDebug.m_Lock);
 
@@ -4981,7 +4984,7 @@ extern "C"
 		if (!g_bCreatedSystem)
 			return g_OriginalFunctions.pthread_key_delete(_Key);
 
-		auto &ThreadLocalDebug = *g_ThreadLocalDebug;
+		auto &ThreadLocalDebug = *gs_ThreadLocalDebug;
 
 		DMibLock(ThreadLocalDebug.m_Lock);
 		auto Error = g_OriginalFunctions.pthread_key_delete(_Key);

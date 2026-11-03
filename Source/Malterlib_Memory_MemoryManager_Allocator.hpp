@@ -7,7 +7,7 @@ namespace NMib::NMemory
 {
 	template <typename t_CParams>
 	TCAllocator_MemoryManager<t_CParams>::TCAllocator_MemoryManager(TCMemoryManager<t_CParams> *_pMemoryManager)
-		: m_pMemoryManager(_pMemoryManager)
+		: mp_pMemoryManager(_pMemoryManager)
 	{
 	}
 
@@ -50,19 +50,19 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	only_parameters_aliased inline_small umint TCAllocator_MemoryManager<t_CParams>::f_Size(void *_pBlock)
 	{
-		return m_pMemoryManager->f_Size(_pBlock);
+		return mp_pMemoryManager->f_Size(_pBlock);
 	}
 
 	template <typename t_CParams>
 	only_parameters_aliased inline_small umint TCAllocator_MemoryManager<t_CParams>::f_TrySize(void *_pBlock)
 	{
-		return m_pMemoryManager->f_TrySize(_pBlock);
+		return mp_pMemoryManager->f_TrySize(_pBlock);
 	}
 
 	template <typename t_CParams>
 	inline_small umint TCAllocator_MemoryManager<t_CParams>::f_SizePadded(umint _Size)
 	{
-		return m_pMemoryManager->f_SizePadded(_Size);
+		return mp_pMemoryManager->f_SizePadded(_Size);
 	}
 
 	template <typename t_CParams>
@@ -106,7 +106,7 @@ namespace NMib::NMemory
 		)
 		-> void *
 	{
-		return m_pMemoryManager->f_AllocWithSize(_Size);
+		return mp_pMemoryManager->f_AllocWithSize(_Size);
 	}
 
 	template <typename t_CParams>
@@ -121,19 +121,19 @@ namespace NMib::NMemory
 		)
 		-> void *
 	{
-		return m_pMemoryManager->f_Alloc(_Size);
+		return mp_pMemoryManager->f_Alloc(_Size);
 	}
 
 	template <typename t_CParams>
 	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
-		return m_pMemoryManager->f_AllocWithSize(_Size);
+		return mp_pMemoryManager->f_AllocWithSize(_Size);
 	}
 
 	template <typename t_CParams>
 	only_parameters_aliased return_not_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Alloc(umint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
-		return m_pMemoryManager->f_Alloc(_Size);
+		return mp_pMemoryManager->f_Alloc(_Size);
 	}
 
 	template <typename t_CParams>
@@ -146,7 +146,7 @@ namespace NMib::NMemory
 		)
 		-> void *
 	{
-		return m_pMemoryManager->f_AllocAlignedWithSize(_Size, _Alignment);
+		return mp_pMemoryManager->f_AllocAlignedWithSize(_Size, _Alignment);
 	}
 
 	template <typename t_CParams>
@@ -159,7 +159,7 @@ namespace NMib::NMemory
 		)
 		-> void *
 	{
-		return m_pMemoryManager->f_AllocAligned(_Size, _Alignment);
+		return mp_pMemoryManager->f_AllocAligned(_Size, _Alignment);
 	}
 
 	template <typename t_CParams>
@@ -172,7 +172,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		return m_pMemoryManager->f_AllocBatch(_Size, _Alignment, _Functor);
+		return mp_pMemoryManager->f_AllocBatch(_Size, _Alignment, _Functor);
 	}
 
 	template <typename t_CParams>
@@ -188,7 +188,7 @@ namespace NMib::NMemory
 			, ENumaNode _NumaNode
 		)
 	{
-		return m_pMemoryManager->f_AllocBatch(_Size, _Alignment, _Functor);
+		return mp_pMemoryManager->f_AllocBatch(_Size, _Alignment, _Functor);
 	}
 
 	template <typename t_CParams>
@@ -202,7 +202,7 @@ namespace NMib::NMemory
 		)
 		-> void *
 	{
-		return m_pMemoryManager->f_Realloc(_pMem, _Size, _OldSize);
+		return mp_pMemoryManager->f_Realloc(_pMem, _Size, _OldSize);
 	}
 
 	template <typename t_CParams>
@@ -219,13 +219,13 @@ namespace NMib::NMemory
 		)
 		-> void *
 	{
-		return m_pMemoryManager->f_Realloc(_pMem, _Size, _OldSize);
+		return mp_pMemoryManager->f_Realloc(_pMem, _Size, _OldSize);
 	}
 
 	template <typename t_CParams>
 	only_parameters_aliased inline_small void *TCAllocator_MemoryManager<t_CParams>::f_Resize(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
-		return m_pMemoryManager->f_Resize(_pMem, _Size, _OldSize);
+		return mp_pMemoryManager->f_Resize(_pMem, _Size, _OldSize);
 	}
 
 	template <typename t_CParams>
@@ -242,7 +242,7 @@ namespace NMib::NMemory
 		)
 		-> void *
 	{
-		return m_pMemoryManager->f_Resize(_pMem, _Size, _OldSize);
+		return mp_pMemoryManager->f_Resize(_pMem, _Size, _OldSize);
 	}
 
 	template <typename t_CParams>
@@ -258,13 +258,13 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	only_parameters_aliased inline_small void TCAllocator_MemoryManager<t_CParams>::f_Free(void *_pBlock, umint _Size)
 	{
-		m_pMemoryManager->f_Free(_pBlock, _Size);
+		mp_pMemoryManager->f_Free(_pBlock, _Size);
 	}
 
 	template <typename t_CParams>
 	only_parameters_aliased inline_small void TCAllocator_MemoryManager<t_CParams>::f_FreeNoSize(void *_pBlock)
 	{
-		m_pMemoryManager->f_FreeNoSize(_pBlock);
+		mp_pMemoryManager->f_FreeNoSize(_pBlock);
 	}
 
 	template <typename t_CParams>

@@ -514,16 +514,16 @@ namespace NMib::NMemory
 	template <typename tf_CData1, typename tf_CData2>
 	inline_medium tf_CData1 *fg_ObjectCopy(tf_CData1 *_pDest, tf_CData2 const *_pSource, umint _nObjects) noexcept(noexcept(fg_GetType<tf_CData1 &>() = fg_GetType<tf_CData2 const &>()))
 	{
-		for (umint i = 0; i < _nObjects; ++i)
-			_pDest[i] = _pSource[i];
+		for (umint iObject = 0; iObject < _nObjects; ++iObject)
+			_pDest[iObject] = _pSource[iObject];
 		return _pDest;
 	}
 
 	template <typename tf_CData1, umint tf_ListSize>
 	inline_medium tf_CData1 *fg_ObjectCopy(tf_CData1 _Dest[tf_ListSize], tf_CData1 const _Source[tf_ListSize]) noexcept(noexcept(fg_GetType<tf_CData1 &>() = fg_GetType<tf_CData1 const &>()))
 	{
-		for (umint i = 0; i < tf_ListSize; ++i)
-			_Dest[i] = _Source[i];
+		for (umint iObject = 0; iObject < tf_ListSize; ++iObject)
+			_Dest[iObject] = _Source[iObject];
 		return _Dest;
 	}
 
@@ -708,7 +708,7 @@ namespace NMib::NMemory
 		{
 			static void fs_QuickSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
 			{
-				aint m;
+				aint iPivot;
 
 				while (_Low < _High)
 				{
@@ -718,17 +718,17 @@ namespace NMib::NMemory
 						return;
 					}
 
-					m = fsp_Partition(_pArray, _Low, _High, _fCompare);
+					iPivot = fsp_Partition(_pArray, _Low, _High, _fCompare);
 
-					if (m - _Low <= _High - m)
+					if (iPivot - _Low <= _High - iPivot)
 					{
-						fs_QuickSort(_pArray, _Low, m - 1, _fCompare);
-						_Low = m + 1;
+						fs_QuickSort(_pArray, _Low, iPivot - 1, _fCompare);
+						_Low = iPivot + 1;
 					}
 					else
 					{
-						fs_QuickSort(_pArray, m + 1, _High, _fCompare);
-						_High = m - 1;
+						fs_QuickSort(_pArray, iPivot + 1, _High, _fCompare);
+						_High = iPivot - 1;
 					}
 				}
 			}
@@ -737,49 +737,49 @@ namespace NMib::NMemory
 			static void fsp_InsertSort(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
 			{
 				t_CData Temp;
-				aint i, j;
+				aint iItem, iInsert;
 
-				for (i = _Low + 1; i <= _High; i++)
+				for (iItem = _Low + 1; iItem <= _High; iItem++)
 				{
-					Temp = _pArray[i];
+					Temp = _pArray[iItem];
 
-					for (j = i - 1; j >= _Low && fg_CheckOrdering(_fCompare(Temp, _pArray[j])) < 0; j--)
-						_pArray[j + 1] = _pArray[j];
+					for (iInsert = iItem - 1; iInsert >= _Low && fg_CheckOrdering(_fCompare(Temp, _pArray[iInsert])) < 0; iInsert--)
+						_pArray[iInsert + 1] = _pArray[iInsert];
 
-					_pArray[j + 1] = Temp;
+					_pArray[iInsert + 1] = Temp;
 				}
 			}
 
 			static aint fsp_Partition(t_CData *_pArray, aint _Low, aint _High, t_CSorter const &_fCompare)
 			{
 				t_CData Temp, Pivot;
-				aint i, j, p;
+				aint iLeft, iRight, iPivot;
 
-				p = _Low + ((_High - _Low) >> 1);
-				Pivot = _pArray[p];
-				_pArray[p] = _pArray[_Low];
+				iPivot = _Low + ((_High - _Low) >> 1);
+				Pivot = _pArray[iPivot];
+				_pArray[iPivot] = _pArray[_Low];
 
-				i = _Low + 1;
-				j = _High;
+				iLeft = _Low + 1;
+				iRight = _High;
 				while (1)
 				{
-					while (i < j && fg_CheckOrdering(_fCompare(_pArray[i], Pivot)) < 0)
-						i++;
-					while (j >= i && fg_CheckOrdering(_fCompare(Pivot, _pArray[j])) < 0)
-						j--;
-					if (i >= j)
+					while (iLeft < iRight && fg_CheckOrdering(_fCompare(_pArray[iLeft], Pivot)) < 0)
+						iLeft++;
+					while (iRight >= iLeft && fg_CheckOrdering(_fCompare(Pivot, _pArray[iRight])) < 0)
+						iRight--;
+					if (iLeft >= iRight)
 						break;
-					Temp = _pArray[i];
-					_pArray[i] = _pArray[j];
-					_pArray[j] = Temp;
-					j--;
-					i++;
+					Temp = _pArray[iLeft];
+					_pArray[iLeft] = _pArray[iRight];
+					_pArray[iRight] = Temp;
+					iRight--;
+					iLeft++;
 				}
 
-				_pArray[_Low] = _pArray[j];
-				_pArray[j] = Pivot;
+				_pArray[_Low] = _pArray[iRight];
+				_pArray[iRight] = Pivot;
 
-				return j;
+				return iRight;
 			}
 		};
 	}

@@ -49,6 +49,7 @@ extern "C"
 	static
 #endif
 
+	// NOLINTNEXTLINE(malterlib-variable-naming): not static in the override dylib, where Malterlib_Memory_SystemOverride_MacOS.cpp declares it extern
 	constinit COriginalFunctions g_OriginalFunctions =
 		{
 #include "Malterlib_Memory_SystemOverride_MacOSInterposeFunctions.h"

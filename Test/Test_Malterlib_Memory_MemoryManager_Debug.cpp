@@ -147,7 +147,7 @@ namespace
 				uint8 *pAlloc = nullptr;
 				bool bFoundAlloc = false;
 
-				auto fl_AllocFunctor = [&]
+				auto fAllocFunctor = [&]
 					(uint8 *_pAlloc, umint _Size, CMibCodeAddress *_pStackTrace, umint _nStackTrace, ch8 const *_pFile, uint32 _Line, uint32 _Flags, umint _ThreadID, umint _AllocID)
 					{
 						if (pAlloc == _pAlloc)
@@ -159,7 +159,7 @@ namespace
 					DMibTestPath("Small");
 					umint Size = 16;
 					pAlloc = (uint8 *)MemoryManager.f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
-					MemoryManager.f_EnumAllocations(fl_AllocFunctor);
+					MemoryManager.f_EnumAllocations(fAllocFunctor);
 					DMibTest(DMibExpr(bFoundAlloc));
 					MemoryManager.f_Free(pAlloc, Size);
 					bFoundAlloc = false;
@@ -168,7 +168,7 @@ namespace
 					DMibTestPath("Big");
 					umint Size = 512 * 1024;
 					pAlloc = (uint8 *)MemoryManager.f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
-					MemoryManager.f_EnumAllocations(fl_AllocFunctor);
+					MemoryManager.f_EnumAllocations(fAllocFunctor);
 					DMibTest(DMibExpr(bFoundAlloc));
 					MemoryManager.f_Free(pAlloc, Size);
 					bFoundAlloc = false;
@@ -177,7 +177,7 @@ namespace
 					DMibTestPath("Huge");
 					umint Size = 32 * 1024 * 1024;
 					pAlloc = (uint8 *)MemoryManager.f_AllocWithSizeDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_None);
-					MemoryManager.f_EnumAllocations(fl_AllocFunctor);
+					MemoryManager.f_EnumAllocations(fAllocFunctor);
 					DMibTest(DMibExpr(bFoundAlloc));
 					MemoryManager.f_Free(pAlloc, Size);
 					bFoundAlloc = false;
@@ -255,7 +255,7 @@ namespace
 			};
 			DMibTestCategory("Memory overwrite")
 			{
-				auto fl_TestOverwite = [&](umint _Size, ch8 const *_pDesc)
+				auto fTestOverwrite = [&](umint _Size, ch8 const *_pDesc)
 					{
 						DMibTestPath(_pDesc);
 
@@ -597,10 +597,10 @@ namespace
 					}
 				;
 
-				fl_TestOverwite(64, "Normal");
-				fl_TestOverwite(512 * 1024, "Big");
+				fTestOverwrite(64, "Normal");
+				fTestOverwrite(512 * 1024, "Big");
 #	if DMibPPtrBits > 32
-				fl_TestOverwite(32 * 1024 * 1024, "Huge");
+				fTestOverwrite(32 * 1024 * 1024, "Huge");
 #	endif
 			};
 #endif

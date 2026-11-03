@@ -18,12 +18,12 @@ namespace NMib::NMemory
 
 		constexpr bool operator == (TCAllocator_MemoryManager const &_Right) const noexcept
 		{
-			return m_pMemoryManager == _Right.m_pMemoryManager;
+			return mp_pMemoryManager == _Right.mp_pMemoryManager;
 		}
 
 		constexpr auto operator <=> (TCAllocator_MemoryManager const &_Right) const noexcept
 		{
-			return m_pMemoryManager <=> _Right.m_pMemoryManager;
+			return mp_pMemoryManager <=> _Right.mp_pMemoryManager;
 		}
 
 		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
@@ -171,7 +171,7 @@ namespace NMib::NMemory
 		CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
 
 	private:
-		TCMemoryManager<t_CParams> *m_pMemoryManager;
+		TCMemoryManager<t_CParams> *mp_pMemoryManager;
 	};
 }
 

@@ -31,7 +31,7 @@ extern "C"
 
 		NMib::NContainer::TCVector<NMib::NStorage::TCUniquePointer<NMib::NThread::CThreadObject>> StartedThreads;
 
-		for (umint i = 0; i < nThreads; ++i)
+		for (umint iThread = 0; iThread < nThreads; ++iThread)
 		{
 			StartedThreads.f_Insert
 				(
@@ -41,7 +41,7 @@ extern "C"
 						{
 							NMib::NSys::fg_Thread_Sleep(fp64(0.1) + NMib::NMisc::fg_GetRandomFloat() * 0.1);
 
-							for (int i = 0; i < 2; ++i)
+							for (int iRepetition = 0; iRepetition < 2; ++iRepetition)
 							{
 								NMib::NContainer::TCVector<CAlloc> Allocs;
 								NMib::NContainer::TCVector<CAlloc> BigAllocs;

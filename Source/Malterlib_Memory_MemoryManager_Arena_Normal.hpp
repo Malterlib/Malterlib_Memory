@@ -216,7 +216,7 @@ namespace NMib::NMemory
 		uint8 *pBlock = _pBase + CarveOffset;
 		_FreeState.m_pFreeHead = pBlock;
 
-		for (umint i = 1; i < nBlocks; ++i)
+		for (umint iBlock = 1; iBlock < nBlocks; ++iBlock)
 		{
 			uint8 *pNext = pBlock + _AlignedSize;
 
@@ -247,12 +247,12 @@ namespace NMib::NMemory
 		else if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
 			if (_SlabBucket > 4) [[likely]]
-				return &m_CurrentSubSlabs.m_Normal[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
+				return &mp_CurrentSubSlabs.m_Normal[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
 			else
-				return &m_CurrentSubSlabs.m_Level0[(_AlignedSize - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment];
+				return &mp_CurrentSubSlabs.m_Level0[(_AlignedSize - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment];
 		}
 		else
-			return &m_CurrentSubSlabs.m_Normal[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
+			return &mp_CurrentSubSlabs.m_Normal[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
 	}
 
 	template <typename t_CParams>
@@ -262,12 +262,12 @@ namespace NMib::NMemory
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
 			if (_SlabBucket > 4) [[likely]]
-				return &m_NormalSizeSlabs[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
+				return &mp_NormalSizeSlabs[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
 			else
-				return &m_NormalSizeSlabsLevel0[(_AlignedSize - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment];
+				return &mp_NormalSizeSlabsLevel0[(_AlignedSize - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment];
 		}
 		else
-			return &m_NormalSizeSlabs[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
+			return &mp_NormalSizeSlabs[fsp_NormalSizeClass(_SlabBucket, _SlabType)];
 	}
 
 	template <typename t_CParams>
@@ -465,7 +465,7 @@ namespace NMib::NMemory
 			Size = SizeMinus1 + 1;
 		}
 
-		DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(Size));
+		DMibMemLightweightTrack(mp_pMemoryManager->fp_TrackAlloc(Size));
 
 		DMibFastCheck(Size >= t_CParams::mc_MinNormalAllocSize);
 
@@ -502,7 +502,7 @@ namespace NMib::NMemory
 						DMibFastCheck(SlabBucket - 5 < mc_nNormalSizeLists);
 						DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-						pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
+						pList = &mp_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
 					}
 					else
 					{
@@ -514,7 +514,7 @@ namespace NMib::NMemory
 						DMibFastCheck(SlabIndex < mc_nLevel0Lists);
 						DMibFastCheck(Size != mc_Level0SmallestSize || SlabIndex == (mc_nLevel0Lists - 1));
 
-						pList = &m_NormalSizeSlabsLevel0[SlabIndex];
+						pList = &mp_NormalSizeSlabsLevel0[SlabIndex];
 					}
 				}
 				else
@@ -522,7 +522,7 @@ namespace NMib::NMemory
 					DMibFastCheck(SlabBucket - t_CParams::mc_MinNormalSlabBucket < mc_nNormalSizeLists);
 					DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-					pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
+					pList = &mp_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
 				}
 			}
 
@@ -734,7 +734,7 @@ namespace NMib::NMemory
 						DMibFastCheck(SlabBucket - 5 < mc_nNormalSizeLists);
 						DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-						pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
+						pList = &mp_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
 					}
 					else
 					{
@@ -746,7 +746,7 @@ namespace NMib::NMemory
 						DMibFastCheck(SlabIndex < mc_nLevel0Lists);
 						DMibFastCheck(Size != mc_Level0SmallestSize || SlabIndex == (mc_nLevel0Lists - 1));
 
-						pList = &m_NormalSizeSlabsLevel0[SlabIndex];
+						pList = &mp_NormalSizeSlabsLevel0[SlabIndex];
 					}
 				}
 				else
@@ -754,13 +754,13 @@ namespace NMib::NMemory
 					DMibFastCheck(SlabBucket - t_CParams::mc_MinNormalSlabBucket < mc_nNormalSizeLists);
 					DMibFastCheck(SubIndex < t_CParams::mc_NumSizesPerLevel);
 
-					pList = &m_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
+					pList = &mp_NormalSizeSlabs[fsp_NormalSizeClass(SlabBucket, SubIndex)];
 				}
 			}
 
 			auto &List = *pList;
 
-			DMibMemLightweightTrack(auto *pLocalArena = m_pMemoryManager->m_LocalArena.f_TryGet());
+			DMibMemLightweightTrack(auto *pLocalArena = mp_pMemoryManager->mp_LocalArena.f_TryGet());
 
 			while (1)
 			{
@@ -884,7 +884,7 @@ namespace NMib::NMemory
 									if (Current.m_pFreeState != &FreeState)
 									{
 										if constexpr (t_CParams::mc_bGlobalAddressOrder)
-											m_bSubSlabListsDirty = true;
+											mp_bSubSlabListsDirty = true;
 										List.f_UnsafeInsertFirst(&pSlab->m_pSubSlabNodes[iSubSlab]);
 									}
 								}
@@ -1457,7 +1457,7 @@ namespace NMib::NMemory
 						if (!bCurrent && umint(FreeState.m_CarveEnd - FreeState.m_CarveStart) * 4 > AlignedSize)
 						{
 							if constexpr (t_CParams::mc_bGlobalAddressOrder)
-								m_bSubSlabListsDirty = true;
+								mp_bSubSlabListsDirty = true;
 
 							// Always append at the tail: a relisted sub-slab then accumulates
 							// frees while queued behind the others, so it is popped with a long
@@ -1543,7 +1543,7 @@ namespace NMib::NMemory
 			return;
 
 		if constexpr (t_CParams::mc_bGlobalAddressOrder)
-			m_bSubSlabListsDirty = true;
+			mp_bSubSlabListsDirty = true;
 
 		fp_GetNormalFreeList(_SlabType, _SlabBucket, _AlignedSize)->f_UnsafeInsertLast(&_pSlab->m_pSubSlabNodes[_iSubSlab]);
 	}

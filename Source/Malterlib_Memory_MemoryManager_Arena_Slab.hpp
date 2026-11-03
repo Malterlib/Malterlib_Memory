@@ -31,12 +31,12 @@ namespace NMib::NMemory
 			{
 				umint nToCommit = nSubSlabs - nCommittedHeaderSubSlabs;
 				if constexpr (mc_EnableCallbacks)
-					m_pMemoryManager->f_OnCommit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nToCommit * t_CParams::mc_SubSlabSize);
+					mp_pMemoryManager->f_OnCommit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nToCommit * t_CParams::mc_SubSlabSize);
 				OldCommitted.f_EnumFreeBitRanges
 					(
 						[&](umint _iSubSlab, umint _nSubSlabs)
 						{
-							m_pMemoryManager->m_Allocator.f_Commit(pMemory + _iSubSlab * t_CParams::mc_SubSlabSize, _nSubSlabs * t_CParams::mc_SubSlabSize);
+							mp_pMemoryManager->mp_Allocator.f_Commit(pMemory + _iSubSlab * t_CParams::mc_SubSlabSize, _nSubSlabs * t_CParams::mc_SubSlabSize);
 							return true;
 						}
 						, iSubSlab
@@ -50,15 +50,15 @@ namespace NMib::NMemory
 				umint nAlreadyCommitted = nCommittedHeaderSubSlabs - nSubSlabs;
 				OldCommitted.template f_SetBitRange<true>(iSubSlab - nAlreadyCommitted, nAlreadyCommitted);
 			}
-			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, tf_SlabType>(m_Magic, this, nSubSlabs);
+			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, tf_SlabType>(mp_Magic, this, nSubSlabs);
 			pSlab->f_SetCommitted(OldCommitted);
 		}
 		else
 		{
-			m_pMemoryManager->m_Allocator.f_Commit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nSubSlabs * t_CParams::mc_SubSlabSize);
+			mp_pMemoryManager->mp_Allocator.f_Commit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nSubSlabs * t_CParams::mc_SubSlabSize);
 			if constexpr (mc_EnableCallbacks)
-				m_pMemoryManager->f_OnCommit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nSubSlabs * t_CParams::mc_SubSlabSize);
-			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, tf_SlabType>(m_Magic, this, nSubSlabs);
+				mp_pMemoryManager->f_OnCommit(pMemory + iSubSlab * t_CParams::mc_SubSlabSize, nSubSlabs * t_CParams::mc_SubSlabSize);
+			pSlab = new((void *)pSlabMem) TCMemoryManagerSlab<t_CParams, tf_SlabType>(mp_Magic, this, nSubSlabs);
 		}
 
 		return pSlab;
@@ -141,32 +141,32 @@ namespace NMib::NMemory
 		{
 			// Do full garbage collection
 			fp_GarbageCollectFull();
-			iFree = m_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
+			iFree = mp_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
 		}
 		else
 		{
 			// Only collect garbage that is relevant to this slab type
-			iFree = m_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
+			iFree = mp_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
 			while (iFree < 0 && fp_GarbageCollect(_SlabType))
-				iFree = m_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
+				iFree = mp_PartiallyFreeSlabsAvailable[_SlabType].f_FindUpperBound(_SizeType);
 		}
 
 		if (iFree >= 0)
 		{
 			DMibFastCheck(iFree <= t_CParams::mc_NumSubSlabSizeLevels);
-			pSlab = m_PartiallyFreeSlabs[_SlabType][iFree].f_GetFirst();
+			pSlab = mp_PartiallyFreeSlabs[_SlabType][iFree].f_GetFirst();
 			DMibFastCheck(pSlab);
 			DMibFastCheck(pSlab->f_HasFreeBit(_SizeType));
 			return pSlab;
 		}
 
-		auto pFreeSlab = m_FreeSlabs.f_Pop();
+		auto pFreeSlab = mp_FreeSlabs.f_Pop();
 
 		if (!pFreeSlab)
 		{
 			//fp_GarbageCollectFull();
-			DMibLock(m_pNumaArena->m_FreeSlabsLock);
-			pFreeSlab = m_pNumaArena->m_FreeSlabs.f_Pop();
+			DMibLock(mp_pNumaArena->mp_FreeSlabsLock);
+			pFreeSlab = mp_pNumaArena->mp_FreeSlabs.f_Pop();
 			if (pFreeSlab)
 			{
 				pFreeSlab->m_LinkNeedDecommit.f_Unlink();
@@ -184,22 +184,22 @@ namespace NMib::NMemory
 			pMemory = fg_AlignDown((uint8 *)pFreeSlab, t_CParams::mc_SlabSize);
 		else
 		{
-			pMemory = m_pMemoryManager->m_Allocator.f_AllocAligned
+			pMemory = mp_pMemoryManager->mp_Allocator.f_AllocAligned
 				(
 					t_CParams::mc_SlabSize
 					, t_CParams::mc_SlabSize
 					, (t_CParams::CAllocator::f_CanCommit() ? EAllocationFlag_NoCommit : EAllocationFlag_None) | EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags
-					, m_NumaNode
+					, mp_NumaNode
 				)
 			;
 
 			if constexpr (mc_EnableCallbacks)
-				m_pMemoryManager->f_OnDecommit((uint8 *)pMemory, t_CParams::mc_SlabSize);
+				mp_pMemoryManager->f_OnDecommit((uint8 *)pMemory, t_CParams::mc_SlabSize);
 		}
 
 		pSlab = fp_CreateSlabDynamic(_SlabType, pMemory, pFreeSlab);
 
-		m_FreeSlabs.f_InsertFirst(pSlab);
+		mp_FreeSlabs.f_InsertFirst(pSlab);
 
 		return pSlab;
 	}

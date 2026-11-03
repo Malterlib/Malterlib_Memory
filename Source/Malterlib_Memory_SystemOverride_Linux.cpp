@@ -194,9 +194,9 @@ extern "C"
 
 	module_export struct mallinfo mallinfo(void)
 	{
-		struct mallinfo res;
-		fg_MemClear(res);
-		return res;
+		struct mallinfo Result;
+		fg_MemClear(Result);
+		return Result;
 	}
 
 	int mallopt(int _Command, int _Value)

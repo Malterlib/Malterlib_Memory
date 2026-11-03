@@ -10,7 +10,7 @@ namespace NMib::NMemory
 	DMibImpErrorClassImplement(CExceptionMemoryManagerDebug);
 #endif
 
-	extern ch8 const *gc_IgnoreFunctions[];
+	extern ch8 const *g_IgnoreFunctions[];
 }
 
 namespace NMib::NMemory::NPrivate
@@ -42,10 +42,10 @@ namespace NMib::NMemory::NPrivate
 
 		auto StackTraceCleanup = g_OnScopeExit / [&]
 			{
-				for (umint i = 0; i < nStackTrace; ++i)
+				for (umint iTrace = 0; iTrace < nStackTrace; ++iTrace)
 				{
-					if (StackTraceInfos[i].m_pContext)
-						NSys::fg_Debug_ReleaseStackTraceInfo(&StackTraceInfos[i]);
+					if (StackTraceInfos[iTrace].m_pContext)
+						NSys::fg_Debug_ReleaseStackTraceInfo(&StackTraceInfos[iTrace]);
 				}
 			}
 		;
@@ -63,10 +63,10 @@ namespace NMib::NMemory::NPrivate
 
 		{
 			bool bCanSkip = true;
-			for (umint i = 0; i < nStackTrace; ++i)
+			for (umint iTrace = 0; iTrace < nStackTrace; ++iTrace)
 			{
-				auto &TraceInfo = StackTraceInfos[i];
-				if (NSys::fg_Debug_AquireStackTraceInfo(TraceInfo, _pStackTrace[i], _bCanAllocateNonTracked))
+				auto &TraceInfo = StackTraceInfos[iTrace];
+				if (NSys::fg_Debug_AquireStackTraceInfo(TraceInfo, _pStackTrace[iTrace], _bCanAllocateNonTracked))
 				{
 					if (bCanSkip)
 					{
@@ -81,7 +81,7 @@ namespace NMib::NMemory::NPrivate
 						if (NStr::fg_StrMatchWildcard(TraceInfo.m_pFunctionName, "+[* load]") == NStr::EMatchWildcardResult_WholeStringMatchedAndPatternExhausted)
 							return false;
 #endif
-						for (char const **pCurIgnoreFunction = gc_IgnoreFunctions; *pCurIgnoreFunction; ++pCurIgnoreFunction)
+						for (char const **pCurIgnoreFunction = g_IgnoreFunctions; *pCurIgnoreFunction; ++pCurIgnoreFunction)
 						{
 							if (NStr::fg_StrStartsWith(TraceInfo.m_pFunctionName, *pCurIgnoreFunction))
 								return false; // Ignore this report.
@@ -144,11 +144,11 @@ namespace NMib::NMemory::NPrivate
 
 		CFStr TraceString = "0x";
 		CFStr TraceString2;
-		for (uint32 i = 0; i < nBytes; ++i)
+		for (uint32 iByte = 0; iByte < nBytes; ++iByte)
 		{
-			TraceString += (CFStr::CFormat("{sj2,sf0,nh}") << ((uint8 *)pCurrentBlock)[i]).f_GetStr();
-			if (((uint8 *)pCurrentBlock)[i] > 31)
-				TraceString2.f_AddChar(((uint8 *)pCurrentBlock)[i]);
+			TraceString += (CFStr::CFormat("{sj2,sf0,nh}") << ((uint8 *)pCurrentBlock)[iByte]).f_GetStr();
+			if (((uint8 *)pCurrentBlock)[iByte] > 31)
+				TraceString2.f_AddChar(((uint8 *)pCurrentBlock)[iByte]);
 			else
 				TraceString2.f_AddChar('$');
 		}
@@ -165,10 +165,10 @@ namespace NMib::NMemory::NPrivate
 
 		bool bCanSkip = true;
 		umint nSkipped = 0;
-		for (umint i = 0; i < nStackTrace; ++i)
+		for (umint iTrace = 0; iTrace < nStackTrace; ++iTrace)
 		{
-			CStackTraceInfo &TraceInfo = StackTraceInfos[i];
-			CMibCodeAddress pAddress = _pStackTrace[i];
+			CStackTraceInfo &TraceInfo = StackTraceInfos[iTrace];
+			CMibCodeAddress pAddress = _pStackTrace[iTrace];
 			if (TraceInfo.m_pContext)
 			{
 				if (bCanSkip)

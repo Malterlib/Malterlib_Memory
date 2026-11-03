@@ -15,7 +15,7 @@ namespace NMib::NMemory
 	TCMemoryManagerNumaArenaBackgroundCleanup<t_CParams>::TCMemoryManagerNumaArenaBackgroundCleanup(TCMemoryManagerNumaArena<t_CParams> *_pNumaArena)
 		: mp_pNumaArena(_pNumaArena)
 		, mp_bStarted(false)
-		, mp_pMemoryManager(_pNumaArena->m_pMemoryManager)
+		, mp_pMemoryManager(_pNumaArena->mp_pMemoryManager)
 	{
 		if (g_bCanStartThreads.f_Load())
 			f_CanStartThreads();
@@ -93,10 +93,10 @@ namespace NMib::NMemory
 					// lock, so a lazy return from those waits, which reads the zone list lock, would deadlock with a fork
 					NSys::fg_Mem_DisableLazyReturnCheckout();
 
-					if (mp_pNumaArena->m_NumaNode != ENumaNode_Default)
+					if (mp_pNumaArena->mp_NumaNode != ENumaNode_Default)
 					{
-						NSys::fg_Thread_SetNumaAffinity(NMib::NSys::fg_Thread_GetCurrent(), mp_pNumaArena->m_NumaNode);
-						mp_pMemoryManager->f_SetNumaNode(mp_pNumaArena->m_NumaNode);
+						NSys::fg_Thread_SetNumaAffinity(NMib::NSys::fg_Thread_GetCurrent(), mp_pNumaArena->mp_NumaNode);
+						mp_pMemoryManager->f_SetNumaNode(mp_pNumaArena->mp_NumaNode);
 					}
 
 					static_assert(t_CParams::mc_BackgroundCleanupLifetimeDecommit >= t_CParams::mc_BackgroundCleanupLifetime);
@@ -140,11 +140,11 @@ namespace NMib::NMemory
 							int64 Now = fs_GetTimestamp();
 							int64 RemoveTime = Now - LifeTime;
 							int64 RemoveTimeDecommit = Now - LifeTimeDecommit;
-							[[maybe_unused]] auto &ThreadLocal = *mp_pNumaArena->m_pMemoryManager->m_LocalArena; // Precach thread local to prevent deadlock
+							[[maybe_unused]] auto &ThreadLocal = *mp_pNumaArena->mp_pMemoryManager->mp_LocalArena; // Precach thread local to prevent deadlock
 
 							DMibLock(mp_GarbageCollectLock);
 
-							mp_pNumaArena->m_pMemoryManager->f_LazyReturnCheckout();
+							mp_pNumaArena->mp_pMemoryManager->f_LazyReturnCheckout();
 
 							int64 NextUpdate = mp_pNumaArena->f_GarbageCollect({RemoveTime, RemoveTimeDecommit}, true, bForceFullGarbageCollection);
 							bForceFullGarbageCollection = false;

@@ -84,6 +84,8 @@
 #	define DMibMemoryInterpose_SomeHooks
 #endif
 
+// NOLINTBEGIN(malterlib-variable-naming): the members of COriginalFunctions are named after the macOS functions they point to, and the
+// interpose macros also use each name to take the address of the function and to name its replacement
 #ifndef DMibMemoryInterpose_SomeHooks
 DMibMemoryInterpose0(malloc_zone_t *, malloc_default_zone)
 DMibMemoryInterpose2(malloc_zone_t *, malloc_create_zone, (_StartSize, _Flags), vm_size_t _StartSize, unsigned _Flags)
@@ -331,6 +333,7 @@ DMibMemoryInterpose7
 		, mach_msg_timeout_t _Timeout
 		, mach_port_name_t _Notify
 	)
+// NOLINTEND(malterlib-variable-naming)
 
 /* Unimplemented:
 	__mach_stack_logging_shared_memory_address

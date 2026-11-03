@@ -257,11 +257,11 @@ namespace NMib::NMemory
 
 			bool f_ContainsBlock(void *_pBlock)
 			{
-				DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *lLists[] = {&m_Chunks, &m_FreeChunks, &m_EmptyChunks};
+				DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *Lists[] = {&m_Chunks, &m_FreeChunks, &m_EmptyChunks};
 
-				for (umint i = 0; i < sizeof(lLists) / sizeof(DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *); ++i)
+				for (umint iList = 0; iList < sizeof(Lists) / sizeof(DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *); ++iList)
 				{
-					DMibListLinkAllocatorD_Iter_FromTemplate(CChunk, m_Link, t_CAllocator) Iter = *lLists[i];
+					DMibListLinkAllocatorD_Iter_FromTemplate(CChunk, m_Link, t_CAllocator) Iter = *Lists[iList];
 					while (Iter)
 					{
 						if ((umint)_pBlock >= (umint)(CChunk *)Iter && (umint)_pBlock < (umint)(CChunk *)Iter + Iter->m_Size)
@@ -473,11 +473,11 @@ namespace NMib::NMemory
 
 			bool f_ContainsBlock(void *_pBlock)
 			{
-				DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *lLists[] = {&m_Chunks, &m_FreeChunks, &m_EmptyChunks};
+				DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *Lists[] = {&m_Chunks, &m_FreeChunks, &m_EmptyChunks};
 
-				for (umint i = 0; i < sizeof(lLists) / sizeof(DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *); ++i)
+				for (umint iList = 0; iList < sizeof(Lists) / sizeof(DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) *); ++iList)
 				{
-					DMibListLinkAllocatorD_Iter_FromTemplate(CChunk, m_Link, t_CAllocator) Iter = *lLists[i];
+					DMibListLinkAllocatorD_Iter_FromTemplate(CChunk, m_Link, t_CAllocator) Iter = *Lists[iList];
 					while (Iter)
 					{
 						if ((umint)_pBlock >= (umint)(CChunk *)Iter && (umint)_pBlock < (umint)(CChunk *)Iter + Iter->m_Size)

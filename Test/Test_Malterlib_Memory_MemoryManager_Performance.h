@@ -59,14 +59,14 @@ namespace
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
 		{
-			m_MaxSize = _MaxSize;
+			mp_MaxSize = _MaxSize;
 			return true;
 		}
 
 		void f_InitThread()
 		{
-			(*m_Memory).f_SetLen(m_MaxSize * 2);
-			(*m_pMemory) = (*m_Memory).f_GetArray();
+			(*mp_Memory).f_SetLen(mp_MaxSize * 2);
+			(*mp_pMemory) = (*mp_Memory).f_GetArray();
 		}
 
 		int f_Checkout()
@@ -76,12 +76,12 @@ namespace
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return NMib::fg_AlignUp((*m_pMemory), _Alignment);
+			return NMib::fg_AlignUp((*mp_pMemory), _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return (*m_pMemory);
+			return (*mp_pMemory);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
@@ -97,16 +97,16 @@ namespace
 		}
 
 	private:
-		NMib::NThread::TCThreadLocal<NMib::NContainer::CByteVector> m_Memory;
+		NMib::NThread::TCThreadLocal<NMib::NContainer::CByteVector> mp_Memory;
 		NMib::NThread::TCThreadLocal
 			<
 				uint8 *
 				, NMib::NMemory::CAllocator_Heap
 				, (NMib::NThread::EThreadLocalFlag)(NMib::NThread::EThreadLocalFlag_AlwaysCreated | NMib::NThread::EThreadLocalFlag_FastThreadLocal)
 			>
-			m_pMemory
+			mp_pMemory
 		;
-		umint m_MaxSize;
+		umint mp_MaxSize;
 	};
 
 #ifdef DMemoryManagerTestEnable_Malterlib
@@ -117,11 +117,11 @@ namespace
 		{
 		};
 
-		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 
 	public:
 		CMalterlibMemoryMalterlib()
-			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+			: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 
@@ -132,7 +132,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -144,24 +144,24 @@ namespace
 		{
 		}
 
-		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
 		{
-			return m_MemoryManager.f_Checkout();
+			return mp_MemoryManager.f_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -189,11 +189,11 @@ namespace
 		{
 		};
 
-		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 
 	public:
 		CMalterlibMemoryMalterlib_SubSlabBitmaps()
-			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+			: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 
@@ -204,7 +204,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -216,24 +216,24 @@ namespace
 		{
 		}
 
-		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
 		{
-			return m_MemoryManager.f_Checkout();
+			return mp_MemoryManager.f_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -258,11 +258,11 @@ namespace
 		{
 		};
 
-		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 
 	public:
 		CMalterlibMemoryMalterlib_SubSlabLists()
-			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+			: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 
@@ -273,7 +273,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -285,24 +285,24 @@ namespace
 		{
 		}
 
-		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
 		{
-			return m_MemoryManager.f_Checkout();
+			return mp_MemoryManager.f_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -330,11 +330,11 @@ namespace
 		{
 		};
 
-		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 
 	public:
 		TCMalterlibMemoryMalterlib_Reap()
-			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+			: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 
@@ -345,7 +345,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -357,24 +357,24 @@ namespace
 		{
 		}
 
-		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
 		{
-			return m_MemoryManager.f_Checkout();
+			return mp_MemoryManager.f_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -406,11 +406,11 @@ namespace
 		{
 		};
 
-		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 
 	public:
 		CMalterlibMemoryMalterlib_LowBranch()
-			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+			: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 
@@ -421,7 +421,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -433,24 +433,24 @@ namespace
 		{
 		}
 
-		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
 		{
-			return m_MemoryManager.f_Checkout();
+			return mp_MemoryManager.f_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -467,20 +467,20 @@ namespace
 	{
 	private:
 #	ifdef DMibNeedDebugException
-		static constexpr bool mc_bHasExceptions = true;
+		static constexpr bool mcp_bHasExceptions = true;
 #	else
-		static constexpr bool mc_bHasExceptions = false;
+		static constexpr bool mcp_bHasExceptions = false;
 #	endif
 
 		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
 		{
 		};
 
-		NMib::NMemory::TCMemoryManagerDebug<CParams, mc_bHasExceptions> m_MemoryManager;
+		NMib::NMemory::TCMemoryManagerDebug<CParams, mcp_bHasExceptions> mp_MemoryManager;
 
 	public:
 		CMalterlibMemoryMalterlib_Debug()
-			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+			: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 
@@ -491,7 +491,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -503,24 +503,24 @@ namespace
 		{
 		}
 
-		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
 		{
-			return m_MemoryManager.f_Checkout();
+			return mp_MemoryManager.f_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -539,11 +539,11 @@ namespace
 		{
 		};
 
-		NMib::NMemory::TCMemoryManagerTracked<NMib::NMemory::TCMemoryManager<CParams>> m_MemoryManager;
+		NMib::NMemory::TCMemoryManagerTracked<NMib::NMemory::TCMemoryManager<CParams>> mp_MemoryManager;
 
 	public:
 		CMalterlibMemoryMalterlib_Tracked()
-			: m_MemoryManager("Test tracked manager", NMib::NMemory::CMemoryManagerConfig())
+			: mp_MemoryManager("Test tracked manager", NMib::NMemory::CMemoryManagerConfig())
 		{
 		}
 
@@ -554,7 +554,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -566,24 +566,24 @@ namespace
 		{
 		}
 
-		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
 		{
-			return m_MemoryManager.f_Checkout();
+			return mp_MemoryManager.f_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -611,11 +611,11 @@ namespace
 		{
 		};
 
-		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 
 	public:
 		CMalterlibMemoryMalterlib_NoCleanup()
-			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+			: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 
@@ -626,7 +626,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -638,24 +638,24 @@ namespace
 		{
 		}
 
-		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
 		{
-			return m_MemoryManager.f_Checkout();
+			return mp_MemoryManager.f_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -679,11 +679,11 @@ namespace
 		{
 		};
 
-		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 
 	public:
 		CMalterlibMemoryMalterlib_NoDeferCleanup()
-			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+			: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 
@@ -694,7 +694,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -706,24 +706,24 @@ namespace
 		{
 		}
 
-		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
 		{
-			return m_MemoryManager.f_Checkout();
+			return mp_MemoryManager.f_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -742,11 +742,11 @@ namespace
 		{
 		};
 
-		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 
 	public:
 		CMalterlibMemoryMalterlib_NoCheckout()
-			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+			: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 
@@ -757,7 +757,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -776,17 +776,17 @@ namespace
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -805,11 +805,11 @@ namespace
 		{
 		};
 
-		NMib::NMemory::TCMemoryManager<CParams> m_MemoryManager;
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 
 	public:
 		CMalterlibMemoryMalterlib_NoCommit()
-			: m_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
+			: mp_MemoryManager{NMib::NMemory::CMemoryManagerConfig()}
 		{
 		}
 
@@ -820,7 +820,7 @@ namespace
 
 		void f_SetNumaNode(NMib::ENumaNode _Node)
 		{
-			m_MemoryManager.f_SetNumaNode(_Node);
+			mp_MemoryManager.f_SetNumaNode(_Node);
 		}
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
@@ -832,24 +832,24 @@ namespace
 		{
 		}
 
-		auto f_Checkout() -> decltype(m_MemoryManager.f_Checkout())
+		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
 		{
-			return m_MemoryManager.f_Checkout();
+			return mp_MemoryManager.f_Checkout();
 		}
 
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment)
 		{
-			return m_MemoryManager.f_AllocAligned(_Size, _Alignment);
+			return mp_MemoryManager.f_AllocAligned(_Size, _Alignment);
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_MemoryManager.f_Alloc(_Size);
+			return mp_MemoryManager.f_Alloc(_Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_MemoryManager.f_FreeNoSize(_pMem);
+			mp_MemoryManager.f_FreeNoSize(_pMem);
 		}
 
 		void f_Clear()
@@ -990,20 +990,20 @@ namespace
 	struct CMalterlibMemoryMacOS
 	{
 	private:
-		malloc_zone_t *m_pMallocZone;
+		malloc_zone_t *mp_pMallocZone;
 
 	public:
 		CMalterlibMemoryMacOS()
-			: m_pMallocZone(nullptr)
+			: mp_pMallocZone(nullptr)
 		{
 		}
 
 		~CMalterlibMemoryMacOS()
 		{
-			if (m_pMallocZone)
+			if (mp_pMallocZone)
 			{
-				malloc_destroy_zone(m_pMallocZone);
-				m_pMallocZone = nullptr;
+				malloc_destroy_zone(mp_pMallocZone);
+				mp_pMallocZone = nullptr;
 			}
 		}
 
@@ -1022,7 +1022,7 @@ namespace
 
 		bool f_Init(umint _nThreads, umint _MaxSize)
 		{
-			m_pMallocZone = malloc_create_zone(1024 * 1024, 0);
+			mp_pMallocZone = malloc_create_zone(1024 * 1024, 0);
 			return true;
 		}
 
@@ -1041,18 +1041,18 @@ namespace
 			return nullptr;
 #	else
 			_Alignment = NMib::fg_Max(sizeof(void *), _Alignment);
-			return m_pMallocZone->memalign(m_pMallocZone, _Alignment, _Size);
+			return mp_pMallocZone->memalign(mp_pMallocZone, _Alignment, _Size);
 #	endif
 		}
 
 		inline_small void *f_Alloc(umint _Size)
 		{
-			return m_pMallocZone->malloc(m_pMallocZone, _Size);
+			return mp_pMallocZone->malloc(mp_pMallocZone, _Size);
 		}
 
 		inline_small void f_FreeNoSize(void *_pMem)
 		{
-			m_pMallocZone->free(m_pMallocZone, _pMem);
+			mp_pMallocZone->free(mp_pMallocZone, _pMem);
 		}
 
 		void f_Clear()

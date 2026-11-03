@@ -15,9 +15,9 @@ namespace NMib::NMemory
 		if (_pLocalArena)
 			RandomIndex = _pLocalArena->m_RandomIndex & (mc_MessagesSpread - 1);
 		else
-			RandomIndex = m_Magic & (mc_MessagesSpread - 1);
+			RandomIndex = mp_Magic & (mc_MessagesSpread - 1);
 
-		auto &Messages = m_MessageState.m_SpreadMessages[RandomIndex].m_Messages;
+		auto &Messages = mp_MessageState.m_SpreadMessages[RandomIndex].m_Messages;
 		bool bWasEmpty = false;
 		while (1)
 		{
@@ -35,14 +35,14 @@ namespace NMib::NMemory
 		if (!bWasEmpty)
 			return;
 
-		m_MessageState.m_MessagesAvailable.f_FetchAdd(1);
+		mp_MessageState.m_MessagesAvailable.f_FetchAdd(1);
 	}
 
 	template <typename t_CParams>
 	inline_always bool TCMemoryManagerArena<t_CParams>::fp_HasRemoteFrees() const
 	{
 		if constexpr (mc_bUseRemoteFreeReap)
-			return m_RemoteFreeState.m_RemoteFreeSlabs.f_Load(NAtomic::gc_MemoryOrder_Relaxed) != 0;
+			return mp_RemoteFreeState.m_RemoteFreeSlabs.f_Load(NAtomic::gc_MemoryOrder_Relaxed) != 0;
 		else
 			return false;
 	}
@@ -53,16 +53,16 @@ namespace NMib::NMemory
 		auto &StackNext = _pSlab->m_pRemoteFreeNotify->m_StackNext;
 		while (1)
 		{
-			umint OldHead = m_RemoteFreeState.m_RemoteFreeSlabs.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
+			umint OldHead = mp_RemoteFreeState.m_RemoteFreeSlabs.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
 			StackNext.f_Store(OldHead, NAtomic::gc_MemoryOrder_Relaxed);
-			if (m_RemoteFreeState.m_RemoteFreeSlabs.f_CompareExchangeWeak(OldHead, (umint)_pSlab, NAtomic::gc_MemoryOrder_Release))
+			if (mp_RemoteFreeState.m_RemoteFreeSlabs.f_CompareExchangeWeak(OldHead, (umint)_pSlab, NAtomic::gc_MemoryOrder_Release))
 				break;
 
 			yield_cpu;
 		}
 
 		if constexpr (mc_bUseFreeMessages)
-			m_MessageState.m_MessagesAvailable.f_FetchAdd(1);
+			mp_MessageState.m_MessagesAvailable.f_FetchAdd(1);
 	}
 
 	template <typename t_CParams>
@@ -233,7 +233,7 @@ namespace NMib::NMemory
 					// The sub-slab was exhausted so it is neither listed nor current; remote
 					// frees are cold, append at the tail like message-processed frees
 					if constexpr (t_CParams::mc_bGlobalAddressOrder)
-						m_bSubSlabListsDirty = true;
+						mp_bSubSlabListsDirty = true;
 					fp_GetNormalFreeList(SlabType, SlabBucket, AlignedSize)->f_UnsafeInsertLast(&_pSlab->m_pSubSlabNodes[_iSubSlab]);
 				}
 			}
@@ -317,7 +317,7 @@ namespace NMib::NMemory
 				{
 					if (f_IsContended(_pLocalArena))
 					{
-						if (m_RemoteFreeState.m_RemoteFreeSlabs.f_Load(NAtomic::gc_MemoryOrder_Relaxed))
+						if (mp_RemoteFreeState.m_RemoteFreeSlabs.f_Load(NAtomic::gc_MemoryOrder_Relaxed))
 							fp_RequestCleanup();
 						return bDoneSomething;
 					}
@@ -332,13 +332,13 @@ namespace NMib::NMemory
 				TCMemoryManagerSlabShared<t_CParams> *pSlab;
 				while (1)
 				{
-					umint OldHead = m_RemoteFreeState.m_RemoteFreeSlabs.f_Load(NAtomic::gc_MemoryOrder_Acquire);
+					umint OldHead = mp_RemoteFreeState.m_RemoteFreeSlabs.f_Load(NAtomic::gc_MemoryOrder_Acquire);
 					if (!OldHead)
 						return bDoneSomething;
 
 					pSlab = (TCMemoryManagerSlabShared<t_CParams> *)OldHead;
 					umint Next = pSlab->m_pRemoteFreeNotify->m_StackNext.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
-					if (m_RemoteFreeState.m_RemoteFreeSlabs.f_CompareExchangeWeak(OldHead, Next, NAtomic::gc_MemoryOrder_Acquire))
+					if (mp_RemoteFreeState.m_RemoteFreeSlabs.f_CompareExchangeWeak(OldHead, Next, NAtomic::gc_MemoryOrder_Acquire))
 						break;
 
 					yield_cpu;
@@ -381,7 +381,7 @@ namespace NMib::NMemory
 					uint8 *pEndOfSlab = fg_AlignUp((uint8 *)pBlock + 1, t_CParams::mc_SlabSize);
 					CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-					DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+					DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic));
 					TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 					fp_FreeFromMessage(pBlock, pSlab);
 				}
@@ -392,10 +392,10 @@ namespace NMib::NMemory
 					uint8 *pEndOfSlab = fg_AlignUp((uint8 *)pBlock->m_pBlock + 1, t_CParams::mc_SlabSize);
 					CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-					DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+					DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic));
 					TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 					fp_FreeFromMessage(pBlock->m_pBlock, pSlab);
-					m_pMemoryManager->f_Free(pBlock, sizeof(CMessage_FreeSmallBlock));
+					mp_pMemoryManager->f_Free(pBlock, sizeof(CMessage_FreeSmallBlock));
 				}
 			}
 			else
@@ -404,7 +404,7 @@ namespace NMib::NMemory
 				uint8 *pEndOfSlab = fg_AlignUp((uint8 *)pBlock + 1, t_CParams::mc_SlabSize);
 				CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-				DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+				DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic));
 				TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 				fp_FreeFromMessage(pBlock, pSlab);
 			}
@@ -439,7 +439,7 @@ namespace NMib::NMemory
 
 		if constexpr (mc_bUseFreeMessages)
 		{
-			for (auto &Messages : m_MessageState.m_DeferredMessages)
+			for (auto &Messages : mp_MessageState.m_DeferredMessages)
 			{
 				if (Messages)
 				{
@@ -454,12 +454,12 @@ namespace NMib::NMemory
 				}
 			}
 
-			if (m_MessageState.m_MessagesAvailable.f_Exchange(0))
+			if (mp_MessageState.m_MessagesAvailable.f_Exchange(0))
 			{
 				umint iMessages = 0;
-				for (auto &Messages : m_MessageState.m_SpreadMessages)
+				for (auto &Messages : mp_MessageState.m_SpreadMessages)
 				{
-					m_MessageState.m_DeferredMessages[iMessages] = Messages.m_Messages.f_Exchange(0);
+					mp_MessageState.m_DeferredMessages[iMessages] = Messages.m_Messages.f_Exchange(0);
 					++iMessages;
 				}
 			}
@@ -475,7 +475,7 @@ namespace NMib::NMemory
 
 		if constexpr (mc_bUseFreeMessages)
 		{
-			for (auto &Messages : m_MessageState.m_DeferredMessages)
+			for (auto &Messages : mp_MessageState.m_DeferredMessages)
 			{
 				if (Messages)
 				{
@@ -510,7 +510,7 @@ namespace NMib::NMemory
 			{
 				smint nToProcess = 128;
 
-				for (auto &Messages : m_MessageState.m_DeferredMessages)
+				for (auto &Messages : mp_MessageState.m_DeferredMessages)
 				{
 					if (Messages)
 					{
@@ -520,7 +520,7 @@ namespace NMib::NMemory
 							return false;
 					}
 				}
-				if (m_MessageState.m_MessagesAvailable.f_Exchange(0))
+				if (mp_MessageState.m_MessagesAvailable.f_Exchange(0))
 				{
 					bool bNeedProcess = false;
 					auto Cleanup = g_OnScopeExit / [&]
@@ -531,12 +531,12 @@ namespace NMib::NMemory
 					;
 
 					umint iMessages = 0;
-					for (auto &Messages : m_MessageState.m_SpreadMessages)
+					for (auto &Messages : mp_MessageState.m_SpreadMessages)
 					{
-						m_MessageState.m_DeferredMessages[iMessages] = Messages.m_Messages.f_Exchange(0);
+						mp_MessageState.m_DeferredMessages[iMessages] = Messages.m_Messages.f_Exchange(0);
 						++iMessages;
 					}
-					for (auto &Messages : m_MessageState.m_DeferredMessages)
+					for (auto &Messages : mp_MessageState.m_DeferredMessages)
 					{
 						if (Messages)
 						{
@@ -572,7 +572,7 @@ namespace NMib::NMemory
 
 		if constexpr (mc_bUseFreeMessages)
 		{
-			for (auto &Messages : m_MessageState.m_DeferredMessages)
+			for (auto &Messages : mp_MessageState.m_DeferredMessages)
 			{
 				if (Messages)
 				{
@@ -582,10 +582,10 @@ namespace NMib::NMemory
 				}
 			}
 
-			if (m_MessageState.m_MessagesAvailable.f_Exchange(0))
+			if (mp_MessageState.m_MessagesAvailable.f_Exchange(0))
 			{
 				bDoneSomething = true;
-				for (auto &Messages : m_MessageState.m_SpreadMessages)
+				for (auto &Messages : mp_MessageState.m_SpreadMessages)
 				{
 					auto ToProcess = Messages.m_Messages.f_Exchange(0);
 					smint nToProcess = 0;
@@ -611,7 +611,7 @@ namespace NMib::NMemory
 	{
 		if constexpr (mc_bUseFreeMessages)
 		{
-			if (m_MessageState.m_MessagesAvailable.f_Load(NAtomic::gc_MemoryOrder_Relaxed))
+			if (mp_MessageState.m_MessagesAvailable.f_Load(NAtomic::gc_MemoryOrder_Relaxed))
 				return true;
 		}
 
@@ -620,7 +620,7 @@ namespace NMib::NMemory
 
 		if constexpr (mc_bUseFreeMessages)
 		{
-			for (auto &Messages : m_MessageState.m_DeferredMessages)
+			for (auto &Messages : mp_MessageState.m_DeferredMessages)
 			{
 				if (Messages)
 					return true;
@@ -634,11 +634,11 @@ namespace NMib::NMemory
 	inline_never bool TCMemoryManagerArena<t_CParams>::fp_CheckCleanupNumaFree()
 	{
 		bool bNeedCleanup = false;
-		if (m_bWantNumaFreeSlabsCleanup)
+		if (mp_bWantNumaFreeSlabsCleanup)
 		{
-			m_bWantNumaFreeSlabsCleanup = false;
+			mp_bWantNumaFreeSlabsCleanup = false;
 			bNeedCleanup = true;
-			m_pNumaArena->f_RequestCleanup(ENumaArenaCleanup_FreeSlabs);
+			mp_pNumaArena->f_RequestCleanup(ENumaArenaCleanup_FreeSlabs);
 		}
 		return bNeedCleanup;
 	}
@@ -648,18 +648,18 @@ namespace NMib::NMemory
 	{
 		bool bNeedCleanup;
 		if constexpr (mc_bUseFreeMessages)
-			bNeedCleanup = m_MessageState.m_MessagesAvailable.f_Load(NAtomic::gc_MemoryOrder_Relaxed) != 0;
+			bNeedCleanup = mp_MessageState.m_MessagesAvailable.f_Load(NAtomic::gc_MemoryOrder_Relaxed) != 0;
 		else
 			bNeedCleanup = fp_HasRemoteFrees();
-		if (m_bWantCleanup)
+		if (mp_bWantCleanup)
 		{
-			m_bWantCleanup = false;
-			if (!m_bRequestedCleanup)
+			mp_bWantCleanup = false;
+			if (!mp_bRequestedCleanup)
 			{
 				{
-					DMibLock(m_pNumaArena->m_ArenasNeedCleanupLock);
-					m_bRequestedCleanup = true;
-					m_pNumaArena->m_ArenasNeedCleanup.f_InsertFirst(this);
+					DMibLock(mp_pNumaArena->mp_ArenasNeedCleanupLock);
+					mp_bRequestedCleanup = true;
+					mp_pNumaArena->mp_ArenasNeedCleanup.f_InsertFirst(this);
 				}
 				bNeedCleanup = true;
 			}

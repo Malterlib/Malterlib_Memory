@@ -312,15 +312,15 @@ namespace NMib::NMemory
 		;
 
 	private:
-		static constexpr umint mc_SmallAllocCategoryJumpTableSize = mc_bUseSmallSizes ? (t_CParams::mc_SmallSizeSlabsLargestSize == 16 ? 6 : 5) : 1;
+		static constexpr umint mcp_SmallAllocCategoryJumpTableSize = mc_bUseSmallSizes ? (t_CParams::mc_SmallSizeSlabsLargestSize == 16 ? 6 : 5) : 1;
 
 		using FSmallAllocJump = void *(*)(TCMemoryManagerArena *_pThis);
 		struct CSmallAllocJumbTable
 		{
-			FSmallAllocJump m_Table[mc_SmallAllocCategoryJumpTableSize];
+			FSmallAllocJump m_Table[mcp_SmallAllocCategoryJumpTableSize];
 		};
 
-		static constexpr CSmallAllocJumbTable mc_SmallAllocCategoryJumpTable = []() constexpr -> CSmallAllocJumbTable
+		static constexpr CSmallAllocJumbTable mcp_SmallAllocCategoryJumpTable = []() constexpr -> CSmallAllocJumbTable
 			{
 				if constexpr (mc_bUseSmallSizes)
 				{
@@ -356,18 +356,18 @@ namespace NMib::NMemory
 			()
 		;
 
-		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) m_FreeSlabs;
+		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) mp_FreeSlabs;
 #ifndef DDocumentation_Doxygen
-		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) m_PartiallyFreeSlabs[t_CParams::mc_NumSizesPerLevel][t_CParams::mc_NumSubSlabSizeLevels];
+		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) mp_PartiallyFreeSlabs[t_CParams::mc_NumSizesPerLevel][t_CParams::mc_NumSubSlabSizeLevels];
 #endif
-		NContainer::TCBitArray<t_CParams::mc_NumSubSlabSizeLevels> m_PartiallyFreeSlabsAvailable[t_CParams::mc_NumSizesPerLevel];
+		NContainer::TCBitArray<t_CParams::mc_NumSubSlabSizeLevels> mp_PartiallyFreeSlabsAvailable[t_CParams::mc_NumSizesPerLevel];
 
-		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) m_FullSlabs;
+		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_Link) mp_FullSlabs;
 
 #ifndef DDocumentation_Doxygen
-		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkToGarbageCollect) m_SlabsToGarbageCollect[t_CParams::mc_NumSizesPerLevel];
+		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkToGarbageCollect) mp_SlabsToGarbageCollect[t_CParams::mc_NumSizesPerLevel];
 #endif
-		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkNeedDecommit) m_SlabsNeedingDecommit;
+		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkNeedDecommit) mp_SlabsNeedingDecommit;
 
 		// The arena lock, its contention counter and the checkout count are all written by
 		// other threads, so each gets a private cache line; the struct size rounds up to
@@ -380,7 +380,7 @@ namespace NMib::NMemory
 			align_cacheline NAtomic::TCAtomic<umint> m_CheckoutCount = 0;
 		};
 
-		CLockState m_LockState;
+		CLockState mp_LockState;
 
 		struct CMessageState
 		{
@@ -398,7 +398,7 @@ namespace NMib::NMemory
 		{
 		};
 
-		DMibNoUniqueAddress TCConditional<mc_bUseFreeMessages, CMessageState, CMessageStateEmpty> m_MessageState;
+		DMibNoUniqueAddress TCConditional<mc_bUseFreeMessages, CMessageState, CMessageStateEmpty> mp_MessageState;
 
 		// mc_bReapInCleanup: Treiber stack of slabs with pending cross-thread frees (slab
 		// pointers linked through m_pRemoteFreeNotify->m_StackNext, 0 terminated). Pushed by the
@@ -413,13 +413,13 @@ namespace NMib::NMemory
 		{
 		};
 
-		DMibNoUniqueAddress TCConditional<mc_bUseRemoteFreeReap, CRemoteFreeState, CRemoteFreeStateEmpty> m_RemoteFreeState;
+		DMibNoUniqueAddress TCConditional<mc_bUseRemoteFreeReap, CRemoteFreeState, CRemoteFreeStateEmpty> mp_RemoteFreeState;
 
-		DMibMemoryManagerList(CMemoryManagerSubSlab_SmallSizeLink, m_Link) m_SmallSizeSlabsFull;
-		DMibMemoryManagerList(CMemoryManagerSubSlab_SmallSizeLink, m_Link) m_SmallSizeSlabs[mc_nSmallSizeSlabs];
+		DMibMemoryManagerList(CMemoryManagerSubSlab_SmallSizeLink, m_Link) mp_SmallSizeSlabsFull;
+		DMibMemoryManagerList(CMemoryManagerSubSlab_SmallSizeLink, m_Link) mp_SmallSizeSlabs[mc_nSmallSizeSlabs];
 
-		CNormalFreeStoreList m_NormalSizeSlabsLevel0[mc_nLevel0Lists];
-		CNormalFreeStoreList m_NormalSizeSlabs[mc_nNormalSizeClasses];
+		CNormalFreeStoreList mp_NormalSizeSlabsLevel0[mc_nLevel0Lists];
+		CNormalFreeStoreList mp_NormalSizeSlabs[mc_nNormalSizeClasses];
 
 		struct CCurrentSubSlabs
 		{
@@ -431,19 +431,19 @@ namespace NMib::NMemory
 		{
 		};
 
-		DMibNoUniqueAddress TCConditional<mc_bSubSlabStore, CCurrentSubSlabs, CCurrentSubSlabsEmpty> m_CurrentSubSlabs;
+		DMibNoUniqueAddress TCConditional<mc_bSubSlabStore, CCurrentSubSlabs, CCurrentSubSlabsEmpty> mp_CurrentSubSlabs;
 
-		uint64 m_Magic = 0; // Read-only after construction, kept on the read-mostly line with the pointers below
+		uint64 mp_Magic = 0; // Read-only after construction, kept on the read-mostly line with the pointers below
 
-		TCMemoryManager<t_CParams> *m_pMemoryManager;
-		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
-		ENumaNode m_NumaNode;
-		uint8 m_iLimitedArena = 0;
+		TCMemoryManager<t_CParams> *mp_pMemoryManager;
+		TCMemoryManagerNumaArena<t_CParams> *mp_pNumaArena;
+		ENumaNode mp_NumaNode;
+		uint8 mp_iLimitedArena = 0;
 
-		bool m_bWantCleanup = false;
-		bool m_bRequestedCleanup = false;
-		bool m_bWantNumaFreeSlabsCleanup = false;
-		bool m_bLimitedArenas = false;
-		bool m_bSubSlabListsDirty = false; // mc_bGlobalAddressOrder: a fast-path head insert broke the address order
+		bool mp_bWantCleanup = false;
+		bool mp_bRequestedCleanup = false;
+		bool mp_bWantNumaFreeSlabsCleanup = false;
+		bool mp_bLimitedArenas = false;
+		bool mp_bSubSlabListsDirty = false; // mc_bGlobalAddressOrder: a fast-path head insert broke the address order
 	};
 }

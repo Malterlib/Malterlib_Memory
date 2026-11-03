@@ -37,7 +37,7 @@ namespace NMib::NMemory
 		bool f_IsValid() const;
 
 	private:
-		TCMemoryManager<t_CParams> *m_pMemoryManager = nullptr;
+		TCMemoryManager<t_CParams> *mp_pMemoryManager = nullptr;
 
 		TCMemoryManagerCheckout(TCMemoryManagerCheckout const &_Other) = delete;
 		TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout const &_Other) = delete;
@@ -52,7 +52,7 @@ namespace NMib::NMemory
 		~TCMemoryManagerCheckoutLight();
 
 	private:
-		TCMemoryManager<t_CParams> *m_pMemoryManager;
+		TCMemoryManager<t_CParams> *mp_pMemoryManager;
 
 		TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight const &_Other) = delete;
 		TCMemoryManagerCheckoutLight &operator = (TCMemoryManagerCheckoutLight const &_Other) = delete;
@@ -241,31 +241,31 @@ namespace NMib::NMemory
 		static_assert(cIsPowerOfTwo<t_CParams::mc_SubSlabSize>, "Must be aligned to power of two");
 		static_assert(cIsPowerOfTwo<t_CParams::mc_SlabSize>, "Must be aligned to power of two");
 
-		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CGlobal::mc_EnableCallbacks;
+		static constexpr bool mcp_EnableCallbacks = t_CParams::CNotifier::CGlobal::mc_EnableCallbacks;
 
-		typename t_CParams::CAllocator m_Allocator;
+		typename t_CParams::CAllocator mp_Allocator;
 
-		mutable align_cacheline NThread::CLowLevelLock m_NumaArenasLock;
-		NIntrusive::TCAVLTree<&TCMemoryManagerNumaArena<t_CParams>::m_Link, typename TCMemoryManagerNumaArena<t_CParams>::CCompare> m_NumaArenas;
+		mutable align_cacheline NThread::CLowLevelLock mp_NumaArenasLock;
+		NIntrusive::TCAVLTree<&TCMemoryManagerNumaArena<t_CParams>::m_Link, typename TCMemoryManagerNumaArena<t_CParams>::CCompare> mp_NumaArenas;
 
-		uint32 m_nMaxArenas;
-		bool m_bCanDoLazyCheckout = false;
-		bool m_bThreadLocalsDestroyed = false;
-		uint64 m_Magic;
+		uint32 mp_nMaxArenas;
+		bool mp_bCanDoLazyCheckout = false;
+		bool mp_bThreadLocalsDestroyed = false;
+		uint64 mp_Magic;
 
-		TCPool<CLocalNumaNode, 8, NThread::CLowLevelLock, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> m_LocalNumaNodePool;
+		TCPool<CLocalNumaNode, 8, NThread::CLowLevelLock, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> mp_LocalNumaNodePool;
 
-		NThread::TCThreadLocalDynamic<CLocalNumaNode, NThread::EThreadLocalFlag_Inherit> m_LocalNumaNode;
+		NThread::TCThreadLocalDynamic<CLocalNumaNode, NThread::EThreadLocalFlag_Inherit> mp_LocalNumaNode;
 
 		NThread::TCThreadLocalDynamic
 			<
 				TCMemoryManagerThreadLocal<t_CParams>
 				, NThread::EThreadLocalFlag_AlwaysCreated | NThread::EThreadLocalFlag_FastThreadLocal | NThread::EThreadLocalFlag_Inherit
 			>
-			m_LocalArena
+			mp_LocalArena
 		;
 
-		mutable NThread::CMutualManyRead m_HeapChunksLock;
-		NContainer::TCMap<uint8 *, TCMemoryManagerArenaHeapChunk<t_CParams>, NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_HeapChunks;
+		mutable NThread::CMutualManyRead mp_HeapChunksLock;
+		NContainer::TCMap<uint8 *, TCMemoryManagerArenaHeapChunk<t_CParams>, NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> mp_HeapChunks;
 	};
 }

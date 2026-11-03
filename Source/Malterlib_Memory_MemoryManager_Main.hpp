@@ -9,59 +9,59 @@ namespace NMib::NMemory
 	template <typename ...tfp_CAllocator>
 	TCMemoryManager<t_CParams>::TCMemoryManager(CMemoryManagerConfig const &_Config, tfp_CAllocator && ...p_Params)
 		: t_CParams::CNotifier::CGlobal(*this)
-		, m_Magic(_Config.m_Magic)
-		, m_nMaxArenas(fg_Min(fg_RoundPowerOfTwoUp(_Config.m_nMaxArenas), t_CParams::mc_MaxArenas))
-		, m_HeapChunks(CAllocatorConstructTag(), this)
-		, m_Allocator(fg_Forward<tfp_CAllocator>(p_Params)...)
-		, m_LocalArena
+		, mp_Magic(_Config.m_Magic)
+		, mp_nMaxArenas(fg_Min(fg_RoundPowerOfTwoUp(_Config.m_nMaxArenas), t_CParams::mc_MaxArenas))
+		, mp_HeapChunks(CAllocatorConstructTag(), this)
+		, mp_Allocator(fg_Forward<tfp_CAllocator>(p_Params)...)
+		, mp_LocalArena
 		(
 			[this]() -> NThread::CThreadLocalInterface::CSafeAllocMemory
 			{
 				ENumaNode NumaNode = ENumaNode_Default;
-				if (m_LocalNumaNode.f_IsValid()) // Don't init if we don't need to
-					NumaNode = (*m_LocalNumaNode).m_Node;
+				if (mp_LocalNumaNode.f_IsValid()) // Don't init if we don't need to
+					NumaNode = (*mp_LocalNumaNode).m_Node;
 
 				TCMemoryManagerNumaArena<t_CParams> *pNumaArena;
 				{
-					DMibLock(m_NumaArenasLock);
-					pNumaArena = m_NumaArenas.f_FindEqual(NumaNode);
+					DMibLock(mp_NumaArenasLock);
+					pNumaArena = mp_NumaArenas.f_FindEqual(NumaNode);
 					if (!pNumaArena)
 					{
-						pNumaArena = new(m_Allocator.f_Alloc(sizeof(TCMemoryManagerNumaArena<t_CParams>), EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags, NumaNode))
-							TCMemoryManagerNumaArena<t_CParams>(NumaNode, this, m_Magic, m_nMaxArenas != 0)
+						pNumaArena = new(mp_Allocator.f_Alloc(sizeof(TCMemoryManagerNumaArena<t_CParams>), EAllocationFlag_WillFreeWithSize | t_CParams::mc_AllocationFlags, NumaNode))
+							TCMemoryManagerNumaArena<t_CParams>(NumaNode, this, mp_Magic, mp_nMaxArenas != 0)
 						;
-						m_NumaArenas.f_Insert(pNumaArena);
+						mp_NumaArenas.f_Insert(pNumaArena);
 					}
 				}
 
-				return {pNumaArena->m_PoolThreadLocal.f_GetBlock(), sizeof(TCMemoryManagerThreadLocal<t_CParams>)};
+				return {pNumaArena->mp_PoolThreadLocal.f_GetBlock(), sizeof(TCMemoryManagerThreadLocal<t_CParams>)};
 			}
 			, [this](NThread::CThreadLocalInterface::CSafeAllocMemory const &_Memory) -> void
 			{
 				ENumaNode NumaNode = ENumaNode_Default;
-				if (m_LocalNumaNode.f_IsValid()) // Don't init if we don't need to
-					NumaNode = (*m_LocalNumaNode).m_Node;
+				if (mp_LocalNumaNode.f_IsValid()) // Don't init if we don't need to
+					NumaNode = (*mp_LocalNumaNode).m_Node;
 
 				TCMemoryManagerNumaArena<t_CParams> *pNumaArena;
 				{
-					DMibLock(m_NumaArenasLock);
-					pNumaArena = m_NumaArenas.f_FindEqual(NumaNode);
+					DMibLock(mp_NumaArenasLock);
+					pNumaArena = mp_NumaArenas.f_FindEqual(NumaNode);
 				}
 
 				DMibFastCheck(pNumaArena);
 
-				pNumaArena->m_PoolThreadLocal.f_ReturnBlock(_Memory.m_pMemory);
+				pNumaArena->mp_PoolThreadLocal.f_ReturnBlock(_Memory.m_pMemory);
 			}
 			, [this](TCMemoryManagerThreadLocal<t_CParams> *_pParentArena, void *_pMemory, bool _bMove) -> TCMemoryManagerThreadLocal<t_CParams> *
 			{
 				ENumaNode NumaNode = ENumaNode_Default;
-				if (m_LocalNumaNode.f_IsValid()) // Don't init if we don't need to
-					NumaNode = (*m_LocalNumaNode).m_Node;
+				if (mp_LocalNumaNode.f_IsValid()) // Don't init if we don't need to
+					NumaNode = (*mp_LocalNumaNode).m_Node;
 
 				TCMemoryManagerNumaArena<t_CParams> *pNumaArena;
 				{
-					DMibLock(m_NumaArenasLock);
-					pNumaArena = m_NumaArenas.f_FindEqual(NumaNode);
+					DMibLock(mp_NumaArenasLock);
+					pNumaArena = mp_NumaArenas.f_FindEqual(NumaNode);
 				}
 
 				DMibFastCheck(pNumaArena);
@@ -74,18 +74,18 @@ namespace NMib::NMemory
 			, [](TCMemoryManagerThreadLocal<t_CParams> *_pArena)
 			{
 				TCMemoryManagerNumaArena<t_CParams> *pNumaArena = _pArena->m_pNumaArena;
-				pNumaArena->m_PoolThreadLocal.f_Delete(_pArena);
+				pNumaArena->mp_PoolThreadLocal.f_Delete(_pArena);
 			}
 		)
-		, m_LocalNumaNode
+		, mp_LocalNumaNode
 		(
 			[this]() -> NThread::CThreadLocalInterface::CSafeAllocMemory
 			{
-				return {this->m_LocalNumaNodePool.f_GetBlock(), sizeof(CLocalNumaNode)};
+				return {this->mp_LocalNumaNodePool.f_GetBlock(), sizeof(CLocalNumaNode)};
 			}
 			, [this](NThread::CThreadLocalInterface::CSafeAllocMemory const &_Memory) -> void
 			{
-				return this->m_LocalNumaNodePool.f_ReturnBlock(_Memory.m_pMemory);
+				return this->mp_LocalNumaNodePool.f_ReturnBlock(_Memory.m_pMemory);
 			}
 			, [](CLocalNumaNode *_pParent, void *_pMemory, bool _bMove) -> CLocalNumaNode *
 			{
@@ -96,7 +96,7 @@ namespace NMib::NMemory
 			}
 			, [this](CLocalNumaNode *_pData)
 			{
-				this->m_LocalNumaNodePool.f_Delete(_pData);
+				this->mp_LocalNumaNodePool.f_Delete(_pData);
 			}
 		)
 	{
@@ -108,9 +108,9 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	CReportMemoryLightweight *TCMemoryManager<t_CParams>::f_ReportMemoryTo(CReportMemoryLightweight *_pMemoryReporter)
 	{
-		if (m_bThreadLocalsDestroyed)
+		if (mp_bThreadLocalsDestroyed)
 			return nullptr;
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		auto pOld = ThreadLocal.m_pLightweightReporter;
 		ThreadLocal.m_pLightweightReporter = _pMemoryReporter;
 		return pOld;
@@ -119,18 +119,18 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	EMemoryReportLightweightScopeFlag TCMemoryManager<t_CParams>::f_GetLightweightScopeFlags()
 	{
-		if (m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
+		if (mp_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
 			return EMemoryReportLightweightScopeFlag_None;
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		return ThreadLocal.m_LightweightScopeFlags;
 	}
 
 	template <typename t_CParams>
 	EMemoryReportLightweightScopeFlag TCMemoryManager<t_CParams>::f_SetLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags)
 	{
-		if (m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
+		if (mp_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
 			return EMemoryReportLightweightScopeFlag_None;
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		auto Old = ThreadLocal.m_LightweightScopeFlags;
 		ThreadLocal.m_LightweightScopeFlags = _Flags;
 		return Old;
@@ -139,9 +139,9 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	EMemoryReportLightweightScopeFlag TCMemoryManager<t_CParams>::f_AddLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags)
 	{
-		if (m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
+		if (mp_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
 			return EMemoryReportLightweightScopeFlag_None;
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		auto Old = ThreadLocal.m_LightweightScopeFlags;
 		ThreadLocal.m_LightweightScopeFlags |= _Flags;
 		return Old;
@@ -150,7 +150,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_always void TCMemoryManager<t_CParams>::fp_TrackAlloc(umint _Size)
 	{
-		auto *pLocalArena = m_LocalArena.f_TryGet();
+		auto *pLocalArena = mp_LocalArena.f_TryGet();
 		if (fsp_ShouldTrackAlloc(pLocalArena))
 			pLocalArena->f_TrackAlloc(_Size);
 	}
@@ -168,7 +168,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void *TCMemoryManager<t_CParams>::f_GetCustomThreadLocal(umint _Index)
 	{
-		auto *pLocalArena = m_LocalArena.f_TryGet();
+		auto *pLocalArena = mp_LocalArena.f_TryGet();
 		if (pLocalArena)
 			return pLocalArena->m_pCustom[_Index];
 		return nullptr;
@@ -177,7 +177,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void *TCMemoryManager<t_CParams>::f_SetCustomThreadLocal(umint _Index, void *_pCustom)
 	{
-		auto *pLocalArena = m_LocalArena.f_TryGet();
+		auto *pLocalArena = mp_LocalArena.f_TryGet();
 		if (pLocalArena)
 		{
 			void *pOld = pLocalArena->m_pCustom[_Index];
@@ -198,10 +198,10 @@ namespace NMib::NMemory
 		{
 			DMibMemLightweightTrackDisableScope;
 
-			m_HeapChunks.f_Clear();
+			mp_HeapChunks.f_Clear();
 
-			for (auto &Arena : m_NumaArenas)
-				Arena.m_Heap.f_Destroy();
+			for (auto &Arena : mp_NumaArenas)
+				Arena.mp_Heap.f_Destroy();
 		}
 
 		bool bDoneSomething = true;
@@ -209,9 +209,9 @@ namespace NMib::NMemory
 		{
 			bDoneSomething = false;
 
-			for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+			for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 			{
-				for (auto iArena = iNumaArena->m_Arenas.f_GetIterator(); iArena; ++iArena)
+				for (auto iArena = iNumaArena->mp_Arenas.f_GetIterator(); iArena; ++iArena)
 				{
 					if (iArena->f_ProcessMessages())
 						bDoneSomething = true;
@@ -219,39 +219,39 @@ namespace NMib::NMemory
 			}
 		}
 
-		m_bThreadLocalsDestroyed = true;
-		m_LocalArena.f_Destroy();
-		m_LocalNumaNode.f_Destroy();
+		mp_bThreadLocalsDestroyed = true;
+		mp_LocalArena.f_Destroy();
+		mp_LocalNumaNode.f_Destroy();
 
-		while (auto pArena = m_NumaArenas.f_GetRoot())
+		while (auto pArena = mp_NumaArenas.f_GetRoot())
 		{
-			m_NumaArenas.f_Remove(pArena);
+			mp_NumaArenas.f_Remove(pArena);
 			pArena->~TCMemoryManagerNumaArena<t_CParams>();
-			m_Allocator.f_Free(pArena, sizeof(TCMemoryManagerNumaArena<t_CParams>));
+			mp_Allocator.f_Free(pArena, sizeof(TCMemoryManagerNumaArena<t_CParams>));
 		}
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_DestroyThreadLocals()
 	{
-		m_bThreadLocalsDestroyed = true;
-		m_LocalArena.f_Destroy();
-		m_LocalNumaNode.f_Destroy();
+		mp_bThreadLocalsDestroyed = true;
+		mp_LocalArena.f_Destroy();
+		mp_LocalNumaNode.f_Destroy();
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::fp_ProcessArenaMessages()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		auto ReentrantScope = ThreadLocal.f_Reentrant();
 
 		bool bProcessed = true;
 		while (bProcessed)
 		{
 			bProcessed = false;
-			for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+			for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 			{
-				DMibUnlock(m_NumaArenasLock); // Arenas should only be added to m_NumaArenas, so this should be safe
+				DMibUnlock(mp_NumaArenasLock); // Arenas should only be added to mp_NumaArenas, so this should be safe
 
 				bool bDeferred = false;
 				if (iNumaArena->f_ProcessArenaMessages(false, bDeferred))
@@ -263,28 +263,28 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::fp_EnumArenas(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArena<t_CParams> *_pArena)> const &_Functor, bool _bCleanup)
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		auto ReentrantScope = ThreadLocal.f_Reentrant();
 
-		DMibLock(m_NumaArenasLock);
+		DMibLock(mp_NumaArenasLock);
 		if (_bCleanup)
 			fp_ProcessArenaMessages();
-		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+		for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 		{
-			DMibUnlock(m_NumaArenasLock); // Arenas should only be added to m_NumaArenas, so this should be safe
-			DMibLock(iNumaArena->m_ArenasLock);
-			for (auto iArena = iNumaArena->m_Arenas.f_GetIterator(); iArena;)
+			DMibUnlock(mp_NumaArenasLock); // Arenas should only be added to mp_NumaArenas, so this should be safe
+			DMibLock(iNumaArena->mp_ArenasLock);
+			for (auto iArena = iNumaArena->mp_Arenas.f_GetIterator(); iArena;)
 			{
 				auto pArena = &*iArena;
 				++iArena;
-				DMibUnlock(iNumaArena->m_ArenasLock);
+				DMibUnlock(iNumaArena->mp_ArenasLock);
 				if (pArena != ThreadLocal.m_pArena)
-					pArena->m_LockState.m_Lock.f_LockNoSanitize();
+					pArena->mp_LockState.m_Lock.f_LockNoSanitize();
 
 				_Functor(pArena);
 
 				if (pArena != ThreadLocal.m_pArena)
-					pArena->m_LockState.m_Lock.f_UnlockNoSanitize();
+					pArena->mp_LockState.m_Lock.f_UnlockNoSanitize();
 			}
 		}
 	}
@@ -295,18 +295,18 @@ namespace NMib::NMemory
 		TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
 
 		umint nSlabs = 0;
-		DMibLock(m_NumaArenasLock);
-		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+		DMibLock(mp_NumaArenasLock);
+		for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 		{
-			DMibUnlock(m_NumaArenasLock); // Arenas should only be added to m_NumaArenas, so this should be safe
-			DMibLock(iNumaArena->m_ArenasLock);
-			for (auto iArena = iNumaArena->m_Arenas.f_GetIterator(); iArena; ++iArena)
+			DMibUnlock(mp_NumaArenasLock); // Arenas should only be added to mp_NumaArenas, so this should be safe
+			DMibLock(iNumaArena->mp_ArenasLock);
+			for (auto iArena = iNumaArena->mp_Arenas.f_GetIterator(); iArena; ++iArena)
 				nSlabs += iArena->f_GetNumUsedSlabs();
 		}
 
 		{
-			DMibLockRead(m_HeapChunksLock);
-			nSlabs += m_HeapChunks.f_GetLen();
+			DMibLockRead(mp_HeapChunksLock);
+			nSlabs += mp_HeapChunks.f_GetLen();
 		}
 
 		return nSlabs;
@@ -316,18 +316,18 @@ namespace NMib::NMemory
 	umint TCMemoryManager<t_CParams>::f_GetNumFreeSlabs()
 	{
 		umint nSlabs = 0;
-		DMibLock(m_NumaArenasLock);
-		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+		DMibLock(mp_NumaArenasLock);
+		for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 		{
-			DMibUnlock(m_NumaArenasLock); // Arenas should only be added to m_NumaArenas, so this should be safe
+			DMibUnlock(mp_NumaArenasLock); // Arenas should only be added to mp_NumaArenas, so this should be safe
 			{
-				DMibLock(iNumaArena->m_FreeSlabsLock);
-				nSlabs += iNumaArena->m_FreeSlabs.f_GetLen();
+				DMibLock(iNumaArena->mp_FreeSlabsLock);
+				nSlabs += iNumaArena->mp_FreeSlabs.f_GetLen();
 			}
 
 			{
-				DMibLock(iNumaArena->m_ArenasLock);
-				for (auto iArena = iNumaArena->m_Arenas.f_GetIterator(); iArena; ++iArena)
+				DMibLock(iNumaArena->mp_ArenasLock);
+				for (auto iArena = iNumaArena->mp_Arenas.f_GetIterator(); iArena; ++iArena)
 					nSlabs += iArena->f_GetNumFreeSlabs();
 			}
 		}
@@ -341,10 +341,10 @@ namespace NMib::NMemory
 		TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
 
 		// We need to garbage collect the heaps first as they generate frees to arenas
-		DMibLock(m_NumaArenasLock);
-		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+		DMibLock(mp_NumaArenasLock);
+		for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 		{
-			DMibUnlock(m_NumaArenasLock); // Arenas should only be added to m_NumaArenas, so this should be safe
+			DMibUnlock(mp_NumaArenasLock); // Arenas should only be added to mp_NumaArenas, so this should be safe
 			while (iNumaArena->f_GarbageCollect({TCLimitsInt<int64>::mc_Max - 1, TCLimitsInt<int64>::mc_Max - 1}, _bDecommit, true) != TCLimitsInt<int64>::mc_Max)
 				;
 		}
@@ -357,10 +357,10 @@ namespace NMib::NMemory
 		{
 			bool bDone = true;
 			{
-				DMibLock(m_NumaArenasLock);
-				for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+				DMibLock(mp_NumaArenasLock);
+				for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 				{
-					if (!iNumaArena->m_BackgroundCleanup.f_IsWaiting())
+					if (!iNumaArena->mp_BackgroundCleanup.f_IsWaiting())
 					{
 						bDone = false;
 						break;
@@ -379,11 +379,11 @@ namespace NMib::NMemory
 	void TCMemoryManager<t_CParams>::f_DestroyCleanupThreads()
 	{
 		{
-			DMibLock(m_NumaArenasLock);
-			for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+			DMibLock(mp_NumaArenasLock);
+			for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 			{
-				DMibUnlock(m_NumaArenasLock);
-				iNumaArena->m_BackgroundCleanup.f_StopThread();
+				DMibUnlock(mp_NumaArenasLock);
+				iNumaArena->mp_BackgroundCleanup.f_StopThread();
 			}
 		}
 	}
@@ -392,10 +392,10 @@ namespace NMib::NMemory
 	void TCMemoryManager<t_CParams>::f_CanStartThreads()
 	{
 		{
-			DMibLock(m_NumaArenasLock);
-			for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+			DMibLock(mp_NumaArenasLock);
+			for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 			{
-				DMibUnlock(m_NumaArenasLock); // Arenas should only be added to m_NumaArenas, so this should be safe
+				DMibUnlock(mp_NumaArenasLock); // Arenas should only be added to mp_NumaArenas, so this should be safe
 				iNumaArena->f_CanStartThreads();
 			}
 		}
@@ -405,10 +405,10 @@ namespace NMib::NMemory
 	void TCMemoryManager<t_CParams>::f_ForceStartCleanupThreads()
 	{
 		{
-			DMibLock(m_NumaArenasLock);
-			for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+			DMibLock(mp_NumaArenasLock);
+			for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 			{
-				DMibUnlock(m_NumaArenasLock); // Arenas should only be added to m_NumaArenas, so this should be safe
+				DMibUnlock(mp_NumaArenasLock); // Arenas should only be added to mp_NumaArenas, so this should be safe
 				iNumaArena->f_ForceStartCleanupThread();
 			}
 		}
@@ -418,12 +418,12 @@ namespace NMib::NMemory
 	void TCMemoryManager<t_CParams>::fp_EnumHeaps(NFunction::TCFunctionNoAlloc<void (TCMemoryManagerArenaHeap<t_CParams> *_pHeap)> const &_Functor)
 	{
 		TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
-		DMibLock(m_NumaArenasLock);
-		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+		DMibLock(mp_NumaArenasLock);
+		for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 		{
-			DMibUnlock(m_NumaArenasLock); // Arenas should only be added to m_NumaArenas, so this should be safe
-			DMibLock(iNumaArena->m_Heap);
-			_Functor(&(iNumaArena->m_Heap));
+			DMibUnlock(mp_NumaArenasLock); // Arenas should only be added to mp_NumaArenas, so this should be safe
+			DMibLock(iNumaArena->mp_Heap);
+			_Functor(&(iNumaArena->mp_Heap));
 		}
 	}
 
@@ -451,12 +451,12 @@ namespace NMib::NMemory
 	void TCMemoryManager<t_CParams>::f_EnumHeaps(NFunction::TCFunctionNoAlloc<void (typename t_CParams::CNotifier::CHeap *_pHeap)> const &_Functor)
 	{
 		TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(*this);
-		DMibLock(m_NumaArenasLock);
-		for (auto iNumaArena = m_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
+		DMibLock(mp_NumaArenasLock);
+		for (auto iNumaArena = mp_NumaArenas.f_GetIterator(); iNumaArena; ++iNumaArena)
 		{
-			DMibUnlock(m_NumaArenasLock); // Arenas should only be added to m_NumaArenas, so this should be safe
-			DMibLock(iNumaArena->m_Heap);
-			_Functor(&(iNumaArena->m_Heap));
+			DMibUnlock(mp_NumaArenasLock); // Arenas should only be added to mp_NumaArenas, so this should be safe
+			DMibLock(iNumaArena->mp_Heap);
+			_Functor(&(iNumaArena->mp_Heap));
 		}
 	}
 
@@ -491,20 +491,20 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_SetNumaNode(ENumaNode _NumaNode)
 	{
-		(*m_LocalNumaNode).m_Node = _NumaNode;
+		(*mp_LocalNumaNode).m_Node = _NumaNode;
 
-		if (m_bCanDoLazyCheckout)
+		if (mp_bCanDoLazyCheckout)
 			f_LazyReturnCheckout();
 
-		m_LocalArena.f_ReinitForThread();
+		mp_LocalArena.f_ReinitForThread();
 	}
 
 	template <typename t_CParams>
 	inline_never void *TCMemoryManager<t_CParams>::fp_AllocWithCheckout(umint &_Size, TCMemoryManagerThreadLocal<t_CParams> &_LocalArena)
 	{
-		if (m_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount) [[unlikely]]
+		if (mp_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount) [[unlikely]]
 		{
-			fp_CheckoutHelper(_LocalArena)->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+			fp_CheckoutHelper(_LocalArena)->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 			DMibFastCheck(fg_GetSys()->f_ThreadCreated());
 			_LocalArena.m_bLazyCheckout = true;
 			return f_AllocAlignedWithSize(_Size, 1);
@@ -535,9 +535,9 @@ namespace NMib::NMemory
 			, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor
 		)
 	{
-		if (m_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount) [[unlikely]]
+		if (mp_bCanDoLazyCheckout && !_LocalArena.m_TemporaryReturnCheckoutCount) [[unlikely]]
 		{
-			fp_CheckoutHelper(_LocalArena)->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+			fp_CheckoutHelper(_LocalArena)->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 			DMibFastCheck(fg_GetSys()->f_ThreadCreated());
 			_LocalArena.m_bLazyCheckout = true;
 			return f_AllocBatch(_Size, 1, _Functor);
@@ -624,7 +624,7 @@ namespace NMib::NMemory
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic))
+		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic))
 		{
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 			return pSlab->m_pArena->f_Size(_pMemory, pSlab);
@@ -636,21 +636,21 @@ namespace NMib::NMemory
 			TCMemoryManagerArenaHeapChunk<t_CParams> const *pChunk;
 			bool bIsChunk;
 			{
-				DMibLockRead(m_HeapChunksLock);
-				pChunk = m_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
+				DMibLockRead(mp_HeapChunksLock);
+				pChunk = mp_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
 				bIsChunk = pChunk && (uint8 *)_pMemory < pChunk->f_GetEndAddress();
 			}
 			if (bIsChunk)
 				return pChunk->f_GetHeap()->f_Size(_pMemory, pChunk);
 		}
 
-		return m_Allocator.f_Size(_pMemory);
+		return mp_Allocator.f_Size(_pMemory);
 	}
 
 	template <typename t_CParams>
 	uint64 TCMemoryManager<t_CParams>::f_GetMagic() const
 	{
-		return m_Magic;
+		return mp_Magic;
 	}
 
 	template <typename t_CParams>
@@ -659,7 +659,7 @@ namespace NMib::NMemory
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic))
+		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic))
 		{
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 			return pSlab->m_pMemoryManager;
@@ -670,13 +670,13 @@ namespace NMib::NMemory
 
 			TCMemoryManagerArenaHeapChunk<t_CParams> const *pChunk;
 			{
-				DMibLockRead(m_HeapChunksLock);
-				pChunk = m_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
+				DMibLockRead(mp_HeapChunksLock);
+				pChunk = mp_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
 				if (pChunk && (uint8 *)_pMemory < pChunk->f_GetEndAddress())
 					return this;
 			}
 		}
-		if (m_Allocator.f_TrySize(_pMemory))
+		if (mp_Allocator.f_TrySize(_pMemory))
 			return this;
 		return nullptr;
 	}
@@ -687,7 +687,7 @@ namespace NMib::NMemory
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic))
+		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic))
 		{
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 			return pSlab->m_pArena->f_Size(_pMemory, pSlab);
@@ -698,15 +698,15 @@ namespace NMib::NMemory
 			TCMemoryManagerArenaHeapChunk<t_CParams> const *pChunk;
 			bool bIsChunk;
 			{
-				DMibLockRead(m_HeapChunksLock);
-				pChunk = m_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
+				DMibLockRead(mp_HeapChunksLock);
+				pChunk = mp_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
 				bIsChunk = pChunk && (uint8 *)_pMemory < pChunk->f_GetEndAddress();
 			}
 			if (bIsChunk)
 				return pChunk->f_GetHeap()->f_Size(_pMemory, pChunk);
 		}
 
-		return m_Allocator.f_TrySize(_pMemory);
+		return mp_Allocator.f_TrySize(_pMemory);
 	}
 
 	template <typename t_CParams>
@@ -715,7 +715,7 @@ namespace NMib::NMemory
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic))
+		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic))
 		{
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 			return pSlab->m_pArena->f_Overhead(_pMemory, pSlab);
@@ -726,15 +726,15 @@ namespace NMib::NMemory
 			TCMemoryManagerArenaHeapChunk<t_CParams> const *pChunk;
 			bool bIsChunk;
 			{
-				DMibLockRead(m_HeapChunksLock);
-				pChunk = m_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
+				DMibLockRead(mp_HeapChunksLock);
+				pChunk = mp_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
 				bIsChunk = pChunk && (uint8 *)_pMemory < pChunk->f_GetEndAddress();
 			}
 			if (bIsChunk)
 				return pChunk->f_GetHeap()->f_Overhead(_pMemory, pChunk);
 		}
 
-		return m_Allocator.f_Overhead(_pMemory);
+		return mp_Allocator.f_Overhead(_pMemory);
 	}
 
 	template <typename t_CParams>
@@ -748,95 +748,95 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_PrepareFork()
 	{
-		m_HeapChunksLock.f_PrepareFork();
-		for (auto &Arena : m_NumaArenas)
-			Arena.m_BackgroundCleanup.f_PrepareFork();
+		mp_HeapChunksLock.f_PrepareFork();
+		for (auto &Arena : mp_NumaArenas)
+			Arena.mp_BackgroundCleanup.f_PrepareFork();
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_ForkedChild()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		DMibFastCheck(ThreadLocal.m_pArena);
 		ThreadLocal.f_ForkedChild();
 
-		for (auto &Arena : m_NumaArenas)
+		for (auto &Arena : mp_NumaArenas)
 		{
-			Arena.m_PoolThreadLocal.f_ForkedChildLocked();
-			Arena.m_Pool.f_ForkedChildLocked();
-			Arena.m_FreeSlabsLock.f_ForkedChildLocked();
-			Arena.m_ArenasLock.f_ForkedChildLocked();
-			Arena.m_FreeArenasLock.f_ForkedChildLocked();
-			Arena.m_ArenasNeedCleanupLock.f_ForkedChildLocked();
+			Arena.mp_PoolThreadLocal.f_ForkedChildLocked();
+			Arena.mp_Pool.f_ForkedChildLocked();
+			Arena.mp_FreeSlabsLock.f_ForkedChildLocked();
+			Arena.mp_ArenasLock.f_ForkedChildLocked();
+			Arena.mp_FreeArenasLock.f_ForkedChildLocked();
+			Arena.mp_ArenasNeedCleanupLock.f_ForkedChildLocked();
 			Arena.f_ForkedChildLimitedArenas(ThreadLocal.m_pArena);
-			Arena.m_LimitedArenasCreateLock.f_ForkedChildLocked();
+			Arena.mp_LimitedArenasCreateLock.f_ForkedChildLocked();
 		}
-		m_NumaArenasLock.f_ForkedChildLocked();
-		m_HeapChunksLock.f_ForkedChild();
-		for (auto &Arena : m_NumaArenas)
-			Arena.m_Heap.f_ForkedChild();
+		mp_NumaArenasLock.f_ForkedChildLocked();
+		mp_HeapChunksLock.f_ForkedChild();
+		for (auto &Arena : mp_NumaArenas)
+			Arena.mp_Heap.f_ForkedChild();
 
-		for (auto &Arena : m_NumaArenas)
-			Arena.m_BackgroundCleanup.f_ForkedChild();
+		for (auto &Arena : mp_NumaArenas)
+			Arena.mp_BackgroundCleanup.f_ForkedChild();
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_ForkedParent()
 	{
-		for (auto &Arena : m_NumaArenas)
-			Arena.m_BackgroundCleanup.f_ForkedParent();
-		m_HeapChunksLock.f_ForkedParent();
+		for (auto &Arena : mp_NumaArenas)
+			Arena.mp_BackgroundCleanup.f_ForkedParent();
+		mp_HeapChunksLock.f_ForkedParent();
 	}
 
 	// Ordered so that no thread holding a later lock waits for an earlier one
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_Lock()
 	{
-		m_NumaArenasLock.f_Lock();
-		for (auto &Arena : m_NumaArenas)
-			Arena.m_BackgroundCleanup.f_Lock();
+		mp_NumaArenasLock.f_Lock();
+		for (auto &Arena : mp_NumaArenas)
+			Arena.mp_BackgroundCleanup.f_Lock();
 
-		for (auto &Arena : m_NumaArenas)
-			Arena.m_Heap.f_Lock();
+		for (auto &Arena : mp_NumaArenas)
+			Arena.mp_Heap.f_Lock();
 
-		m_HeapChunksLock.f_Lock();
+		mp_HeapChunksLock.f_Lock();
 		f_CheckoutManual();
-		auto *pCheckedOut = m_LocalArena->m_pArena;
-		for (auto &Arena : m_NumaArenas)
+		auto *pCheckedOut = mp_LocalArena->m_pArena;
+		for (auto &Arena : mp_NumaArenas)
 		{
-			Arena.m_LimitedArenasCreateLock.f_Lock();
+			Arena.mp_LimitedArenasCreateLock.f_Lock();
 			Arena.f_LockLimitedArenas(pCheckedOut);
-			Arena.m_ArenasNeedCleanupLock.f_Lock();
-			Arena.m_FreeArenasLock.f_Lock();
-			Arena.m_ArenasLock.f_Lock();
-			Arena.m_FreeSlabsLock.f_Lock();
-			Arena.m_Pool.f_Lock();
-			Arena.m_PoolThreadLocal.f_Lock();
+			Arena.mp_ArenasNeedCleanupLock.f_Lock();
+			Arena.mp_FreeArenasLock.f_Lock();
+			Arena.mp_ArenasLock.f_Lock();
+			Arena.mp_FreeSlabsLock.f_Lock();
+			Arena.mp_Pool.f_Lock();
+			Arena.mp_PoolThreadLocal.f_Lock();
 		}
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_Unlock()
 	{
-		auto *pCheckedOut = m_LocalArena->m_pArena;
-		for (auto &Arena : m_NumaArenas)
+		auto *pCheckedOut = mp_LocalArena->m_pArena;
+		for (auto &Arena : mp_NumaArenas)
 		{
-			Arena.m_PoolThreadLocal.f_Unlock();
-			Arena.m_Pool.f_Unlock();
-			Arena.m_FreeSlabsLock.f_Unlock();
-			Arena.m_ArenasLock.f_Unlock();
-			Arena.m_FreeArenasLock.f_Unlock();
-			Arena.m_ArenasNeedCleanupLock.f_Unlock();
+			Arena.mp_PoolThreadLocal.f_Unlock();
+			Arena.mp_Pool.f_Unlock();
+			Arena.mp_FreeSlabsLock.f_Unlock();
+			Arena.mp_ArenasLock.f_Unlock();
+			Arena.mp_FreeArenasLock.f_Unlock();
+			Arena.mp_ArenasNeedCleanupLock.f_Unlock();
 			Arena.f_UnlockLimitedArenas(pCheckedOut);
-			Arena.m_LimitedArenasCreateLock.f_Unlock();
+			Arena.mp_LimitedArenasCreateLock.f_Unlock();
 		}
-		m_HeapChunksLock.f_Unlock();
-		for (auto &Arena : m_NumaArenas)
-			Arena.m_Heap.f_Unlock();
+		mp_HeapChunksLock.f_Unlock();
+		for (auto &Arena : mp_NumaArenas)
+			Arena.mp_Heap.f_Unlock();
 
-		for (auto &Arena : m_NumaArenas)
-			Arena.m_BackgroundCleanup.f_Unlock();
-		m_NumaArenasLock.f_Unlock();
+		for (auto &Arena : mp_NumaArenas)
+			Arena.mp_BackgroundCleanup.f_Unlock();
+		mp_NumaArenasLock.f_Unlock();
 		f_CheckinManual();
 	}
 
@@ -861,8 +861,8 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	TCMemoryManagerNumaArena<t_CParams> *TCMemoryManager<t_CParams>::fp_GetAnyNumaArena()
 	{
-		DMibLock(m_NumaArenasLock);
-		return m_NumaArenas.f_FindSmallest();
+		DMibLock(mp_NumaArenasLock);
+		return mp_NumaArenas.f_FindSmallest();
 	}
 
 	template <typename t_CParams>
@@ -886,14 +886,14 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void TCMemoryManager<t_CParams>::fp_AllocBatchSlowPath(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
 	{
-		auto *pLocalArena = m_LocalArena.f_TryGet();
+		auto *pLocalArena = mp_LocalArena.f_TryGet();
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize)
 		{
 			if (!pLocalArena) [[unlikely]]
 			{
 				if (fg_GetSys()->f_ThreadDestroyed()) [[unlikely]]
 					return fp_AllocBatchWithTempCheckout(_Size, _Functor);
-				pLocalArena = &(*m_LocalArena);
+				pLocalArena = &(*mp_LocalArena);
 			}
 			auto &LocalArena = *pLocalArena;
 			auto ReentrantScope = LocalArena.f_Reentrant();
@@ -908,7 +908,7 @@ namespace NMib::NMemory
 			if (fg_GetSys()->f_ThreadDestroyed()) [[unlikely]]
 				pNumaArena = fp_GetAnyNumaArena();
 			else
-				pNumaArena = m_LocalArena->m_pNumaArena;
+				pNumaArena = mp_LocalArena->m_pNumaArena;
 		}
 		else
 			pNumaArena = pLocalArena->m_pNumaArena;
@@ -919,7 +919,7 @@ namespace NMib::NMemory
 			while (true)
 			{
 				umint Size = _Size;
-				auto pAlloc = pNumaArena->m_Heap.f_AllocAlignedWithSize(Size, _Alignment);
+				auto pAlloc = pNumaArena->mp_Heap.f_AllocAlignedWithSize(Size, _Alignment);
 				if (!_Functor(pAlloc, Size))
 					break;
 			}
@@ -932,12 +932,12 @@ namespace NMib::NMemory
 				(
 					{
 						if (fsp_ShouldTrackAlloc(pLocalArena))
-							pLocalArena->f_TrackAlloc(m_Allocator.f_SizePadded(_Size));
+							pLocalArena->f_TrackAlloc(mp_Allocator.f_SizePadded(_Size));
 					}
 				)
 			;
-			auto pRet = m_Allocator.f_AllocAlignedWithSize(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
-			if constexpr (mc_EnableCallbacks)
+			auto pRet = mp_Allocator.f_AllocAlignedWithSize(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->mp_NumaNode);
+			if constexpr (mcp_EnableCallbacks)
 				this->f_OnAlloc((uint8 *)pRet, _Size);
 			if (!_Functor(pRet, Size))
 				break;
@@ -947,14 +947,14 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void *TCMemoryManager<t_CParams>::fp_AllocAlignedSlowPath(umint &_Size, umint _Alignment)
 	{
-		auto *pLocalArena = m_LocalArena.f_TryGet();
+		auto *pLocalArena = mp_LocalArena.f_TryGet();
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize)
 		{
 			if (!pLocalArena) [[unlikely]]
 			{
 				if (fg_GetSys()->f_ThreadDestroyed()) [[unlikely]]
 					return fp_AllocWithTempCheckout(_Size);
-				pLocalArena = &(*m_LocalArena);
+				pLocalArena = &(*mp_LocalArena);
 			}
 			auto &LocalArena = *pLocalArena;
 			auto ReentrantScope = LocalArena.f_Reentrant();
@@ -969,7 +969,7 @@ namespace NMib::NMemory
 			if (fg_GetSys()->f_ThreadDestroyed()) [[unlikely]]
 				pNumaArena = fp_GetAnyNumaArena();
 			else
-				pNumaArena = m_LocalArena->m_pNumaArena;
+				pNumaArena = mp_LocalArena->m_pNumaArena;
 		}
 		else
 			pNumaArena = pLocalArena->m_pNumaArena;
@@ -977,19 +977,19 @@ namespace NMib::NMemory
 		if (_Size <= t_CParams::mc_MaxHeapAllocSize)
 		{
 			TCMemoryManagerLimitedTemporaryReturn<t_CParams> Unlock(pLocalArena);
-			return pNumaArena->m_Heap.f_AllocAlignedWithSize(_Size, _Alignment);
+			return pNumaArena->mp_Heap.f_AllocAlignedWithSize(_Size, _Alignment);
 		}
 
 		DMibMemLightweightTrack
 			(
 				{
 					if (fsp_ShouldTrackAlloc(pLocalArena))
-						pLocalArena->f_TrackAlloc(m_Allocator.f_SizePadded(_Size));
+						pLocalArena->f_TrackAlloc(mp_Allocator.f_SizePadded(_Size));
 				}
 			)
 		;
-		auto pRet = m_Allocator.f_AllocAlignedWithSize(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->m_NumaNode);
-		if constexpr (mc_EnableCallbacks)
+		auto pRet = mp_Allocator.f_AllocAlignedWithSize(_Size, _Alignment, t_CParams::mc_AllocationFlags, pNumaArena->mp_NumaNode);
+		if constexpr (mcp_EnableCallbacks)
 			this->f_OnAlloc((uint8 *)pRet, _Size);
 		return pRet;
 	}
@@ -1001,7 +1001,7 @@ namespace NMib::NMemory
 
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize) [[likely]]
 		{
-			auto *pLocalArena = m_LocalArena.f_TryGet();
+			auto *pLocalArena = mp_LocalArena.f_TryGet();
 			if (!pLocalArena) [[unlikely]]
 				goto l_SlowPath;
 			auto &LocalArena = *pLocalArena;
@@ -1022,7 +1022,7 @@ namespace NMib::NMemory
 
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize) [[likely]]
 		{
-			auto *pLocalArena = m_LocalArena.f_TryGet();
+			auto *pLocalArena = mp_LocalArena.f_TryGet();
 			if (!pLocalArena) [[unlikely]]
 				goto l_SlowPath;
 			auto &LocalArena = *pLocalArena;
@@ -1043,7 +1043,7 @@ namespace NMib::NMemory
 
 		if (_Size <= t_CParams::mc_MaxSlabAllocSize) [[likely]]
 		{
-			auto *pLocalArena = m_LocalArena.f_TryGet();
+			auto *pLocalArena = mp_LocalArena.f_TryGet();
 			if (!pLocalArena) [[unlikely]]
 				goto l_SlowPath;
 			auto &LocalArena = *pLocalArena;
@@ -1065,7 +1065,7 @@ namespace NMib::NMemory
 		else if (_Size <= t_CParams::mc_MaxHeapAllocSize)
 			return TCMemoryManagerArenaHeap<t_CParams>::fs_GetAllocSize(_Size);
 		else
-			return m_Allocator.f_SizePadded(_Size);
+			return mp_Allocator.f_SizePadded(_Size);
 	}
 
 	template <typename t_CParams>
@@ -1086,13 +1086,13 @@ namespace NMib::NMemory
 		uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 		CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-		if ((_Size != 0 && _Size <= t_CParams::mc_MaxSlabAllocSize) || (_Size == 0 && pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic))) [[likely]]
+		if ((_Size != 0 && _Size <= t_CParams::mc_MaxSlabAllocSize) || (_Size == 0 && pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic))) [[likely]]
 		{
-			DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+			DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic));
 
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 
-			auto *pLocalArena = m_LocalArena.f_TryGet();
+			auto *pLocalArena = mp_LocalArena.f_TryGet();
 			if (!pLocalArena) [[unlikely]]
 			{
 				if (fg_GetSys()->f_ThreadDestroyed()) [[unlikely]]
@@ -1100,7 +1100,7 @@ namespace NMib::NMemory
 					pSlab->m_pArena->f_FreeOtherThread(_pMemory, pSlab, nullptr);
 					return;
 				}
-				pLocalArena = &(*m_LocalArena);
+				pLocalArena = &(*mp_LocalArena);
 			}
 
 			auto &LocalArena = *pLocalArena;
@@ -1129,8 +1129,8 @@ namespace NMib::NMemory
 			TCMemoryManagerArenaHeapChunk<t_CParams> *pChunk;
 			bool bIsChunk;
 			{
-				DMibLockRead(m_HeapChunksLock);
-				pChunk = m_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
+				DMibLockRead(mp_HeapChunksLock);
+				pChunk = mp_HeapChunks.f_FindLargestLessThanEqual(_pMemory);
 				bIsChunk = pChunk && (uint8 *)_pMemory < pChunk->f_GetEndAddress();
 			}
 
@@ -1139,7 +1139,7 @@ namespace NMib::NMemory
 				DMibMemLightweightTrack
 					(
 						{
-							auto *pLocalArena = m_LocalArena.f_TryGet();
+							auto *pLocalArena = mp_LocalArena.f_TryGet();
 							if (fsp_ShouldTrackAlloc(pLocalArena))
 								pLocalArena->f_TrackFree(pChunk->f_GetHeap()->f_Size(_pMemory, pChunk));
 						}
@@ -1152,23 +1152,23 @@ namespace NMib::NMemory
 				DMibFastCheck(_Size == 0);
 		}
 
-		if constexpr (mc_EnableCallbacks)
+		if constexpr (mcp_EnableCallbacks)
 			this->f_OnFree((uint8 *)_pMemory);
 
 		DMibMemLightweightTrack
 			(
 				{
-					auto *pLocalArena = m_LocalArena.f_TryGet();
+					auto *pLocalArena = mp_LocalArena.f_TryGet();
 					if (fsp_ShouldTrackAlloc(pLocalArena))
-						pLocalArena->f_TrackFree(m_Allocator.f_Size(_pMemory));
+						pLocalArena->f_TrackFree(mp_Allocator.f_Size(_pMemory));
 				}
 			)
 		;
 
 		if (_Size)
-			m_Allocator.f_Free(_pMemory, _Size);
+			mp_Allocator.f_Free(_pMemory, _Size);
 		else
-			m_Allocator.f_FreeNoSize(_pMemory);
+			mp_Allocator.f_FreeNoSize(_pMemory);
 	}
 
 	template <typename t_CParams>
@@ -1184,11 +1184,11 @@ namespace NMib::NMemory
 			uint8 *pEndOfSlab = fg_AlignUp((uint8 *)_pMemory + 1, t_CParams::mc_SlabSize);
 			CMemoryManagerSlabSharedPostfixHeader *pHeader = (CMemoryManagerSlabSharedPostfixHeader *)(pEndOfSlab - sizeof(CMemoryManagerSlabSharedPostfixHeader));
 
-			DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic));
+			DMibFastCheck(pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic));
 
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 
-			auto *pLocalArena = m_LocalArena.f_TryGet();
+			auto *pLocalArena = mp_LocalArena.f_TryGet();
 			if (!pLocalArena) [[unlikely]]
 				goto l_SlowPath;
 			auto &LocalArena = *pLocalArena;
@@ -1225,12 +1225,12 @@ namespace NMib::NMemory
 
 		// Unsized frees are compatibility ABI paths such as C free and third-party unsized delete. Malterlib C++ code is compiled to use sized frees, so large heap blocks from
 		// internal code do not normally reach this footer classifier. A forged footer attack requires both allocator metadata disclosure and attacker-controlled bytes at the
-		// would-be footer inside a heap allocation. Do not harden this by checking m_HeapChunks first: that would put a locked tree lookup on every unsized free.
-		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, m_Magic)) [[likely]]
+		// would-be footer inside a heap allocation. Do not harden this by checking mp_HeapChunks first: that would put a locked tree lookup on every unsized free.
+		if (pHeader->f_GetMagic() == NPrivate::fg_CalcMagic(pEndOfSlab, mp_Magic)) [[likely]]
 		{
 			TCMemoryManagerSlabShared<t_CParams> *pSlab = (TCMemoryManagerSlabShared<t_CParams> *)(pEndOfSlab - pHeader->m_SlabStartOffset);
 
-			auto *pLocalArena = m_LocalArena.f_TryGet();
+			auto *pLocalArena = mp_LocalArena.f_TryGet();
 			if (!pLocalArena) [[unlikely]]
 				goto l_SlowPath;
 			auto &LocalArena = *pLocalArena;
@@ -1280,15 +1280,15 @@ namespace NMib::NMemory
 		auto pArena = _ThreadLocal.m_pPreferredArena;
 		if (pArena) [[likely]]
 		{
-			if (!pArena->m_LockState.m_Lock.f_TryLockNoSanitize()) [[unlikely]]
+			if (!pArena->mp_LockState.m_Lock.f_TryLockNoSanitize()) [[unlikely]]
 			{
-				if (m_nMaxArenas) [[unlikely]]
+				if (mp_nMaxArenas) [[unlikely]]
 					return fp_CheckoutHelperSlowPath(_ThreadLocal);
 				else
 				{
-					++pArena->m_LockState.m_LockContended;
-					pArena->m_LockState.m_Lock.f_LockNoSanitize();
-					--pArena->m_LockState.m_LockContended;
+					++pArena->mp_LockState.m_LockContended;
+					pArena->mp_LockState.m_Lock.f_LockNoSanitize();
+					--pArena->mp_LockState.m_LockContended;
 				}
 			}
 
@@ -1304,7 +1304,7 @@ namespace NMib::NMemory
 	{
 		auto pNumaArena = _ThreadLocal.m_pNumaArena;
 
-		if (m_nMaxArenas == 0)
+		if (mp_nMaxArenas == 0)
 		{
 			auto pArena = pNumaArena->f_NewArena();
 			_ThreadLocal.m_pArena = pArena;
@@ -1314,19 +1314,19 @@ namespace NMib::NMemory
 
 		if (_ThreadLocal.m_pPreferredArena) [[likely]]
 		{
-			umint iLimitedArena = _ThreadLocal.m_pPreferredArena->m_iLimitedArena;
-			auto &LimitedArena = pNumaArena->m_LimitedArenas[iLimitedArena];
+			umint iLimitedArena = _ThreadLocal.m_pPreferredArena->mp_iLimitedArena;
+			auto &LimitedArena = pNumaArena->mp_LimitedArenas[iLimitedArena];
 			auto *pArena = LimitedArena.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
-			if (pArena->m_LockState.m_Lock.f_TryLockNoSanitize()) [[likely]]
+			if (pArena->mp_LockState.m_Lock.f_TryLockNoSanitize()) [[likely]]
 			{
 				_ThreadLocal.m_pArena = pArena;
 				return pArena;
 			}
-			if (t_CParams::mc_MaxArenas == 1 || m_nMaxArenas == 1)
+			if (t_CParams::mc_MaxArenas == 1 || mp_nMaxArenas == 1)
 			{
-				++pArena->m_LockState.m_LockContended;
-				pArena->m_LockState.m_Lock.f_LockNoSanitize();
-				--pArena->m_LockState.m_LockContended;
+				++pArena->mp_LockState.m_LockContended;
+				pArena->mp_LockState.m_Lock.f_LockNoSanitize();
+				--pArena->mp_LockState.m_LockContended;
 
 				_ThreadLocal.m_pArena = pArena;
 				return pArena;
@@ -1334,37 +1334,37 @@ namespace NMib::NMemory
 		}
 
 		umint iLimitedArena;
-		if (t_CParams::mc_MaxArenas == 1 || m_nMaxArenas == 1)
+		if (t_CParams::mc_MaxArenas == 1 || mp_nMaxArenas == 1)
 			iLimitedArena = 0;
 		else
-			iLimitedArena = _ThreadLocal.m_LimitedRandom.template f_GetValue<uint32>() & (m_nMaxArenas - 1);
+			iLimitedArena = _ThreadLocal.m_LimitedRandom.template f_GetValue<uint32>() & (mp_nMaxArenas - 1);
 
-		auto &LimitedArena = pNumaArena->m_LimitedArenas[iLimitedArena];
+		auto &LimitedArena = pNumaArena->mp_LimitedArenas[iLimitedArena];
 		auto *pArena = LimitedArena.f_Load(NAtomic::gc_MemoryOrder_Relaxed);
 		if (!pArena) [[unlikely]]
 		{
-			DMibLock(pNumaArena->m_LimitedArenasCreateLock);
+			DMibLock(pNumaArena->mp_LimitedArenasCreateLock);
 			pArena = LimitedArena.f_Load();
 			if (!pArena)
 			{
 				pArena = pNumaArena->f_NewArena();
-				pArena->m_iLimitedArena = iLimitedArena;
+				pArena->mp_iLimitedArena = iLimitedArena;
 				_ThreadLocal.m_pArena = pArena;
 				LimitedArena.f_Store(pArena);
 				return pArena;
 			}
 		}
 
-		if (pArena->m_LockState.m_Lock.f_TryLockNoSanitize()) [[likely]]
+		if (pArena->mp_LockState.m_Lock.f_TryLockNoSanitize()) [[likely]]
 		{
 			_ThreadLocal.m_pArena = pArena;
 			return pArena;
 		}
 		else
 		{
-			++pArena->m_LockState.m_LockContended;
-			pArena->m_LockState.m_Lock.f_LockNoSanitize();
-			--pArena->m_LockState.m_LockContended;
+			++pArena->mp_LockState.m_LockContended;
+			pArena->mp_LockState.m_Lock.f_LockNoSanitize();
+			--pArena->mp_LockState.m_LockContended;
 		}
 
 		_ThreadLocal.m_pArena = pArena;
@@ -1374,17 +1374,17 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_CheckoutManual()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		if (ThreadLocal.m_pArena)
-			ThreadLocal.m_pArena->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+			ThreadLocal.m_pArena->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 		else
-			fp_CheckoutHelper(ThreadLocal)->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+			fp_CheckoutHelper(ThreadLocal)->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_CheckinManual()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		DMibFastCheck(ThreadLocal.m_pArena);
 
 		ThreadLocal.f_ReturnCheckout();
@@ -1393,7 +1393,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_CheckinManualLight()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		DMibFastCheck(ThreadLocal.m_pArena);
 
 		ThreadLocal.f_ReturnCheckoutLight();
@@ -1402,19 +1402,19 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	bool TCMemoryManager<t_CParams>::f_IsCheckedOut()
 	{
-		if (m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
+		if (mp_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
 			return false;
 
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		return !!ThreadLocal.m_pArena;
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_LazyReturnCheckout()
 	{
-		if (!m_LocalArena.f_IsValid()) [[unlikely]]
+		if (!mp_LocalArena.f_IsValid()) [[unlikely]]
 			return;
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		if (ThreadLocal.m_bLazyCheckout && !ThreadLocal.m_Reentrant)
 		{
 			ThreadLocal.m_bLazyCheckout = false;
@@ -1425,34 +1425,34 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_LazyReturnCheckoutPrevent()
 	{
-		if (!m_LocalArena.f_IsValid()) [[unlikely]]
+		if (!mp_LocalArena.f_IsValid()) [[unlikely]]
 			return;
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		++ThreadLocal.m_TemporaryReturnCheckoutCount;
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_LazyReturnCheckoutAllow()
 	{
-		if (!m_LocalArena.f_IsValid()) [[unlikely]]
+		if (!mp_LocalArena.f_IsValid()) [[unlikely]]
 			return;
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		--ThreadLocal.m_TemporaryReturnCheckoutCount;
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_CanDoLazyCheckout()
 	{
-		if (m_nMaxArenas != 0)
+		if (mp_nMaxArenas != 0)
 			return;
 
-		m_bCanDoLazyCheckout = true;
+		mp_bCanDoLazyCheckout = true;
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_ReturnCheckoutVirtual()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		DMibFastCheck(ThreadLocal.m_pArena);
 
 		ThreadLocal.f_ReturnCheckout();
@@ -1461,56 +1461,56 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_TemporaryReturn()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		ThreadLocal.f_TemporaryReturn();
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_TemporaryGetBack()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		ThreadLocal.f_TemporaryGetBack();
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_TakeOwnership()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		ThreadLocal.f_TakeOwnership();
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_RelinquishOwnership()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		ThreadLocal.f_RelinquishOwnership();
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManager<t_CParams>::f_GarbageCollectLocalArena(bool _bDecommit)
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		ThreadLocal.f_GarbageCollectLocalArena(_bDecommit);
 	}
 
 	template <typename t_CParams>
 	bool TCMemoryManager<t_CParams>::f_GarbageCollectLocalArenaIfPending()
 	{
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		return ThreadLocal.f_GarbageCollectLocalArenaIfPending();
 	}
 
 	template <typename t_CParams>
 	TCMemoryManagerCheckout<t_CParams> TCMemoryManager<t_CParams>::f_CheckoutForce()
 	{
-		if (m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
+		if (mp_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
 			return nullptr;
 
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		if (ThreadLocal.m_pArena)
-			ThreadLocal.m_pArena->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+			ThreadLocal.m_pArena->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 		else
-			fp_CheckoutHelper(ThreadLocal)->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+			fp_CheckoutHelper(ThreadLocal)->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 
 		return this;
 	}
@@ -1518,14 +1518,14 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	TCMemoryManagerCheckout<t_CParams> TCMemoryManager<t_CParams>::f_Checkout()
 	{
-		if (m_nMaxArenas != 0 || m_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
+		if (mp_nMaxArenas != 0 || mp_bThreadLocalsDestroyed || fg_GetSys()->f_ThreadDestroyed())
 			return nullptr;
 
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		if (ThreadLocal.m_pArena)
-			ThreadLocal.m_pArena->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+			ThreadLocal.m_pArena->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 		else
-			fp_CheckoutHelper(ThreadLocal)->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+			fp_CheckoutHelper(ThreadLocal)->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 
 		return this;
 	}
@@ -1533,14 +1533,14 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	CMemoryManagerCheckout TCMemoryManager<t_CParams>::f_CheckoutVirtual()
 	{
-		if (m_nMaxArenas != 0)
+		if (mp_nMaxArenas != 0)
 			return nullptr;
 
-		auto &ThreadLocal = *m_LocalArena;
+		auto &ThreadLocal = *mp_LocalArena;
 		if (ThreadLocal.m_pArena)
-			ThreadLocal.m_pArena->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+			ThreadLocal.m_pArena->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 		else
-			fp_CheckoutHelper(ThreadLocal)->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+			fp_CheckoutHelper(ThreadLocal)->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 
 		return this;
 	}
@@ -1551,39 +1551,39 @@ namespace NMib::NMemory
 
 	template <typename t_CParams>
 	TCMemoryManagerCheckout<t_CParams>::TCMemoryManagerCheckout(TCMemoryManagerCheckout &&_Other)
-		: m_pMemoryManager(_Other.m_pMemoryManager)
+		: mp_pMemoryManager(_Other.mp_pMemoryManager)
 	{
-		_Other.m_pMemoryManager = nullptr;
+		_Other.mp_pMemoryManager = nullptr;
 	}
 
 	template <typename t_CParams>
 	TCMemoryManagerCheckout<t_CParams> &TCMemoryManagerCheckout<t_CParams>::operator = (TCMemoryManagerCheckout<t_CParams> &&_Other)
 	{
-		if (m_pMemoryManager)
-			m_pMemoryManager->f_CheckinManual();
+		if (mp_pMemoryManager)
+			mp_pMemoryManager->f_CheckinManual();
 
-		m_pMemoryManager = _Other.m_pMemoryManager;
-		_Other.m_pMemoryManager = nullptr;
+		mp_pMemoryManager = _Other.mp_pMemoryManager;
+		_Other.mp_pMemoryManager = nullptr;
 		return *this;
 	}
 
 	template <typename t_CParams>
 	TCMemoryManagerCheckout<t_CParams>::TCMemoryManagerCheckout(TCMemoryManager<t_CParams> *_pMemoryManager)
-		: m_pMemoryManager(_pMemoryManager)
+		: mp_pMemoryManager(_pMemoryManager)
 	{
 	}
 
 	template <typename t_CParams>
 	TCMemoryManagerCheckout<t_CParams>::~TCMemoryManagerCheckout()
 	{
-		if (m_pMemoryManager)
-			m_pMemoryManager->f_CheckinManual();
+		if (mp_pMemoryManager)
+			mp_pMemoryManager->f_CheckinManual();
 	}
 
 	template <typename t_CParams>
 	bool TCMemoryManagerCheckout<t_CParams>::f_IsValid() const
 	{
-		return !!m_pMemoryManager;
+		return !!mp_pMemoryManager;
 	}
 
 	///
@@ -1592,32 +1592,32 @@ namespace NMib::NMemory
 
 	template <typename t_CParams>
 	TCMemoryManagerCheckoutLight<t_CParams>::TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight &&_Other)
-		: m_pMemoryManager(_Other.m_pMemoryManager)
+		: mp_pMemoryManager(_Other.mp_pMemoryManager)
 	{
-		_Other.m_pMemoryManager = nullptr;
+		_Other.mp_pMemoryManager = nullptr;
 	}
 
 	template <typename t_CParams>
 	TCMemoryManagerCheckoutLight<t_CParams> &TCMemoryManagerCheckoutLight<t_CParams>::operator = (TCMemoryManagerCheckoutLight<t_CParams> &&_Other)
 	{
-		if (m_pMemoryManager)
-			m_pMemoryManager->f_CheckinManualLight();
+		if (mp_pMemoryManager)
+			mp_pMemoryManager->f_CheckinManualLight();
 
-		m_pMemoryManager = _Other.m_pMemoryManager;
-		_Other.m_pMemoryManager = nullptr;
+		mp_pMemoryManager = _Other.mp_pMemoryManager;
+		_Other.mp_pMemoryManager = nullptr;
 		return *this;
 	}
 
 	template <typename t_CParams>
 	TCMemoryManagerCheckoutLight<t_CParams>::TCMemoryManagerCheckoutLight(TCMemoryManager<t_CParams> *_pMemoryManager)
-		: m_pMemoryManager(_pMemoryManager)
+		: mp_pMemoryManager(_pMemoryManager)
 	{
 	}
 
 	template <typename t_CParams>
 	TCMemoryManagerCheckoutLight<t_CParams>::~TCMemoryManagerCheckoutLight()
 	{
-		if (m_pMemoryManager)
-			m_pMemoryManager->f_CheckinManualLight();
+		if (mp_pMemoryManager)
+			mp_pMemoryManager->f_CheckinManualLight();
 	}
 }

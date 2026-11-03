@@ -60,20 +60,20 @@ namespace NMib::NMemory
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerArenaHeap;
 
-		umint m_Size;
-		TCMemoryManagerArenaHeap<t_CParams> *m_pHeap;
-		NContainer::TCBitArrayHierarchical<t_CParams::mc_HeapChunkSize / t_CParams::mc_HeapBlockSize> m_Committed;
-		NContainer::TCBitArrayHierarchical<t_CParams::mc_HeapChunkSize / t_CParams::mc_HeapBlockSize> m_DeferredDecommit;
+		umint mp_Size;
+		TCMemoryManagerArenaHeap<t_CParams> *mp_pHeap;
+		NContainer::TCBitArrayHierarchical<t_CParams::mc_HeapChunkSize / t_CParams::mc_HeapBlockSize> mp_Committed;
+		NContainer::TCBitArrayHierarchical<t_CParams::mc_HeapChunkSize / t_CParams::mc_HeapBlockSize> mp_DeferredDecommit;
 
-		ENumaArenaCleanup m_RequestedCleanup;
+		ENumaArenaCleanup mp_RequestedCleanup;
 
-		DMibListLinkDS_Link(TCMemoryManagerArenaHeapChunk, m_HeapLink);
-		DMibListLinkDS_Link(TCMemoryManagerArenaHeapChunk, m_CleanupLink);
+		DMibListLinkDS_Link(TCMemoryManagerArenaHeapChunk, mp_HeapLink);
+		DMibListLinkDS_Link(TCMemoryManagerArenaHeapChunk, mp_CleanupLink);
 
-		NContainer::TCMap<uint8 *, CMemoryManagerArenaHeapBlock, NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_Blocks;
+		NContainer::TCMap<uint8 *, CMemoryManagerArenaHeapBlock, NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> mp_Blocks;
 
-		int64 m_DecommitTimestamp = 0;
-		int64 m_FreeTimestamp = 0;
+		int64 mp_DecommitTimestamp = 0;
+		int64 mp_FreeTimestamp = 0;
 	};
 
 	template <typename t_CParams>
@@ -101,20 +101,20 @@ namespace NMib::NMemory
 		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 
 	private:
-		static constexpr bool mc_EnableCallbacks = t_CParams::CNotifier::CHeap::mc_EnableCallbacks;
+		static constexpr bool mcp_EnableCallbacks = t_CParams::CNotifier::CHeap::mc_EnableCallbacks;
 
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerArenaHeapChunk;
 
-		align_cacheline mutable NThread::CLowLevelLock m_Lock;
+		align_cacheline mutable NThread::CLowLevelLock mp_Lock;
 
-		TCMemoryManager<t_CParams> *m_pMemoryManager;
-		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
+		TCMemoryManager<t_CParams> *mp_pMemoryManager;
+		TCMemoryManagerNumaArena<t_CParams> *mp_pNumaArena;
 
-		NContainer::TCMap<umint, DMibListLinkDS_List_FromTemplate(CMemoryManagerArenaHeapBlock, m_Link), NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> m_FreeBuckets;
+		NContainer::TCMap<umint, DMibListLinkDS_List_FromTemplate(CMemoryManagerArenaHeapBlock, m_Link), NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> mp_FreeBuckets;
 
-		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArenaHeapChunk<t_CParams>, m_HeapLink) m_Chunks;
-		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArenaHeapChunk<t_CParams>, m_CleanupLink) m_ChunksNeedingCleanup;
+		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArenaHeapChunk<t_CParams>, mp_HeapLink) mp_Chunks;
+		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArenaHeapChunk<t_CParams>, mp_CleanupLink) mp_ChunksNeedingCleanup;
 
 		void fp_RemoveFreeBlock(CMemoryManagerArenaHeapBlock *_pBlock, TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk);
 

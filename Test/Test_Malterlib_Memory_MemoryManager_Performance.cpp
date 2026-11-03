@@ -280,8 +280,8 @@ namespace
 
 				umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
 				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
-				for (umint i = 0; i <= m_ArraySize; ++i)
-					new(m_pAllocations + i) CAllocationInfo();
+				for (umint iAllocation = 0; iAllocation <= m_ArraySize; ++iAllocation)
+					new(m_pAllocations + iAllocation) CAllocationInfo();
 			}
 
 			static bool fs_Alignment()
@@ -390,8 +390,8 @@ namespace
 
 				umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
 				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
-				for (umint i = 0; i <= m_ArraySize; ++i)
-					new(m_pAllocations + i) CAllocationInfo();
+				for (umint iAllocation = 0; iAllocation <= m_ArraySize; ++iAllocation)
+					new(m_pAllocations + iAllocation) CAllocationInfo();
 			}
 
 			static bool fs_Alignment()
@@ -494,8 +494,8 @@ namespace
 
 				umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
 				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
-				for (umint i = 0; i <= m_ArraySize; ++i)
-					new(m_pAllocations + i) CAllocationInfo();
+				for (umint iAllocation = 0; iAllocation <= m_ArraySize; ++iAllocation)
+					new(m_pAllocations + iAllocation) CAllocationInfo();
 			}
 
 			static bool fs_Alignment()
@@ -635,9 +635,9 @@ namespace
 						uint64 nIterations = 0;
 						{
 							DMibTestScopeMeasure(m_Measure, nIterations);
-							for (int i = 0; i < nPattern; ++i)
+							for (int iPattern = 0; iPattern < nPattern; ++iPattern)
 							{
-								for (umint i = 0; i < 32; ++i)
+								for (umint iAlloc = 0; iAlloc < 32; ++iAlloc)
 								{
 									Pattern.f_Next(*pHeap);
 									//Pattern.f_Next(*m_pHeap);
@@ -693,11 +693,11 @@ namespace
 				NMib::NContainer::TCLinkedList<TCThreadTest<tf_CHeap, tf_CAllocPattern>> Tests;
 				// Start threads
 				int32 iNode = 0;
-				for (umint i = 0; i < _nThreads; ++i)
+				for (umint iThread = 0; iThread < _nThreads; ++iThread)
 				{
 					auto &Test = Tests.f_Insert();
 					Test.m_pWakeEvent = &WakeEvent;
-					Test.m_iThread = i;
+					Test.m_iThread = iThread;
 					Test.m_iRepetition = iRepetition;
 					Test.m_MaxAllocSize = _MaxAllocSize;
 					Test.m_pHeap = &Heap;
@@ -845,7 +845,7 @@ namespace
 				NMib::NThread::CEvent Exited;
 				Exited.f_ResetSignaled();
 
-				auto fl_AddStats = [&](NMib::NProcess::CProcessStatistics const &_Stats)
+				auto fAddStats = [&](NMib::NProcess::CProcessStatistics const &_Stats)
 					{
 						for (auto Iter = _Stats.m_Statistics.f_GetIterator(); Iter; ++Iter)
 						{
@@ -933,8 +933,8 @@ namespace
 									NMib::NProcess::CProcessStatistics MemoryStats = pProcessLaunch->f_GetOverallMemoryStatistics();
 									NMib::NProcess::CProcessStatistics ExecutionStats = pProcessLaunch->f_GetOverallExecutionStatistics();
 
-									fl_AddStats(ExecutionStats);
-									fl_AddStats(MemoryStats);
+									fAddStats(ExecutionStats);
+									fAddStats(MemoryStats);
 									/*
 									for (auto Iter = MemoryStats.m_Statistics.f_GetIterator(); Iter; ++Iter)
 									{
@@ -1003,7 +1003,7 @@ namespace
 					pProcessLaunch.f_Clear();
 				}
 
-				fl_AddStats(SampledMemoryStats);
+				fAddStats(SampledMemoryStats);
 
 				if (ResultParser.m_bFailedTest)
 					DMibTest(!DMibExpr(ResultParser.m_bFailedTest))(ETestFlag_Aggregated);
@@ -1137,23 +1137,23 @@ namespace
 				{
 					for
 #if 1
-					(umint i = 1; i <= 1024 * 1024 * 8; i = i << 1)
+					(umint MaxAllocSize = 1; MaxAllocSize <= 1024 * 1024 * 8; MaxAllocSize = MaxAllocSize << 1)
 #else
 					(
-						umint i = 1
-						//; i <= 1024*1024*8
+						umint MaxAllocSize = 1
+						//; MaxAllocSize <= 1024*1024*8
 #	if DMibPPtrBits == 64
-						; i <= 12
+						; MaxAllocSize <= 12
 #	else
-						; i <= 4
+						; MaxAllocSize <= 4
 #	endif
-						; i = i < 4 ? i << 1 : i + 4
+						; MaxAllocSize = MaxAllocSize < 4 ? MaxAllocSize << 1 : MaxAllocSize + 4
 					)
 #endif
 					{
-						DMibTestCategory(NMib::NStr::CStr::CFormat("Max Alloc({})") << i)
+						DMibTestCategory(NMib::NStr::CStr::CFormat("Max Alloc({})") << MaxAllocSize)
 						{
-							f_DoPattern(_pPattern, _Pattern, i);
+							f_DoPattern(_pPattern, _Pattern, MaxAllocSize);
 						};
 					}
 				}
@@ -1181,7 +1181,7 @@ namespace
 			umint nVirtualCores = NMib::NSys::fg_Thread_GetVirtualCores();
 			umint nCores = m_nCores;
 			//nCores = 1;
-			umint i = 1;
+			umint nThreads = 1;
 			NMib::NContainer::TCSet<umint> AlreadyRan;
 
 			auto fRunTest = [&](umint _nThreads)
@@ -1221,15 +1221,15 @@ namespace
 
 			umint nEndCores = NMib::fg_Max(nCores * 2, 128u);
 
-			for (; i <= nEndCores; i = i << 1)
-				fRunTest(i);
+			for (; nThreads <= nEndCores; nThreads = nThreads << 1)
+				fRunTest(nThreads);
 
 			if (!NMib::fg_IsPowerOfTwo(nPhysicalCores) && nPhysicalCores != nCores)
 				fRunTest(nPhysicalCores);
 
-			i = nCores;
-			fRunTest(i);
-			i = i << 1;
+			nThreads = nCores;
+			fRunTest(nThreads);
+			nThreads = nThreads << 1;
 #if 0
 			umint nEndCores = NMib::fg_Min(nCores * 1024, 64u); // Max 4096 threads as it taskes some time to start threads
 			//umint nEndCores = NMib::fg_Min(nCores*1024, 4096u); // Max 4096 threads as it taskes some time to start threads
@@ -1237,8 +1237,8 @@ namespace
 				nEndCores = NMib::fg_Min(nEndCores, 128u); // Running in debugger the debugger makes creating threads really slow
 #endif
 
-			for (; i <= nEndCores; i = i << 1)
-				fRunTest(i);
+			for (; nThreads <= nEndCores; nThreads = nThreads << 1)
+				fRunTest(nThreads);
 		}
 
 		void f_DoPatterns()

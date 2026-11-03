@@ -28,7 +28,7 @@ namespace NMib::NMemory
 				(
 					[&](umint _Bit, umint _nBits) -> bool
 					{
-						this->m_pMemoryManager->m_Allocator.f_Commit(pMemory + _Bit * t_CParams::mc_SubSlabSize * mc_SlabMultiplier, _nBits * t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
+						this->m_pMemoryManager->mp_Allocator.f_Commit(pMemory + _Bit * t_CParams::mc_SubSlabSize * mc_SlabMultiplier, _nBits * t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
 
 						return true;
 					}
@@ -60,7 +60,7 @@ namespace NMib::NMemory
 					this->m_NeedDecommitTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 				this->m_pArena->fp_RequestCleanup();
 				if (!this->m_LinkNeedDecommit.f_IsInList())
-					this->m_pArena->m_SlabsNeedingDecommit.f_Insert(this);
+					this->m_pArena->mp_SlabsNeedingDecommit.f_Insert(this);
 			}
 			else
 			{
@@ -69,7 +69,7 @@ namespace NMib::NMemory
 					(
 						[&](umint _Bit, umint _nBits) -> bool
 						{
-							this->m_pMemoryManager->m_Allocator.f_Decommit
+							this->m_pMemoryManager->mp_Allocator.f_Decommit
 								(
 									pMemory + _Bit * t_CParams::mc_SubSlabSize * mc_SlabMultiplier
 									, _nBits * t_CParams::mc_SubSlabSize * mc_SlabMultiplier
@@ -118,7 +118,7 @@ namespace NMib::NMemory
 				(
 					[&](umint _Bit, umint _nBits) -> bool
 					{
-						this->m_pMemoryManager->m_Allocator.f_Decommit(pMemory + _Bit * t_CParams::mc_SubSlabSize, _nBits * t_CParams::mc_SubSlabSize);
+						this->m_pMemoryManager->mp_Allocator.f_Decommit(pMemory + _Bit * t_CParams::mc_SubSlabSize, _nBits * t_CParams::mc_SubSlabSize);
 						if constexpr (mc_EnableCallbacks)
 							this->m_pMemoryManager->f_OnDecommit(pMemory + _Bit * t_CParams::mc_SubSlabSize, _nBits * t_CParams::mc_SubSlabSize);
 
@@ -151,7 +151,7 @@ namespace NMib::NMemory
 							if (StartCommit < EndCommit)
 							{
 								umint nToCommit = EndCommit - StartCommit;
-								this->m_pMemoryManager->m_Allocator.f_Decommit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (nToCommit) * t_CParams::mc_SubSlabSize);
+								this->m_pMemoryManager->mp_Allocator.f_Decommit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (nToCommit) * t_CParams::mc_SubSlabSize);
 								if constexpr (mc_EnableCallbacks)
 									this->m_pMemoryManager->f_OnDecommit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (nToCommit) * t_CParams::mc_SubSlabSize);
 
@@ -166,7 +166,7 @@ namespace NMib::NMemory
 						umint EndCommit = _Bit;
 						if (StartCommit < EndCommit)
 						{
-							this->m_pMemoryManager->m_Allocator.f_Commit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (EndCommit - StartCommit) * t_CParams::mc_SubSlabSize);
+							this->m_pMemoryManager->mp_Allocator.f_Commit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (EndCommit - StartCommit) * t_CParams::mc_SubSlabSize);
 							if constexpr (mc_EnableCallbacks)
 								this->m_pMemoryManager->f_OnCommit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (EndCommit - StartCommit) * t_CParams::mc_SubSlabSize);
 						}
@@ -176,7 +176,7 @@ namespace NMib::NMemory
 						umint EndCommit = EndBit * mc_SlabMultiplier;
 						if (StartCommit < EndCommit)
 						{
-							this->m_pMemoryManager->m_Allocator.f_Commit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (EndCommit - StartCommit) * t_CParams::mc_SubSlabSize);
+							this->m_pMemoryManager->mp_Allocator.f_Commit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (EndCommit - StartCommit) * t_CParams::mc_SubSlabSize);
 							if constexpr (mc_EnableCallbacks)
 								this->m_pMemoryManager->f_OnCommit(pMemory + StartCommit * t_CParams::mc_SubSlabSize, (EndCommit - StartCommit) * t_CParams::mc_SubSlabSize);
 						}
@@ -201,7 +201,7 @@ namespace NMib::NMemory
 				if constexpr (t_CParams::mc_bBackgroundCleanup)
 					this->m_NeedDecommitTimestamp = TCMemoryManagerNumaArena<t_CParams>::fs_GetTimestamp();
 				this->m_pArena->fp_RequestCleanup();
-				this->m_pArena->m_SlabsNeedingDecommit.f_Insert(this);
+				this->m_pArena->mp_SlabsNeedingDecommit.f_Insert(this);
 			}
 		}
 	}
@@ -219,7 +219,7 @@ namespace NMib::NMemory
 				[&](umint _Bit, umint _nBits) -> bool
 				{
 					m_CommittedSubSlabs.template f_SetBitRange<false>(_Bit, _nBits);
-					this->m_pMemoryManager->m_Allocator.f_Decommit(pMemory + _Bit * t_CParams::mc_SubSlabSize * mc_SlabMultiplier, _nBits * t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
+					this->m_pMemoryManager->mp_Allocator.f_Decommit(pMemory + _Bit * t_CParams::mc_SubSlabSize * mc_SlabMultiplier, _nBits * t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
 					if constexpr (mc_EnableCallbacks)
 						this->m_pMemoryManager->f_OnDecommit(pMemory + _Bit * t_CParams::mc_SubSlabSize * mc_SlabMultiplier, _nBits * t_CParams::mc_SubSlabSize * mc_SlabMultiplier);
 

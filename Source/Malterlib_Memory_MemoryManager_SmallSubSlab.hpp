@@ -88,8 +88,8 @@ namespace NMib::NMemory
 
 		uint16 *pAlloc = (uint16 *)pArray;
 		uint16 *pAllocEnd = pAlloc + AllocSizeUint16 * (NumAllocs - 1);
-		for (uint16 i = 1; pAlloc != pAllocEnd; pAlloc += AllocSizeUint16, ++i)
-			*pAlloc = i;
+		for (uint16 iNextAlloc = 1; pAlloc != pAllocEnd; pAlloc += AllocSizeUint16, ++iNextAlloc)
+			*pAlloc = iNextAlloc;
 
 		*pAlloc = 0xFFFF;
 	}
@@ -183,13 +183,13 @@ namespace NMib::NMemory
 
 		m_Params.m_FirstFreeList = 0;
 		m_Params.m_nAllocated = 0;
-		for (umint i = 0; i < mc_NumAllocRegions - 1; ++i)
+		for (umint iRegion = 0; iRegion < mc_NumAllocRegions - 1; ++iRegion)
 		{
-			m_Params.m_FreeListsNext[i] = i + 1;
-			m_Params.m_FreeLists[i] = 0;
-			uint8 *pAlloc = pArray + i * 255;
-			for (umint i = 0; i < 254; ++i)
-				pAlloc[i] = i + 1;
+			m_Params.m_FreeListsNext[iRegion] = iRegion + 1;
+			m_Params.m_FreeLists[iRegion] = 0;
+			uint8 *pAlloc = pArray + iRegion * 255;
+			for (umint iAlloc = 0; iAlloc < 254; ++iAlloc)
+				pAlloc[iAlloc] = iAlloc + 1;
 			pAlloc[254] = 0xFF;
 		}
 		{
@@ -197,8 +197,8 @@ namespace NMib::NMemory
 			m_Params.m_FreeListsNext[mc_NumAllocRegions - 1] = 0xFF;
 			m_Params.m_FreeLists[mc_NumAllocRegions - 1] = 0;
 			uint8 *pAlloc = pArray + (mc_NumAllocRegions - 1) * 255;
-			for (umint i = 0; i < nAllocs - 1; ++i)
-				pAlloc[i] = i + 1;
+			for (umint iAlloc = 0; iAlloc < nAllocs - 1; ++iAlloc)
+				pAlloc[iAlloc] = iAlloc + 1;
 			pAlloc[nAllocs - 1] = 0xFF;
 		}
 	}

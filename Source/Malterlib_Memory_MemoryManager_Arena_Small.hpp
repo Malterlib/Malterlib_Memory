@@ -9,7 +9,7 @@ namespace NMib::NMemory
 	inline_never void *TCMemoryManagerArena<t_CParams>::fp_AllocSmallSize(umint &_Size)
 	{
 		umint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
-		DMibMemLightweightTrack(m_pMemoryManager->fp_TrackAlloc(_Size));
+		DMibMemLightweightTrack(mp_pMemoryManager->fp_TrackAlloc(_Size));
 		if (iSlab == 0) [[unlikely]]
 			return fsp_AllocSmall<1>(this);
 		return fsp_AllocSmallShared(this, iSlab);
@@ -18,7 +18,7 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	inline_never void TCMemoryManagerArena<t_CParams>::fp_AllocSmallSizeBatch(umint _Size, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_Functor)
 	{
-		DMibMemLightweightTrack(auto *pLocalArena = m_pMemoryManager->m_LocalArena.f_TryGet(););
+		DMibMemLightweightTrack(auto *pLocalArena = mp_pMemoryManager->mp_LocalArena.f_TryGet(););
 
 		umint iSlab = fsp_GetSlabTypeFromSizeSmall(_Size);
 		if (iSlab == 0) [[unlikely]]
@@ -219,10 +219,10 @@ namespace NMib::NMemory
 	inline_always void *TCMemoryManagerArena<t_CParams>::fsp_AllocSmallShared(TCMemoryManagerArena *_pThis, umint _Index)
 	{
 		using CSubSlab = TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>;
-		auto &Slabs = _pThis->m_SmallSizeSlabs[_Index];
+		auto &Slabs = _pThis->mp_SmallSizeSlabs[_Index];
 		CSubSlab *pSlab = (CSubSlab *)Slabs.f_GetFirst();
 		if (!pSlab) [[unlikely]]
-			return mc_SmallAllocCategoryJumpTable.m_Table[_Index](_pThis);
+			return mcp_SmallAllocCategoryJumpTable.m_Table[_Index](_pThis);
 
 		bool bFull;
 		void *pAlloc = pSlab->f_Alloc(bFull);
@@ -235,7 +235,7 @@ namespace NMib::NMemory
 		if (bFull) [[unlikely]]
 		{
 			pSlab->m_Params.m_Link.m_Link.f_UnsafeUnlink();
-			_pThis->m_SmallSizeSlabsFull.f_UnsafeInsertFirst(pSlab->m_Params.m_Link);
+			_pThis->mp_SmallSizeSlabsFull.f_UnsafeInsertFirst(pSlab->m_Params.m_Link);
 		}
 
 		return pAlloc;
@@ -247,7 +247,7 @@ namespace NMib::NMemory
 	{
 		using CSubSlab = TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size>;
 
-		auto &Slabs = _pThis->m_SmallSizeSlabs[CSubSlab::mc_SmallSlabIndex];
+		auto &Slabs = _pThis->mp_SmallSizeSlabs[CSubSlab::mc_SmallSlabIndex];
 		CSubSlab *pSlab = (CSubSlab *)Slabs.f_GetFirst();
 		if (!pSlab)
 			pSlab = _pThis->fp_AllocSmallNoSlab<tf_Size>();
@@ -263,7 +263,7 @@ namespace NMib::NMemory
 		if (bFull)
 		{
 			pSlab->m_Params.m_Link.m_Link.f_UnsafeUnlink();
-			_pThis->m_SmallSizeSlabsFull.f_UnsafeInsertFirst(pSlab->m_Params.m_Link);
+			_pThis->mp_SmallSizeSlabsFull.f_UnsafeInsertFirst(pSlab->m_Params.m_Link);
 		}
 
 		return pAlloc;
@@ -275,7 +275,7 @@ namespace NMib::NMemory
 	{
 		using CSubSlab = TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size>;
 
-		auto pFreeSlab = (TCMemoryManagerSlab<t_CParams, 0> *)m_PartiallyFreeSlabs[0][0].f_GetFirst();
+		auto pFreeSlab = (TCMemoryManagerSlab<t_CParams, 0> *)mp_PartiallyFreeSlabs[0][0].f_GetFirst();
 
 		if (!pFreeSlab)
 			pFreeSlab = (TCMemoryManagerSlab<t_CParams, 0> *)fp_NewSlab(0, 0);
@@ -313,7 +313,7 @@ namespace NMib::NMemory
 			pSlab->f_OnFillFree(*this);
 
 		DMibFastCheck(SlabIndex < mc_nSmallSizeSlabs);
-		auto &Slabs = m_SmallSizeSlabs[SlabIndex];
+		auto &Slabs = mp_SmallSizeSlabs[SlabIndex];
 
 		Slabs.f_Insert(pSlab->m_Params.m_Link);
 
@@ -350,7 +350,7 @@ namespace NMib::NMemory
 			DMibFastCheck(_SmallState == ESmallState_WasFull);
 			_pSubSlab->m_Params.m_Link.m_Link.f_UnsafeUnlink();
 
-			m_SmallSizeSlabs[_Index].f_UnsafeInsert(_pSubSlab->m_Params.m_Link);
+			mp_SmallSizeSlabs[_Index].f_UnsafeInsert(_pSubSlab->m_Params.m_Link);
 		}
 	}
 
@@ -362,7 +362,7 @@ namespace NMib::NMemory
 
 		using CSubSlab = TCMemoryManagerSubSlab_SmallSize<t_CParams, tf_Size>;
 
-		auto &Slabs = m_SmallSizeSlabs[CSubSlab::mc_SmallSlabIndex];
+		auto &Slabs = mp_SmallSizeSlabs[CSubSlab::mc_SmallSlabIndex];
 		for (auto iSlab = Slabs.f_GetIterator(); iSlab; ++iSlab)
 		{
 			CSubSlab *pSlab = (CSubSlab *)&*iSlab;

@@ -17,34 +17,34 @@ namespace NMib::NMemory
 	struct CMemoryReportLightweightScope final : public CCoroutineThreadLocalHandler
 	{
 		CMemoryReportLightweightScope(CReportMemoryLightweight *_pReporter)
-			: m_pNewReporter(_pReporter)
+			: mp_pNewReporter(_pReporter)
 		{
-			m_pOldReporter = fg_ReportMemoryLightweightTo(_pReporter);
+			mp_pOldReporter = fg_ReportMemoryLightweightTo(_pReporter);
 		}
 
 		CMemoryReportLightweightScope(CReportMemoryLightweight &_Reporter)
 		{
-			m_pOldReporter = fg_ReportMemoryLightweightTo(&_Reporter);
+			mp_pOldReporter = fg_ReportMemoryLightweightTo(&_Reporter);
 		}
 
 		~CMemoryReportLightweightScope()
 		{
-			fg_ReportMemoryLightweightTo(m_pOldReporter);
+			fg_ReportMemoryLightweightTo(mp_pOldReporter);
 		}
 
 		void f_Suspend() noexcept override
 		{
-			fg_ReportMemoryLightweightTo(m_pOldReporter);
+			fg_ReportMemoryLightweightTo(mp_pOldReporter);
 		}
 
 		void f_ResumeNoExcept() noexcept override
 		{
-			m_pOldReporter = fg_ReportMemoryLightweightTo(m_pNewReporter);
+			mp_pOldReporter = fg_ReportMemoryLightweightTo(mp_pNewReporter);
 		}
 
 	private:
-		CReportMemoryLightweight *m_pOldReporter;
-		CReportMemoryLightweight *m_pNewReporter;
+		CReportMemoryLightweight *mp_pOldReporter;
+		CReportMemoryLightweight *mp_pNewReporter;
 	};
 
 	enum EMemoryReportLightweightScopeFlag
@@ -163,62 +163,62 @@ namespace NMib::NMemory
 	struct CMemoryReportScope final : public CCoroutineThreadLocalHandler
 	{
 		CMemoryReportScope(CReportMemory &_Reporter)
-			: m_pNewReporter(&_Reporter)
+			: mp_pNewReporter(&_Reporter)
 		{
-			m_pOldReporter = fg_ReportMemoryTo(&_Reporter);
+			mp_pOldReporter = fg_ReportMemoryTo(&_Reporter);
 		}
 
 		~CMemoryReportScope()
 		{
-			fg_ReportMemoryTo(m_pOldReporter);
+			fg_ReportMemoryTo(mp_pOldReporter);
 		}
 
 		void f_Suspend() noexcept override
 		{
-			fg_ReportMemoryTo(m_pOldReporter);
+			fg_ReportMemoryTo(mp_pOldReporter);
 		}
 
 		void f_ResumeNoExcept() noexcept override
 		{
-			m_pOldReporter = fg_ReportMemoryTo(m_pNewReporter);
+			mp_pOldReporter = fg_ReportMemoryTo(mp_pNewReporter);
 		}
 
 	private:
-		CReportMemory *m_pOldReporter;
-		CReportMemory *m_pNewReporter;
+		CReportMemory *mp_pOldReporter;
+		CReportMemory *mp_pNewReporter;
 	};
 
 	struct CDisableMemoryReporterScope final : public CCoroutineThreadLocalHandler
 	{
 		CDisableMemoryReporterScope()
 		{
-			m_pOldReporter = fg_ReportMemoryTo(nullptr);
+			mp_pOldReporter = fg_ReportMemoryTo(nullptr);
 		}
 
 		~CDisableMemoryReporterScope()
 		{
-			fg_ReportMemoryTo(m_pOldReporter);
+			fg_ReportMemoryTo(mp_pOldReporter);
 		}
 
 		void f_Suspend() noexcept override
 		{
-			fg_ReportMemoryTo(m_pOldReporter);
+			fg_ReportMemoryTo(mp_pOldReporter);
 		}
 
 		void f_ResumeNoExcept() noexcept override
 		{
-			m_pOldReporter = fg_ReportMemoryTo(nullptr);
+			mp_pOldReporter = fg_ReportMemoryTo(nullptr);
 		}
 
 	private:
-		CReportMemory *m_pOldReporter;
+		CReportMemory *mp_pOldReporter;
 	};
 
 	struct CMemoryReportGoingToReportScope
 	{
 		CMemoryReportGoingToReportScope(umint _Allocator, bool _bReport)
-			: m_Allocator(_Allocator)
-			, m_bReport(_bReport)
+			: mp_Allocator(_Allocator)
+			, mp_bReport(_bReport)
 		{
 			if (_bReport)
 				fg_ReportMemoryGoingToReportEnter(_Allocator);
@@ -226,13 +226,13 @@ namespace NMib::NMemory
 
 		~CMemoryReportGoingToReportScope()
 		{
-			if (m_bReport)
-				fg_ReportMemoryGoingToReportExit(m_Allocator);
+			if (mp_bReport)
+				fg_ReportMemoryGoingToReportExit(mp_Allocator);
 		}
 
 	private:
-		umint m_Allocator;
-		bool m_bReport;
+		umint mp_Allocator;
+		bool mp_bReport;
 	};
 
 #	define DMibMemoryGoingToReportScope(d_MemoryAllocator, d_bReport) CMemoryReportGoingToReportScope MalterlibMemoryReportScope((umint)d_MemoryAllocator, d_bReport);

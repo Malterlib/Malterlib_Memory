@@ -22,21 +22,21 @@ namespace NMib::NMemory
 			, bool _bLimitedArenas
 		)
 		: t_CParams::CNotifier::CArena(_pMemoryManager)
-		, m_pMemoryManager(_pMemoryManager)
-		, m_Magic(_Magic)
-		, m_NumaNode(_NumaNode)
-		, m_pNumaArena(_pNumaArena)
-		, m_bLimitedArenas(_bLimitedArenas)
+		, mp_pMemoryManager(_pMemoryManager)
+		, mp_Magic(_Magic)
+		, mp_NumaNode(_NumaNode)
+		, mp_pNumaArena(_pNumaArena)
+		, mp_bLimitedArenas(_bLimitedArenas)
 	{
-		DMibFastCheck((uint8 *)&m_LockState.m_Lock == fg_AlignUp((uint8 *)&m_LockState.m_Lock, umint(DMibPMemoryCacheLineSize)));
+		DMibFastCheck((uint8 *)&mp_LockState.m_Lock == fg_AlignUp((uint8 *)&mp_LockState.m_Lock, umint(DMibPMemoryCacheLineSize)));
 		if constexpr (mc_bUseFreeMessages)
-			DMibFastCheck((uint8 *)&m_MessageState.m_MessagesAvailable == fg_AlignUp((uint8 *)&m_MessageState.m_MessagesAvailable, umint(DMibPMemoryCacheLineSize)));
+			DMibFastCheck((uint8 *)&mp_MessageState.m_MessagesAvailable == fg_AlignUp((uint8 *)&mp_MessageState.m_MessagesAvailable, umint(DMibPMemoryCacheLineSize)));
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManagerArena<t_CParams>::fp_RequestCleanup()
 	{
-		m_bWantCleanup = true;
+		mp_bWantCleanup = true;
 	}
 
 	template <typename t_CParams>
@@ -44,20 +44,20 @@ namespace NMib::NMemory
 	{
 		if (_pLocalArena->m_bForcingCleanup)
 			return false;
-		return m_LockState.m_LockContended.f_Load(NAtomic::gc_MemoryOrder_Relaxed) > 0;
+		return mp_LockState.m_LockContended.f_Load(NAtomic::gc_MemoryOrder_Relaxed) > 0;
 	}
 
 	template <typename t_CParams>
 	bool TCMemoryManagerArena<t_CParams>::f_ReturnCheckout()
 	{
-		DMibFastCheck(m_LockState.m_CheckoutCount.f_Load() > 0);
-		if (m_LockState.m_CheckoutCount.f_FetchSub(1, NAtomic::gc_MemoryOrder_Relaxed) == 1)
+		DMibFastCheck(mp_LockState.m_CheckoutCount.f_Load() > 0);
+		if (mp_LockState.m_CheckoutCount.f_FetchSub(1, NAtomic::gc_MemoryOrder_Relaxed) == 1)
 		{
 			bool bNeedCleanup = fp_CheckCleanup();
-			m_LockState.m_Lock.f_UnlockNoSanitize();
+			mp_LockState.m_Lock.f_UnlockNoSanitize();
 
 			if (bNeedCleanup)
-				m_pNumaArena->f_OnNeedCleanup();
+				mp_pNumaArena->f_OnNeedCleanup();
 
 			return true;
 		}
@@ -67,22 +67,22 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	void TCMemoryManagerArena<t_CParams>::f_ForkedChild()
 	{
-		m_LockState.m_Lock.f_ForkedChildLocked();
-		m_LockState.m_LockContended.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed); // The waiters counted in the parent do not exist in the child
+		mp_LockState.m_Lock.f_ForkedChildLocked();
+		mp_LockState.m_LockContended.f_Store(0, NAtomic::gc_MemoryOrder_Relaxed); // The waiters counted in the parent do not exist in the child
 	}
 
 	template <typename t_CParams>
 	void TCMemoryManagerArena<t_CParams>::f_ReturnCheckoutLight()
 	{
-		DMibFastCheck(m_LockState.m_CheckoutCount.f_Load() == 0); // Should not have been increased
+		DMibFastCheck(mp_LockState.m_CheckoutCount.f_Load() == 0); // Should not have been increased
 		bool bNeedCleanup = false;
-		if (m_bWantCleanup)
+		if (mp_bWantCleanup)
 			bNeedCleanup = fp_CheckCleanup();
 
-		m_LockState.m_Lock.f_UnlockNoSanitize();
+		mp_LockState.m_Lock.f_UnlockNoSanitize();
 
 		if (bNeedCleanup)
-			m_pNumaArena->f_OnNeedCleanup();
+			mp_pNumaArena->f_OnNeedCleanup();
 	}
 
 	template <typename t_CParams>
@@ -90,26 +90,26 @@ namespace NMib::NMemory
 	{
 		{
 			for (umint iSlab = 0; iSlab < mc_nSmallSizeSlabs; ++iSlab)
-				m_SmallSizeSlabs[iSlab].f_Clear();
+				mp_SmallSizeSlabs[iSlab].f_Clear();
 		}
 		if constexpr (t_CParams::mc_bUseSmallSizes)
 		{
 			for (umint iSlab = 0; iSlab < mc_nLevel0Lists; ++iSlab)
-				m_NormalSizeSlabsLevel0[iSlab].f_Clear();
+				mp_NormalSizeSlabsLevel0[iSlab].f_Clear();
 		}
 		{
 			for (umint iSlab = 0; iSlab < mc_nNormalSizeClasses; ++iSlab)
-				m_NormalSizeSlabs[iSlab].f_Clear();
+				mp_NormalSizeSlabs[iSlab].f_Clear();
 		}
-		m_SmallSizeSlabsFull.f_Clear();
+		mp_SmallSizeSlabsFull.f_Clear();
 
-		while (auto pSlab = m_FreeSlabs.f_Pop())
+		while (auto pSlab = mp_FreeSlabs.f_Pop())
 		{
 			if constexpr (mc_EnableCallbacks)
-				m_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
+				mp_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 
 			pSlab->~TCMemoryManagerSlabShared<t_CParams>();
-			m_pMemoryManager->m_Allocator.f_Free(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
+			mp_pMemoryManager->mp_Allocator.f_Free(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 		}
 
 		{
@@ -117,26 +117,26 @@ namespace NMib::NMemory
 			{
 				for (umint iLevel = 0; iLevel < t_CParams::mc_NumSubSlabSizeLevels; ++iLevel)
 				{
-					while (auto pSlab = m_PartiallyFreeSlabs[iSlab][iLevel].f_Pop())
+					while (auto pSlab = mp_PartiallyFreeSlabs[iSlab][iLevel].f_Pop())
 					{
 						if constexpr (mc_EnableCallbacks)
-							m_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
+							mp_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 
 						pSlab->~TCMemoryManagerSlabShared<t_CParams>();
-						m_pMemoryManager->m_Allocator.f_Free(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
+						mp_pMemoryManager->mp_Allocator.f_Free(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 					}
-					m_PartiallyFreeSlabsAvailable[iSlab].template f_SetBit<false>(iLevel);
+					mp_PartiallyFreeSlabsAvailable[iSlab].template f_SetBit<false>(iLevel);
 				}
 			}
 		}
 
-		while (auto pSlab = m_FullSlabs.f_Pop())
+		while (auto pSlab = mp_FullSlabs.f_Pop())
 		{
 			if constexpr (mc_EnableCallbacks)
-				m_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
+				mp_pMemoryManager->f_OnCommit(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 
 			pSlab->~TCMemoryManagerSlabShared<t_CParams>();
-			m_pMemoryManager->m_Allocator.f_Free(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
+			mp_pMemoryManager->mp_Allocator.f_Free(pSlab->f_GetSlabStart(), t_CParams::mc_SlabSize);
 		}
 	}
 
@@ -156,7 +156,7 @@ namespace NMib::NMemory
 			_pSlab->f_DecommitSubSlabs(iAlloc, 1);
 			if (_pSlab->f_SetBitFree(0, iAlloc))
 			{
-				if (m_bWantNumaFreeSlabsCleanup) [[unlikely]]
+				if (mp_bWantNumaFreeSlabsCleanup) [[unlikely]]
 					fp_CheckCleanupNumaFree();
 
 				return true;
@@ -165,7 +165,7 @@ namespace NMib::NMemory
 		DMibFastCheck(_pSlab->m_nFreeSubSlabs == 0);
 		fp_CheckSlabNoLongerGarbage(_pSlab);
 
-		if (m_bWantNumaFreeSlabsCleanup) [[unlikely]]
+		if (mp_bWantNumaFreeSlabsCleanup) [[unlikely]]
 			fp_CheckCleanupNumaFree();
 
 		return false;
@@ -201,7 +201,7 @@ namespace NMib::NMemory
 		else
 			fp_AllocNormalBatch(_Size, _Functor);
 
-		if (m_bWantNumaFreeSlabsCleanup) [[unlikely]]
+		if (mp_bWantNumaFreeSlabsCleanup) [[unlikely]]
 			fp_CheckCleanupNumaFree();
 	}
 
@@ -263,10 +263,10 @@ namespace NMib::NMemory
 					if (_pLocalArena && _pLocalArena->m_pArena == nullptr)
 					{
 						auto &LocalArena = *_pLocalArena;
-						auto &MemoryManager = *m_pMemoryManager;
-						if (MemoryManager.m_bCanDoLazyCheckout && !LocalArena.m_TemporaryReturnCheckoutCount)
+						auto &MemoryManager = *mp_pMemoryManager;
+						if (MemoryManager.mp_bCanDoLazyCheckout && !LocalArena.m_TemporaryReturnCheckoutCount)
 						{
-							MemoryManager.fp_CheckoutHelper(LocalArena)->m_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
+							MemoryManager.fp_CheckoutHelper(LocalArena)->mp_LockState.m_CheckoutCount.f_FetchAdd(1, NAtomic::gc_MemoryOrder_Relaxed);
 							DMibFastCheck(fg_GetSys()->f_ThreadCreated());
 							LocalArena.m_bLazyCheckout = true;
 						}
@@ -282,7 +282,7 @@ namespace NMib::NMemory
 					DMibMemLightweightTrackDisableScope;
 
 					FreeLinkType = EMessageType_FreeSmallBlock;
-					CMessage_FreeSmallBlock *pFreeLinkSmallBlock = (CMessage_FreeSmallBlock *)m_pMemoryManager->f_AllocAligned(sizeof(CMessage_FreeSmallBlock), 1);
+					CMessage_FreeSmallBlock *pFreeLinkSmallBlock = (CMessage_FreeSmallBlock *)mp_pMemoryManager->f_AllocAligned(sizeof(CMessage_FreeSmallBlock), 1);
 					pFreeLinkSmallBlock->m_pBlock = _pMemory;
 					pFreeLink = pFreeLinkSmallBlock;
 				}
@@ -406,7 +406,7 @@ namespace NMib::NMemory
 									// steals the stack. The checkout-return path also re-arms on
 									// fp_HasRemoteFrees
 									fp_PushRemoteFreeSlab(_pSlab);
-									m_pNumaArena->f_RequestCleanupWeak(ENumaArenaCleanup_ProcessMessages);
+									mp_pNumaArena->f_RequestCleanupWeak(ENumaArenaCleanup_ProcessMessages);
 								}
 							}
 						}
@@ -420,7 +420,7 @@ namespace NMib::NMemory
 		if constexpr (mc_bUseFreeMessages)
 		{
 			f_AddMessage(pFreeLink, FreeLinkType, _pLocalArena);
-			m_pNumaArena->f_RequestCleanupWeak(ENumaArenaCleanup_ProcessMessages);
+			mp_pNumaArena->f_RequestCleanupWeak(ENumaArenaCleanup_ProcessMessages);
 		}
 		else
 		{
@@ -551,7 +551,7 @@ namespace NMib::NMemory
 				DMibFastCheck(((_iSubSlab >> Level) << Level) == _iSubSlab);
 				if (_pSlab->f_SetBitFree(Level, _iSubSlab >> Level))
 				{
-					if (m_bWantNumaFreeSlabsCleanup) [[unlikely]]
+					if (mp_bWantNumaFreeSlabsCleanup) [[unlikely]]
 						fp_CheckCleanupNumaFree();
 
 					return true;
@@ -577,7 +577,7 @@ namespace NMib::NMemory
 			DMibFastCheck(((_iSubSlab >> Level) << Level) == _iSubSlab);
 			if (_pSlab->f_SetBitFree(Level, _iSubSlab >> Level))
 			{
-				if (m_bWantNumaFreeSlabsCleanup) [[unlikely]]
+				if (mp_bWantNumaFreeSlabsCleanup) [[unlikely]]
 					fp_CheckCleanupNumaFree();
 
 				return true;
@@ -586,7 +586,7 @@ namespace NMib::NMemory
 
 		_pSlab->m_nAllocatedSubSlabs -= nSubSlabs;
 
-		if (m_bWantNumaFreeSlabsCleanup) [[unlikely]]
+		if (mp_bWantNumaFreeSlabsCleanup) [[unlikely]]
 			fp_CheckCleanupNumaFree();
 
 		return false;
@@ -597,7 +597,7 @@ namespace NMib::NMemory
 	{
 		umint nSlabs = 0;
 
-		nSlabs += m_FreeSlabs.f_GetLen();
+		nSlabs += mp_FreeSlabs.f_GetLen();
 
 		return nSlabs;
 	}
@@ -608,11 +608,11 @@ namespace NMib::NMemory
 		umint nSlabs = 0;
 		for (umint iSlabType = 0; iSlabType < t_CParams::mc_NumSizesPerLevel; ++iSlabType)
 		{
-			for (umint i = 0; i < t_CParams::mc_NumSubSlabSizeLevels; ++i)
-				nSlabs += m_PartiallyFreeSlabs[iSlabType][i].f_GetLen();
+			for (umint iLevel = 0; iLevel < t_CParams::mc_NumSubSlabSizeLevels; ++iLevel)
+				nSlabs += mp_PartiallyFreeSlabs[iSlabType][iLevel].f_GetLen();
 		}
 
-		nSlabs += m_FullSlabs.f_GetLen();
+		nSlabs += mp_FullSlabs.f_GetLen();
 
 		return nSlabs;
 	}
@@ -640,20 +640,20 @@ namespace NMib::NMemory
 
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 			{
-				for (umint i = 0; i < mc_nLevel0Lists; ++i)
+				for (umint iList = 0; iList < mc_nLevel0Lists; ++iList)
 				{
-					for (auto iNode = m_NormalSizeSlabsLevel0[i].f_GetIterator(); iNode; ++iNode)
+					for (auto iNode = mp_NormalSizeSlabsLevel0[iList].f_GetIterator(); iNode; ++iNode)
 						fCheckNode(&*iNode);
 
-					fCheckCurrent(m_CurrentSubSlabs.m_Level0[i]);
+					fCheckCurrent(mp_CurrentSubSlabs.m_Level0[iList]);
 				}
 			}
-			for (umint i = 0; i < mc_nNormalSizeClasses; ++i)
+			for (umint iSizeClass = 0; iSizeClass < mc_nNormalSizeClasses; ++iSizeClass)
 			{
-				for (auto iNode = m_NormalSizeSlabs[i].f_GetIterator(); iNode; ++iNode)
+				for (auto iNode = mp_NormalSizeSlabs[iSizeClass].f_GetIterator(); iNode; ++iNode)
 					fCheckNode(&*iNode);
 
-				fCheckCurrent(m_CurrentSubSlabs.m_Normal[i]);
+				fCheckCurrent(mp_CurrentSubSlabs.m_Normal[iSizeClass]);
 			}
 
 			// Freed multi sub-slab single block allocations are only marked pending: they are
@@ -667,7 +667,7 @@ namespace NMib::NMemory
 
 			for (umint SlabType = 0; SlabType < t_CParams::mc_NumSizesPerLevel; ++SlabType)
 			{
-				for (auto iSlab = m_SlabsToGarbageCollect[SlabType].f_GetIterator(); iSlab; ++iSlab)
+				for (auto iSlab = mp_SlabsToGarbageCollect[SlabType].f_GetIterator(); iSlab; ++iSlab)
 				{
 					CPendingCheckParams Params;
 					Params.m_pSlab = &*iSlab;
@@ -718,18 +718,18 @@ namespace NMib::NMemory
 		{
 			if constexpr (t_CParams::mc_bUseSmallSizes)
 			{
-				for (umint i = 0; i < mc_nLevel0Lists; ++i)
+				for (umint iList = 0; iList < mc_nLevel0Lists; ++iList)
 				{
-					for (auto iAlloc = m_NormalSizeSlabsLevel0[i].f_GetIterator(); iAlloc; ++iAlloc)
+					for (auto iAlloc = mp_NormalSizeSlabsLevel0[iList].f_GetIterator(); iAlloc; ++iAlloc)
 					{
 						if (fp_CheckFree(&*iAlloc, _Flags))
 							bError = true;
 					}
 				}
 			}
-			for (umint i = 0; i < mc_nNormalSizeClasses; ++i)
+			for (umint iSizeClass = 0; iSizeClass < mc_nNormalSizeClasses; ++iSizeClass)
 			{
-				for (auto iAlloc = m_NormalSizeSlabs[i].f_GetIterator(); iAlloc; ++iAlloc)
+				for (auto iAlloc = mp_NormalSizeSlabs[iSizeClass].f_GetIterator(); iAlloc; ++iAlloc)
 				{
 					if (fp_CheckFree(&*iAlloc, _Flags))
 						bError = true;

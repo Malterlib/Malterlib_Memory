@@ -104,7 +104,7 @@ namespace
 	{
 		~CSubSystem_WaitForLateThread()
 		{
-			for (umint i = 0; i < 10000 && !g_bLateThreadAllocated.f_Load(); ++i)
+			for (umint iWait = 0; iWait < 10000 && !g_bLateThreadAllocated.f_Load(); ++iWait)
 				usleep(1000);
 		}
 	};
@@ -151,7 +151,7 @@ namespace
 					[[maybe_unused]] auto &WaitForLateThread = *g_SubSystem_WaitForLateThread;
 
 					// The threads are still allocating when the process exits, which destroys the memory manager
-					for (umint i = 0; i < 4; ++i)
+					for (umint iThread = 0; iThread < 4; ++iThread)
 					{
 #	ifdef DPlatformFamily_macOS
 						dispatch_async_f(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), nullptr, &fg_AllocateUntilProcessExits);
@@ -170,10 +170,10 @@ namespace
 					constexpr umint c_DelayStep = 50;
 
 					umint nLateThreads = 0;
-					for (umint i = 0; i < c_nLateThreads; ++i)
+					for (umint iThread = 0; iThread < c_nLateThreads; ++iThread)
 					{
 						pthread_t Thread;
-						if (pthread_create(&Thread, nullptr, &fg_AllocateLate, (void *)(i * c_DelayStep)) == 0)
+						if (pthread_create(&Thread, nullptr, &fg_AllocateLate, (void *)(iThread * c_DelayStep)) == 0)
 						{
 							pthread_detach(Thread);
 							++nLateThreads;
@@ -205,7 +205,7 @@ namespace
 				umint nLateThreadsNotCreated = 0;
 				CStr FirstOutput;
 
-				for (umint i = 0; i < c_nChildren; ++i)
+				for (umint iChild = 0; iChild < c_nChildren; ++iChild)
 				{
 					NStorage::TCSharedPointer<CChild> pChild = fg_Construct();
 
@@ -324,7 +324,7 @@ namespace
 
 						TCVector<malloc_zone_t *> Zones;
 
-						for (umint i = 0; i < _nZones; ++i)
+						for (umint iZone = 0; iZone < _nZones; ++iZone)
 							Zones.f_Insert(malloc_create_zone(0, 0));
 
 						void *pMemory;
@@ -347,10 +347,10 @@ namespace
 							constexpr umint c_nSizeTests = 10000;
 
 							CTestPerformanceMeasure MallocSizeTime("malloc_size");
-							for (umint i = 0; i < c_nTests; ++i)
+							for (umint iTest = 0; iTest < c_nTests; ++iTest)
 							{
 								DMibTestScopeMeasure(MallocSizeTime, c_nSizeTests);
-								for (umint i = 0; i < c_nSizeTests; ++i)
+								for (umint iSizeTest = 0; iSizeTest < c_nSizeTests; ++iSizeTest)
 								{
 									auto *pInvalidMemory = (void **)(umint)4096;
 									[[maybe_unused]] auto SizeInvalidMemory = malloc_size(pInvalidMemory);
@@ -368,10 +368,10 @@ namespace
 
 							CTestPerformanceMeasure MallocSizeTime("malloc_size");
 
-							for (umint i = 0; i < c_nTests; ++i)
+							for (umint iTest = 0; iTest < c_nTests; ++iTest)
 							{
 								DMibTestScopeMeasure(MallocSizeTime, c_nSizeTests);
-								for (umint i = 0; i < c_nSizeTests; ++i)
+								for (umint iSizeTest = 0; iSizeTest < c_nSizeTests; ++iSizeTest)
 									[[maybe_unused]] auto SizeInvalidMemory = malloc_size(pMemory);
 							}
 

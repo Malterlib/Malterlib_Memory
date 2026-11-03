@@ -477,12 +477,12 @@ namespace NMib::NMemory
 
 		constexpr bool operator == (TCAllocator_Placement const &_Right) const noexcept
 		{
-			return m_pPointer == _Right.m_pPointer;
+			return mp_pPointer == _Right.mp_pPointer;
 		}
 
 		constexpr auto operator <=> (TCAllocator_Placement const &_Right) const noexcept
 		{
-			return m_pPointer <=> _Right.m_pPointer;
+			return mp_pPointer <=> _Right.mp_pPointer;
 		}
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<TCAllocator_Placement>;
@@ -611,9 +611,9 @@ namespace NMib::NMemory
 		// NOLINTEND(malterlib-function-naming)
 
 	private:
-		void *m_pPointer;
+		void *mp_pPointer;
 #ifdef DMibDebug
-		bool m_bPointerTaken;
+		bool mp_bPointerTaken;
 #endif
 
 		void fp_DoCheck(umint _Size);
@@ -784,11 +784,11 @@ namespace NMib::NMemory
 		CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
 
 	private:
-		static umint const mcp_StorageSize = (t_StaticStorage + t_Alignment - 1) & ~umint(t_Alignment - 1);
+		static constexpr umint mcp_StorageSize = (t_StaticStorage + t_Alignment - 1) & ~umint(t_Alignment - 1);
 
-		alignas(t_Alignment) uint8 m_Storage[mcp_StorageSize];
+		alignas(t_Alignment) uint8 mp_Storage[mcp_StorageSize];
 #if DMibEnableSafeCheck > 0
-		bool m_bAllocated = false;
+		bool mp_bAllocated = false;
 #endif
 
 		bool fp_IsStatic(void const *_pBlock) const;
@@ -809,7 +809,7 @@ namespace NMib::NMemory
 		t_CDeleterType const &f_GetDeleter() const;
 
 	private:
-		t_CDeleterType m_Deleter;
+		t_CDeleterType mp_Deleter;
 	};
 }
 

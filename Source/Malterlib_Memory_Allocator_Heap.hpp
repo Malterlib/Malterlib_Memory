@@ -403,28 +403,28 @@ namespace NMib::NMemory
 	template <umint t_AllocSize>
 	inline_small void TCAllocator_Placement<t_AllocSize>::fp_DoCheck(umint _Size)
 	{
-		DMibFastCheck(m_pPointer);
+		DMibFastCheck(mp_pPointer);
 #ifdef DMibDebug
-		DMibFastCheck(!m_bPointerTaken);
-		m_bPointerTaken = true;
+		DMibFastCheck(!mp_bPointerTaken);
+		mp_bPointerTaken = true;
 #endif
 		DMibFastCheck(_Size == t_AllocSize);
 	}
 
 	template <umint t_AllocSize>
 	TCAllocator_Placement<t_AllocSize>::TCAllocator_Placement(void *_pPointer)
-		: m_pPointer(_pPointer)
+		: mp_pPointer(_pPointer)
 #ifdef DMibDebug
-		, m_bPointerTaken(false)
+		, mp_bPointerTaken(false)
 #endif
 	{
 	}
 
 	template <umint t_AllocSize>
 	TCAllocator_Placement<t_AllocSize>::TCAllocator_Placement(TCAllocator_Placement &&_Other) noexcept
-		: m_pPointer(fg_Exchange(_Other.m_pPointer, nullptr))
+		: mp_pPointer(fg_Exchange(_Other.mp_pPointer, nullptr))
 #ifdef DMibDebug
-		, m_bPointerTaken(fg_Exchange(_Other.m_bPointerTaken, true))
+		, mp_bPointerTaken(fg_Exchange(_Other.mp_bPointerTaken, true))
 #endif
 	{
 	}
@@ -435,9 +435,9 @@ namespace NMib::NMemory
 		if (this == &_Other)
 			return *this;
 
-		m_pPointer = fg_Exchange(_Other.m_pPointer, nullptr);
+		mp_pPointer = fg_Exchange(_Other.mp_pPointer, nullptr);
 #ifdef DMibDebug
-		m_bPointerTaken = fg_Exchange(_Other.m_bPointerTaken, true);
+		mp_bPointerTaken = fg_Exchange(_Other.mp_bPointerTaken, true);
 #endif
 		return *this;
 	}
@@ -539,7 +539,7 @@ namespace NMib::NMemory
 		-> void *
 	{
 		fp_DoCheck(_Size);
-		return m_pPointer;
+		return mp_pPointer;
 	}
 
 	template <umint t_AllocSize>
@@ -555,21 +555,21 @@ namespace NMib::NMemory
 		-> void *
 	{
 		fp_DoCheck(_Size);
-		return m_pPointer;
+		return mp_pPointer;
 	}
 
 	template <umint t_AllocSize>
 	only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		fp_DoCheck(_Size);
-		return m_pPointer;
+		return mp_pPointer;
 	}
 
 	template <umint t_AllocSize>
 	only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_Alloc(umint _Size, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		fp_DoCheck(_Size);
-		return m_pPointer;
+		return mp_pPointer;
 	}
 
 	template <umint t_AllocSize>
@@ -583,16 +583,16 @@ namespace NMib::NMemory
 		-> void *
 	{
 		fp_DoCheck(_Size);
-		DMibFastCheck(((umint)m_pPointer & (_Alignment - 1)) == 0);
-		return m_pPointer;
+		DMibFastCheck(((umint)mp_pPointer & (_Alignment - 1)) == 0);
+		return mp_pPointer;
 	}
 
 	template <umint t_AllocSize>
 	only_parameters_aliased malloc_like inline_small void *TCAllocator_Placement<t_AllocSize>::f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode)
 	{
 		fp_DoCheck(_Size);
-		DMibFastCheck(((umint)m_pPointer & (_Alignment - 1)) == 0);
-		return m_pPointer;
+		DMibFastCheck(((umint)mp_pPointer & (_Alignment - 1)) == 0);
+		return mp_pPointer;
 	}
 
 	template <umint t_AllocSize>
@@ -600,10 +600,10 @@ namespace NMib::NMemory
 		-> CAutoDestroy
 	{
 		fp_DoCheck(_Size);
-		DMibFastCheck(((umint)m_pPointer & (_Alignment - 1)) == 0);
+		DMibFastCheck(((umint)mp_pPointer & (_Alignment - 1)) == 0);
 
 		CAutoDestroy AutoDestroy;
-		AutoDestroy.m_pMemory = m_pPointer;
+		AutoDestroy.m_pMemory = mp_pPointer;
 		AutoDestroy.m_Size = t_AllocSize;
 
 		return fg_Move(AutoDestroy);
@@ -613,10 +613,10 @@ namespace NMib::NMemory
 	only_parameters_aliased inline_small auto TCAllocator_Placement<t_AllocSize>::f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags, ENumaNode _NumaNode) -> CAutoDestroy
 	{
 		fp_DoCheck(_Size);
-		DMibFastCheck(((umint)m_pPointer & (_Alignment - 1)) == 0);
+		DMibFastCheck(((umint)mp_pPointer & (_Alignment - 1)) == 0);
 
 		CAutoDestroy AutoDestroy;
-		AutoDestroy.m_pMemory = m_pPointer;
+		AutoDestroy.m_pMemory = mp_pPointer;
 		AutoDestroy.m_Size = t_AllocSize;
 
 		return fg_Move(AutoDestroy);
@@ -639,9 +639,9 @@ namespace NMib::NMemory
 		)
 	{
 		fp_DoCheck(_Size);
-		DMibFastCheck(((umint)m_pPointer & (_Alignment - 1)) == 0);
+		DMibFastCheck(((umint)mp_pPointer & (_Alignment - 1)) == 0);
 
-		bool bRet = _Functor(m_pPointer, t_AllocSize);
+		bool bRet = _Functor(mp_pPointer, t_AllocSize);
 		(void)bRet;
 		DMibFastCheck(!bRet); // Has to abort after first alloc
 	}
@@ -735,13 +735,13 @@ namespace NMib::NMemory
 	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>
 	bool TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::fp_IsStatic(void const *_pBlock) const
 	{
-		return &m_Storage == _pBlock;
+		return &mp_Storage == _pBlock;
 	}
 
 	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>
 	malloc_like void *TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::fp_GetStatic()
 	{
-		return &m_Storage;
+		return &mp_Storage;
 	}
 
 	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>
@@ -765,7 +765,7 @@ namespace NMib::NMemory
 	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>
 	TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator> &TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::operator = (TCAllocator_Static &&_Other)
 	{
-		DMibFastCheck(!m_bAllocated && !_Other.m_bAllocated);
+		DMibFastCheck(!mp_bAllocated && !_Other.mp_bAllocated);
 		static_cast<t_CFallbackAllocator &>(*this) = fg_Move(static_cast<t_CFallbackAllocator &>(_Other));
 		return *this;
 	}
@@ -774,7 +774,7 @@ namespace NMib::NMemory
 	auto TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::operator = (TCAllocator_Static const &_Other)
 		-> TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator> &
 	{
-		DMibFastCheck(!m_bAllocated && !_Other.m_bAllocated);
+		DMibFastCheck(!mp_bAllocated && !_Other.mp_bAllocated);
 		static_cast<t_CFallbackAllocator &>(*this) = static_cast<t_CFallbackAllocator const &>(_Other);
 		return *this;
 	}
@@ -818,7 +818,7 @@ namespace NMib::NMemory
 	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>
 	only_parameters_aliased inline_small umint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_Size(void *_pBlock)
 	{
-		DMibFastCheck(m_bAllocated);
+		DMibFastCheck(mp_bAllocated);
 		if (fp_IsStatic(_pBlock))
 			return mcp_StorageSize;
 		return t_CFallbackAllocator::f_Size(_pBlock);
@@ -827,7 +827,7 @@ namespace NMib::NMemory
 	template <umint t_StaticStorage, umint t_Alignment, typename t_CFallbackAllocator>
 	only_parameters_aliased inline_small umint TCAllocator_Static<t_StaticStorage, t_Alignment, t_CFallbackAllocator>::f_TrySize(void *_pBlock)
 	{
-		DMibFastCheck(m_bAllocated);
+		DMibFastCheck(mp_bAllocated);
 		if (fp_IsStatic(_pBlock))
 			return mcp_StorageSize;
 		return t_CFallbackAllocator::f_TrySize(_pBlock);
@@ -887,8 +887,8 @@ namespace NMib::NMemory
 		if (_Size <= mcp_StorageSize)
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(!m_bAllocated);
-			m_bAllocated = true;
+			DMibFastCheck(!mp_bAllocated);
+			mp_bAllocated = true;
 #endif
 			_Size = mcp_StorageSize;
 			return fp_GetStatic();
@@ -924,8 +924,8 @@ namespace NMib::NMemory
 		if (_Size <= mcp_StorageSize)
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(!m_bAllocated);
-			m_bAllocated = true;
+			DMibFastCheck(!mp_bAllocated);
+			mp_bAllocated = true;
 #endif
 			_Size = mcp_StorageSize;
 			return fp_GetStatic();
@@ -945,8 +945,8 @@ namespace NMib::NMemory
 		if (_Size <= mcp_StorageSize)
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(!m_bAllocated);
-			m_bAllocated = true;
+			DMibFastCheck(!mp_bAllocated);
+			mp_bAllocated = true;
 #endif
 			_Size = mcp_StorageSize;
 			return fp_GetStatic();
@@ -968,8 +968,8 @@ namespace NMib::NMemory
 		if (_Size <= mcp_StorageSize)
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(!m_bAllocated);
-			m_bAllocated = true;
+			DMibFastCheck(!mp_bAllocated);
+			mp_bAllocated = true;
 #endif
 			_Size = mcp_StorageSize;
 			return fp_GetStatic();
@@ -991,8 +991,8 @@ namespace NMib::NMemory
 		if (_Size <= mcp_StorageSize)
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(!m_bAllocated);
-			m_bAllocated = true;
+			DMibFastCheck(!mp_bAllocated);
+			mp_bAllocated = true;
 #endif
 			_Size = mcp_StorageSize;
 			return fp_GetStatic();
@@ -1014,8 +1014,8 @@ namespace NMib::NMemory
 		if (_Size <= mcp_StorageSize)
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(!m_bAllocated);
-			m_bAllocated = true;
+			DMibFastCheck(!mp_bAllocated);
+			mp_bAllocated = true;
 #endif
 			bool bRet = _Functor(fp_GetStatic(), mcp_StorageSize);
 			(void)bRet;
@@ -1055,7 +1055,7 @@ namespace NMib::NMemory
 		if (fp_IsStatic(_pMem))
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(m_bAllocated);
+			DMibFastCheck(mp_bAllocated);
 #endif
 			if (_Size <= mcp_StorageSize)
 			{
@@ -1063,7 +1063,7 @@ namespace NMib::NMemory
 				return fp_GetStatic();
 			}
 #if DMibEnableSafeCheck > 0
-			m_bAllocated = false;
+			mp_bAllocated = false;
 #endif
 			return t_CFallbackAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
 		}
@@ -1099,7 +1099,7 @@ namespace NMib::NMemory
 		if (fp_IsStatic(_pMem))
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(m_bAllocated);
+			DMibFastCheck(mp_bAllocated);
 #endif
 			if (_Size <= mcp_StorageSize)
 			{
@@ -1107,7 +1107,7 @@ namespace NMib::NMemory
 				return fp_GetStatic();
 			}
 #if DMibEnableSafeCheck > 0
-			m_bAllocated = false;
+			mp_bAllocated = false;
 #endif
 			return t_CFallbackAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 		}
@@ -1140,7 +1140,7 @@ namespace NMib::NMemory
 		if (fp_IsStatic(_pMem))
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(m_bAllocated);
+			DMibFastCheck(mp_bAllocated);
 #endif
 			if (_Size <= mcp_StorageSize)
 			{
@@ -1148,7 +1148,7 @@ namespace NMib::NMemory
 				return fp_GetStatic();
 			}
 #if DMibEnableSafeCheck > 0
-			m_bAllocated = false;
+			mp_bAllocated = false;
 #endif
 			void *pMem = t_CFallbackAllocator::f_AllocWithSize(_Size, _AllocFlags, _NumaNode);
 			fg_MemCopy(pMem, fp_GetStatic(), fg_Min(_Size, mcp_StorageSize));
@@ -1185,7 +1185,7 @@ namespace NMib::NMemory
 		if (fp_IsStatic(_pMem))
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(m_bAllocated);
+			DMibFastCheck(mp_bAllocated);
 #endif
 			if (_Size <= mcp_StorageSize)
 			{
@@ -1193,7 +1193,7 @@ namespace NMib::NMemory
 				return fp_GetStatic();
 			}
 #if DMibEnableSafeCheck > 0
-			m_bAllocated = false;
+			mp_bAllocated = false;
 #endif
 			void *pMem = t_CFallbackAllocator::f_AllocWithSizeDebug(_Size, _pFile, _Line, _Flags, _AllocFlags, _NumaNode);
 			fg_MemCopy(pMem, fp_GetStatic(), fg_Min(_Size, mcp_StorageSize));
@@ -1229,8 +1229,8 @@ namespace NMib::NMemory
 		if (fp_IsStatic(_pBlock))
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(m_bAllocated);
-			m_bAllocated = false;
+			DMibFastCheck(mp_bAllocated);
+			mp_bAllocated = false;
 #endif
 
 			return;
@@ -1244,8 +1244,8 @@ namespace NMib::NMemory
 		if (fp_IsStatic(_pBlock))
 		{
 #if DMibEnableSafeCheck > 0
-			DMibFastCheck(m_bAllocated);
-			m_bAllocated = false;
+			DMibFastCheck(mp_bAllocated);
+			mp_bAllocated = false;
 #endif
 
 			return;
@@ -1305,14 +1305,14 @@ namespace NMib::NMemory
 	template <typename t_CDeleterType, typename t_CFallbackAllocator>
 	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::TCAllocator_FunctorDeleter(TCAllocator_FunctorDeleter const &_Other)
 		: t_CFallbackAllocator(static_cast<t_CFallbackAllocator const &>(_Other))
-		, m_Deleter(_Other.m_Deleter)
+		, mp_Deleter(_Other.mp_Deleter)
 	{
 	}
 
 	template <typename t_CDeleterType, typename t_CFallbackAllocator>
 	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::TCAllocator_FunctorDeleter(TCAllocator_FunctorDeleter &&_Other)
 		: t_CFallbackAllocator(fg_Move(static_cast<t_CFallbackAllocator &>(_Other)))
-		, m_Deleter(fg_Move(_Other.m_Deleter))
+		, mp_Deleter(fg_Move(_Other.mp_Deleter))
 	{
 	}
 
@@ -1320,7 +1320,7 @@ namespace NMib::NMemory
 	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator> &TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::operator = (TCAllocator_FunctorDeleter const &_Other)
 	{
 		static_cast<t_CFallbackAllocator &>(*this) = static_cast<t_CFallbackAllocator const &>(_Other);
-		m_Deleter = _Other.m_Deleter;
+		mp_Deleter = _Other.mp_Deleter;
 		return *this;
 	}
 
@@ -1328,27 +1328,27 @@ namespace NMib::NMemory
 	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator> &TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::operator = (TCAllocator_FunctorDeleter &&_Other)
 	{
 		static_cast<t_CFallbackAllocator &>(*this) = fg_Move(static_cast<t_CFallbackAllocator &>(_Other));
-		m_Deleter = fg_Move(_Other.m_Deleter);
+		mp_Deleter = fg_Move(_Other.mp_Deleter);
 		return *this;
 	}
 
 	template <typename t_CDeleterType, typename t_CFallbackAllocator>
 	template <typename tf_CParam0>
 	TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::TCAllocator_FunctorDeleter(tf_CParam0 &&_Param0)
-		: m_Deleter(fg_Forward<tf_CParam0>(_Param0))
+		: mp_Deleter(fg_Forward<tf_CParam0>(_Param0))
 	{
 	}
 
 	template <typename t_CDeleterType, typename t_CFallbackAllocator>
 	t_CDeleterType &TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::f_GetDeleter()
 	{
-		return m_Deleter;
+		return mp_Deleter;
 	}
 
 	template <typename t_CDeleterType, typename t_CFallbackAllocator>
 	t_CDeleterType const &TCAllocator_FunctorDeleter<t_CDeleterType, t_CFallbackAllocator>::f_GetDeleter() const
 	{
-		return m_Deleter;
+		return mp_Deleter;
 	}
 }
 

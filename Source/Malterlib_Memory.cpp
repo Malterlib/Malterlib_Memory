@@ -7,7 +7,7 @@ namespace NMib::NMemory
 {
 	// Qt does not free some global pools, so we tell the debug mem manager to ignore them here.
 	// Nobody should add to this list other than Mike & Erik!
-	ch8 const *gc_IgnoreFunctions[] =
+	ch8 const *g_IgnoreFunctions[] =
 		{
 			"QMutex::QMutex"
 #ifdef DPlatformFamily_macOS

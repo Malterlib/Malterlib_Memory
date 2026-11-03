@@ -85,15 +85,15 @@ namespace NMib::NMemory
 	template <typename ...tfp_CAllocator>
 	TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::TCMemoryManagerDebug(tfp_CAllocator && ...p_Params)
 		: CSuper(fg_Forward<tfp_CAllocator>(p_Params)...)
-		, m_bReportingLeaks
+		, mp_bReportingLeaks
 		(
 			[this]() -> NThread::CThreadLocalInterface::CSafeAllocMemory
 			{
-				return {m_ReportingLeaksPool.f_GetBlock(), sizeof(zbool)};
+				return {mp_ReportingLeaksPool.f_GetBlock(), sizeof(zbool)};
 			}
 			, [this](NThread::CThreadLocalInterface::CSafeAllocMemory const &_Memory) -> void
 			{
-				return m_ReportingLeaksPool.f_ReturnBlock(_Memory.m_pMemory);
+				return mp_ReportingLeaksPool.f_ReturnBlock(_Memory.m_pMemory);
 			}
 			, [](zbool *_pParent, void *_pMemory, bool _bMove) -> zbool *
 			{
@@ -104,7 +104,7 @@ namespace NMib::NMemory
 			}
 			, [this](zbool *_pParent)
 			{
-				m_ReportingLeaksPool.f_Delete(_pParent);
+				mp_ReportingLeaksPool.f_Delete(_pParent);
 			}
 		)
 	{
@@ -119,30 +119,30 @@ namespace NMib::NMemory
 	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_PrepareFork()
 	{
 		CSuper::f_PrepareFork();
-		m_ReportingLeaksPool.f_Lock();
-		m_ReportingLeaksPool.f_PrepareFork();
+		mp_ReportingLeaksPool.f_Lock();
+		mp_ReportingLeaksPool.f_PrepareFork();
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ForkedChild()
 	{
-		m_ReportingLeaksPool.f_ForkedChild();
-		m_ReportingLeaksPool.f_Unlock();
+		mp_ReportingLeaksPool.f_ForkedChild();
+		mp_ReportingLeaksPool.f_Unlock();
 		CSuper::f_ForkedChild();
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ForkedParent()
 	{
-		m_ReportingLeaksPool.f_ForkedParent();
-		m_ReportingLeaksPool.f_Unlock();
+		mp_ReportingLeaksPool.f_ForkedParent();
+		mp_ReportingLeaksPool.f_Unlock();
 		CSuper::f_ForkedParent();
 	}
 
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	void TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_DestroyThreadLocals()
 	{
-		m_bReportingLeaks.f_Destroy();
+		mp_bReportingLeaks.f_Destroy();
 		CSuper::f_DestroyThreadLocals();
 	}
 
@@ -155,7 +155,7 @@ namespace NMib::NMemory
 		if constexpr (!t_COptions::mc_bEnumeration)
 			return;
 
-		auto fl_ReportAlloc = [&](typename CParams::CNotifier::CAllocInfo &_AllocInfo)
+		auto fReportAlloc = [&](typename CParams::CNotifier::CAllocInfo &_AllocInfo)
 			{
 				uint8 *pAddress = _AllocInfo.f_GetAddress();
 				if
@@ -175,7 +175,7 @@ namespace NMib::NMemory
 				[&](typename CParams::CNotifier::CArena *_pArena)
 				{
 					for (auto iAlloc = _pArena->m_Allocations.f_GetIterator(); iAlloc; ++iAlloc)
-						fl_ReportAlloc(*iAlloc);
+						fReportAlloc(*iAlloc);
 				}
 			)
 		;
@@ -184,7 +184,7 @@ namespace NMib::NMemory
 				[&](typename CParams::CNotifier::CHeap *_pHeap)
 				{
 					for (auto iAlloc = _pHeap->m_Allocations.f_GetIterator(); iAlloc; ++iAlloc)
-						fl_ReportAlloc(*iAlloc);
+						fReportAlloc(*iAlloc);
 				}
 			)
 		;
@@ -193,7 +193,7 @@ namespace NMib::NMemory
 				[&](typename CParams::CNotifier::CGlobal *_pGlobal)
 				{
 					for (auto iAlloc = _pGlobal->m_Allocations.f_GetIterator(); iAlloc; ++iAlloc)
-						fl_ReportAlloc(*iAlloc);
+						fReportAlloc(*iAlloc);
 				}
 			)
 		;
@@ -303,12 +303,12 @@ namespace NMib::NMemory
 	template <typename t_CParams, bool t_bException, typename t_COptions>
 	bool TCMemoryManagerDebug<t_CParams, t_bException, t_COptions>::f_ReportingLeaks()
 	{
-		auto *pReportingLeaks = m_bReportingLeaks.f_TryGet();
+		auto *pReportingLeaks = mp_bReportingLeaks.f_TryGet();
 		if (!pReportingLeaks)
 		{
 			if (!fg_GetSys()->f_InitDone() || fg_GetSys()->f_ThreadDestroyed())
 				return false;
-			return *m_bReportingLeaks;
+			return *mp_bReportingLeaks;
 		}
 		return *pReportingLeaks;
 	};
@@ -336,12 +336,12 @@ namespace NMib::NMemory
 		NContainer::TCMapWithPool<umint, CLocalAllocInfo, NMib::CSort_Default, NMib::NMemory::CAllocator_VirtualNoTracking> Allocations;
 
 		{
-			*m_bReportingLeaks = true;
+			*mp_bReportingLeaks = true;
 			auto Cleanup = fg_OnScopeExit
 				(
 					[&]()
 					{
-						*m_bReportingLeaks = false;
+						*mp_bReportingLeaks = false;
 					}
 				)
 			;
@@ -457,8 +457,8 @@ namespace NMib::NMemory
 			umint PreBytes = sizeof(CPreBlock);
 			umint PostBytes = t_COptions::mc_nPostGuardBytes;
 			umint GuardBytes = NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes);
-			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, GuardBytes, mc_PreBlockAlignment);
-			uint8 *pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, mc_PreBlockAlignment);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, GuardBytes, mcp_PreBlockAlignment);
+			uint8 *pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, mcp_PreBlockAlignment);
 
 			umint RequestedSize = _Size;
 
@@ -547,7 +547,7 @@ namespace NMib::NMemory
 			};
 
 			CFunctorOptions Options;
-			_Alignment = fg_Max(_Alignment, mc_PreBlockAlignment);
+			_Alignment = fg_Max(_Alignment, mcp_PreBlockAlignment);
 
 			Options.m_pFile = _pFile;
 			Options.m_Line = _Line;
@@ -651,10 +651,10 @@ namespace NMib::NMemory
 		DMibFastCheck(!f_ReportingLeaks());
 		if constexpr ((t_COptions::mc_nPreGuardBytes + t_COptions::mc_nPostGuardBytes) != 0)
 		{
-			umint Alignment = fg_Max(_Alignment, mc_PreBlockAlignment);
+			umint Alignment = fg_Max(_Alignment, mcp_PreBlockAlignment);
 			umint PreBytes = NPrivate::fg_AlignAllocationSizeOrThrow(sizeof(CPreBlock) + (sizeof(((CPreBlock *)nullptr)->m_Magic) + sizeof(((CPreBlock *)nullptr)->m_Offset)), Alignment);
 			umint PostBytes = NPrivate::fg_AlignAllocationSizeOrThrow(t_COptions::mc_nPostGuardBytes, Alignment);
-			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes), mc_PreBlockAlignment);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes), mcp_PreBlockAlignment);
 			uint8 *pMemory = (uint8 *)CSuper::f_AllocAlignedWithSize(Size, Alignment);
 
 			umint RequestedSize = NPrivate::fg_AlignAllocationSizeOrThrow(_Size, _Alignment);
@@ -768,13 +768,13 @@ namespace NMib::NMemory
 			umint PreBytes = pOldPreBlock->m_PreCheck;
 			umint PostBytes = t_COptions::mc_nPostGuardBytes;
 			umint GuardBytes = NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes);
-			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, GuardBytes, mc_PreBlockAlignment);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, GuardBytes, mcp_PreBlockAlignment);
 
 			umint OldPaddedSize = 0;
 			if (_OldSize)
 			{
 				DMibFastCheck(_OldSize == pOldPreBlock->m_Size || _OldSize == pOldPreBlock->m_RequestedSize);
-				OldPaddedSize = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_OldSize, GuardBytes, mc_PreBlockAlignment);
+				OldPaddedSize = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_OldSize, GuardBytes, mcp_PreBlockAlignment);
 			}
 
 			uint8 *pMemory = (uint8 *)CSuper::f_Realloc(pOldMemory, Size, OldPaddedSize);
@@ -851,13 +851,13 @@ namespace NMib::NMemory
 			umint PreBytes = pOldPreBlock->m_PreCheck;
 			umint PostBytes = t_COptions::mc_nPostGuardBytes;
 			umint GuardBytes = NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes);
-			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, GuardBytes, mc_PreBlockAlignment);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, GuardBytes, mcp_PreBlockAlignment);
 
 			umint OldPaddedSize = 0;
 			if (_OldSize)
 			{
 				DMibFastCheck(_OldSize == pOldPreBlock->m_Size || _OldSize == pOldPreBlock->m_RequestedSize);
-				OldPaddedSize = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_OldSize, GuardBytes, mc_PreBlockAlignment);
+				OldPaddedSize = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_OldSize, GuardBytes, mcp_PreBlockAlignment);
 			}
 
 			uint8 *pMemory = (uint8 *)CSuper::f_Resize(pOldMemory, Size, OldPaddedSize);
@@ -1010,7 +1010,7 @@ namespace NMib::NMemory
 
 			umint PreBytes = pPreBlock->m_PreCheck;
 			umint PostBytes = t_COptions::mc_nPostGuardBytes;
-			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes), mc_PreBlockAlignment);
+			umint Size = NPrivate::fg_AlignAllocationSizeWithExtraOrThrow(_Size, NPrivate::fg_AddAllocationSizeOrThrow(PreBytes, PostBytes), mcp_PreBlockAlignment);
 
 			DMibFastCheck(_Size == pPreBlock->m_Size || _Size == pPreBlock->m_RequestedSize);
 			CSuper::f_Free(pOldMemory, Size);
@@ -1167,8 +1167,8 @@ namespace NMib::NMemory
 			else
 #endif
 			{
-				static bool bBreak = true;
-				if (bBreak)
+				static bool s_bBreak = true;
+				if (s_bBreak)
 					DMibPDebugBreak; // Memory damaged
 			}
 		}
