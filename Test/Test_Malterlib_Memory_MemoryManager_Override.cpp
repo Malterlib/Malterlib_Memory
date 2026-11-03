@@ -316,6 +316,55 @@ namespace
 				auto SizeInvalidMemory = malloc_size(pInvalidMemory);
 				DMibExpect(SizeInvalidMemory, ==, 0);
 			};
+			DMibTestSuite("BatchMalloc")
+			{
+				auto fTestZone = [](malloc_zone_t *_pZone)
+					{
+						constexpr unsigned c_nRequested = 64;
+						constexpr size_t c_Size = 48;
+
+						void *Allocations[c_nRequested] = {};
+						unsigned nAllocated = malloc_zone_batch_malloc(_pZone, c_Size, Allocations, c_nRequested);
+#	ifdef DMibConfig_OverrideSystemMalloc
+						DMibExpect(nAllocated, ==, c_nRequested);
+#	else
+						// Without the override the zone is the system's or a sanitizer's, which may allocate fewer than requested.
+						DMibExpect(nAllocated, <=, c_nRequested);
+#	endif
+
+						umint nValid = 0;
+						for (unsigned iAllocation = 0; iAllocation < nAllocated; ++iAllocation)
+						{
+							if (!Allocations[iAllocation] || malloc_size(Allocations[iAllocation]) < c_Size)
+								continue;
+							memset(Allocations[iAllocation], int(iAllocation), c_Size);
+							++nValid;
+						}
+						DMibExpect(nValid, ==, nAllocated);
+
+						malloc_zone_batch_free(_pZone, Allocations, nAllocated);
+
+						// Memory from the ordinary malloc functions can also be freed in a batch.
+						void *Single[2] = {malloc_zone_malloc(_pZone, c_Size), malloc_zone_malloc(_pZone, c_Size)};
+						malloc_zone_batch_free(_pZone, Single, 2);
+					}
+				;
+
+				{
+					DMibTestPath("Default zone");
+					fTestZone(malloc_default_zone());
+				}
+				{
+					DMibTestPath("Created zone");
+					malloc_zone_t *pZone = malloc_create_zone(0, 0);
+					auto Cleanup = g_OnScopeExit / [&]
+						{
+							malloc_destroy_zone(pZone);
+						}
+					;
+					fTestZone(pZone);
+				}
+			};
 			DMibTestSuite(CTestCategory("TrySizePerf") << CTestGroup("Performance"))
 			{
 				auto fDoTest = [](umint _nZones)

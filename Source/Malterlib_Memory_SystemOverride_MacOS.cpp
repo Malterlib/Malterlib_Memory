@@ -852,7 +852,7 @@ void *fg_MalterlibZoneMalloc(malloc_zone_t_known_version *_pZone, size_t _Size)
 unsigned fg_MalterlibZoneBatchMalloc(malloc_zone_t_known_version *_pZone, size_t _Size, void **_pResults, unsigned _nRequested)
 {
 	DMibMacOSOverrideZoneCheck(_pZone);
-	if (_nRequested)
+	if (!_nRequested)
 		return 0;
 	DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 	umint Size;
@@ -967,7 +967,7 @@ unsigned fg_MalterlibZoneBatchMalloc(malloc_zone_t_known_version *_pZone, size_t
 #	endif
 #endif
 
-	return _nRequested;
+	return nAllocated;
 }
 
 void fg_MalterlibZoneBatchFree(malloc_zone_t_known_version *_pZone, void **_pToBeFreed, unsigned _nToBeFreed)
@@ -983,7 +983,7 @@ void fg_MalterlibZoneBatchFree(malloc_zone_t_known_version *_pZone, void **_pToB
 		auto &MainHeap = *DMainHeapSmall;
 		auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
 		for (umint iToFree = 0; iToFree < _nToBeFreed; ++iToFree)
-			return MainHeap.f_FreeNoSize(_pToBeFreed[iToFree]);
+			MainHeap.f_FreeNoSize(_pToBeFreed[iToFree]);
 	}
 	else
 #	endif
@@ -991,7 +991,7 @@ void fg_MalterlibZoneBatchFree(malloc_zone_t_known_version *_pZone, void **_pToB
 		auto &MainHeap = *DMainHeapMax;
 		auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
 		for (umint iToFree = 0; iToFree < _nToBeFreed; ++iToFree)
-			return MainHeap.f_FreeNoSize(_pToBeFreed[iToFree]);
+			MainHeap.f_FreeNoSize(_pToBeFreed[iToFree]);
 	}
 #else
 	auto Checkout = fg_GetSys()->f_MemoryManager_Checkout();
@@ -3847,7 +3847,7 @@ extern "C"
 						, .zone_name = nullptr // "DefaultMallocZone" // "Malterlib malloc zone"
 						, .batch_malloc = [](malloc_zone_t_known_version *_pZone, size_t _Size, void **_pResults, unsigned _nRequested) -> unsigned
 						{
-							if (_nRequested)
+							if (!_nRequested)
 								return 0;
 							umint Size;
 							if (!fg_TryAlignMacOSAllocationSize(_Size, Size))
@@ -3887,7 +3887,7 @@ extern "C"
 							;
 #	endif
 
-							return _nRequested;
+							return nAllocated;
 						}
 						, .batch_free = [](malloc_zone_t_known_version *_pZone, void **_pToBeFreed, unsigned _nToBeFreed)
 						{
@@ -4230,6 +4230,9 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_batch_malloc((malloc_zone_t *)_pZone, _Size, _pResults, _nRequested);
+		// The batch functions of a zone are optional; without one no block is allocated in a batch.
+		if (!_pZone->batch_malloc)
+			return 0;
 		return _pZone->batch_malloc(_pZone, _Size, _pResults, _nRequested);
 #else
 		return g_OriginalFunctions.malloc_zone_batch_malloc((malloc_zone_t *)_pZone, _Size, _pResults, _nRequested);
@@ -4241,6 +4244,14 @@ extern "C"
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
 			return g_OriginalFunctions.malloc_zone_batch_free((malloc_zone_t *)_pZone, to_be_freed, num);
+		// Without a batch free function the blocks are still freed, one at a time, as malloc_zone_batch_free documents.
+		if (!_pZone->batch_free)
+		{
+			for (unsigned iFree = 0; iFree < num; ++iFree)
+				_pZone->free(_pZone, to_be_freed[iFree]);
+			return;
+		}
+		return _pZone->batch_free(_pZone, to_be_freed, num);
 #else
 		return g_OriginalFunctions.malloc_zone_batch_free((malloc_zone_t *)_pZone, to_be_freed, num);
 #endif
