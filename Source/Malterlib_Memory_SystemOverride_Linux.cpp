@@ -42,6 +42,10 @@ namespace
 
 		return true;
 	}
+
+	// The alignment of the system's malloc, also on 32-bit platforms, where the heap gives less by default. Code built for the
+	// system's malloc uses aligned SSE loads on what it allocates.
+	constexpr umint gc_SystemAllocationAlignment = 16;
 }
 
 extern "C"
@@ -56,12 +60,12 @@ extern "C"
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		umint Size = umint(_Size);
-		if (!fg_TryAlignSystemAllocationSize(Size, 16))
+		if (!fg_TryAlignSystemAllocationSize(Size, gc_SystemAllocationAlignment))
 			return nullptr;
 #if DMibConfig_MalterlibMemoryManager_Debug
-		return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAlignedDebug(Size, gc_SystemAllocationAlignment, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
 #else
-		return NMib::NMemory::CAllocator_NonTrackedHeap::f_Alloc(Size);
+		return NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAligned(Size, gc_SystemAllocationAlignment);
 #endif
 	}
 
@@ -79,12 +83,12 @@ extern "C"
 			errno = ENOMEM;
 			return nullptr;
 		}
-		if (!fg_TryAlignSystemAllocationSize(Size, 16))
+		if (!fg_TryAlignSystemAllocationSize(Size, gc_SystemAllocationAlignment))
 			return nullptr;
 #if DMibConfig_MalterlibMemoryManager_Debug
-		auto pRet = NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocDebug(Size, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+		auto pRet = NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAlignedDebug(Size, gc_SystemAllocationAlignment, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
 #else
-		auto pRet = NMib::NMemory::CAllocator_NonTrackedHeap::f_Alloc(Size);
+		auto pRet = NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAligned(Size, gc_SystemAllocationAlignment);
 #endif
 		NMib::NMemory::fg_MemClear(pRet, Size);
 		return pRet;
@@ -99,13 +103,33 @@ extern "C"
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		DMibFastCheck(NMib::g_bCanUseSystemMalloc);
 		umint Size = umint(_Size);
-		if (!fg_TryAlignSystemAllocationSize(Size, 16))
+		if (!fg_TryAlignSystemAllocationSize(Size, gc_SystemAllocationAlignment))
 			return nullptr;
+
+		// The heap has no aligned resize, and its resize can move a block to less than the alignment of malloc after it freed the
+		// old one. So a block that holds the new size stays, and otherwise the data moves to a new aligned block, which leaves
+		// the old one to the caller when the allocation fails.
+		umint OldSize = _pMemory ? NMib::NMemory::CAllocator_NonTrackedHeap::f_Size(_pMemory) : 0;
+		if (_pMemory && Size <= OldSize && (umint(_pMemory) & (gc_SystemAllocationAlignment - 1)) == 0)
+			return _pMemory;
+
 #if DMibConfig_MalterlibMemoryManager_Debug
-		return NMib::NMemory::CAllocator_NonTrackedHeap::f_ResizeDebug(_pMemory, Size, 0, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
+		void *pAligned = NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAlignedDebug(Size, gc_SystemAllocationAlignment, DMibPFile, DMibPLine, NMib::EHeapDebugFlag_Ignore);
 #else
-		return NMib::NMemory::CAllocator_NonTrackedHeap::f_Resize(_pMemory, Size, 0);
+		void *pAligned = NMib::NMemory::CAllocator_NonTrackedHeap::f_AllocAligned(Size, gc_SystemAllocationAlignment);
 #endif
+		if (!pAligned)
+		{
+			errno = ENOMEM;
+			return nullptr;
+		}
+
+		if (_pMemory)
+		{
+			NMib::NMemory::fg_MemCopy(pAligned, _pMemory, NMib::fg_Min(OldSize, Size));
+			NMib::NMemory::CAllocator_NonTrackedHeap::f_FreeNoSize(_pMemory);
+		}
+		return pAligned;
 	}
 
 	module_export void free(void *_pMemory) __THROW
