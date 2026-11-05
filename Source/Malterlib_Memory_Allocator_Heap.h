@@ -129,23 +129,22 @@ namespace NMib::NMemory
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Heap>;
 
-		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
-		static bool f_IsStatic(void const *_pBlock);
-		static bool f_OnlyOneAlloc();
-		static umint f_StaticAddresses();
+		DMibNamedAsMemberFunction static bool f_IsStatic(void const *_pBlock);
+		DMibNamedAsMemberFunction static bool f_OnlyOneAlloc();
+		DMibNamedAsMemberFunction static umint f_StaticAddresses();
 
-		static umint f_GranularityAlloc(bool _bLargePages = false);
-		static umint f_GranularityCommit(bool _bLargePages = false);
-		static umint f_GranularityProtect(bool _bLargePages = false);
-		only_parameters_aliased static umint f_Size(void *_pBlock);
-		only_parameters_aliased static umint f_TrySize(void *_pBlock);
-		static umint f_SizePadded(umint _Size);
-		static fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
-		static constexpr bool f_CanCommit();
-		static bool f_CanProtect();
-		static bool f_DeterministicSize();
-		only_parameters_aliased static void f_Protect(void *_pMem, umint _Size, uaint _Protect);
-		only_parameters_aliased malloc_like static auto f_AllocWithSizeDebug
+		DMibNamedAsMemberFunction static umint f_GranularityAlloc(bool _bLargePages = false);
+		DMibNamedAsMemberFunction static umint f_GranularityCommit(bool _bLargePages = false);
+		DMibNamedAsMemberFunction static umint f_GranularityProtect(bool _bLargePages = false);
+		DMibNamedAsMemberFunction only_parameters_aliased static umint f_Size(void *_pBlock);
+		DMibNamedAsMemberFunction only_parameters_aliased static umint f_TrySize(void *_pBlock);
+		DMibNamedAsMemberFunction static umint f_SizePadded(umint _Size);
+		DMibNamedAsMemberFunction static fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
+		DMibNamedAsMemberFunction static constexpr bool f_CanCommit();
+		DMibNamedAsMemberFunction static bool f_CanProtect();
+		DMibNamedAsMemberFunction static bool f_DeterministicSize();
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Protect(void *_pMem, umint _Size, uaint _Protect);
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocWithSizeDebug
 			(
 				umint &_Size
 				, ch8 const *_pFile
@@ -156,7 +155,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_AllocDebug
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocDebug
 			(
 				umint _Size
 				, ch8 const *_pFile
@@ -167,7 +166,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_AllocAlignedWithSizeDebug
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocAlignedWithSizeDebug
 			(
 				umint &_Size
 				, umint _Alignment
@@ -179,7 +178,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_AllocAlignedDebug
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocAlignedDebug
 			(
 				umint _Size
 				, umint _Alignment
@@ -191,14 +190,39 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static void *f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		only_parameters_aliased malloc_like static void *f_Alloc(umint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		only_parameters_aliased static auto f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static void *f_AllocWithSize
+			(
+				umint &_Size
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static void *f_Alloc
+			(
+				umint _Size
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased static auto f_AllocSafeWithSize
+			(
+				umint &_Size
+				, umint _Alignment
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 			-> CAutoDestroy
 		;
-		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
-		only_parameters_aliased malloc_like static auto f_AllocAlignedWithSize
+		DMibNamedAsMemberFunction only_parameters_aliased static CAutoDestroy f_AllocSafe
+			(
+				umint _Size
+				, umint _Alignment
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocAlignedWithSize
 			(
 				umint &_Size
 				, umint _Alignment
@@ -207,7 +231,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_AllocAligned
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocAligned
 			(
 				umint _Size
 				, umint _Alignment
@@ -216,20 +240,20 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased static void f_AllocBatch
-			(
-				umint _Size
-				, umint _Alignment
-				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
-				, EAllocationFlag _AllocFlags = EAllocationFlag_None
-				, ENumaNode _NumaNode = ENumaNode_Default
-			)
-		;
-		only_parameters_aliased static void f_AllocBatchDebug
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_AllocBatch
 			(
 				umint _Size
 				, umint _Alignment
 				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_AllocBatchDebug
+			(
+				umint _Size
+				, umint _Alignment
+				, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor
 				, ch8 const *_pFile
 				, aint _Line
 				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
@@ -237,7 +261,7 @@ namespace NMib::NMemory
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
 		;
-		only_parameters_aliased malloc_like static auto f_Realloc
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_Realloc
 			(
 				void *_pMem
 				, umint &_Size
@@ -247,21 +271,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_ReallocDebug
-			(
-				void *_pMem
-				, umint &_Size
-				, umint _OldSize
-				, ch8 const *_pFile
-				, aint _Line
-				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
-				, EAllocationFlag _AllocFlags = EAllocationFlag_None
-				, ENumaNode _NumaNode = ENumaNode_Default
-			)
-			-> void *
-		;
-		only_parameters_aliased static void *f_Resize(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		only_parameters_aliased static auto f_ResizeDebug
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_ReallocDebug
 			(
 				void *_pMem
 				, umint &_Size
@@ -274,11 +284,32 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased static void f_Commit(void *_pMem, umint _Size);
-		only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
-		only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
-		only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
-		// NOLINTEND(malterlib-function-naming)
+		DMibNamedAsMemberFunction only_parameters_aliased static void *f_Resize
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased static auto f_ResizeDebug
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+			-> void *
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Commit(void *_pMem, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
 	};
 
 	struct CAllocator_NonTrackedHeap : public CAllocator_Base
@@ -292,22 +323,21 @@ namespace NMib::NMemory
 
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_NonTrackedHeap>;
 
-		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
-		static bool f_IsStatic(void const *_pBlock);
-		static bool f_OnlyOneAlloc();
-		static umint f_StaticAddresses();
-		static umint f_GranularityAlloc(bool _bLargePages = false);
-		static umint f_GranularityCommit(bool _bLargePages = false);
-		static umint f_GranularityProtect(bool _bLargePages = false);
-		only_parameters_aliased static umint f_Size(void *_pBlock);
-		only_parameters_aliased static umint f_TrySize(void *_pBlock);
-		static umint f_SizePadded(umint _Size);
-		static fp32 f_Overhead(void const *_pBlock);
-		static constexpr bool f_CanCommit();
-		static bool f_CanProtect();
-		static bool f_DeterministicSize();
-		only_parameters_aliased static void f_Protect(void *_pMem, umint _Size, uaint _Protect);
-		only_parameters_aliased malloc_like static auto f_AllocWithSizeDebug
+		DMibNamedAsMemberFunction static bool f_IsStatic(void const *_pBlock);
+		DMibNamedAsMemberFunction static bool f_OnlyOneAlloc();
+		DMibNamedAsMemberFunction static umint f_StaticAddresses();
+		DMibNamedAsMemberFunction static umint f_GranularityAlloc(bool _bLargePages = false);
+		DMibNamedAsMemberFunction static umint f_GranularityCommit(bool _bLargePages = false);
+		DMibNamedAsMemberFunction static umint f_GranularityProtect(bool _bLargePages = false);
+		DMibNamedAsMemberFunction only_parameters_aliased static umint f_Size(void *_pBlock);
+		DMibNamedAsMemberFunction only_parameters_aliased static umint f_TrySize(void *_pBlock);
+		DMibNamedAsMemberFunction static umint f_SizePadded(umint _Size);
+		DMibNamedAsMemberFunction static fp32 f_Overhead(void const *_pBlock);
+		DMibNamedAsMemberFunction static constexpr bool f_CanCommit();
+		DMibNamedAsMemberFunction static bool f_CanProtect();
+		DMibNamedAsMemberFunction static bool f_DeterministicSize();
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Protect(void *_pMem, umint _Size, uaint _Protect);
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocWithSizeDebug
 			(
 				umint &_Size
 				, ch8 const *_pFile
@@ -318,7 +348,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_AllocDebug
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocDebug
 			(
 				umint _Size
 				, ch8 const *_pFile
@@ -329,7 +359,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_AllocAlignedWithSizeDebug
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocAlignedWithSizeDebug
 			(
 				umint &_Size
 				, umint _Alignment
@@ -341,7 +371,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_AllocAlignedDebug
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocAlignedDebug
 			(
 				umint _Size
 				, umint _Alignment
@@ -353,9 +383,21 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static void *f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		only_parameters_aliased malloc_like static void *f_Alloc(umint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		only_parameters_aliased malloc_like static auto f_AllocAlignedWithSize
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static void *f_AllocWithSize
+			(
+				umint &_Size
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static void *f_Alloc
+			(
+				umint _Size
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocAlignedWithSize
 			(
 				umint &_Size
 				, umint _Alignment
@@ -364,7 +406,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_AllocAligned
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_AllocAligned
 			(
 				umint _Size
 				, umint _Alignment
@@ -373,12 +415,25 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased static auto f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		DMibNamedAsMemberFunction only_parameters_aliased static auto f_AllocSafeWithSize
+			(
+				umint &_Size
+				, umint _Alignment
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 			-> CAutoDestroy
 		;
-		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
-		only_parameters_aliased static void f_AllocBatch
+		DMibNamedAsMemberFunction only_parameters_aliased static CAutoDestroy f_AllocSafe
+			(
+				umint _Size
+				, umint _Alignment
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_AllocBatch
 			(
 				umint _Size
 				, umint _Alignment
@@ -387,7 +442,7 @@ namespace NMib::NMemory
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
 		;
-		only_parameters_aliased static void f_AllocBatchDebug
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_AllocBatchDebug
 			(
 				umint _Size
 				, umint _Alignment
@@ -399,7 +454,7 @@ namespace NMib::NMemory
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
 		;
-		only_parameters_aliased malloc_like static auto f_Realloc
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_Realloc
 			(
 				void *_pMem
 				, umint &_Size
@@ -409,21 +464,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_ReallocDebug
-			(
-				void *_pMem
-				, umint &_Size
-				, umint _OldSize
-				, ch8 const *_pFile
-				, aint _Line
-				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
-				, EAllocationFlag _AllocFlags = EAllocationFlag_None
-				, ENumaNode _NumaNode = ENumaNode_Default
-			)
-			-> void *
-		;
-		only_parameters_aliased static void *f_Resize(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		only_parameters_aliased static auto f_ResizeDebug
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_ReallocDebug
 			(
 				void *_pMem
 				, umint &_Size
@@ -436,11 +477,32 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased static void f_Commit(void *_pMem, umint _Size);
-		only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
-		only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
-		only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
-		// NOLINTEND(malterlib-function-naming)
+		DMibNamedAsMemberFunction only_parameters_aliased static void *f_Resize
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased static auto f_ResizeDebug
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+			-> void *
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Commit(void *_pMem, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
 	};
 
 	struct CAllocator_HeapNoDelete : public CAllocator_Heap
@@ -465,22 +527,20 @@ namespace NMib::NMemory
 		TCAllocator_Placement &operator = (TCAllocator_Placement const &_Other) = delete;
 		TCAllocator_Placement(TCAllocator_Placement &&_Other) noexcept;
 		TCAllocator_Placement &operator = (TCAllocator_Placement &&_Other) noexcept;
-		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
-		static bool f_IsStatic(void const *_pBlock);
-		static bool f_OnlyOneAlloc();
-		static umint f_StaticAddresses();
-		static umint f_GranularityAlloc(bool _bLargePages = false);
-		static umint f_GranularityCommit(bool _bLargePages = false);
-		static umint f_GranularityProtect(bool _bLargePages = false);
-		only_parameters_aliased static umint f_Size(void *_pBlock);
-		only_parameters_aliased static umint f_TrySize(void *_pBlock);
-		static umint f_SizePadded(umint _Size);
-		static fp32 f_Overhead(void const *_pBlock);
-		static constexpr bool f_CanCommit();
-		static bool f_CanProtect();
-		static bool f_DeterministicSize();
-		only_parameters_aliased static void f_Protect(void *_pMem, umint _Size, uaint _Protect);
-		// NOLINTEND(malterlib-function-naming)
+		DMibNamedAsMemberFunction static bool f_IsStatic(void const *_pBlock);
+		DMibNamedAsMemberFunction static bool f_OnlyOneAlloc();
+		DMibNamedAsMemberFunction static umint f_StaticAddresses();
+		DMibNamedAsMemberFunction static umint f_GranularityAlloc(bool _bLargePages = false);
+		DMibNamedAsMemberFunction static umint f_GranularityCommit(bool _bLargePages = false);
+		DMibNamedAsMemberFunction static umint f_GranularityProtect(bool _bLargePages = false);
+		DMibNamedAsMemberFunction only_parameters_aliased static umint f_Size(void *_pBlock);
+		DMibNamedAsMemberFunction only_parameters_aliased static umint f_TrySize(void *_pBlock);
+		DMibNamedAsMemberFunction static umint f_SizePadded(umint _Size);
+		DMibNamedAsMemberFunction static fp32 f_Overhead(void const *_pBlock);
+		DMibNamedAsMemberFunction static constexpr bool f_CanCommit();
+		DMibNamedAsMemberFunction static bool f_CanProtect();
+		DMibNamedAsMemberFunction static bool f_DeterministicSize();
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Protect(void *_pMem, umint _Size, uaint _Protect);
 		only_parameters_aliased malloc_like auto f_AllocWithSizeDebug
 			(
 				umint &_Size
@@ -539,8 +599,7 @@ namespace NMib::NMemory
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
 		;
-		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
-		only_parameters_aliased malloc_like static auto f_Realloc
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_Realloc
 			(
 				void *_pMem
 				, umint &_Size
@@ -550,21 +609,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased malloc_like static auto f_ReallocDebug
-			(
-				void *_pMem
-				, umint &_Size
-				, umint _OldSize
-				, ch8 const *_pFile
-				, aint _Line
-				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
-				, EAllocationFlag _AllocFlags = EAllocationFlag_None
-				, ENumaNode _NumaNode = ENumaNode_Default
-			)
-			-> void *
-		;
-		only_parameters_aliased static void *f_Resize(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		only_parameters_aliased static auto f_ResizeDebug
+		DMibNamedAsMemberFunction only_parameters_aliased malloc_like static auto f_ReallocDebug
 			(
 				void *_pMem
 				, umint &_Size
@@ -577,11 +622,32 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		only_parameters_aliased static void f_Commit(void *_pMem, umint _Size);
-		only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
-		only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
-		only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
-		// NOLINTEND(malterlib-function-naming)
+		DMibNamedAsMemberFunction only_parameters_aliased static void *f_Resize
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased static auto f_ResizeDebug
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, ch8 const *_pFile
+				, aint _Line
+				, EHeapDebugFlag _Flags = EHeapDebugFlag_None
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+			-> void *
+		;
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Commit(void *_pMem, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
+		DMibNamedAsMemberFunction only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
 
 	private:
 		void *mp_pPointer;
@@ -625,9 +691,7 @@ namespace NMib::NMemory
 		TCAllocator_Static &operator = (TCAllocator_Static &&_Other);
 		TCAllocator_Static &operator = (TCAllocator_Static const &_Other);
 		bool f_IsStatic(void const *_pBlock) const;
-		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
-		static bool f_OnlyOneAlloc();
-		// NOLINTEND(malterlib-function-naming)
+		DMibNamedAsMemberFunction static bool f_OnlyOneAlloc();
 		umint f_StaticAddresses();
 		umint f_GranularityAlloc(bool _bLargePages = false);
 		umint f_GranularityCommit(bool _bLargePages = false);
