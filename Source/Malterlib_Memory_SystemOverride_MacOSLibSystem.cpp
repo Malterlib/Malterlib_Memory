@@ -25,7 +25,16 @@
 
 extern "C"
 {
-	extern void fg_MalterlibSystem_InitEarly(COriginalFunctions const &_Functions, int argc, char const *argv[], char const *envp[], char const *apple[], struct ProgramVars const *vars);
+	extern void fg_MalterlibSystem_InitEarly
+		(
+			COriginalFunctions const &_Functions
+			, int _nArguments
+			, char const *_Arguments[]
+			, char const *_Environment[]
+			, char const *_Apple[]
+			, struct ProgramVars const *_pProgramVars
+		)
+	;
 	extern void fg_MalterlibSystem_InitBeforeMalloc(COriginalFunctions const &_Functions);
 	extern void fg_MalterlibSystem_InitAfterMalloc();
 #if !defined(DMibMemoryOverrideDll)
@@ -35,7 +44,7 @@ extern "C"
 	{
 	}
 
-	int malloc_jumpstart(int);
+	int malloc_jumpstart(int _Value);
 }
 struct CTesting
 {
@@ -68,30 +77,30 @@ extern "C"
 	assure_used static CInterpose g_Malterlib_Interpose_##d_Replacee \
 	__attribute__ ((section ("__DATA,__interpose"))) = { (void (*)())&d_Replacement, (void (*)())&d_Replacee}
 
-	extern void __malloc_init(char const *apple[]) __attribute__((weak_import)); // from libsystem_malloc.dylib
-	void fg_Malterlib___malloc_init(char const *apple[])
+	extern void __malloc_init(char const *_Apple[]) __attribute__((weak_import)); // from libsystem_malloc.dylib
+	void fg_Malterlib___malloc_init(char const *_Apple[])
 	{
 		fg_MalterlibSystem_InitBeforeMalloc(g_OriginalFunctions);
 		if (__malloc_init)
-			__malloc_init(apple);
+			__malloc_init(_Apple);
 		fg_MalterlibSystem_InitAfterMalloc();
 	}
 
 	extern void __libc_init
 		(
-			struct ProgramVars const *vars
-			, void (*atfork_prepare)(void)
-			, void (*atfork_parent)(void)
-			, void (*atfork_child)(void)
-			, char const *apple[]
+			struct ProgramVars const *_pProgramVars
+			, void (*_fAtForkPrepare)(void)
+			, void (*_fAtForkParent)(void)
+			, void (*_fAtForkChild)(void)
+			, char const *_Apple[]
 		)
 		__attribute__((weak_import))
 	;
-	void fg_Malterlib___libc_init(struct ProgramVars const *vars, void (*atfork_prepare)(void), void (*atfork_parent)(void), void (*atfork_child)(void), char const *apple[])
+	void fg_Malterlib___libc_init(struct ProgramVars const *_pProgramVars, void (*_fAtForkPrepare)(void), void (*_fAtForkParent)(void), void (*_fAtForkChild)(void), char const *_Apple[])
 	{
 		fg_MalterlibSystem_InitBeforeMalloc(g_OriginalFunctions);
 		if (__libc_init)
-			__libc_init(vars, atfork_prepare, atfork_parent, atfork_child, apple);
+			__libc_init(_pProgramVars, _fAtForkPrepare, _fAtForkParent, _fAtForkChild, _Apple);
 		fg_MalterlibSystem_InitAfterMalloc();
 	}
 

@@ -170,9 +170,9 @@ extern "C" void *__wrap__Znwj(std::size_t _Size)
 
 #		if DMibPPtrBits >= 64
 // operator new(unsigned long)
-extern "C" void *__wrap__ZnwmRKSt9nothrow_t(std::size_t _Size, std::nothrow_t const &) noexcept
+extern "C" void *__wrap__ZnwmRKSt9nothrow_t(std::size_t _Size, std::nothrow_t const &_NoThrow) noexcept
 #		else
-extern "C" void *__wrap__ZnwjRKSt9nothrow_t(std::size_t _Size, std::nothrow_t const &) noexcept
+extern "C" void *__wrap__ZnwjRKSt9nothrow_t(std::size_t _Size, std::nothrow_t const &_NoThrow) noexcept
 #		endif
 {
 	try
@@ -194,7 +194,7 @@ extern "C" void __wrap__ZdlPv(void *_pMemory) noexcept
 }
 
 // operator delete(void *)
-extern "C" void __wrap__ZdlPvRKSt9nothrow_t(void *_pMemory, std::nothrow_t const &) noexcept
+extern "C" void __wrap__ZdlPvRKSt9nothrow_t(void *_pMemory, std::nothrow_t const &_NoThrow) noexcept
 {
 	DMibReturnIfDeleteCaptured(_pMemory, 0);
 
@@ -225,9 +225,9 @@ extern "C" void *__wrap__Znaj(std::size_t _Size)
 
 #		if DMibPPtrBits >= 64
 // operator new[](unsigned long)
-extern "C" void *__wrap__ZnamRKSt9nothrow_t(std::size_t _Size, std::nothrow_t const &) noexcept
+extern "C" void *__wrap__ZnamRKSt9nothrow_t(std::size_t _Size, std::nothrow_t const &_NoThrow) noexcept
 #		else
-extern "C" void *__wrap__ZnajRKSt9nothrow_t(std::size_t _Size, std::nothrow_t const &) noexcept
+extern "C" void *__wrap__ZnajRKSt9nothrow_t(std::size_t _Size, std::nothrow_t const &_NoThrow) noexcept
 #		endif
 {
 	try
@@ -247,7 +247,7 @@ extern "C" void __wrap__ZdaPv(void *_pMemory) noexcept
 }
 
 // operator delete[](void *)
-extern "C" void __wrap__ZdaPvRKSt9nothrow_t(void *_pMemory, std::nothrow_t const &) noexcept
+extern "C" void __wrap__ZdaPvRKSt9nothrow_t(void *_pMemory, std::nothrow_t const &_NoThrow) noexcept
 {
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
@@ -275,10 +275,10 @@ extern "C" void *__wrap__ZnwjSt11align_val_t(std::size_t _Size, std::align_val_t
 
 #		if DMibPPtrBits >= 64
 // operator new(unsigned long, std::align_val_t)
-extern "C" void *__wrap__ZnwmSt11align_val_tRKSt9nothrow_t(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+extern "C" void *__wrap__ZnwmSt11align_val_tRKSt9nothrow_t(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 #		else
 // operator new(unsigned int, std::align_val_t)
-extern "C" void *__wrap__ZnwjSt11align_val_tRKSt9nothrow_t(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+extern "C" void *__wrap__ZnwjSt11align_val_tRKSt9nothrow_t(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 #		endif
 {
 	try
@@ -303,9 +303,9 @@ extern "C" void *__wrap__ZnajSt11align_val_t(std::size_t _Size, std::align_val_t
 
 #		if DMibPPtrBits >= 64
 // operator new[](unsigned long, std::align_val_t)
-extern "C" void *__wrap__ZnamSt11align_val_tRKSt9nothrow_t(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+extern "C" void *__wrap__ZnamSt11align_val_tRKSt9nothrow_t(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 #		else
-extern "C" void *__wrap__ZnajSt11align_val_tRKSt9nothrow_t(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+extern "C" void *__wrap__ZnajSt11align_val_tRKSt9nothrow_t(std::size_t _Size, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 #		endif
 {
 	try
@@ -325,7 +325,7 @@ extern "C" void __wrap__ZdaPvSt11align_val_t(void *_pMemory, std::align_val_t _A
 }
 
 // operator delete[](void*, std::align_val_t)
-extern "C" void __wrap__ZdaPvSt11align_val_tRKSt9nothrow_t(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &) noexcept
+extern "C" void __wrap__ZdaPvSt11align_val_tRKSt9nothrow_t(void *_pMemory, std::align_val_t _Alignment, std::nothrow_t const &_NoThrow) noexcept
 {
 	NMib::NMemory::fg_FreeNoSize(_pMemory);
 }
