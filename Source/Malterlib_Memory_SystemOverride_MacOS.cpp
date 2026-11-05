@@ -148,17 +148,17 @@ extern "C"
 
 	// These are here so dynamic linking works on OSes where these are not defined
 #if !defined(DMibMemoryOverrideDll)
-	assure_used module_export void __attribute__((weak)) __malloc_init(char const *apple[])
+	assure_used module_export void __attribute__((weak)) __malloc_init(char const *_Apple[])
 	{
 	}
 
 	assure_used module_export void __attribute__((weak)) __libc_init
 		(
-			struct ProgramVars const *vars
-			, void (*atfork_prepare)(void)
-			, void (*atfork_parent)(void)
-			, void (*atfork_child)(void)
-			, char const *apple[]
+			struct ProgramVars const *_pProgramVars
+			, void (*_fAtForkPrepare)(void)
+			, void (*_fAtForkParent)(void)
+			, void (*_fAtForkChild)(void)
+			, char const *_Apple[]
 		)
 	{
 	}
@@ -541,11 +541,11 @@ extern "C"
 	assure_used DMibMalterlibOverrideMallocExport void fg_MalterlibSystem_InitEarly
 		(
 			COriginalFunctions const &_Functions
-			, int argc
-			, char const *argv[]
-			, char const *envp[]
-			, char const *apple[]
-			, ProgramVars const *vars
+			, int _nArguments
+			, char const *_Arguments[]
+			, char const *_Environment[]
+			, char const *_Apple[]
+			, ProgramVars const *_pProgramVars
 		)
 	{
 #ifndef DMibMemoryOverrideDll
@@ -661,12 +661,12 @@ void fg_MalterlibMallocOverrideInit_UninstallHandler()
 extern "C"
 {
 #if !defined(DMibMemoryOverrideDll)
-	assure_used DMibMalterlibOverrideMallocExport bool breakpad_should_handle_exception(pthread_t _pThread)
+	assure_used DMibMalterlibOverrideMallocExport bool breakpad_should_handle_exception(pthread_t _Thread)
 	{
 		if (!g_MalterlibMallocOveriddenInstalled)
 			return true;
 
-		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((umint)_pThread, g_LowLevelGlobalState->m_iThreadLocal);
+		auto *pJumpBuffer = (jmp_buf *)NSys::fg_Thread_GetLocal((umint)_Thread, g_LowLevelGlobalState->m_iThreadLocal);
 		if (pJumpBuffer)
 			return false;
 		else
@@ -1407,19 +1407,19 @@ namespace
 
 extern "C"
 {
-	boolean_t mach_exc_server(mach_msg_header_t *InHeadP, mach_msg_header_t *OutHeadP);
+	boolean_t mach_exc_server(mach_msg_header_t *_pRequest, mach_msg_header_t *o_pReply);
 
 	auto catch_exception_raise_state
 		(
-			mach_port_t exception_port
-			, exception_type_t exception
-			, exception_data_t const code
-			, mach_msg_type_number_t codeCnt
-			, int *flavor
-			, thread_state_t const old_state
-			, mach_msg_type_number_t old_stateCnt
-			, thread_state_t new_state
-			, mach_msg_type_number_t *new_stateCnt
+			mach_port_t _ExceptionPort
+			, exception_type_t _Exception
+			, exception_data_t const _pCodes
+			, mach_msg_type_number_t _CodesCount
+			, int *_pFlavor
+			, thread_state_t const _pOldState
+			, mach_msg_type_number_t _OldStatesCount
+			, thread_state_t _pNewState
+			, mach_msg_type_number_t *_pNewStateCount
 		)
 		-> kern_return_t
 	{
@@ -1428,24 +1428,32 @@ extern "C"
 
 	auto catch_exception_raise_state_identity
 		(
-			mach_port_t exception_port
-			, mach_port_t thread
-			, mach_port_t task
-			, exception_type_t exception
-			, exception_data_t code
-			, mach_msg_type_number_t codeCnt
-			, int *flavor
-			, thread_state_t old_state
-			, mach_msg_type_number_t old_stateCnt
-			, thread_state_t new_state
-			, mach_msg_type_number_t *new_stateCnt
+			mach_port_t _ExceptionPort
+			, mach_port_t _Thread
+			, mach_port_t _Task
+			, exception_type_t _Exception
+			, exception_data_t _pCodes
+			, mach_msg_type_number_t _CodesCount
+			, int *_pFlavor
+			, thread_state_t _pOldState
+			, mach_msg_type_number_t _OldStatesCount
+			, thread_state_t _pNewState
+			, mach_msg_type_number_t *_pNewStateCount
 		)
 		-> kern_return_t
 	{
 		return KERN_FAILURE;
 	}
 
-	auto catch_mach_exception_raise(mach_port_t exception_port, mach_port_t thread, mach_port_t task, exception_type_t exception, mach_exception_data_t code, mach_msg_type_number_t codeCnt)
+	auto catch_mach_exception_raise
+		(
+			mach_port_t _ExceptionPort
+			, mach_port_t _Thread
+			, mach_port_t _Task
+			, exception_type_t _Exception
+			, mach_exception_data_t _pCodes
+			, mach_msg_type_number_t _CodesCount
+		)
 		-> kern_return_t
 	{
 		return KERN_FAILURE;
@@ -1453,15 +1461,15 @@ extern "C"
 
 	auto catch_mach_exception_raise_state
 		(
-			mach_port_t exception_port
-			, exception_type_t exception
-			, mach_exception_data_t const code
-			, mach_msg_type_number_t codeCnt
-			, int *flavor
-			, thread_state_t const old_state
-			, mach_msg_type_number_t old_stateCnt
-			, thread_state_t new_state
-			, mach_msg_type_number_t *new_stateCnt
+			mach_port_t _ExceptionPort
+			, exception_type_t _Exception
+			, mach_exception_data_t const _pCodes
+			, mach_msg_type_number_t _CodesCount
+			, int *_pFlavor
+			, thread_state_t const _pOldState
+			, mach_msg_type_number_t _OldStatesCount
+			, thread_state_t _pNewState
+			, mach_msg_type_number_t *_pNewStateCount
 		)
 		-> kern_return_t
 	{
@@ -3734,7 +3742,7 @@ extern "C"
 		}
 	;
 
-	assure_used DMibMalterlibOverrideMallocExport malloc_zone_t_known_version *fg_Malterlib_malloc_create_zone(vm_size_t start_size, unsigned flags)
+	assure_used DMibMalterlibOverrideMallocExport malloc_zone_t_known_version *fg_Malterlib_malloc_create_zone(vm_size_t _StartSize, unsigned _Flags)
 	{
 #ifdef DMemoryManagerIsSame
 		auto fCreateZone = [&]<typename tf_CZone>()
@@ -4063,7 +4071,7 @@ extern "C"
 					g_bOnlyDefaultZone = false;
 				}
 
-				// return g_OriginalFunctions.malloc_create_zone(start_size, flags);
+				// return g_OriginalFunctions.malloc_create_zone(_StartSize, _Flags);
 				return pMemoryManager.f_Detach()->f_GetMallocZone();
 			}
 		;
@@ -4075,7 +4083,7 @@ extern "C"
 #	endif
 			return fCreateZone.operator ()<CMemoryManagerZoneMax>();
 #else
-		return (malloc_zone_t_known_version *)g_OriginalFunctions.malloc_create_zone(start_size, flags);
+		return (malloc_zone_t_known_version *)g_OriginalFunctions.malloc_create_zone(_StartSize, _Flags);
 #endif
 	}
 
@@ -4239,21 +4247,21 @@ extern "C"
 #endif
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_batch_free(malloc_zone_t_known_version *_pZone, void **to_be_freed, unsigned num)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_batch_free(malloc_zone_t_known_version *_pZone, void **_pToBeFreed, unsigned _nToBeFreed)
 	{
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
-			return g_OriginalFunctions.malloc_zone_batch_free((malloc_zone_t *)_pZone, to_be_freed, num);
+			return g_OriginalFunctions.malloc_zone_batch_free((malloc_zone_t *)_pZone, _pToBeFreed, _nToBeFreed);
 		// Without a batch free function the blocks are still freed, one at a time, as malloc_zone_batch_free documents.
 		if (!_pZone->batch_free)
 		{
-			for (unsigned iFree = 0; iFree < num; ++iFree)
-				_pZone->free(_pZone, to_be_freed[iFree]);
+			for (unsigned iFree = 0; iFree < _nToBeFreed; ++iFree)
+				_pZone->free(_pZone, _pToBeFreed[iFree]);
 			return;
 		}
-		return _pZone->batch_free(_pZone, to_be_freed, num);
+		return _pZone->batch_free(_pZone, _pToBeFreed, _nToBeFreed);
 #else
-		return g_OriginalFunctions.malloc_zone_batch_free((malloc_zone_t *)_pZone, to_be_freed, num);
+		return g_OriginalFunctions.malloc_zone_batch_free((malloc_zone_t *)_pZone, _pToBeFreed, _nToBeFreed);
 #endif
 	}
 
@@ -4543,14 +4551,14 @@ extern "C"
 #endif
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport kern_return_t fg_Malterlib_malloc_get_all_zones(task_t task, memory_reader_t reader, vm_address_t **addresses, unsigned *count)
+	assure_used DMibMalterlibOverrideMallocExport kern_return_t fg_Malterlib_malloc_get_all_zones(task_t _Task, memory_reader_t _fReader, vm_address_t **o_pAddresses, unsigned *o_pCount)
 	{
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
-			return g_OriginalFunctions.malloc_get_all_zones(task, reader, addresses, count);
+			return g_OriginalFunctions.malloc_get_all_zones(_Task, _fReader, o_pAddresses, o_pCount);
 		return KERN_FAILURE;
 #else
-		return g_OriginalFunctions.malloc_get_all_zones(task, reader, addresses, count);
+		return g_OriginalFunctions.malloc_get_all_zones(_Task, _fReader, o_pAddresses, o_pCount);
 #endif
 	}
 
@@ -4575,33 +4583,33 @@ extern "C"
 #endif
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_print(malloc_zone_t_known_version *_pZone, boolean_t verbose)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_print(malloc_zone_t_known_version *_pZone, boolean_t _bVerbose)
 	{
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
-			return g_OriginalFunctions.malloc_zone_print((malloc_zone_t *)_pZone, verbose);
+			return g_OriginalFunctions.malloc_zone_print((malloc_zone_t *)_pZone, _bVerbose);
 #else
-		return g_OriginalFunctions.malloc_zone_print((malloc_zone_t *)_pZone, verbose);
+		return g_OriginalFunctions.malloc_zone_print((malloc_zone_t *)_pZone, _bVerbose);
 #endif
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_statistics(malloc_zone_t_known_version *_pZone, malloc_statistics_t *stats)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_statistics(malloc_zone_t_known_version *_pZone, malloc_statistics_t *o_pStatistics)
 	{
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
-			return g_OriginalFunctions.malloc_zone_statistics((malloc_zone_t *)_pZone, stats);
+			return g_OriginalFunctions.malloc_zone_statistics((malloc_zone_t *)_pZone, o_pStatistics);
 #else
-		return g_OriginalFunctions.malloc_zone_statistics((malloc_zone_t *)_pZone, stats);
+		return g_OriginalFunctions.malloc_zone_statistics((malloc_zone_t *)_pZone, o_pStatistics);
 #endif
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_log(malloc_zone_t_known_version *_pZone, void *address)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_log(malloc_zone_t_known_version *_pZone, void *_pAddress)
 	{
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
-			return g_OriginalFunctions.malloc_zone_log((malloc_zone_t *)_pZone, address);
+			return g_OriginalFunctions.malloc_zone_log((malloc_zone_t *)_pZone, _pAddress);
 #else
-		return g_OriginalFunctions.malloc_zone_log((malloc_zone_t *)_pZone, address);
+		return g_OriginalFunctions.malloc_zone_log((malloc_zone_t *)_pZone, _pAddress);
 #endif
 	}
 
@@ -4632,27 +4640,27 @@ extern "C"
 #endif
 	}
 
-	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_discharge(malloc_zone_t_known_version *_pZone, void *memory)
+	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_discharge(malloc_zone_t_known_version *_pZone, void *_pMemory)
 	{
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
-			return g_OriginalFunctions.malloc_zone_discharge((malloc_zone_t *)_pZone, memory);
+			return g_OriginalFunctions.malloc_zone_discharge((malloc_zone_t *)_pZone, _pMemory);
 #else
-		return g_OriginalFunctions.malloc_zone_discharge((malloc_zone_t *)_pZone, memory);
+		return g_OriginalFunctions.malloc_zone_discharge((malloc_zone_t *)_pZone, _pMemory);
 #endif
 	}
 
 	assure_used DMibMalterlibOverrideMallocExport void fg_Malterlib_malloc_zone_enumerate_discharged_pointers
 		(
 			malloc_zone_t_known_version *_pZone
-			, void (^report_discharged)(void *_pMemory, void *_pInfo)
+			, void (^_fReportDischarged)(void *_pMemory, void *_pInfo)
 		)
 	{
 #ifdef DMemoryManagerIsSame
 		if (g_bForeignZone) [[unlikely]]
-			return g_OriginalFunctions.malloc_zone_enumerate_discharged_pointers((malloc_zone_t *)_pZone, report_discharged);
+			return g_OriginalFunctions.malloc_zone_enumerate_discharged_pointers((malloc_zone_t *)_pZone, _fReportDischarged);
 #else
-		return g_OriginalFunctions.malloc_zone_enumerate_discharged_pointers((malloc_zone_t *)_pZone, report_discharged);
+		return g_OriginalFunctions.malloc_zone_enumerate_discharged_pointers((malloc_zone_t *)_pZone, _fReportDischarged);
 #endif
 	}
 
@@ -4726,18 +4734,18 @@ extern "C"
 
 	assure_used mach_msg_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_mach_msg
 		(
-			mach_msg_header_t *msg
-			, mach_msg_option_t option
-			, mach_msg_size_t send_size
-			, mach_msg_size_t rcv_size
-			, mach_port_name_t rcv_name
-			, mach_msg_timeout_t timeout
-			, mach_port_name_t notify
+			mach_msg_header_t *_pMessage
+			, mach_msg_option_t _Option
+			, mach_msg_size_t _SendSize
+			, mach_msg_size_t _ReceiveSize
+			, mach_port_name_t _ReceiveName
+			, mach_msg_timeout_t _Timeout
+			, mach_port_name_t _Notify
 		)
 	{
 #ifdef DMemoryManagerIsSame
 		bool bSuccessLazyReturn = false;
-		if ((option & MACH_RCV_MSG) && msg->msgh_remote_port == 0)
+		if ((_Option & MACH_RCV_MSG) && _pMessage->msgh_remote_port == 0)
 		{
 			bSuccessLazyReturn = fg_LazyReturnCheckout();
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -4749,7 +4757,7 @@ extern "C"
 		}
 #endif
 
-		auto Return = g_OriginalFunctions.mach_msg(msg, option, send_size, rcv_size, rcv_name, timeout, notify);
+		auto Return = g_OriginalFunctions.mach_msg(_pMessage, _Option, _SendSize, _ReceiveSize, _ReceiveName, _Timeout, _Notify);
 
 #ifdef DMemoryManagerIsSame
 		if (bSuccessLazyReturn)
@@ -4766,154 +4774,154 @@ extern "C"
 		return Return;
 	}
 
-	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_timedwait(semaphore_t semaphore, mach_timespec_t wait_time)
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_timedwait(semaphore_t _Semaphore, mach_timespec_t _WaitTime)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.semaphore_timedwait(semaphore, wait_time);
+		return g_OriginalFunctions.semaphore_timedwait(_Semaphore, _WaitTime);
 	}
 
-	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_wait(semaphore_t semaphore)
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_wait(semaphore_t _Semaphore)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.semaphore_wait(semaphore);
+		return g_OriginalFunctions.semaphore_wait(_Semaphore);
 	}
 
-	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_wait_signal(semaphore_t wait_semaphore, semaphore_t signal_semaphore)
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_wait_signal(semaphore_t _WaitSemaphore, semaphore_t _SignalSemaphore)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.semaphore_wait_signal(wait_semaphore, signal_semaphore);
+		return g_OriginalFunctions.semaphore_wait_signal(_WaitSemaphore, _SignalSemaphore);
 	}
 
-	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_timedwait_signal(semaphore_t wait_semaphore, semaphore_t signal_semaphore, mach_timespec_t wait_time)
+	assure_used kern_return_t DMibMalterlibOverrideMallocExport fg_Malterlib_semaphore_timedwait_signal(semaphore_t _WaitSemaphore, semaphore_t _SignalSemaphore, mach_timespec_t _WaitTime)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.semaphore_timedwait_signal(wait_semaphore, signal_semaphore, wait_time);
+		return g_OriginalFunctions.semaphore_timedwait_signal(_WaitSemaphore, _SignalSemaphore, _WaitTime);
 	}
 
-	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib___workq_kernreturn(int options, user_addr_t item, int affinity, int prio)
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib___workq_kernreturn(int _Options, user_addr_t _Item, int _Affinity, int _Priority)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.__workq_kernreturn(options, item, affinity, prio);
+		return g_OriginalFunctions.__workq_kernreturn(_Options, _Item, _Affinity, _Priority);
 	}
 
 	// Kernel waits must return checked-out arenas so idle threads do not prevent garbage collection.
 	// os_sync needs separate hooks because shared-cache ulock calls bypass interposition.
-	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib___ulock_wait(uint32_t operation, void *addr, uint64_t value, uint32_t timeout_us)
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib___ulock_wait(uint32_t _Operation, void *_pAddress, uint64_t _Value, uint32_t _TimeoutMicroseconds)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.__ulock_wait(operation, addr, value, timeout_us);
+		return g_OriginalFunctions.__ulock_wait(_Operation, _pAddress, _Value, _TimeoutMicroseconds);
 	}
 
-	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib___ulock_wait2(uint32_t operation, void *addr, uint64_t value, uint64_t timeout_ns, uint64_t value2)
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib___ulock_wait2(uint32_t _Operation, void *_pAddress, uint64_t _Value, uint64_t _TimeoutNanoseconds, uint64_t _Value2)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.__ulock_wait2(operation, addr, value, timeout_ns, value2);
+		return g_OriginalFunctions.__ulock_wait2(_Operation, _pAddress, _Value, _TimeoutNanoseconds, _Value2);
 	}
 
-	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_os_sync_wait_on_address(void *addr, uint64_t value, size_t size, uint32_t flags)
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_os_sync_wait_on_address(void *_pAddress, uint64_t _Value, size_t _Size, uint32_t _Flags)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.os_sync_wait_on_address(addr, value, size, flags);
+		return g_OriginalFunctions.os_sync_wait_on_address(_pAddress, _Value, _Size, _Flags);
 	}
 
 	assure_used auto DMibMalterlibOverrideMallocExport fg_Malterlib_os_sync_wait_on_address_with_timeout
 		(
-			void *addr
-			, uint64_t value
-			, size_t size
-			, uint32_t flags
-			, uint32_t clockid
-			, uint64_t timeout_ns
+			void *_pAddress
+			, uint64_t _Value
+			, size_t _Size
+			, uint32_t _Flags
+			, uint32_t _ClockID
+			, uint64_t _TimeoutNanoseconds
 		)
 		-> int
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.os_sync_wait_on_address_with_timeout(addr, value, size, flags, clockid, timeout_ns);
+		return g_OriginalFunctions.os_sync_wait_on_address_with_timeout(_pAddress, _Value, _Size, _Flags, _ClockID, _TimeoutNanoseconds);
 	}
 
 	assure_used uint32_t DMibMalterlibOverrideMallocExport fg_Malterlib___psynch_cvwait
 		(
-			user_addr_t cv
-			, uint64_t cvlsgen
-			, uint32_t cvugen
-			, user_addr_t mutex
-			, uint64_t mugen
-			, uint32_t flags
-			, int64_t sec
-			, uint32_t nsec
+			user_addr_t _Condition
+			, uint64_t _ConditionLSGeneration
+			, uint32_t _ConditionUGeneration
+			, user_addr_t _Mutex
+			, uint64_t _MutexGeneration
+			, uint32_t _Flags
+			, int64_t _Seconds
+			, uint32_t _Nanoseconds
 		)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.__psynch_cvwait(cv, cvlsgen, cvugen, mutex, mugen, flags, sec, nsec);
+		return g_OriginalFunctions.__psynch_cvwait(_Condition, _ConditionLSGeneration, _ConditionUGeneration, _Mutex, _MutexGeneration, _Flags, _Seconds, _Nanoseconds);
 	}
 
 	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_kevent
 		(
-			int kq
-			, struct kevent const *changelist
-			, int nchanges
-			, struct kevent *eventlist
-			, int nevents
-			, struct timespec const *timeout
+			int _KernelQueue
+			, struct kevent const *_pChanges
+			, int _nChanges
+			, struct kevent *o_pEvents
+			, int _nEvents
+			, struct timespec const *_pTimeout
 		)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.kevent(kq, changelist, nchanges, eventlist, nevents, timeout);
+		return g_OriginalFunctions.kevent(_KernelQueue, _pChanges, _nChanges, o_pEvents, _nEvents, _pTimeout);
 	}
 
 	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_kevent64
 		(
-			int kq
-			, struct kevent64_s const *changelist
-			, int nchanges
-			, struct kevent64_s *eventlist
-			, int nevents
-			, unsigned int flags
-			, struct timespec const *timeout
+			int _KernelQueue
+			, struct kevent64_s const *_pChanges
+			, int _nChanges
+			, struct kevent64_s *o_pEvents
+			, int _nEvents
+			, unsigned int _Flags
+			, struct timespec const *_pTimeout
 		)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.kevent64(kq, changelist, nchanges, eventlist, nevents, flags, timeout);
+		return g_OriginalFunctions.kevent64(_KernelQueue, _pChanges, _nChanges, o_pEvents, _nEvents, _Flags, _pTimeout);
 	}
 
-	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_poll(struct pollfd *fds, nfds_t nfds, int timeout)
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_poll(struct pollfd *_pFileDescriptors, nfds_t _nFileDescriptors, int _Timeout)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.poll(fds, nfds, timeout);
+		return g_OriginalFunctions.poll(_pFileDescriptors, _nFileDescriptors, _Timeout);
 	}
 
-	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_nanosleep(struct timespec const *req, struct timespec *rem)
+	assure_used int DMibMalterlibOverrideMallocExport fg_Malterlib_nanosleep(struct timespec const *_pRequested, struct timespec *o_pRemaining)
 	{
 #ifdef DMemoryManagerIsSame
 		fg_LazyReturnCheckout();
 #endif
-		return g_OriginalFunctions.nanosleep(req, rem);
+		return g_OriginalFunctions.nanosleep(_pRequested, o_pRemaining);
 	}
 }
 

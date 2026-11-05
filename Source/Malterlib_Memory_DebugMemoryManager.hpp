@@ -234,9 +234,9 @@ namespace NMib::NMemory
 				NSys::fg_Mem_VirtualProtect(pRetBlock + UserNeededSize, GranularityProtect, EProtect_Exec);
 			}
 
-			for (auto FIter = mp_FreeBlocks.f_GetIterator(); FIter; ++FIter)
+			for (auto iFreeBlock = mp_FreeBlocks.f_GetIterator(); iFreeBlock; ++iFreeBlock)
 			{
-				CMemoryBlock *pMemBlock = FIter;
+				CMemoryBlock *pMemBlock = iFreeBlock;
 
 				umint UserNeededSize = fg_AlignUp(pMemBlock->m_AllocSize, GranularityProtect);
 
