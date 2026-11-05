@@ -31,16 +31,16 @@ namespace NMib::NMemory
 		TCMemoryManagerCheckout() = default;
 		TCMemoryManagerCheckout(TCMemoryManagerCheckout &&_Other);
 		TCMemoryManagerCheckout(TCMemoryManager<t_CParams> *_pMemoryManager);
-		TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout<t_CParams> &&_Other);
 		~TCMemoryManagerCheckout();
+		TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout<t_CParams> &&_Other);
 
 		bool f_IsValid() const;
 
 	private:
-		TCMemoryManager<t_CParams> *mp_pMemoryManager = nullptr;
-
 		TCMemoryManagerCheckout(TCMemoryManagerCheckout const &_Other) = delete;
 		TCMemoryManagerCheckout &operator = (TCMemoryManagerCheckout const &_Other) = delete;
+
+		TCMemoryManager<t_CParams> *mp_pMemoryManager = nullptr;
 	};
 
 	template <typename t_CParams>
@@ -48,22 +48,22 @@ namespace NMib::NMemory
 	{
 		TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight &&_Other);
 		TCMemoryManagerCheckoutLight(TCMemoryManager<t_CParams> *_pMemoryManager);
-		TCMemoryManagerCheckoutLight &operator = (TCMemoryManagerCheckoutLight<t_CParams> &&_Other);
 		~TCMemoryManagerCheckoutLight();
+		TCMemoryManagerCheckoutLight &operator = (TCMemoryManagerCheckoutLight<t_CParams> &&_Other);
 
 	private:
-		TCMemoryManager<t_CParams> *mp_pMemoryManager;
-
 		TCMemoryManagerCheckoutLight(TCMemoryManagerCheckoutLight const &_Other) = delete;
 		TCMemoryManagerCheckoutLight &operator = (TCMemoryManagerCheckoutLight const &_Other) = delete;
+
+		TCMemoryManager<t_CParams> *mp_pMemoryManager;
 	};
 
 	struct align_cacheline CLocalNumaNode
 	{
-		ENumaNode m_Node;
-
 		CLocalNumaNode(ENumaNode _Node);
 		CLocalNumaNode();
+
+		ENumaNode m_Node;
 	};
 
 	struct CMemoryManagerConfig
@@ -167,7 +167,35 @@ namespace NMib::NMemory
 		EMemoryReportLightweightScopeFlag f_AddLightweightScopeFlags(EMemoryReportLightweightScopeFlag _Flags);
 #endif
 
+	protected:
+		void f_GarbageCollectLocalArena(bool _bDecommit) override;
+		bool f_GarbageCollectLocalArenaIfPending() override;
+
 	private:
+		template <typename t_CParams2>
+		friend struct TCMemoryManagerArenaHeapChunk;
+
+		template <typename t_CParams2>
+		friend struct TCMemoryManagerArena;
+
+		template <typename t_CParams2>
+		friend struct TCMemoryManagerArenaHeap;
+
+		template <typename t_CParams2, uint32 t_SlabType2>
+		friend struct TCMemoryManagerSlab;
+
+		template <typename t_CParams2>
+		friend struct TCMemoryManagerNumaArena;
+
+		template <typename t_CParams2>
+		friend struct TCMemoryManagerNumaArenaBackgroundCleanup;
+
+		template <typename t_CParams2>
+		friend struct TCMemoryManagerThreadLocal;
+
+		template <typename t_CParams2>
+		friend struct TCMemoryManagerLimitedTemporaryReturn;
+
 		void *fp_AllocAlignedSlowPath(umint &_Size, umint _Alignment);
 		void fp_AllocBatchSlowPath(umint _Size, umint _Alignment, NFunction::TCFunctionNoAlloc<bool (void *_pAlloc, umint _Size)> const &_fFunctor);
 
@@ -201,35 +229,6 @@ namespace NMib::NMemory
 		void f_TemporaryGetBack() override;
 		void f_TakeOwnership() override;
 		void f_RelinquishOwnership() override;
-
-	protected:
-		void f_GarbageCollectLocalArena(bool _bDecommit) override;
-		bool f_GarbageCollectLocalArenaIfPending() override;
-
-	private:
-		template <typename t_CParams2>
-		friend struct TCMemoryManagerArenaHeapChunk;
-
-		template <typename t_CParams2>
-		friend struct TCMemoryManagerArena;
-
-		template <typename t_CParams2>
-		friend struct TCMemoryManagerArenaHeap;
-
-		template <typename t_CParams2, uint32 t_SlabType2>
-		friend struct TCMemoryManagerSlab;
-
-		template <typename t_CParams2>
-		friend struct TCMemoryManagerNumaArena;
-
-		template <typename t_CParams2>
-		friend struct TCMemoryManagerNumaArenaBackgroundCleanup;
-
-		template <typename t_CParams2>
-		friend struct TCMemoryManagerThreadLocal;
-
-		template <typename t_CParams2>
-		friend struct TCMemoryManagerLimitedTemporaryReturn;
 
 		static_assert(cIsPowerOfTwo<t_CParams::mc_SubSlabSize>, "Must be aligned to power of two");
 		static_assert(cIsPowerOfTwo<t_CParams::mc_SlabSize>, "Must be aligned to power of two");

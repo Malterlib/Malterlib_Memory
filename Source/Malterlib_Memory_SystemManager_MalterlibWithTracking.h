@@ -22,8 +22,9 @@ namespace NMib
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	struct CMemoryManagerParamsSmallOverrides : public CMemoryManagerParamsFlavorOverrides
 	{
-		static constexpr umint mc_SubSlabSize = 4096;
 		using CAllocator = CMainHeapVirtualAllocator;
+
+		static constexpr umint mc_SubSlabSize = 4096;
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 	};
 
@@ -34,6 +35,7 @@ namespace NMib
 	struct CMemoryManagerParamsMaxOverrides : public CMemoryManagerParamsFlavorOverrides
 	{
 		using CAllocator = CMainHeapVirtualAllocator;
+
 		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 	};
 
@@ -107,8 +109,9 @@ namespace NMib
 
 	struct CMemoryManagerNonTrackedParams : public CMemoryManagerParamsMax
 	{
-		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_NonTrackedMainHeap;
 		using CAllocator = NMemory::CAllocator_VirtualNoTracking;
+
+		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_NonTrackedMainHeap;
 		static constexpr bool mc_bBackgroundCleanup = false; // Threading potentially recursive allocations
 	};
 

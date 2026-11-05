@@ -9,16 +9,13 @@ namespace NMib::NMemory
 {
 	struct CAllocator_Placement : public CAllocator_Base
 	{
-		static constexpr aint mc_Reporting = false;
-		static constexpr aint mc_CanBeStatic = false;
-		static constexpr bool mc_bMethodsStatic = false;
+		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Placement>;
+
+		inline_always CAllocator_Placement();
 
 		constexpr bool operator == (CAllocator_Placement const &_Right) const noexcept;
 		constexpr auto operator <=> (CAllocator_Placement const &_Right) const noexcept;
 
-		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Placement>;
-
-		inline_always CAllocator_Placement();
 		DMibNamedAsMemberFunction inline_always static bool f_IsStatic(void const *_pBlock);
 		DMibNamedAsMemberFunction inline_always static bool f_OnlyOneAlloc();
 		DMibNamedAsMemberFunction inline_always static umint f_StaticAddresses();
@@ -178,6 +175,10 @@ namespace NMib::NMemory
 		DMibNamedAsMemberFunction inline_always only_parameters_aliased static void f_Decommit(void *_pMem, umint _Size);
 		DMibNamedAsMemberFunction inline_always only_parameters_aliased static void f_Free(void *_pBlock, umint _Size);
 		DMibNamedAsMemberFunction inline_always only_parameters_aliased static void f_FreeNoSize(void *_pBlock);
+
+		static constexpr aint mc_Reporting = false;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
 	};
 }
 

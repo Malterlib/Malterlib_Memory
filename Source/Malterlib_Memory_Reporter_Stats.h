@@ -13,6 +13,10 @@ namespace NMib::NMemory
 		{
 			CSize();
 
+			umint f_GetSize() const;
+
+			CSize &operator += (CSize const &_Other);
+
 			zuint64 m_nAllocations;
 			zuint64 m_nBytes;
 			zuint64 m_nBytesRequested;
@@ -20,14 +24,8 @@ namespace NMib::NMemory
 			zuint64 m_Cycles;
 			zuint64 m_CyclesFree;
 			DMibListLinkDS_Link(CSize, m_Link);
-			umint f_GetSize() const;
-
-			CSize &operator += (CSize const &_Other);
 		};
 
-		static CStatsMemoryReporter *ms_pThis;
-
-	public:
 		CStatsMemoryReporter();
 		~CStatsMemoryReporter();
 
@@ -74,6 +72,8 @@ namespace NMib::NMemory
 		void f_Commit(umint _MemoryAllocator, umint _Address, umint _Size) override;
 		void f_Decommit(umint _MemoryAllocator, umint _Address, umint _Size) override;
 
+		static CStatsMemoryReporter *ms_pThis;
+
 	private:
 		struct CAllocator
 		{
@@ -86,11 +86,12 @@ namespace NMib::NMemory
 
 		struct CThreadLocal
 		{
+			CThreadLocal();
+			~CThreadLocal();
+
 			umint m_CyclesDepth;
 			uint64 m_CyclesStart[16]; // 16 should be more than enough
 			NContainer::TCMap<umint, CAllocator, CSort_Default, CAllocator_NonTrackedHeap> m_Allocators;
-			CThreadLocal();
-			~CThreadLocal();
 		};
 
 	private:

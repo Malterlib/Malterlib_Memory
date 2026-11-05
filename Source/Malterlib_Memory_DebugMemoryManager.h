@@ -52,16 +52,33 @@ namespace NMib::NMemory
 	private:
 		struct CMemoryBlock
 		{
+			uint8 *f_GetUserAddress() const;
+
 			uint8 *m_pStart;
 			umint m_RealSize;
 			umint m_AllocSize;
 			umint m_OriginalSize;
-
-			uint8 *f_GetUserAddress() const;
 		};
+
+		struct CMemoryManagerParamsOverrides : public CDefaultMemoryManagerParams
+		{
+			using CAllocator = NMemory::CAllocator_VirtualNoTracking;
+
+			static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
+		};
+
+		struct CMemoryManagerParamsOverridesParams : public TCMemoryManagerParams<CMemoryManagerParamsOverrides>
+		{
+		};
+
+		using CMemoryManager = NMemory::TCMemoryManager<CMemoryManagerParamsOverridesParams>;
 
 		void fp_RemoveFreeBlock();
 		void fp_Free(void *_pBlock, umint _Size);
+
+		// macOS needs 16 byte alignment to handle SSE
+		static constexpr aint mcp_MemoryManagerAlignmentCalc = gc_HighestBitSet<sizeof(umint) * 2>;
+		static constexpr aint mcp_MemoryManagerAlignment = mcp_MemoryManagerAlignmentCalc < 4 ? 4 : mcp_MemoryManagerAlignmentCalc;
 
 		umint mp_Sequence;
 		NContainer::TCMapWithPool
@@ -97,22 +114,6 @@ namespace NMib::NMemory
 		bool mp_bProtectionDemanded;
 
 		mutable NThread::CMutual mp_Lock;
-
-		// macOS needs 16 byte alignment to handle SSE
-		static constexpr aint mcp_MemoryManagerAlignmentCalc = gc_HighestBitSet<sizeof(umint) * 2>;
-		static constexpr aint mcp_MemoryManagerAlignment = mcp_MemoryManagerAlignmentCalc < 4 ? 4 : mcp_MemoryManagerAlignmentCalc;
-
-		struct CMemoryManagerParamsOverrides : public CDefaultMemoryManagerParams
-		{
-			static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
-			using CAllocator = NMemory::CAllocator_VirtualNoTracking;
-		};
-
-		struct CMemoryManagerParamsOverridesParams : public TCMemoryManagerParams<CMemoryManagerParamsOverrides>
-		{
-		};
-
-		using CMemoryManager = NMemory::TCMemoryManager<CMemoryManagerParamsOverridesParams>;
 
 		CMemoryManager mp_Heap;
 	};

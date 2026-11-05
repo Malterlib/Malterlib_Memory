@@ -20,22 +20,26 @@ namespace NMib::NMemory
 
 		struct CSubSystem_Memory : public CSubSystem
 		{
-			~CSubSystem_Memory()
-			{
-				m_bDestroyed = true;
-			}
+			~CSubSystem_Memory();
 
-			void f_DestroyThreadLocal() override
-			{
-				m_bThreadLocalsDestroyed = true;
-				m_ThreadLocal.f_Destroy();
-			}
+			void f_DestroyThreadLocal() override;
 
 			bool m_bThreadLocalsDestroyed = false;
 			bool m_bDestroyed = false;
 
 			NThread::TCThreadLocal<CThreadLocal, NMemory::CAllocator_NonTrackedHeap, NThread::EThreadLocalFlag_AlwaysCreated> m_ThreadLocal;
 		};
+
+		CSubSystem_Memory::~CSubSystem_Memory()
+		{
+			m_bDestroyed = true;
+		}
+
+		void CSubSystem_Memory::f_DestroyThreadLocal()
+		{
+			m_bThreadLocalsDestroyed = true;
+			m_ThreadLocal.f_Destroy();
+		}
 
 		constinit TCSubSystem<CSubSystem_Memory, ESubSystemDestruction_BeforeThreadLocals> g_SubSystem_Memory = {DAggregateInit};
 	}

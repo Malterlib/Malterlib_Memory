@@ -50,14 +50,14 @@ namespace NMib
 	template <typename t_CType = void, typename ...tp_CParams>
 	struct TCConstruct
 	{
-		static constexpr aint mc_nParams = sizeof...(tp_CParams);
-
-		NStorage::TCTuple<NMib::NTraits::TCAddLValueReference<tp_CParams>...> m_Params;
-
 		TCConstruct(NMib::NTraits::TCAddLValueReference<tp_CParams> ...p_Params);
 
 		template <typename tf_CType, typename tf_CAllocator>
 		typename NMib::NPrivate::TCChooseCreateType<t_CType, tf_CType>::CType *f_Create(tf_CAllocator &&_Allocator);
+
+		static constexpr aint mc_nParams = sizeof...(tp_CParams);
+
+		NStorage::TCTuple<NMib::NTraits::TCAddLValueReference<tp_CParams>...> m_Params;
 
 	private:
 		template <typename tf_CType, typename tf_CAllocator, umint ...tfp_Indices>

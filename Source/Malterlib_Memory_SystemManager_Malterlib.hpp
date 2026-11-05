@@ -191,8 +191,6 @@ namespace NMib::NMemory
 
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
 	{
-		static constexpr bool mc_bSizePenalty = false;
-
 		inline_always static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule)
 		{
 			return true;
@@ -254,8 +252,6 @@ namespace NMib::NMemory
 			return false;
 #	endif
 		}
-
-		static constexpr bool mc_bSupportsNonTracked = true;
 
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_PrepareFork(CMemoryManagerCrossModule *_pModule)
 		{
@@ -507,7 +503,6 @@ namespace NMib::NMemory
 		}
 
 #	if DEnableDebugMemoryManager
-		static constexpr bool mc_bSupportsDebug = true;
 		inline_always static void * DMibCrossmoduleAPI fs_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, umint &_Size, ch8 const *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
 #		if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -642,9 +637,15 @@ namespace NMib::NMemory
 				;
 			}
 		}
+#	endif
+
+		static constexpr bool mc_bSupportsNonTracked = true;
+#	if DEnableDebugMemoryManager
+		static constexpr bool mc_bSupportsDebug = true;
 #	else
 		static constexpr bool mc_bSupportsDebug = false;
 #	endif
+		static constexpr bool mc_bSizePenalty = false;
 	};
 
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size)
