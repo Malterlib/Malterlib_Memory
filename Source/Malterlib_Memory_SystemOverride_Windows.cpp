@@ -108,9 +108,9 @@ namespace
 		return true;
 	}
 
-	inline_always bool fg_TryMultiplyWindowsAllocationSize(size_t _Count, size_t _Size, umint &o_Size, int *o_pErrno = nullptr)
+	inline_always bool fg_TryMultiplyWindowsAllocationSize(size_t _nMembers, size_t _Size, umint &o_Size, int *o_pErrno = nullptr)
 	{
-		if (NMib::fg_MultiplyOverflow(umint(_Count), umint(_Size), o_Size))
+		if (NMib::fg_MultiplyOverflow(umint(_nMembers), umint(_Size), o_Size))
 		{
 			errno = ENOMEM;
 			if (o_pErrno)
@@ -145,11 +145,11 @@ extern "C"
 #endif
 	size_t __crtDebugFillThreshold = SIZE_MAX;
 
-	DMemDeclNaR void * DDefaultCallingConv malloc(size_t);
-	DMemDeclNa void DDefaultCallingConv free(void *);
-	DMemDeclNaR void * DDefaultCallingConv realloc(void *, size_t);
-	DMemDeclNaR void * DDefaultCallingConv calloc(size_t, size_t);
-	DMemDeclNaR void * DDefaultCallingConv memalign(size_t, size_t);
+	DMemDeclNaR void * DDefaultCallingConv malloc(size_t _Size);
+	DMemDeclNa void DDefaultCallingConv free(void *_pMemory);
+	DMemDeclNaR void * DDefaultCallingConv realloc(void *_pMemory, size_t _Size);
+	DMemDeclNaR void * DDefaultCallingConv calloc(size_t _nMembers, size_t _Size);
+	DMemDeclNaR void * DDefaultCallingConv memalign(size_t _Alignment, size_t _Size);
 
 	/*************************************************************************************************\
 	|¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
@@ -157,28 +157,28 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	DMemDeclNaR void * DDefaultCallingConv malloc(size_t sz)
+	DMemDeclNaR void * DDefaultCallingConv malloc(size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		if (!fg_TryAlignWindowsAllocationSize(sz))
+		if (!fg_TryAlignWindowsAllocationSize(_Size))
 			return nullptr;
-		return NMib::NMemory::fg_Alloc(sz);
+		return NMib::NMemory::fg_Alloc(_Size);
 	}
 
-	void * DDefaultCallingConv _malloc_base(size_t sz)
+	void * DDefaultCallingConv _malloc_base(size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		if (!fg_TryAlignWindowsAllocationSize(sz))
+		if (!fg_TryAlignWindowsAllocationSize(_Size))
 			return nullptr;
-		return NMib::NMemory::fg_Alloc(sz);
+		return NMib::NMemory::fg_Alloc(_Size);
 	}
 
-	void * DDefaultCallingConv _malloc_dbg(size_t sz, int BlockType, char const *Filename, int Line)
+	void * DDefaultCallingConv _malloc_dbg(size_t _Size, int _BlockType, char const *_pFile, int _Line)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		if (!fg_TryAlignWindowsAllocationSize(sz))
+		if (!fg_TryAlignWindowsAllocationSize(_Size))
 			return nullptr;
-		return NMib::NMemory::fg_AllocDebug(sz, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
+		return NMib::NMemory::fg_AllocDebug(_Size, _pFile, _Line, (_BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 	}
 
 	/*************************************************************************************************\
@@ -187,11 +187,11 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	DMemDeclNaR void * DDefaultCallingConv calloc(size_t nelem, size_t elsize)
+	DMemDeclNaR void * DDefaultCallingConv calloc(size_t _nMembers, size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint UnalignedSize;
-		if (!fg_TryMultiplyWindowsAllocationSize(nelem, elsize, UnalignedSize))
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, UnalignedSize))
 			return nullptr;
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
@@ -201,49 +201,49 @@ extern "C"
 		return pMemory;
 	}
 
-	void * DDefaultCallingConv _calloc_dbg(size_t nelem, size_t elsize, int BlockType, char const *Filename, int Line)
+	void * DDefaultCallingConv _calloc_dbg(size_t _nMembers, size_t _Size, int _BlockType, char const *_pFile, int _Line)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint UnalignedSize;
-		if (!fg_TryMultiplyWindowsAllocationSize(nelem, elsize, UnalignedSize))
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, UnalignedSize))
 			return nullptr;
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 			return nullptr;
-		void *pMemory = NMib::NMemory::fg_AllocDebug(Size, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
+		void *pMemory = NMib::NMemory::fg_AllocDebug(Size, _pFile, _Line, (_BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 		memset(pMemory, 0, UnalignedSize);
 		return pMemory;
 	}
 
-	void * __cdecl _calloc_dbg_impl(size_t nNum, size_t nSize, int nBlockUse, char const *szFileName, int nLine, int *errno_tmp)
+	void * __cdecl _calloc_dbg_impl(size_t _nMembers, size_t _Size, int _BlockType, char const *_pFile, int _Line, int *o_pErrno)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint UnalignedSize;
-		if (!fg_TryMultiplyWindowsAllocationSize(nNum, nSize, UnalignedSize, errno_tmp))
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, UnalignedSize, o_pErrno))
 			return nullptr;
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 		{
-			if (errno_tmp)
-				*errno_tmp = ENOMEM;
+			if (o_pErrno)
+				*o_pErrno = ENOMEM;
 			return nullptr;
 		}
-		void *pMemory = NMib::NMemory::fg_AllocDebug(Size, szFileName, nLine, (nBlockUse == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
+		void *pMemory = NMib::NMemory::fg_AllocDebug(Size, _pFile, _Line, (_BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 		memset(pMemory, 0, UnalignedSize);
 		return pMemory;
 	}
 
-	void * DDefaultCallingConv _calloc_impl(size_t nelem, size_t elsize, int *errno_tmp)
+	void * DDefaultCallingConv _calloc_impl(size_t _nMembers, size_t _Size, int *o_pErrno)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint UnalignedSize;
-		if (!fg_TryMultiplyWindowsAllocationSize(nelem, elsize, UnalignedSize, errno_tmp))
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, UnalignedSize, o_pErrno))
 			return nullptr;
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 		{
-			if (errno_tmp)
-				*errno_tmp = ENOMEM;
+			if (o_pErrno)
+				*o_pErrno = ENOMEM;
 			return nullptr;
 		}
 		void *pMemory = NMib::NMemory::fg_Alloc(Size);
@@ -251,11 +251,11 @@ extern "C"
 		return pMemory;
 	}
 
-	void * DDefaultCallingConv _calloc_base(size_t nelem, size_t elsize)
+	void * DDefaultCallingConv _calloc_base(size_t _nMembers, size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint UnalignedSize;
-		if (!fg_TryMultiplyWindowsAllocationSize(nelem, elsize, UnalignedSize))
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, UnalignedSize))
 			return nullptr;
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
@@ -274,11 +274,11 @@ extern "C"
 		return pMemory;
 	}
 
-	_CRTIMP void * __cdecl _calloc_crt(size_t count, size_t size)
+	_CRTIMP void * __cdecl _calloc_crt(size_t _nMembers, size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint UnalignedSize;
-		if (!fg_TryMultiplyWindowsAllocationSize(count, size, UnalignedSize))
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, UnalignedSize))
 			return nullptr;
 		umint Size = UnalignedSize;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
@@ -288,38 +288,38 @@ extern "C"
 		return pMemory;
 	}
 
-	_CRTIMP __checkReturn __bcount_opt(_Size) void * __cdecl _realloc_crt(__inout_opt void *_Ptr, __in size_t _Size)
+	_CRTIMP __checkReturn __bcount_opt(_Size) void * __cdecl _realloc_crt(__inout_opt void *_pMemory, __in size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		if (!fg_TryAlignWindowsAllocationSize(_Size))
 			return nullptr;
-		void *pMemory = NMib::NMemory::fg_Resize(_Ptr, _Size, 0, EAllocationFlag_SizeNotNeeded);
+		void *pMemory = NMib::NMemory::fg_Resize(_pMemory, _Size, 0, EAllocationFlag_SizeNotNeeded);
 		return pMemory;
 	}
 
-	_CRTIMP __checkReturn __bcount_opt(_Size *_Count) void * __cdecl _recalloc_crt(__inout_opt void *_Ptr, __in size_t _Count, __in size_t _Size)
+	_CRTIMP __checkReturn __bcount_opt(_Size *_nMembers) void * __cdecl _recalloc_crt(__inout_opt void *_pMemory, __in size_t _nMembers, __in size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint Size;
-		if (!fg_TryMultiplyWindowsAllocationSize(_Count, _Size, Size))
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, Size))
 			return nullptr;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 			return nullptr;
-		void *pMemory = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
+		void *pMemory = NMib::NMemory::fg_Resize(_pMemory, Size, 0, EAllocationFlag_SizeNotNeeded);
 		return pMemory;
 	}
 
-	_Success_(return != 0) _Check_return_ _Ret_maybenull_ _Post_writable_byte_size_(_Count * _Size)
+	_Success_(return != 0) _Check_return_ _Ret_maybenull_ _Post_writable_byte_size_(_nMembers * _Size)
 	_ACRTIMP _CRTALLOCATOR _CRTRESTRICT
-	void * __cdecl _recalloc_base(_Pre_maybenull_ _Post_invalid_ void *_Ptr, _In_ size_t _Count, _In_ size_t _Size)
+	void * __cdecl _recalloc_base(_Pre_maybenull_ _Post_invalid_ void *_pMemory, _In_ size_t _nMembers, _In_ size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint Size;
-		if (!fg_TryMultiplyWindowsAllocationSize(_Count, _Size, Size))
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, Size))
 			return nullptr;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 			return nullptr;
-		void *pMemory = NMib::NMemory::fg_Resize(_Ptr, Size, 0, EAllocationFlag_SizeNotNeeded);
+		void *pMemory = NMib::NMemory::fg_Resize(_pMemory, Size, 0, EAllocationFlag_SizeNotNeeded);
 		return pMemory;
 	}
 
@@ -329,22 +329,22 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	DMemDeclNa void DDefaultCallingConv free(void *ptr)
+	DMemDeclNa void DDefaultCallingConv free(void *_pMemory)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		NMib::NMemory::fg_FreeNoSize(ptr);
+		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
 
-	void DDefaultCallingConv _free_base(void *ptr)
+	void DDefaultCallingConv _free_base(void *_pMemory)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		NMib::NMemory::fg_FreeNoSize(ptr);
+		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
 
-	void DDefaultCallingConv _free_dbg(void *ptr, int)
+	void DDefaultCallingConv _free_dbg(void *_pMemory, int _BlockType)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		NMib::NMemory::fg_FreeNoSize(ptr);
+		NMib::NMemory::fg_FreeNoSize(_pMemory);
 	}
 
 	/*************************************************************************************************\
@@ -353,17 +353,17 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	DMemDeclNaR void * DDefaultCallingConv memalign(size_t alignment, size_t size)
+	DMemDeclNaR void * DDefaultCallingConv memalign(size_t _Alignment, size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		if (!NMib::NMemory::NPrivate::fg_IsAllocationAlignmentValid(alignment))
+		if (!NMib::NMemory::NPrivate::fg_IsAllocationAlignmentValid(_Alignment))
 		{
 			errno = EINVAL;
 			return nullptr;
 		}
-		if (!fg_TryAlignWindowsAllocationSize(size, alignment))
+		if (!fg_TryAlignWindowsAllocationSize(_Size, _Alignment))
 			return nullptr;
-		return NMib::NMemory::fg_AllocAligned(size, alignment);
+		return NMib::NMemory::fg_AllocAligned(_Size, _Alignment);
 	}
 
 	/*************************************************************************************************\
@@ -372,52 +372,52 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	DMemDeclNaR void * DDefaultCallingConv realloc(void *ptr, size_t sz)
+	DMemDeclNaR void * DDefaultCallingConv realloc(void *_pMemory, size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		if (!fg_TryAlignWindowsAllocationSize(sz))
+		if (!fg_TryAlignWindowsAllocationSize(_Size))
 			return nullptr;
-		return NMib::NMemory::fg_Resize(ptr, sz, 0, EAllocationFlag_SizeNotNeeded);
+		return NMib::NMemory::fg_Resize(_pMemory, _Size, 0, EAllocationFlag_SizeNotNeeded);
 	}
 
-	void * DDefaultCallingConv _realloc_base(void *ptr, size_t sz)
+	void * DDefaultCallingConv _realloc_base(void *_pMemory, size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		if (!fg_TryAlignWindowsAllocationSize(sz))
+		if (!fg_TryAlignWindowsAllocationSize(_Size))
 			return nullptr;
-		return NMib::NMemory::fg_Resize(ptr, sz, 0, EAllocationFlag_SizeNotNeeded);
+		return NMib::NMemory::fg_Resize(_pMemory, _Size, 0, EAllocationFlag_SizeNotNeeded);
 	}
 
-	void * DDefaultCallingConv _realloc_dbg(void *ptr, size_t sz, int BlockType, char const *Filename, int Line)
+	void * DDefaultCallingConv _realloc_dbg(void *_pMemory, size_t _Size, int _BlockType, char const *_pFile, int _Line)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
-		if (!fg_TryAlignWindowsAllocationSize(sz))
+		if (!fg_TryAlignWindowsAllocationSize(_Size))
 			return nullptr;
-		return NMib::NMemory::fg_ResizeDebug(ptr, sz, 0, Filename, Line, (BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
+		return NMib::NMemory::fg_ResizeDebug(_pMemory, _Size, 0, _pFile, _Line, (_BlockType == 2 ? NMib::EHeapDebugFlag_Ignore : NMib::EHeapDebugFlag_None));
 	}
 
-	DMemDeclNaR void * DDefaultCallingConv _recalloc(void *memblock, size_t count, size_t size)
+	DMemDeclNaR void * DDefaultCallingConv _recalloc(void *_pMemory, size_t _nMembers, size_t _Size)
 	{
 		DMibMemLightweightTrackAddFlagsLowLevelScope(EMemoryReportLightweightScopeFlag_InCScope);
 		umint Size;
-		if (!fg_TryMultiplyWindowsAllocationSize(count, size, Size))
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, Size))
 			return nullptr;
 		if (!fg_TryAlignWindowsAllocationSize(Size))
 			return nullptr;
-		return NMib::NMemory::fg_Resize(memblock, Size, 0, EAllocationFlag_SizeNotNeeded);
+		return NMib::NMemory::fg_Resize(_pMemory, Size, 0, EAllocationFlag_SizeNotNeeded);
 	}
 
 //#ifndef DArchX86_64
 // DMemDeclNaR
 //#endif
-	void * DDefaultCallingConv _recalloc_dbg(void *memblock, size_t count, size_t size, int nBlockUse, char const *szFileName, int nLine)
+	void * DDefaultCallingConv _recalloc_dbg(void *_pMemory, size_t _nMembers, size_t _Size, int _BlockType, char const *_pFile, int _Line)
 	{
 		size_t TotalSize = 0;
 
-		if (!fg_TryMultiplyWindowsAllocationSize(count, size, TotalSize))
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, TotalSize))
 			return nullptr;
 
-		return _realloc_dbg(memblock, TotalSize, nBlockUse, szFileName, nLine);
+		return _realloc_dbg(_pMemory, TotalSize, _BlockType, _pFile, _Line);
 	}
 
 	/*************************************************************************************************\
@@ -426,19 +426,19 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	umint DDefaultCallingConv _msize(void *mem)
+	umint DDefaultCallingConv _msize(void *_pMemory)
 	{
-		return NMib::NMemory::fg_Size(mem);
+		return NMib::NMemory::fg_Size(_pMemory);
 	}
 
-	umint DDefaultCallingConv _msize_base(void *mem) _CRT_NOEXCEPT
+	umint DDefaultCallingConv _msize_base(void *_pMemory) _CRT_NOEXCEPT
 	{
-		return NMib::NMemory::fg_Size(mem);
+		return NMib::NMemory::fg_Size(_pMemory);
 	}
 
-	umint DDefaultCallingConv _msize_dbg(void *mem, int blockType)
+	umint DDefaultCallingConv _msize_dbg(void *_pMemory, int _BlockType)
 	{
-		return NMib::NMemory::fg_Size(mem);
+		return NMib::NMemory::fg_Size(_pMemory);
 	}
 
 	/*************************************************************************************************\
@@ -447,25 +447,25 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	void * DDefaultCallingConv _expand(void *mem, size_t size)
+	void * DDefaultCallingConv _expand(void *_pMemory, size_t _Size)
 	{
 		// Just fail :P
 		DMibPDebugBreak;
-		return mem;
+		return _pMemory;
 	}
 
-	void * DDefaultCallingConv _expand_base(void *mem, size_t size)
+	void * DDefaultCallingConv _expand_base(void *_pMemory, size_t _Size)
 	{
 		// Just fail :P
 		DMibPDebugBreak;
-		return mem;
+		return _pMemory;
 	}
 
-	void * DDefaultCallingConv _expand_dbg(void *userData, umint newSize, int blockType, char const *filename, int linenumber)
+	void * DDefaultCallingConv _expand_dbg(void *_pMemory, umint _Size, int _BlockType, char const *_pFile, int _Line)
 	{
 		// Just fail :P
 		DMibPDebugBreak;
-		return userData;
+		return _pMemory;
 	}
 
 	/*************************************************************************************************\
@@ -474,19 +474,19 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	_Check_return_ _Ret_opt_bytecap_(_Size) void * __cdecl _nh_malloc(_In_ size_t _Size, _In_ int _NhFlag)
+	_Check_return_ _Ret_opt_bytecap_(_Size) void * __cdecl _nh_malloc(_In_ size_t _Size, _In_ int _NewHandlerFlag)
 	{
 		return malloc(_Size);
 	}
 
-	void * DDefaultCallingConv _nh_malloc_base(umint nSize, int nhFlag)
+	void * DDefaultCallingConv _nh_malloc_base(umint _Size, int _NewHandlerFlag)
 	{
-		return malloc(nSize);
+		return malloc(_Size);
 	}
 
-	void * DDefaultCallingConv _nh_malloc_dbg(umint nSize, int nhFlag, int nBlockUse, char const *szFileName, int nLine)
+	void * DDefaultCallingConv _nh_malloc_dbg(umint _Size, int _NewHandlerFlag, int _BlockType, char const *_pFile, int _Line)
 	{
-		return _malloc_dbg(nSize, nBlockUse, szFileName, nLine);
+		return _malloc_dbg(_Size, _BlockType, _pFile, _Line);
 	}
 
 	/*************************************************************************************************\
@@ -500,14 +500,14 @@ extern "C"
 		return malloc(_Size);
 	}
 
-	void * DDefaultCallingConv _heap_alloc_base(umint nSize)
+	void * DDefaultCallingConv _heap_alloc_base(umint _Size)
 	{
-		return malloc(nSize);
+		return malloc(_Size);
 	}
 
-	void * DDefaultCallingConv _heap_alloc_dbg(umint nSize, int nBlockUse, char const *szFileName, int nLine)
+	void * DDefaultCallingConv _heap_alloc_dbg(umint _Size, int _BlockType, char const *_pFile, int _Line)
 	{
-		return _malloc_dbg(nSize, nBlockUse, szFileName, nLine);
+		return _malloc_dbg(_Size, _BlockType, _pFile, _Line);
 	}
 
 	/*************************************************************************************************\
@@ -516,29 +516,29 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	void DDefaultCallingConv _free_lk(void *pUserData)
+	void DDefaultCallingConv _free_lk(void *_pMemory)
 	{
-		free(pUserData);
+		free(_pMemory);
 	}
 
-	void DDefaultCallingConv _free_lk_base(void *pUserData)
+	void DDefaultCallingConv _free_lk_base(void *_pMemory)
 	{
-		free(pUserData);
+		free(_pMemory);
 	}
 
-	void DDefaultCallingConv _free_dbg_lk(void *pUserData, int nBlockUse)
+	void DDefaultCallingConv _free_dbg_lk(void *_pMemory, int _BlockType)
 	{
-		free(pUserData);
+		free(_pMemory);
 	}
 
-	__declspec(noalias) void DDefaultCallingConv _freea_s(void *ptr)
+	__declspec(noalias) void DDefaultCallingConv _freea_s(void *_pMemory)
 	{
 		// DMibPDebugBreak;
-		if (ptr != nullptr)
+		if (_pMemory != nullptr)
 		{
-			ptr = (char *)ptr - _ALLOCA_S_MARKER_SIZE;
-			if (*((size_t *)ptr) == _ALLOCA_S_HEAP_MARKER)
-				free(ptr);
+			_pMemory = (char *)_pMemory - _ALLOCA_S_MARKER_SIZE;
+			if (*((size_t *)_pMemory) == _ALLOCA_S_HEAP_MARKER)
+				free(_pMemory);
 		}
 	}
 
@@ -548,29 +548,29 @@ extern "C"
 	|__________________________________________________________________________________________________
 	\*************************************************************************************************/
 
-	long DDefaultCallingConv _CrtSetBreakAlloc(long lNewBreakAlloc)
+	long DDefaultCallingConv _CrtSetBreakAlloc(long _BreakRequestNumber)
 	{
 		return 0;
 	}
 
-	void DDefaultCallingConv _CrtSetDbgBlockType(void *pUserData, int nBlockUse)
+	void DDefaultCallingConv _CrtSetDbgBlockType(void *_pMemory, int _BlockType)
 	{
 	}
 
-	typedef int (DDefaultCallingConv *_CRT_ALLOC_HOOK)(int _AllocationType, void *_pData, umint _Size, int _BlockUse, long _Request, unsigned char const *_pFileName, int _LineNumber);
+	typedef int (DDefaultCallingConv *_CRT_ALLOC_HOOK)(int _AllocationType, void *_pMemory, umint _Size, int _BlockType, long _RequestNumber, unsigned char const *_pFile, int _Line);
 
-	_CRT_ALLOC_HOOK DDefaultCallingConv _CrtSetAllocHook(_CRT_ALLOC_HOOK pfnNewHook)
+	_CRT_ALLOC_HOOK DDefaultCallingConv _CrtSetAllocHook(_CRT_ALLOC_HOOK _fNewHook)
 	{
 		return nullptr;
 	}
 
-	int DDefaultCallingConv CheckBytes(unsigned char *pb, unsigned char bCheck, umint nSize)
+	int DDefaultCallingConv CheckBytes(unsigned char *_pBytes, unsigned char _Expected, umint _Size)
 	{
 		// We actually need to do this (not just return 1) since both positive and negative returns are used :-)
-		unsigned char *pEnd = pb + nSize;
-		while (pb < pEnd)
+		unsigned char *pEnd = _pBytes + _Size;
+		while (_pBytes < pEnd)
 		{
-			if (*pb++ != bCheck)
+			if (*_pBytes++ != _Expected)
 				return 0;
 		}
 		return 1;
@@ -581,55 +581,55 @@ extern "C"
 		return NMib::fg_GetSys()->f_MemoryManager_Check(false);
 	}
 
-	int DDefaultCallingConv _CrtSetDbgFlag(int fNewBits)
+	int DDefaultCallingConv _CrtSetDbgFlag(int _NewFlags)
 	{
 		return _CRTDBG_LEAK_CHECK_DF;
 	}
 
-	void DDefaultCallingConv _CrtDoForAllClientObjects(void (DDefaultCallingConv *pfn)(void *_pData, void *_pContext), void *pContext)
+	void DDefaultCallingConv _CrtDoForAllClientObjects(void (DDefaultCallingConv *_fCallback)(void *_pMemory, void *_pContext), void *_pContext)
 	{
 	}
 
-	int DDefaultCallingConv _CrtIsValidPointer(void const *pv, unsigned int nBytes, int bReadWrite)
+	int DDefaultCallingConv _CrtIsValidPointer(void const *_pMemory, unsigned int _Size, int _bReadWrite)
 	{
 		return
 			(
-				pv != nullptr
+				_pMemory != nullptr
 #ifdef _WIN32
-				&& !IsBadReadPtr(pv, nBytes)
-				&& (!bReadWrite || !IsBadWritePtr((LPVOID)pv, nBytes))
+				&& !IsBadReadPtr(_pMemory, _Size)
+				&& (!_bReadWrite || !IsBadWritePtr((LPVOID)_pMemory, _Size))
 #endif  /* _WIN32 */
 			)
 		;
 	}
 
-	int DDefaultCallingConv _CrtIsValidHeapPointer(void const *pUserData)
+	int DDefaultCallingConv _CrtIsValidHeapPointer(void const *_pMemory)
 	{
 		return true;
 	}
 
-	int DDefaultCallingConv _CrtIsMemoryBlock(void const *pUserData, unsigned int nBytes, long *plRequestNumber, char **pszFileName, int *pnLine)
+	int DDefaultCallingConv _CrtIsMemoryBlock(void const *_pMemory, unsigned int _Size, long *o_pRequestNumber, char **o_pFile, int *o_pLine)
 	{
 		return false;
 	}
 
-	typedef void (DDefaultCallingConv *_CRT_DUMP_CLIENT)(void *_pUserPortion, umint _BlockSize);
+	typedef void (DDefaultCallingConv *_CRT_DUMP_CLIENT)(void *_pMemory, umint _Size);
 
-	_CRT_DUMP_CLIENT DDefaultCallingConv _CrtSetDumpClient(_CRT_DUMP_CLIENT pfnNewDump)
+	_CRT_DUMP_CLIENT DDefaultCallingConv _CrtSetDumpClient(_CRT_DUMP_CLIENT _fNewDump)
 	{
 		return nullptr;
 	}
 
-	void DDefaultCallingConv _CrtMemCheckpoint(_CrtMemState *state)
+	void DDefaultCallingConv _CrtMemCheckpoint(_CrtMemState *o_pState)
 	{
 	}
 
-	int DDefaultCallingConv _CrtMemDifference(_CrtMemState *state, _CrtMemState const *oldState, _CrtMemState const *newState)
+	int DDefaultCallingConv _CrtMemDifference(_CrtMemState *o_pDifference, _CrtMemState const *_pOldState, _CrtMemState const *_pNewState)
 	{
 		return false;
 	}
 
-	void DDefaultCallingConv _CrtMemDumpAllObjectsSince(_CrtMemState const *state)
+	void DDefaultCallingConv _CrtMemDumpAllObjectsSince(_CrtMemState const *_pState)
 	{
 	}
 
@@ -638,16 +638,16 @@ extern "C"
 		return false;
 	}
 
-	void DDefaultCallingConv _CrtMemDumpStatistics(_CrtMemState const *state)
+	void DDefaultCallingConv _CrtMemDumpStatistics(_CrtMemState const *_pState)
 	{
 	}
 
-	int DDefaultCallingConv _CrtReportBlockType(void const *pUserData)
+	int DDefaultCallingConv _CrtReportBlockType(void const *_pMemory)
 	{
 		return 0;
 	}
 
-	int DDefaultCallingConv _CrtSetCheckCount(int fCheckCount)
+	int DDefaultCallingConv _CrtSetCheckCount(int _CheckCount)
 	{
 		return 0;
 	}
@@ -680,7 +680,7 @@ extern "C"
 		return true;
 	}
 
-	extern "C" bool __cdecl __acrt_uninitialize_heap(bool const)
+	extern "C" bool __cdecl __acrt_uninitialize_heap(bool const _bTerminating)
 	{
 		return true;
 	}
@@ -716,128 +716,128 @@ extern "C"
 	static unsigned char gs_NoMansLandFill = 0xFD; // fill no-man's land with this
 	static unsigned char gs_AlignLandFill = 0xED; // fill no-man's land for aligned routines
 
-	void * __cdecl _aligned_malloc(size_t size, size_t align)
+	void * __cdecl _aligned_malloc(size_t _Size, size_t _Alignment)
 	{
-		return _aligned_offset_malloc_dbg(size, align, 0, NULL, 0);
+		return _aligned_offset_malloc_dbg(_Size, _Alignment, 0, NULL, 0);
 	}
 
-	void * __cdecl _aligned_malloc_dbg(size_t size, size_t align, char const *f_name, int line_n)
+	void * __cdecl _aligned_malloc_dbg(size_t _Size, size_t _Alignment, char const *_pFile, int _Line)
 	{
-		return _aligned_offset_malloc_dbg(size, align, 0, f_name, line_n);
+		return _aligned_offset_malloc_dbg(_Size, _Alignment, 0, _pFile, _Line);
 	}
 
-	void * __cdecl _aligned_realloc(void *memblock, size_t size, size_t align)
+	void * __cdecl _aligned_realloc(void *_pMemory, size_t _Size, size_t _Alignment)
 	{
-		return _aligned_offset_realloc_dbg(memblock, size, align, 0, NULL, 0);
+		return _aligned_offset_realloc_dbg(_pMemory, _Size, _Alignment, 0, NULL, 0);
 	}
 
-	void * __cdecl _aligned_realloc_dbg(void *memblock, size_t size, size_t align, char const *f_name, int line_n)
+	void * __cdecl _aligned_realloc_dbg(void *_pMemory, size_t _Size, size_t _Alignment, char const *_pFile, int _Line)
 	{
-		return _aligned_offset_realloc_dbg(memblock, size, align, 0, f_name, line_n);
+		return _aligned_offset_realloc_dbg(_pMemory, _Size, _Alignment, 0, _pFile, _Line);
 	}
 
-	void * __cdecl _aligned_recalloc_dbg(void *memblock, size_t count, size_t size, size_t align, char const *f_name, int line_n)
+	void * __cdecl _aligned_recalloc_dbg(void *_pMemory, size_t _nMembers, size_t _Size, size_t _Alignment, char const *_pFile, int _Line)
 	{
-		return _aligned_offset_recalloc_dbg(memblock, count, size, align, 0, f_name, line_n);
+		return _aligned_offset_recalloc_dbg(_pMemory, _nMembers, _Size, _Alignment, 0, _pFile, _Line);
 	}
 
-	void * __cdecl _aligned_offset_malloc(size_t size, size_t align, size_t offset)
+	void * __cdecl _aligned_offset_malloc(size_t _Size, size_t _Alignment, size_t _Offset)
 	{
-		return _aligned_offset_malloc_dbg(size, align, offset, NULL, 0);
+		return _aligned_offset_malloc_dbg(_Size, _Alignment, _Offset, NULL, 0);
 	}
 
-	void * __cdecl _aligned_offset_malloc_dbg(size_t size, size_t align, size_t offset, char const *f_name, int line_n)
+	void * __cdecl _aligned_offset_malloc_dbg(size_t _Size, size_t _Alignment, size_t _Offset, char const *_pFile, int _Line)
 	{
 		uintptr_t BlockAddress, AlignedAddress, HeaderGap;
 		CAlignMemBlockHdr *pHdr;
 		size_t NonUserSize, BlockSize;
 
 		/* validation section */
-		align = (align > sizeof(uintptr_t) ? align : sizeof(uintptr_t)) - 1;
+		_Alignment = (_Alignment > sizeof(uintptr_t) ? _Alignment : sizeof(uintptr_t)) - 1;
 
-		HeaderGap = (0 - offset) & (sizeof(uintptr_t) - 1);
+		HeaderGap = (0 - _Offset) & (sizeof(uintptr_t) - 1);
 
-		NonUserSize = HeaderGap + align + sizeof(CAlignMemBlockHdr); // cannot overflow
-		if (!fg_TryAddWindowsAllocationSize(size, NonUserSize, BlockSize))
+		NonUserSize = HeaderGap + _Alignment + sizeof(CAlignMemBlockHdr); // cannot overflow
+		if (!fg_TryAddWindowsAllocationSize(_Size, NonUserSize, BlockSize))
 			return NULL;
 
-		if ((BlockAddress = (uintptr_t)_malloc_dbg(BlockSize, _NORMAL_BLOCK, f_name, line_n)) == (uintptr_t)NULL)
+		if ((BlockAddress = (uintptr_t)_malloc_dbg(BlockSize, _NORMAL_BLOCK, _pFile, _Line)) == (uintptr_t)NULL)
 			return NULL;
 
-		AlignedAddress = ((BlockAddress + NonUserSize + offset) & ~align) - offset;
+		AlignedAddress = ((BlockAddress + NonUserSize + _Offset) & ~_Alignment) - _Offset;
 		pHdr = (CAlignMemBlockHdr *)(AlignedAddress - HeaderGap) - 1;
 		memset((void *)pHdr->m_Gap, gs_AlignLandFill, DAlignGapSize);
 		pHdr->m_pHead = (void *)BlockAddress;
 		return (void *)AlignedAddress;
 	}
 
-	void * __cdecl _aligned_offset_realloc(void *memblock, size_t size, size_t align, size_t offset)
+	void * __cdecl _aligned_offset_realloc(void *_pMemory, size_t _Size, size_t _Alignment, size_t _Offset)
 	{
-		return _aligned_offset_realloc_dbg(memblock, size, align, offset, NULL, 0);
+		return _aligned_offset_realloc_dbg(_pMemory, _Size, _Alignment, _Offset, NULL, 0);
 	}
 
-	void * __cdecl _aligned_offset_recalloc(void *memblock, size_t count, size_t size, size_t align, size_t offset)
+	void * __cdecl _aligned_offset_recalloc(void *_pMemory, size_t _nMembers, size_t _Size, size_t _Alignment, size_t _Offset)
 	{
-		return _aligned_offset_recalloc_dbg(memblock, count, size, align, offset, NULL, 0);
+		return _aligned_offset_recalloc_dbg(_pMemory, _nMembers, _Size, _Alignment, _Offset, NULL, 0);
 	}
 
-	void * __cdecl _aligned_offset_realloc_dbg(void *memblock, size_t size, size_t align, size_t offset, char const *f_name, int line_n)
+	void * __cdecl _aligned_offset_realloc_dbg(void *_pMemory, size_t _Size, size_t _Alignment, size_t _Offset, char const *_pFile, int _Line)
 	{
 		uintptr_t BlockAddress, AlignedAddress, HeaderGap, MoveSize;
 		CAlignMemBlockHdr *pHdr, *pOldHeader;
 		size_t NonUserSize, BlockSize;
 
-		if (memblock == NULL)
-			return _aligned_offset_malloc_dbg(size, align, offset, f_name, line_n);
-		if (size == 0)
+		if (_pMemory == NULL)
+			return _aligned_offset_malloc_dbg(_Size, _Alignment, _Offset, _pFile, _Line);
+		if (_Size == 0)
 		{
-			_aligned_free_dbg(memblock);
+			_aligned_free_dbg(_pMemory);
 			return NULL;
 		}
 
-		pOldHeader = (CAlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
+		pOldHeader = (CAlignMemBlockHdr *)((uintptr_t)_pMemory & ~(sizeof(uintptr_t) - 1)) - 1;
 
-		if (CheckBytes((unsigned char *)memblock - DNoMansLandSize, gs_NoMansLandFill, DNoMansLandSize))
+		if (CheckBytes((unsigned char *)_pMemory - DNoMansLandSize, gs_NoMansLandFill, DNoMansLandSize))
 		{
-			// We don't know where (file, linenum) memblock was allocated
-			_RPT1(_CRT_ERROR, "The block at 0x%p was not allocated by _aligned routines, use realloc()", memblock);
+			// We don't know where (file, linenum) _pMemory was allocated
+			_RPT1(_CRT_ERROR, "The block at 0x%p was not allocated by _aligned routines, use realloc()", _pMemory);
 			errno = 22;
 			return NULL;
 		}
 
 		if (!CheckBytes(pOldHeader->m_Gap, gs_AlignLandFill, DAlignGapSize))
 		{
-			// We don't know where (file, linenum) memblock was allocated
-			_RPT1(_CRT_ERROR, "Damage before 0x%p which was allocated by aligned routine\n", memblock);
+			// We don't know where (file, linenum) _pMemory was allocated
+			_RPT1(_CRT_ERROR, "Damage before 0x%p which was allocated by aligned routine\n", _pMemory);
 		}
 
 		/* validation section */
 
-		MoveSize = _msize(pOldHeader->m_pHead) - ((uintptr_t)memblock - (uintptr_t)pOldHeader->m_pHead);
+		MoveSize = _msize(pOldHeader->m_pHead) - ((uintptr_t)_pMemory - (uintptr_t)pOldHeader->m_pHead);
 
-		align = (align > sizeof(uintptr_t) ? align : sizeof(uintptr_t)) - 1;
+		_Alignment = (_Alignment > sizeof(uintptr_t) ? _Alignment : sizeof(uintptr_t)) - 1;
 
-		HeaderGap = (0 - offset) & (sizeof(uintptr_t) - 1);
+		HeaderGap = (0 - _Offset) & (sizeof(uintptr_t) - 1);
 
-		NonUserSize = HeaderGap + align + sizeof(CAlignMemBlockHdr); // cannot overflow
-		if (!fg_TryAddWindowsAllocationSize(size, NonUserSize, BlockSize))
+		NonUserSize = HeaderGap + _Alignment + sizeof(CAlignMemBlockHdr); // cannot overflow
+		if (!fg_TryAddWindowsAllocationSize(_Size, NonUserSize, BlockSize))
 			return NULL;
 
-		if ((BlockAddress = (uintptr_t)_malloc_dbg(BlockSize, _NORMAL_BLOCK, f_name, line_n)) == (uintptr_t)NULL)
+		if ((BlockAddress = (uintptr_t)_malloc_dbg(BlockSize, _NORMAL_BLOCK, _pFile, _Line)) == (uintptr_t)NULL)
 			return NULL;
 
-		AlignedAddress = ((BlockAddress + NonUserSize + offset) & ~align) - offset;
+		AlignedAddress = ((BlockAddress + NonUserSize + _Offset) & ~_Alignment) - _Offset;
 		pHdr = (CAlignMemBlockHdr *)(AlignedAddress - HeaderGap) - 1;
 		memset((void *)pHdr->m_Gap, gs_AlignLandFill, DAlignGapSize);
 		pHdr->m_pHead = (void *)BlockAddress;
 
-		memcpy((void *)AlignedAddress, memblock, MoveSize > size ? size : MoveSize);
+		memcpy((void *)AlignedAddress, _pMemory, MoveSize > _Size ? _Size : MoveSize);
 		_free_dbg(pOldHeader->m_pHead, _NORMAL_BLOCK);
 
 		return (void *)AlignedAddress;
 	}
 
-	void * __cdecl _aligned_offset_recalloc_dbg(void *memblock, size_t count, size_t size, size_t align, size_t offset, char const *f_name, int line_n)
+	void * __cdecl _aligned_offset_recalloc_dbg(void *_pMemory, size_t _nMembers, size_t _Size, size_t _Alignment, size_t _Offset, char const *_pFile, int _Line)
 	{
 		size_t UserSize = 0; // wanted size, passed to aligned realoc
 		size_t FillStart = 0; // location where aligned recalloc starts to fill with 0
@@ -845,14 +845,14 @@ extern "C"
 							  /* and must stop at the end of the new user block */
 		void *pResult = NULL; // result of aligned recalloc
 
-		/* ensure that (size * count) does not overflow */
-		if (!fg_TryMultiplyWindowsAllocationSize(count, size, UserSize))
+		/* ensure that (_Size * _nMembers) does not overflow */
+		if (!fg_TryMultiplyWindowsAllocationSize(_nMembers, _Size, UserSize))
 			return NULL;
 
-		if (memblock != NULL)
-			FillStart = _aligned_msize(memblock, align, offset);
+		if (_pMemory != NULL)
+			FillStart = _aligned_msize(_pMemory, _Alignment, _Offset);
 
-		pResult = _aligned_offset_realloc_dbg(memblock, UserSize, align, offset, f_name, line_n);
+		pResult = _aligned_offset_realloc_dbg(_pMemory, UserSize, _Alignment, _Offset, _pFile, _Line);
 
 		if (pResult != NULL)
 		{
@@ -862,41 +862,41 @@ extern "C"
 		return pResult;
 	}
 
-	void __cdecl _aligned_free(void *memblock)
+	void __cdecl _aligned_free(void *_pMemory)
 	{
-		_aligned_free_dbg(memblock);
+		_aligned_free_dbg(_pMemory);
 	}
 
-	void __cdecl _aligned_free_dbg(void *memblock)
+	void __cdecl _aligned_free_dbg(void *_pMemory)
 	{
 		CAlignMemBlockHdr *pHdr;
 
-		if (memblock == NULL)
+		if (_pMemory == NULL)
 			return;
 
-		pHdr = (CAlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
+		pHdr = (CAlignMemBlockHdr *)((uintptr_t)_pMemory & ~(sizeof(uintptr_t) - 1)) - 1;
 
-		if (CheckBytes((unsigned char *)memblock - DNoMansLandSize, gs_NoMansLandFill, DNoMansLandSize))
+		if (CheckBytes((unsigned char *)_pMemory - DNoMansLandSize, gs_NoMansLandFill, DNoMansLandSize))
 		{
-			// We don't know where (file, linenum) memblock was allocated
-			_RPT1(_CRT_ERROR, "The block at 0x%p was not allocated by _aligned routines, use free()", memblock);
+			// We don't know where (file, linenum) _pMemory was allocated
+			_RPT1(_CRT_ERROR, "The block at 0x%p was not allocated by _aligned routines, use free()", _pMemory);
 			return;
 		}
 
 		if (!CheckBytes(pHdr->m_Gap, gs_AlignLandFill, DAlignGapSize))
 		{
-			// We don't know where (file, linenum) memblock was allocated
-			_RPT1(_CRT_ERROR, "Damage before 0x%p which was allocated by aligned routine\n", memblock);
+			// We don't know where (file, linenum) _pMemory was allocated
+			_RPT1(_CRT_ERROR, "Damage before 0x%p which was allocated by aligned routine\n", _pMemory);
 		}
 		_free_dbg((void *)pHdr->m_pHead, _NORMAL_BLOCK);
 	}
 
-	size_t __cdecl _aligned_msize(void *memblock, size_t align, size_t offset)
+	size_t __cdecl _aligned_msize(void *_pMemory, size_t _Alignment, size_t _Offset)
 	{
-		return _aligned_msize_dbg(memblock, align, offset);
+		return _aligned_msize_dbg(_pMemory, _Alignment, _Offset);
 	}
 
-	size_t __cdecl _aligned_msize_dbg(void *memblock, size_t align, size_t offset)
+	size_t __cdecl _aligned_msize_dbg(void *_pMemory, size_t _Alignment, size_t _Offset)
 	{
 		size_t HeaderSize = 0; // Size of the header block
 		size_t FooterSize = 0; // Size of the footer block
@@ -910,13 +910,13 @@ extern "C"
 		/* HEADER SIZE + USER SIZE + FOOTER SIZE = TOTAL SIZE */
 
 		CAlignMemBlockHdr *pHdr = NULL; // points to the beginning of the allocated block
-		pHdr = (CAlignMemBlockHdr *)((uintptr_t)memblock & ~(sizeof(uintptr_t) - 1)) - 1;
+		pHdr = (CAlignMemBlockHdr *)((uintptr_t)_pMemory & ~(sizeof(uintptr_t) - 1)) - 1;
 		TotalSize = _msize(pHdr->m_pHead);
-		HeaderSize = (uintptr_t)memblock - (uintptr_t)pHdr->m_pHead;
-		Gap = (0 - offset) & (sizeof(uintptr_t) - 1);
+		HeaderSize = (uintptr_t)_pMemory - (uintptr_t)pHdr->m_pHead;
+		Gap = (0 - _Offset) & (sizeof(uintptr_t) - 1);
 		/* The align cannot be smaller than the sizeof(uintptr_t) */
-		align = (align > sizeof(uintptr_t) ? align : sizeof(uintptr_t)) - 1;
-		FooterSize = Gap + align + sizeof(CAlignMemBlockHdr) - HeaderSize;
+		_Alignment = (_Alignment > sizeof(uintptr_t) ? _Alignment : sizeof(uintptr_t)) - 1;
+		FooterSize = Gap + _Alignment + sizeof(CAlignMemBlockHdr) - HeaderSize;
 		UserSize = TotalSize - HeaderSize - FooterSize;
 		return UserSize;
 	}
