@@ -59,9 +59,16 @@ namespace NMib::NMemory
 		using t_CBaseAllocator::operator <=>;
 		using t_CBaseAllocator::operator ==;
 
-		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
-		static void *f_Realloc(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static auto f_ReallocDebug
+		DMibNamedAsMemberFunction static void *f_Realloc
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction static auto f_ReallocDebug
 			(
 				void *_pMem
 				, umint &_Size
@@ -74,8 +81,16 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		static void *f_Resize(void *_pMem, umint &_Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static auto f_ResizeDebug
+		DMibNamedAsMemberFunction static void *f_Resize
+			(
+				void *_pMem
+				, umint &_Size
+				, umint _OldSize
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction static auto f_ResizeDebug
 			(
 				void *_pMem
 				, umint &_Size
@@ -88,9 +103,8 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		static void f_Free(void *_pBlock, umint _Size);
-		static void f_FreeNoSize(void *_pBlock);
-		// NOLINTEND(malterlib-function-naming)
+		DMibNamedAsMemberFunction static void f_Free(void *_pBlock, umint _Size);
+		DMibNamedAsMemberFunction static void f_FreeNoSize(void *_pBlock);
 	};
 
 	struct CAllocator_HeapSecure : public TCAllocator_Secure<CAllocator_Heap, true>

@@ -180,23 +180,36 @@ namespace NMib::NMemory
 	{
 		using CAutoDestroy = TCAllocator_AutoDestroyStatic<CAllocator_Empty>;
 
-		// NOLINTBEGIN(malterlib-function-naming): the allocator interface, static in stateless allocators and not in the others
-		static inline_small umint f_GranularityAlloc(bool _bLargePages = false);
-		static inline_small umint f_GranularityCommit(bool _bLargePages = false);
-		static inline_small umint f_GranularityProtect(bool _bLargePages = false);
-		static inline_small umint f_Size(void *_pBlock);
-		static inline_small umint f_TrySize(void *_pBlock);
-		static inline_small umint f_SizePadded(umint _Size);
-		static inline_small fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
-		static constexpr inline_small bool f_CanCommit();
-		static inline_small bool f_CanProtect();
-		static inline_small bool f_DeterministicSize();
-		static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect);
-		static inline_small void *f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static inline_small void *f_Alloc(umint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static inline_small void *f_AllocAlignedWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static inline_small void *f_AllocAligned(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static inline_small auto f_AllocAlignedWithSizeDebug
+		DMibNamedAsMemberFunction static inline_small umint f_GranularityAlloc(bool _bLargePages = false);
+		DMibNamedAsMemberFunction static inline_small umint f_GranularityCommit(bool _bLargePages = false);
+		DMibNamedAsMemberFunction static inline_small umint f_GranularityProtect(bool _bLargePages = false);
+		DMibNamedAsMemberFunction static inline_small umint f_Size(void *_pBlock);
+		DMibNamedAsMemberFunction static inline_small umint f_TrySize(void *_pBlock);
+		DMibNamedAsMemberFunction static inline_small umint f_SizePadded(umint _Size);
+		DMibNamedAsMemberFunction static inline_small fp32 f_Overhead(void const *_pBlock); // Number of bytes overhead for block
+		DMibNamedAsMemberFunction static constexpr inline_small bool f_CanCommit();
+		DMibNamedAsMemberFunction static inline_small bool f_CanProtect();
+		DMibNamedAsMemberFunction static inline_small bool f_DeterministicSize();
+		DMibNamedAsMemberFunction static inline_small void f_Protect(void *_pMem, umint _Size, uaint _Protect);
+		DMibNamedAsMemberFunction static inline_small void *f_AllocWithSize(umint &_Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		DMibNamedAsMemberFunction static inline_small void *f_Alloc(umint _Size, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		DMibNamedAsMemberFunction static inline_small void *f_AllocAlignedWithSize
+			(
+				umint &_Size
+				, umint _Alignment
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction static inline_small void *f_AllocAligned
+			(
+				umint _Size
+				, umint _Alignment
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction static inline_small auto f_AllocAlignedWithSizeDebug
 			(
 				umint &_Size
 				, umint _Alignment
@@ -208,7 +221,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		static inline_small auto f_AllocAlignedDebug
+		DMibNamedAsMemberFunction static inline_small auto f_AllocAlignedDebug
 			(
 				umint _Size
 				, umint _Alignment
@@ -220,7 +233,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		static inline_small void f_AllocBatch
+		DMibNamedAsMemberFunction static inline_small void f_AllocBatch
 			(
 				umint _Size
 				, umint _Alignment
@@ -229,7 +242,7 @@ namespace NMib::NMemory
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
 		;
-		static inline_small void f_AllocBatchDebug
+		DMibNamedAsMemberFunction static inline_small void f_AllocBatchDebug
 			(
 				umint _Size
 				, umint _Alignment
@@ -241,7 +254,7 @@ namespace NMib::NMemory
 				, ENumaNode _NumaNode = ENumaNode_Default
 			)
 		;
-		static inline_small auto f_AllocWithSizeDebug
+		DMibNamedAsMemberFunction static inline_small auto f_AllocWithSizeDebug
 			(
 				umint &_Size
 				, ch8 const *_pFile
@@ -252,7 +265,7 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		static inline_small auto f_AllocDebug
+		DMibNamedAsMemberFunction static inline_small auto f_AllocDebug
 			(
 				umint _Size
 				, ch8 const *_pFile
@@ -263,9 +276,17 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		static inline_small void *f_Realloc(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
+		DMibNamedAsMemberFunction static inline_small void *f_Realloc
+			(
+				void *_pMem
+				, umint _Size
+				, umint _OldSize
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
 		static inline_small void *fs_ReallocLocation(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static inline_small auto f_ReallocDebug
+		DMibNamedAsMemberFunction static inline_small auto f_ReallocDebug
 			(
 				void *_pMem
 				, umint _Size
@@ -278,17 +299,37 @@ namespace NMib::NMemory
 			)
 			-> void *
 		;
-		static inline_small void *f_Resize(void *_pMem, umint _Size, umint _OldSize, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static inline_small void f_Commit(void *_pMem, umint _Size);
-		static inline_small void f_Decommit(void *_pMem, umint _Size);
-		static inline_small void f_Free(void *_pBlock, umint _Size);
-		static inline_small void f_FreeNoSize(void *_pBlock);
-		only_parameters_aliased static auto f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default)
+		DMibNamedAsMemberFunction static inline_small void *f_Resize
+			(
+				void *_pMem
+				, umint _Size
+				, umint _OldSize
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction static inline_small void f_Commit(void *_pMem, umint _Size);
+		DMibNamedAsMemberFunction static inline_small void f_Decommit(void *_pMem, umint _Size);
+		DMibNamedAsMemberFunction static inline_small void f_Free(void *_pBlock, umint _Size);
+		DMibNamedAsMemberFunction static inline_small void f_FreeNoSize(void *_pBlock);
+		DMibNamedAsMemberFunction only_parameters_aliased static auto f_AllocSafeWithSize
+			(
+				umint &_Size
+				, umint _Alignment
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
 			-> CAutoDestroy
 		;
-		only_parameters_aliased static CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
-		static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
-		// NOLINTEND(malterlib-function-naming)
+		DMibNamedAsMemberFunction only_parameters_aliased static CAutoDestroy f_AllocSafe
+			(
+				umint _Size
+				, umint _Alignment
+				, EAllocationFlag _AllocFlags = EAllocationFlag_None
+				, ENumaNode _NumaNode = ENumaNode_Default
+			)
+		;
+		DMibNamedAsMemberFunction static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
 	};
 
 	struct CAllocator_Disable : public CAllocator_Base
