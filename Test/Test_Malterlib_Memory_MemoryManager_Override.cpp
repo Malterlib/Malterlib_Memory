@@ -87,7 +87,7 @@ namespace
 
 		usleep(useconds_t(umint(_pDelay)));
 
-		pthread_t Thread; // NOLINT(malterlib-conceptual-prefix): pthread_t is a pointer on macOS and an integer on Linux
+		pthread_t Thread;
 		if (pthread_create(&Thread, nullptr, &fg_AllocateOnLateThread, nullptr) == 0)
 			pthread_detach(Thread);
 		else
@@ -156,7 +156,7 @@ namespace
 #	ifdef DPlatformFamily_macOS
 						dispatch_async_f(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), nullptr, &fg_AllocateUntilProcessExits);
 #	else
-						pthread_t Thread; // NOLINT(malterlib-conceptual-prefix): pthread_t is a pointer on macOS and an integer on Linux
+						pthread_t Thread;
 						if (pthread_create(&Thread, nullptr, &fg_AllocateOnNewThread, nullptr) == 0)
 							pthread_detach(Thread);
 #	endif
@@ -172,7 +172,7 @@ namespace
 					umint nLateThreads = 0;
 					for (umint iThread = 0; iThread < c_nLateThreads; ++iThread)
 					{
-						pthread_t Thread; // NOLINT(malterlib-conceptual-prefix): pthread_t is a pointer on macOS and an integer on Linux
+						pthread_t Thread;
 						if (pthread_create(&Thread, nullptr, &fg_AllocateLate, (void *)(iThread * c_DelayStep)) == 0)
 						{
 							pthread_detach(Thread);
