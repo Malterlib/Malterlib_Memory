@@ -33,11 +33,11 @@ namespace NMib::NMemory
 
 	struct CMemoryManagerArenaHeapBlock
 	{
+		CMemoryManagerArenaHeapBlock();
+
 		DMibListLinkDS_Link(CMemoryManagerArenaHeapBlock, m_Link);
 		void *m_pChunk;
 		EMemoryManagerArenaHeapBlockFlag m_Flags;
-
-		CMemoryManagerArenaHeapBlock();
 	};
 
 	template <typename t_CParams>
@@ -101,20 +101,8 @@ namespace NMib::NMemory
 		bool f_CheckFree(EMemoryManagerCheckFlag _Flags);
 
 	private:
-		static constexpr bool mcp_bEnableCallbacks = t_CParams::CNotifier::CHeap::mc_bEnableCallbacks;
-
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerArenaHeapChunk;
-
-		align_cacheline mutable NThread::CLowLevelLock mp_Lock;
-
-		TCMemoryManager<t_CParams> *mp_pMemoryManager;
-		TCMemoryManagerNumaArena<t_CParams> *mp_pNumaArena;
-
-		NContainer::TCMap<umint, DMibListLinkDS_List_FromTemplate(CMemoryManagerArenaHeapBlock, m_Link), NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> mp_FreeBuckets;
-
-		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArenaHeapChunk<t_CParams>, mp_HeapLink) mp_Chunks;
-		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArenaHeapChunk<t_CParams>, mp_CleanupLink) mp_ChunksNeedingCleanup;
 
 		void fp_RemoveFreeBlock(CMemoryManagerArenaHeapBlock *_pBlock, TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk);
 
@@ -128,5 +116,17 @@ namespace NMib::NMemory
 		void fp_TraceBlocks(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk);
 
 		void fp_RequestCleanup(TCMemoryManagerArenaHeapChunk<t_CParams> *_pChunk, ENumaArenaCleanup _Cleanup);
+
+		static constexpr bool mcp_bEnableCallbacks = t_CParams::CNotifier::CHeap::mc_bEnableCallbacks;
+
+		align_cacheline mutable NThread::CLowLevelLock mp_Lock;
+
+		TCMemoryManager<t_CParams> *mp_pMemoryManager;
+		TCMemoryManagerNumaArena<t_CParams> *mp_pNumaArena;
+
+		NContainer::TCMap<umint, DMibListLinkDS_List_FromTemplate(CMemoryManagerArenaHeapBlock, m_Link), NMib::CSort_Default, TCAllocator_MemoryManager<t_CParams>> mp_FreeBuckets;
+
+		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArenaHeapChunk<t_CParams>, mp_HeapLink) mp_Chunks;
+		DMibListLinkDS_List_FromTemplate(TCMemoryManagerArenaHeapChunk<t_CParams>, mp_CleanupLink) mp_ChunksNeedingCleanup;
 	};
 }

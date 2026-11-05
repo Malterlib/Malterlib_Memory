@@ -66,9 +66,6 @@ namespace NMib::NMemory
 
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
 	{
-		static constexpr bool mc_bSupportsNonTracked = false;
-		static constexpr bool mc_bSupportsDebug = false;
-
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_PrepareFork(CMemoryManagerCrossModule *_pModule)
 		{
 			g_MemoryManagerForkLock.f_Lock();
@@ -135,6 +132,9 @@ namespace NMib::NMemory
 		{
 			g_DebugMemoryManager->f_DestroyCleanupThreads();
 		}
+
+		static constexpr bool mc_bSupportsNonTracked = false;
+		static constexpr bool mc_bSupportsDebug = false;
 	};
 
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size)

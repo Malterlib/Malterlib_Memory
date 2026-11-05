@@ -71,7 +71,7 @@ namespace
 	{
 	}
 
-	auto CMalterlibMemoryMalterlib::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	auto CMalterlibMemoryMalterlib::f_Checkout()
 	{
 		return mp_MemoryManager.f_Checkout();
 	}
@@ -109,7 +109,7 @@ namespace
 	{
 	}
 
-	auto CMalterlibMemoryMalterlib_SubSlabBitmaps::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	auto CMalterlibMemoryMalterlib_SubSlabBitmaps::f_Checkout()
 	{
 		return mp_MemoryManager.f_Checkout();
 	}
@@ -147,7 +147,7 @@ namespace
 	{
 	}
 
-	auto CMalterlibMemoryMalterlib_SubSlabLists::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	auto CMalterlibMemoryMalterlib_SubSlabLists::f_Checkout()
 	{
 		return mp_MemoryManager.f_Checkout();
 	}
@@ -185,7 +185,7 @@ namespace
 	{
 	}
 
-	auto CMalterlibMemoryMalterlib_LowBranch::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	auto CMalterlibMemoryMalterlib_LowBranch::f_Checkout()
 	{
 		return mp_MemoryManager.f_Checkout();
 	}
@@ -223,7 +223,7 @@ namespace
 	{
 	}
 
-	auto CMalterlibMemoryMalterlib_Debug::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	auto CMalterlibMemoryMalterlib_Debug::f_Checkout()
 	{
 		return mp_MemoryManager.f_Checkout();
 	}
@@ -260,7 +260,7 @@ namespace
 	{
 	}
 
-	auto CMalterlibMemoryMalterlib_Tracked::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	auto CMalterlibMemoryMalterlib_Tracked::f_Checkout()
 	{
 		return mp_MemoryManager.f_Checkout();
 	}
@@ -297,7 +297,7 @@ namespace
 	{
 	}
 
-	auto CMalterlibMemoryMalterlib_NoCleanup::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	auto CMalterlibMemoryMalterlib_NoCleanup::f_Checkout()
 	{
 		return mp_MemoryManager.f_Checkout();
 	}
@@ -334,7 +334,7 @@ namespace
 	{
 	}
 
-	auto CMalterlibMemoryMalterlib_NoDeferCleanup::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	auto CMalterlibMemoryMalterlib_NoDeferCleanup::f_Checkout()
 	{
 		return mp_MemoryManager.f_Checkout();
 	}
@@ -408,7 +408,7 @@ namespace
 	{
 	}
 
-	auto CMalterlibMemoryMalterlib_NoCommit::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	auto CMalterlibMemoryMalterlib_NoCommit::f_Checkout()
 	{
 		return mp_MemoryManager.f_Checkout();
 	}
@@ -909,24 +909,31 @@ namespace
 
 	struct CPerformance_Tests : public CTest
 	{
-		umint m_nCores;
-		CPerformance_Tests()
-		{
-			m_nCores = NMib::NSys::fg_Thread_GetVirtualCores();
-		}
-
 		struct CAllocPattern_Random
 		{
 			struct CAllocationInfo
 			{
-				// DMibListLinkD_Link(CAllocationInfo, m_Link);
-				CAllocationInfo()
-					: m_pAddress(nullptr)
-				{
-				}
+				CAllocationInfo();
 
+				// DMibListLinkD_Link(CAllocationInfo, m_Link);
 				void *m_pAddress;
 			};
+
+			CAllocPattern_Random();
+
+			CAllocPattern_Random(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode);
+
+			~CAllocPattern_Random();
+
+			static bool fs_Alignment();
+
+			umint f_GetIdealAllocations();
+
+			template <typename tf_CHeap>
+			inline_small void f_Next(tf_CHeap &_Heap);
+
+			template <typename tf_CHeap>
+			uint64 f_Iterations(tf_CHeap &_Heap);
 
 			NMib::NMisc::CRandomShiftRNG m_Random;
 			uint64 m_nIterations;
@@ -938,99 +945,33 @@ namespace
 
 			// using CAllocInfoList = DMibListLinkD_List(CAllocationInfo, m_Link);
 			// NMib::NMemory::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing> m_AllocationInfoPool;
-
-			CAllocPattern_Random()
-				: m_pAllocations(nullptr)
-			{
-			}
-
-			CAllocPattern_Random(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
-				: m_Random(55556, _iThread, _iRepetition)
-				, m_pAllocations(nullptr)
-				, m_MaxAllocSize(_MaxAllocSize - 1)
-				, m_nIterations(0)
-				, m_MaxAllocatedMemory(gc_TestMaxMemory)
-				, m_ArraySize(0)
-			{
-				m_ArraySize = NMib::fg_Min(((m_MaxAllocatedMemory * 2) / _MaxAllocSize), gc_ArrayLimit) - 1;
-
-				umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
-				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
-				for (umint iAllocation = 0; iAllocation <= m_ArraySize; ++iAllocation)
-					new(m_pAllocations + iAllocation) CAllocationInfo();
-			}
-
-			static bool fs_Alignment()
-			{
-				return false;
-			}
-
-			umint f_GetIdealAllocations()
-			{
-				return m_ArraySize * 256;
-			}
-
-			~CAllocPattern_Random()
-			{
-				if (m_pAllocations)
-					NMib::NSys::fg_Mem_VirtualFree(m_pAllocations, 0);
-			}
-
-			template <typename tf_CHeap>
-			inline_small void f_Next(tf_CHeap &_Heap)
-			{
-				{
-					int32 iStart = m_Random.f_GetValue<uint32>() & m_ArraySize;
-					CAllocationInfo &Info = m_pAllocations[iStart];
-					if (Info.m_pAddress)
-					{
-						_Heap.f_FreeNoSize(Info.m_pAddress);
-						++m_nIterations;
-					}
-
-					{
-						umint Size = (m_Random.f_GetValue<uint32>() & m_MaxAllocSize) + 1;
-						//umint Size = m_MaxAllocSize + 1;
-						Info.m_pAddress = _Heap.f_Alloc(Size);
-						*((uint8 *)Info.m_pAddress) = iStart;
-						//NMib::NMemory::fg_MemClear((uint8 *)Info.m_pAddress, Size);
-						++m_nIterations;
-					}
-				}
-			}
-
-			template <typename tf_CHeap>
-			uint64 f_Iterations(tf_CHeap &_Heap)
-			{
-				auto pEnd = m_pAllocations + m_ArraySize + 1;
-				for (auto pAllocation = m_pAllocations; pAllocation != pEnd; ++pAllocation)
-				{
-					auto &Info = *pAllocation;
-					if (Info.m_pAddress)
-					{
-						_Heap.f_FreeNoSize(Info.m_pAddress);
-						Info.m_pAddress = nullptr;
-						++m_nIterations;
-					}
-				}
-				uint64 Ret = m_nIterations;
-				m_nIterations = 0;
-				return Ret;
-			}
 		};
 
 		struct CAllocPattern_RandomAlignment
 		{
 			struct CAllocationInfo
 			{
-				// DMibListLinkD_Link(CAllocationInfo, m_Link);
-				CAllocationInfo()
-					: m_pAddress(nullptr)
-				{
-				}
+				CAllocationInfo();
 
+				// DMibListLinkD_Link(CAllocationInfo, m_Link);
 				void *m_pAddress;
 			};
+
+			CAllocPattern_RandomAlignment();
+
+			CAllocPattern_RandomAlignment(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode);
+
+			~CAllocPattern_RandomAlignment();
+
+			static bool fs_Alignment();
+
+			umint f_GetIdealAllocations();
+
+			template <typename tf_CHeap>
+			inline_small void f_Next(tf_CHeap &_Heap);
+
+			template <typename tf_CHeap>
+			uint64 f_Iterations(tf_CHeap &_Heap);
 
 			NMib::NMisc::CRandomShiftRNG m_Random;
 			uint64 m_nIterations;
@@ -1043,107 +984,32 @@ namespace
 
 			// using CAllocInfoList = DMibListLinkD_List(CAllocationInfo, m_Link);
 			// NMib::NMemory::TCPool<CAllocationInfo, 1024*1024*4, NMib::NThread::CNoLock, NMib::NMemory::CPoolType_Growing> m_AllocationInfoPool;
-
-			CAllocPattern_RandomAlignment()
-				: m_pAllocations(nullptr)
-			{
-			}
-
-			CAllocPattern_RandomAlignment(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
-				: m_Random(55556, _iThread, _iRepetition)
-				, m_pAllocations(nullptr)
-				, m_MaxAllocSize(_MaxAllocSize - 1)
-				, m_nIterations(0)
-				, m_MaxAllocatedMemory(gc_TestMaxMemory)
-				, m_ArraySize(0)
-				, m_AlignBits(NMib::fg_GetHighestBitSet(_MaxAllocSize))
-			{
-				if (_MaxAllocSize == 0)
-					m_AlignBits = 0;
-				if (m_AlignBits == 0)
-					m_AlignBits = 1;
-				m_ArraySize = NMib::fg_Min(((m_MaxAllocatedMemory * 2) / _MaxAllocSize), gc_ArrayLimit) - 1;
-
-				umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
-				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
-				for (umint iAllocation = 0; iAllocation <= m_ArraySize; ++iAllocation)
-					new(m_pAllocations + iAllocation) CAllocationInfo();
-			}
-
-			static bool fs_Alignment()
-			{
-				return true;
-			}
-
-			umint f_GetIdealAllocations()
-			{
-				return m_ArraySize * 256;
-			}
-
-			~CAllocPattern_RandomAlignment()
-			{
-				if (m_pAllocations)
-					NMib::NSys::fg_Mem_VirtualFree(m_pAllocations, 0);
-			}
-
-			template <typename tf_CHeap>
-			inline_small void f_Next(tf_CHeap &_Heap)
-			{
-				{
-					int32 iStart = m_Random.f_GetValue<uint32>() & m_ArraySize;
-					CAllocationInfo &Info = m_pAllocations[iStart];
-					if (Info.m_pAddress)
-					{
-						_Heap.f_FreeNoSize(Info.m_pAddress);
-						++m_nIterations;
-					}
-
-					{
-						umint Size = (m_Random.f_GetValue<uint32>() & m_MaxAllocSize) + 1;
-						umint AlignmentBits = m_Random.f_GetValue<uint32>() % m_AlignBits;
-						//umint Size = m_MaxAllocSize + 1;
-						umint Alignment = umint(1) << AlignmentBits;
-						Info.m_pAddress = _Heap.f_AllocAligned(Size, Alignment);
-						*((uint8 *)Info.m_pAddress) = iStart;
-						if ((umint)Info.m_pAddress & (Alignment - 1))
-							m_bFailed = true;
-
-						++m_nIterations;
-					}
-				}
-			}
-
-			template <typename tf_CHeap>
-			uint64 f_Iterations(tf_CHeap &_Heap)
-			{
-				auto pEnd = m_pAllocations + m_ArraySize + 1;
-				for (auto pAllocation = m_pAllocations; pAllocation != pEnd; ++pAllocation)
-				{
-					auto &Info = *pAllocation;
-					if (Info.m_pAddress)
-					{
-						_Heap.f_FreeNoSize(Info.m_pAddress);
-						Info.m_pAddress = nullptr;
-						++m_nIterations;
-					}
-				}
-				uint64 Ret = m_nIterations;
-				m_nIterations = 0;
-				return Ret;
-			}
 		};
 
 		struct CAllocPattern_OneSize
 		{
 			struct CAllocationInfo
 			{
-				CAllocationInfo()
-					: m_pAddress(nullptr)
-				{
-				}
+				CAllocationInfo();
 
 				void *m_pAddress;
 			};
+
+			CAllocPattern_OneSize();
+
+			CAllocPattern_OneSize(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode);
+
+			~CAllocPattern_OneSize();
+
+			static bool fs_Alignment();
+
+			umint f_GetIdealAllocations();
+
+			template <typename tf_CHeap>
+			inline_small void f_Next(tf_CHeap &_Heap);
+
+			template <typename tf_CHeap>
+			uint64 f_Iterations(tf_CHeap &_Heap);
 
 			NMib::NMisc::CRandomShiftRNG m_Random;
 			uint64 m_nIterations;
@@ -1152,131 +1018,26 @@ namespace
 			umint m_MaxAllocatedMemory;
 			umint m_MaxAllocSize;
 			bool m_bFailed = false;
-
-			CAllocPattern_OneSize()
-				: m_pAllocations(nullptr)
-			{
-			}
-
-			CAllocPattern_OneSize(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
-				: m_Random(55556, _iThread, _iRepetition)
-				, m_pAllocations(nullptr)
-				, m_MaxAllocSize(_MaxAllocSize)
-				, m_nIterations(0)
-				, m_MaxAllocatedMemory(gc_TestMaxMemory)
-				, m_ArraySize(0)
-			{
-				m_ArraySize = NMib::fg_Min((m_MaxAllocatedMemory / _MaxAllocSize), gc_ArrayLimit) - 1;
-
-				umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
-				m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
-				for (umint iAllocation = 0; iAllocation <= m_ArraySize; ++iAllocation)
-					new(m_pAllocations + iAllocation) CAllocationInfo();
-			}
-
-			static bool fs_Alignment()
-			{
-				return false;
-			}
-
-			umint f_GetIdealAllocations()
-			{
-				return m_ArraySize * 256;
-			}
-
-			~CAllocPattern_OneSize()
-			{
-				if (m_pAllocations)
-					NMib::NSys::fg_Mem_VirtualFree(m_pAllocations, 0);
-			}
-
-			template <typename tf_CHeap>
-			inline_small void f_Next(tf_CHeap &_Heap)
-			{
-				{
-					int32 iStart = m_Random.f_GetValue<uint32>() & m_ArraySize;
-					CAllocationInfo &Info = m_pAllocations[iStart];
-					if (Info.m_pAddress)
-					{
-						_Heap.f_FreeNoSize(Info.m_pAddress);
-						++m_nIterations;
-					}
-
-					{
-						umint Size = m_MaxAllocSize;
-						Info.m_pAddress = _Heap.f_Alloc(Size);
-						*((uint8 *)Info.m_pAddress) = iStart;
-						++m_nIterations;
-					}
-				}
-			}
-
-			template <typename tf_CHeap>
-			uint64 f_Iterations(tf_CHeap &_Heap)
-			{
-				auto pEnd = m_pAllocations + m_ArraySize + 1;
-				for (auto pAllocation = m_pAllocations; pAllocation != pEnd; ++pAllocation)
-				{
-					auto &Info = *pAllocation;
-					if (Info.m_pAddress)
-					{
-						_Heap.f_FreeNoSize(Info.m_pAddress);
-						Info.m_pAddress = nullptr;
-						++m_nIterations;
-					}
-				}
-				uint64 Ret = m_nIterations;
-				m_nIterations = 0;
-				return Ret;
-			}
 		};
 
 		struct CAllocPattern_OneSizeLinear : public CAllocPattern_OneSize
 		{
-			CAllocPattern_OneSizeLinear()
-			{
-			}
+			CAllocPattern_OneSizeLinear();
 
-			CAllocPattern_OneSizeLinear(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
-				: CAllocPattern_OneSize(_MaxAllocSize, _iThread, _iRepetition, _NumaNode)
-			{
-			}
+			CAllocPattern_OneSizeLinear(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode);
 
 			template <typename tf_CHeap>
-			inline_small void f_Next(tf_CHeap &_Heap)
-			{
-				{
-					int32 iStart = m_nIterations & m_ArraySize;
-					CAllocationInfo &Info = m_pAllocations[iStart];
-					if (Info.m_pAddress)
-					{
-						_Heap.f_FreeNoSize(Info.m_pAddress);
-						++m_nIterations;
-					}
-
-					{
-						umint Size = m_MaxAllocSize;
-						Info.m_pAddress = _Heap.f_Alloc(Size);
-						*((uint8 *)Info.m_pAddress) = iStart;
-						++m_nIterations;
-					}
-				}
-			}
+			inline_small void f_Next(tf_CHeap &_Heap);
 		};
 
 		template <typename t_CHeap, typename t_CAllocPattern>
 		struct TCThreadTest : public NMib::NThread::CThread
 		{
-			TCThreadTest()
-				: m_Measure("Baseline")
-				, m_pWakeEvent(nullptr)
-				, m_iThread(0)
-				, m_MaxAllocSize(0)
-				, m_pHeap(nullptr)
-				, m_iNumaNode(NMib::ENumaNode_Default)
-			{
-				m_StartedEvent.f_ResetSignaled();
-			}
+			TCThreadTest();
+
+			virtual aint f_Main();
+
+			virtual NMib::NStr::CStr f_GetThreadName();
 
 			t_CHeap *m_pHeap;
 			NMib::NThread::CEvent *m_pWakeEvent;
@@ -1286,653 +1047,990 @@ namespace
 			umint m_iRepetition;
 			umint m_MaxAllocSize;
 			NMib::ENumaNode m_iNumaNode;
-			virtual aint f_Main()
-			{
-				if (m_iNumaNode != NMib::ENumaNode_Default)
-				{
-					NMib::NSys::fg_Thread_SetNumaAffinity(NMib::NSys::fg_Thread_GetCurrent(), m_iNumaNode);
-					m_pHeap->f_SetNumaNode(m_iNumaNode);
-				}
-				// Init heap
-				m_pHeap->f_InitThread();
-				m_pHeap->f_FreeNoSize(m_pHeap->f_Alloc(1));
-
-				m_StartedEvent.f_SetSignaled();
-				m_pWakeEvent->f_Wait();
-
-				auto Checkout = m_pHeap->f_Checkout();
-				(void)Checkout;
-
-				auto fInnerLoop = [pHeapPointer = m_pHeap, this]() inline_never
-					{
-						auto pHeap = pHeapPointer;
-						t_CAllocPattern Pattern(m_MaxAllocSize, m_iThread, m_iRepetition, m_iNumaNode);
-						int nPattern = Pattern.f_GetIdealAllocations() / 32;
-						uint64 nIterations = 0;
-						{
-							DMibTestScopeMeasure(m_Measure, nIterations);
-							for (int iPattern = 0; iPattern < nPattern; ++iPattern)
-							{
-								for (umint iAlloc = 0; iAlloc < 32; ++iAlloc)
-								{
-									Pattern.f_Next(*pHeap);
-									//Pattern.f_Next(*m_pHeap);
-									//Pattern.f_Next(*m_pHeap);
-									//Pattern.f_Next(*m_pHeap);
-								}
-							}
-							nIterations = Pattern.f_Iterations(*pHeap);
-						}
-
-						if (Pattern.m_bFailed)
-							DMibTest(!DMibExpr(Pattern.m_bFailed))(ETestFlag_Aggregated);
-					}
-				;
-
-				fInnerLoop();
-
-				return 0;
-			}
-
-			virtual NMib::NStr::CStr f_GetThreadName()
-			{
-				return NMib::NStr::CStr::CFormat("Memory manager test {}") << m_iThread;
-			}
 		};
 
+		CPerformance_Tests();
+
 		template <typename tf_CHeap, typename tf_CAllocPattern>
-		void f_DoTestPerform(CTestPerformance &_PerfTest, ETestMeasureType _MeasureType, ch8 const *_pName, umint _MaxAllocSize, umint _nThreads)
+		void f_DoTestPerform(CTestPerformance &_PerfTest, ETestMeasureType _MeasureType, ch8 const *_pName, umint _MaxAllocSize, umint _nThreads);
+
+		template <typename tf_CHeap, typename tf_CAllocPattern>
+		void f_DoTest(CTestPerformance &_PerfTest, CTestMemory &_MemoryTest, ETestMeasureType _MeasureType, ch8 const *_pName, umint _MaxAllocSize, umint _nThreads);
+
+		template <typename tf_CAllocPattern>
+		void f_DoTestsManagers(umint _MaxAllocSize, tf_CAllocPattern const &_Pattern, umint _nThreads);
+
+		template <typename tf_CAllocPattern>
+		void f_DoTests(umint _MaxAllocSize, tf_CAllocPattern const &_Pattern, umint _nThreads);
+
+		template <typename tf_CAllocPattern>
+		void f_DoTests(ch8 const *_pPattern, tf_CAllocPattern const &_Pattern);
+
+		template <typename tf_CAllocPattern>
+		void f_DoPattern(ch8 const *_pPattern, tf_CAllocPattern const &_Pattern, umint _MaxAlloc);
+
+		void f_DoPatterns();
+
+		void f_DoTests();
+
+		umint m_nCores;
+	};
+
+	CPerformance_Tests::CAllocPattern_Random::CAllocationInfo::CAllocationInfo()
+		: m_pAddress(nullptr)
+	{
+	}
+
+	CPerformance_Tests::CAllocPattern_Random::CAllocPattern_Random()
+		: m_pAllocations(nullptr)
+	{
+	}
+
+	CPerformance_Tests::CAllocPattern_Random::CAllocPattern_Random(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
+		: m_Random(55556, _iThread, _iRepetition)
+		, m_pAllocations(nullptr)
+		, m_MaxAllocSize(_MaxAllocSize - 1)
+		, m_nIterations(0)
+		, m_MaxAllocatedMemory(gc_TestMaxMemory)
+		, m_ArraySize(0)
+	{
+		m_ArraySize = NMib::fg_Min(((m_MaxAllocatedMemory * 2) / _MaxAllocSize), gc_ArrayLimit) - 1;
+
+		umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
+		m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
+		for (umint iAllocation = 0; iAllocation <= m_ArraySize; ++iAllocation)
+			new(m_pAllocations + iAllocation) CAllocationInfo();
+	}
+
+	CPerformance_Tests::CAllocPattern_Random::~CAllocPattern_Random()
+	{
+		if (m_pAllocations)
+			NMib::NSys::fg_Mem_VirtualFree(m_pAllocations, 0);
+	}
+
+	bool CPerformance_Tests::CAllocPattern_Random::fs_Alignment()
+	{
+		return false;
+	}
+
+	umint CPerformance_Tests::CAllocPattern_Random::f_GetIdealAllocations()
+	{
+		return m_ArraySize * 256;
+	}
+
+	template <typename tf_CHeap>
+	void CPerformance_Tests::CAllocPattern_Random::f_Next(tf_CHeap &_Heap)
+	{
 		{
-			umint nTests = 5;
-
-			tf_CHeap Heap;
-
-			if (!Heap.f_Init(_nThreads, _MaxAllocSize))
-				return;
-
-			CTestPerformanceMeasure Measure(_pName);
-
-			NMib::NThread::CEvent WakeEvent;
-
-			umint nNodes = NMib::NSys::fg_Mem_GetNumNumaNodes();
-			NMib::NContainer::TCVector<NMib::ENumaNode> Nodes;
-			if (nNodes > 0)
+			int32 iStart = m_Random.f_GetValue<uint32>() & m_ArraySize;
+			CAllocationInfo &Info = m_pAllocations[iStart];
+			if (Info.m_pAddress)
 			{
-				Nodes.f_SetLen(nNodes);
-				NMib::NSys::fg_Mem_GetNumaNodes(Nodes.f_GetArray(), nNodes);
+				_Heap.f_FreeNoSize(Info.m_pAddress);
+				++m_nIterations;
 			}
 
-			for (umint iRepetition = 0; iRepetition < nTests; ++iRepetition)
 			{
-				// Reset started
-				WakeEvent.f_ResetSignaled();
-				NMib::NContainer::TCLinkedList<TCThreadTest<tf_CHeap, tf_CAllocPattern>> Tests;
-				// Start threads
-				int32 iNode = 0;
-				for (umint iThread = 0; iThread < _nThreads; ++iThread)
+				umint Size = (m_Random.f_GetValue<uint32>() & m_MaxAllocSize) + 1;
+				//umint Size = m_MaxAllocSize + 1;
+				Info.m_pAddress = _Heap.f_Alloc(Size);
+				*((uint8 *)Info.m_pAddress) = iStart;
+				//NMib::NMemory::fg_MemClear((uint8 *)Info.m_pAddress, Size);
+				++m_nIterations;
+			}
+		}
+	}
+
+	template <typename tf_CHeap>
+	uint64 CPerformance_Tests::CAllocPattern_Random::f_Iterations(tf_CHeap &_Heap)
+	{
+		auto pEnd = m_pAllocations + m_ArraySize + 1;
+		for (auto pAllocation = m_pAllocations; pAllocation != pEnd; ++pAllocation)
+		{
+			auto &Info = *pAllocation;
+			if (Info.m_pAddress)
+			{
+				_Heap.f_FreeNoSize(Info.m_pAddress);
+				Info.m_pAddress = nullptr;
+				++m_nIterations;
+			}
+		}
+		uint64 Ret = m_nIterations;
+		m_nIterations = 0;
+		return Ret;
+	}
+
+	CPerformance_Tests::CAllocPattern_RandomAlignment::CAllocationInfo::CAllocationInfo()
+		: m_pAddress(nullptr)
+	{
+	}
+
+	CPerformance_Tests::CAllocPattern_RandomAlignment::CAllocPattern_RandomAlignment()
+		: m_pAllocations(nullptr)
+	{
+	}
+
+	CPerformance_Tests::CAllocPattern_RandomAlignment::CAllocPattern_RandomAlignment(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
+		: m_Random(55556, _iThread, _iRepetition)
+		, m_pAllocations(nullptr)
+		, m_MaxAllocSize(_MaxAllocSize - 1)
+		, m_nIterations(0)
+		, m_MaxAllocatedMemory(gc_TestMaxMemory)
+		, m_ArraySize(0)
+		, m_AlignBits(NMib::fg_GetHighestBitSet(_MaxAllocSize))
+	{
+		if (_MaxAllocSize == 0)
+			m_AlignBits = 0;
+		if (m_AlignBits == 0)
+			m_AlignBits = 1;
+		m_ArraySize = NMib::fg_Min(((m_MaxAllocatedMemory * 2) / _MaxAllocSize), gc_ArrayLimit) - 1;
+
+		umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
+		m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
+		for (umint iAllocation = 0; iAllocation <= m_ArraySize; ++iAllocation)
+			new(m_pAllocations + iAllocation) CAllocationInfo();
+	}
+
+	CPerformance_Tests::CAllocPattern_RandomAlignment::~CAllocPattern_RandomAlignment()
+	{
+		if (m_pAllocations)
+			NMib::NSys::fg_Mem_VirtualFree(m_pAllocations, 0);
+	}
+
+	bool CPerformance_Tests::CAllocPattern_RandomAlignment::fs_Alignment()
+	{
+		return true;
+	}
+
+	umint CPerformance_Tests::CAllocPattern_RandomAlignment::f_GetIdealAllocations()
+	{
+		return m_ArraySize * 256;
+	}
+
+	template <typename tf_CHeap>
+	void CPerformance_Tests::CAllocPattern_RandomAlignment::f_Next(tf_CHeap &_Heap)
+	{
+		{
+			int32 iStart = m_Random.f_GetValue<uint32>() & m_ArraySize;
+			CAllocationInfo &Info = m_pAllocations[iStart];
+			if (Info.m_pAddress)
+			{
+				_Heap.f_FreeNoSize(Info.m_pAddress);
+				++m_nIterations;
+			}
+
+			{
+				umint Size = (m_Random.f_GetValue<uint32>() & m_MaxAllocSize) + 1;
+				umint AlignmentBits = m_Random.f_GetValue<uint32>() % m_AlignBits;
+				//umint Size = m_MaxAllocSize + 1;
+				umint Alignment = umint(1) << AlignmentBits;
+				Info.m_pAddress = _Heap.f_AllocAligned(Size, Alignment);
+				*((uint8 *)Info.m_pAddress) = iStart;
+				if ((umint)Info.m_pAddress & (Alignment - 1))
+					m_bFailed = true;
+
+				++m_nIterations;
+			}
+		}
+	}
+
+	template <typename tf_CHeap>
+	uint64 CPerformance_Tests::CAllocPattern_RandomAlignment::f_Iterations(tf_CHeap &_Heap)
+	{
+		auto pEnd = m_pAllocations + m_ArraySize + 1;
+		for (auto pAllocation = m_pAllocations; pAllocation != pEnd; ++pAllocation)
+		{
+			auto &Info = *pAllocation;
+			if (Info.m_pAddress)
+			{
+				_Heap.f_FreeNoSize(Info.m_pAddress);
+				Info.m_pAddress = nullptr;
+				++m_nIterations;
+			}
+		}
+		uint64 Ret = m_nIterations;
+		m_nIterations = 0;
+		return Ret;
+	}
+
+	CPerformance_Tests::CAllocPattern_OneSize::CAllocationInfo::CAllocationInfo()
+		: m_pAddress(nullptr)
+	{
+	}
+
+	CPerformance_Tests::CAllocPattern_OneSize::CAllocPattern_OneSize()
+		: m_pAllocations(nullptr)
+	{
+	}
+
+	CPerformance_Tests::CAllocPattern_OneSize::CAllocPattern_OneSize(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
+		: m_Random(55556, _iThread, _iRepetition)
+		, m_pAllocations(nullptr)
+		, m_MaxAllocSize(_MaxAllocSize)
+		, m_nIterations(0)
+		, m_MaxAllocatedMemory(gc_TestMaxMemory)
+		, m_ArraySize(0)
+	{
+		m_ArraySize = NMib::fg_Min((m_MaxAllocatedMemory / _MaxAllocSize), gc_ArrayLimit) - 1;
+
+		umint Size = sizeof(CAllocationInfo) * (m_ArraySize + 1);
+		m_pAllocations = (CAllocationInfo *)NMib::NSys::fg_Mem_VirtualAlloc(Size, NMib::EAllocationFlag_None, _NumaNode);
+		for (umint iAllocation = 0; iAllocation <= m_ArraySize; ++iAllocation)
+			new(m_pAllocations + iAllocation) CAllocationInfo();
+	}
+
+	CPerformance_Tests::CAllocPattern_OneSize::~CAllocPattern_OneSize()
+	{
+		if (m_pAllocations)
+			NMib::NSys::fg_Mem_VirtualFree(m_pAllocations, 0);
+	}
+
+	bool CPerformance_Tests::CAllocPattern_OneSize::fs_Alignment()
+	{
+		return false;
+	}
+
+	umint CPerformance_Tests::CAllocPattern_OneSize::f_GetIdealAllocations()
+	{
+		return m_ArraySize * 256;
+	}
+
+	template <typename tf_CHeap>
+	void CPerformance_Tests::CAllocPattern_OneSize::f_Next(tf_CHeap &_Heap)
+	{
+		{
+			int32 iStart = m_Random.f_GetValue<uint32>() & m_ArraySize;
+			CAllocationInfo &Info = m_pAllocations[iStart];
+			if (Info.m_pAddress)
+			{
+				_Heap.f_FreeNoSize(Info.m_pAddress);
+				++m_nIterations;
+			}
+
+			{
+				umint Size = m_MaxAllocSize;
+				Info.m_pAddress = _Heap.f_Alloc(Size);
+				*((uint8 *)Info.m_pAddress) = iStart;
+				++m_nIterations;
+			}
+		}
+	}
+
+	template <typename tf_CHeap>
+	uint64 CPerformance_Tests::CAllocPattern_OneSize::f_Iterations(tf_CHeap &_Heap)
+	{
+		auto pEnd = m_pAllocations + m_ArraySize + 1;
+		for (auto pAllocation = m_pAllocations; pAllocation != pEnd; ++pAllocation)
+		{
+			auto &Info = *pAllocation;
+			if (Info.m_pAddress)
+			{
+				_Heap.f_FreeNoSize(Info.m_pAddress);
+				Info.m_pAddress = nullptr;
+				++m_nIterations;
+			}
+		}
+		uint64 Ret = m_nIterations;
+		m_nIterations = 0;
+		return Ret;
+	}
+
+	CPerformance_Tests::CAllocPattern_OneSizeLinear::CAllocPattern_OneSizeLinear()
+	{
+	}
+
+	CPerformance_Tests::CAllocPattern_OneSizeLinear::CAllocPattern_OneSizeLinear(umint _MaxAllocSize, umint _iThread, umint _iRepetition, NMib::ENumaNode _NumaNode)
+		: CAllocPattern_OneSize(_MaxAllocSize, _iThread, _iRepetition, _NumaNode)
+	{
+	}
+
+	template <typename tf_CHeap>
+	void CPerformance_Tests::CAllocPattern_OneSizeLinear::f_Next(tf_CHeap &_Heap)
+	{
+		{
+			int32 iStart = m_nIterations & m_ArraySize;
+			CAllocationInfo &Info = m_pAllocations[iStart];
+			if (Info.m_pAddress)
+			{
+				_Heap.f_FreeNoSize(Info.m_pAddress);
+				++m_nIterations;
+			}
+
+			{
+				umint Size = m_MaxAllocSize;
+				Info.m_pAddress = _Heap.f_Alloc(Size);
+				*((uint8 *)Info.m_pAddress) = iStart;
+				++m_nIterations;
+			}
+		}
+	}
+
+	template <typename t_CHeap, typename t_CAllocPattern>
+	CPerformance_Tests::TCThreadTest<t_CHeap, t_CAllocPattern>::TCThreadTest()
+		: m_Measure("Baseline")
+		, m_pWakeEvent(nullptr)
+		, m_iThread(0)
+		, m_MaxAllocSize(0)
+		, m_pHeap(nullptr)
+		, m_iNumaNode(NMib::ENumaNode_Default)
+	{
+		m_StartedEvent.f_ResetSignaled();
+	}
+
+	template <typename t_CHeap, typename t_CAllocPattern>
+	aint CPerformance_Tests::TCThreadTest<t_CHeap, t_CAllocPattern>::f_Main()
+	{
+		if (m_iNumaNode != NMib::ENumaNode_Default)
+		{
+			NMib::NSys::fg_Thread_SetNumaAffinity(NMib::NSys::fg_Thread_GetCurrent(), m_iNumaNode);
+			m_pHeap->f_SetNumaNode(m_iNumaNode);
+		}
+		// Init heap
+		m_pHeap->f_InitThread();
+		m_pHeap->f_FreeNoSize(m_pHeap->f_Alloc(1));
+
+		m_StartedEvent.f_SetSignaled();
+		m_pWakeEvent->f_Wait();
+
+		auto Checkout = m_pHeap->f_Checkout();
+		(void)Checkout;
+
+		auto fInnerLoop = [pHeapPointer = m_pHeap, this]() inline_never
+			{
+				auto pHeap = pHeapPointer;
+				t_CAllocPattern Pattern(m_MaxAllocSize, m_iThread, m_iRepetition, m_iNumaNode);
+				int nPattern = Pattern.f_GetIdealAllocations() / 32;
+				uint64 nIterations = 0;
 				{
-					auto &Test = Tests.f_Insert();
-					Test.m_pWakeEvent = &WakeEvent;
-					Test.m_iThread = iThread;
-					Test.m_iRepetition = iRepetition;
-					Test.m_MaxAllocSize = _MaxAllocSize;
-					Test.m_pHeap = &Heap;
-					if (nNodes)
+					DMibTestScopeMeasure(m_Measure, nIterations);
+					for (int iPattern = 0; iPattern < nPattern; ++iPattern)
 					{
-						Test.m_iNumaNode = Nodes[iNode];
-						Heap.f_SetNumaNode(Test.m_iNumaNode);
-						iNode = (iNode + 1) % nNodes;
+						for (umint iAlloc = 0; iAlloc < 32; ++iAlloc)
+						{
+							Pattern.f_Next(*pHeap);
+							//Pattern.f_Next(*m_pHeap);
+							//Pattern.f_Next(*m_pHeap);
+							//Pattern.f_Next(*m_pHeap);
+						}
 					}
-					Test.f_Start(NMib::EExecutionPriority_Normal);
+					nIterations = Pattern.f_Iterations(*pHeap);
 				}
 
-				// Wait for all threads to start
-				for (auto Iter = Tests.f_GetIterator(); Iter; ++Iter)
-					Iter->m_StartedEvent.f_Wait();
+				if (Pattern.m_bFailed)
+					DMibTest(!DMibExpr(Pattern.m_bFailed))(ETestFlag_Aggregated);
+			}
+		;
 
-				// Start all threads at the same time
-				WakeEvent.f_SetSignaled();
-				if (_nThreads > m_nCores)
-					Measure.f_Start();
+		fInnerLoop();
 
-				// Wait for all threads to stop
-				for (auto Iter = Tests.f_GetIterator(); Iter; ++Iter)
-					Iter->f_Stop();
+		return 0;
+	}
 
-				if (_nThreads > m_nCores)
+	template <typename t_CHeap, typename t_CAllocPattern>
+	NMib::NStr::CStr CPerformance_Tests::TCThreadTest<t_CHeap, t_CAllocPattern>::f_GetThreadName()
+	{
+		return NMib::NStr::CStr::CFormat("Memory manager test {}") << m_iThread;
+	}
+
+	CPerformance_Tests::CPerformance_Tests()
+	{
+		m_nCores = NMib::NSys::fg_Thread_GetVirtualCores();
+	}
+
+	template <typename tf_CHeap, typename tf_CAllocPattern>
+	void CPerformance_Tests::f_DoTestPerform(CTestPerformance &_PerfTest, ETestMeasureType _MeasureType, ch8 const *_pName, umint _MaxAllocSize, umint _nThreads)
+	{
+		umint nTests = 5;
+
+		tf_CHeap Heap;
+
+		if (!Heap.f_Init(_nThreads, _MaxAllocSize))
+			return;
+
+		CTestPerformanceMeasure Measure(_pName);
+
+		NMib::NThread::CEvent WakeEvent;
+
+		umint nNodes = NMib::NSys::fg_Mem_GetNumNumaNodes();
+		NMib::NContainer::TCVector<NMib::ENumaNode> Nodes;
+		if (nNodes > 0)
+		{
+			Nodes.f_SetLen(nNodes);
+			NMib::NSys::fg_Mem_GetNumaNodes(Nodes.f_GetArray(), nNodes);
+		}
+
+		for (umint iRepetition = 0; iRepetition < nTests; ++iRepetition)
+		{
+			// Reset started
+			WakeEvent.f_ResetSignaled();
+			NMib::NContainer::TCLinkedList<TCThreadTest<tf_CHeap, tf_CAllocPattern>> Tests;
+			// Start threads
+			int32 iNode = 0;
+			for (umint iThread = 0; iThread < _nThreads; ++iThread)
+			{
+				auto &Test = Tests.f_Insert();
+				Test.m_pWakeEvent = &WakeEvent;
+				Test.m_iThread = iThread;
+				Test.m_iRepetition = iRepetition;
+				Test.m_MaxAllocSize = _MaxAllocSize;
+				Test.m_pHeap = &Heap;
+				if (nNodes)
 				{
-					uint64 nIterations = 0;
-					for (auto Iter = Tests.f_GetIterator(); Iter; ++Iter)
-						nIterations += Iter->m_Measure.f_Iterations();
-
-					Measure.f_Stop(nIterations, NMib::fg_Min(_nThreads, NMib::NSys::fg_Thread_GetPhysicalCores()));
+					Test.m_iNumaNode = Nodes[iNode];
+					Heap.f_SetNumaNode(Test.m_iNumaNode);
+					iNode = (iNode + 1) % nNodes;
 				}
-				else
-				{
-					// Add measures
-					for (auto Iter = Tests.f_GetIterator(); Iter; ++Iter)
-						Measure.f_AddThreadResult(Iter->m_Measure);
-
-					Measure.f_NewRepetition();
-				}
+				Test.f_Start(NMib::EExecutionPriority_Normal);
 			}
 
-			if (_MeasureType == ETestMeasureType_Reference)
-				_PerfTest.f_AddReference(Measure);
-			else if (_MeasureType == ETestMeasureType_Baseline)
-				_PerfTest.f_AddBaseline(Measure);
-			else if (_MeasureType == ETestMeasureType_Debug)
-				_PerfTest.f_AddDebug(Measure);
+			// Wait for all threads to start
+			for (auto Iter = Tests.f_GetIterator(); Iter; ++Iter)
+				Iter->m_StartedEvent.f_Wait();
+
+			// Start all threads at the same time
+			WakeEvent.f_SetSignaled();
+			if (_nThreads > m_nCores)
+				Measure.f_Start();
+
+			// Wait for all threads to stop
+			for (auto Iter = Tests.f_GetIterator(); Iter; ++Iter)
+				Iter->f_Stop();
+
+			if (_nThreads > m_nCores)
+			{
+				uint64 nIterations = 0;
+				for (auto Iter = Tests.f_GetIterator(); Iter; ++Iter)
+					nIterations += Iter->m_Measure.f_Iterations();
+
+				Measure.f_Stop(nIterations, NMib::fg_Min(_nThreads, NMib::NSys::fg_Thread_GetPhysicalCores()));
+			}
 			else
-				_PerfTest.f_Add(Measure);
+			{
+				// Add measures
+				for (auto Iter = Tests.f_GetIterator(); Iter; ++Iter)
+					Measure.f_AddThreadResult(Iter->m_Measure);
+
+				Measure.f_NewRepetition();
+			}
 		}
 
-		template <typename tf_CHeap, typename tf_CAllocPattern>
-		void f_DoTest(CTestPerformance &_PerfTest, CTestMemory &_MemoryTest, ETestMeasureType _MeasureType, ch8 const *_pName, umint _MaxAllocSize, umint _nThreads)
+		if (_MeasureType == ETestMeasureType_Reference)
+			_PerfTest.f_AddReference(Measure);
+		else if (_MeasureType == ETestMeasureType_Baseline)
+			_PerfTest.f_AddBaseline(Measure);
+		else if (_MeasureType == ETestMeasureType_Debug)
+			_PerfTest.f_AddDebug(Measure);
+		else
+			_PerfTest.f_Add(Measure);
+	}
+
+	template <typename tf_CHeap, typename tf_CAllocPattern>
+	void CPerformance_Tests::f_DoTest(CTestPerformance &_PerfTest, CTestMemory &_MemoryTest, ETestMeasureType _MeasureType, ch8 const *_pName, umint _MaxAllocSize, umint _nThreads)
+	{
+		//if (_MeasureType == ETestMeasureType_Debug)
+		//	return; // Comment out during debugging?
+
+		if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
 		{
-			//if (_MeasureType == ETestMeasureType_Debug)
-			//	return; // Comment out during debugging?
-
-			if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
-			{
-				if (!tf_CHeap::fs_ShouldRun(_nThreads, tf_CAllocPattern::fs_Alignment()))
-					return;
-
-				CTestPerformanceResult Result;
-				CTestMemoryResult MemoryResult;
-				struct CLocalParser : public CTestResultParser
-				{
-					CTestPerformanceResult &m_Result;
-					ETestMeasureType m_MeasureType;
-					ch8 const *m_pName;
-					bool m_bValidResult;
-					bool m_bFailedTest = false;
-					CLocalParser(CTestPerformanceResult &_Result, ETestMeasureType _MeasureType, ch8 const *_pName)
-						: m_Result(_Result)
-						, m_MeasureType(_MeasureType)
-						, m_pName(_pName)
-						, m_bValidResult(false)
-					{
-					}
-
-					virtual void f_HandleHeader(NMib::NContainer::CRegistry const &_Reg) override
-					{
-					}
-
-					virtual void f_HandleFooter(NMib::NContainer::CRegistry const &_Reg) override
-					{
-					}
-
-					virtual void f_HandleCategory(NMib::NContainer::CRegistry const &_Reg) override
-					{
-					}
-
-					virtual void f_HandleResult(NMib::NContainer::CRegistry const &_Reg) override
-					{
-						CTestResult Result;
-						CTestResultParser::fs_DecodeResult(_Reg, Result);
-
-						if (Result.m_Result == ETestResult_Fail && Result.m_TestPath.f_Find("m_bFailed") >= 0)
-							m_bFailedTest = true;
-					}
-
-					virtual void f_HandlePerformanceResult(NMib::NContainer::CRegistry const &_Reg) override
-					{
-						CTestPerformanceResults Results;
-						CTestResultParser::fs_DecodePerformanceResults(_Reg, Results);
-
-						DMibCheck(Results.m_Results.f_GetLen() == 1);
-						if (!Results.m_Results.f_IsEmpty())
-						{
-							m_Result = Results.m_Results.f_GetFirst();
-							m_bValidResult = true;
-						}
-					}
-
-					virtual void f_HandleMemoryResult(NMib::NContainer::CRegistry const &_Reg) override
-					{
-					}
-				} ResultParser(Result, _MeasureType, _pName);
-
-				NMib::NProcess::CProcessLaunchParams Params;
-				Params.m_Target = NMib::NFile::CFile::fs_GetProgramPath();
-				Params.m_Parameters = NMib::NProcess::CProcessLaunchParams::fs_GetParams
-					(
-						{
-							"--test"
-							, fg_TestGetCurrentPath() / _pName
-							, "--logger"
-							, "Registry"
-							, "--filter-results"
-							, "[\"All\"]"
-							, "--process-recursive"
-							, "--groups"
-							, "[\"Performance\"]"
-						}
-					)
-				;
-
-				DMibLog(Info, "{} {}", Params.m_Target, Params.m_Parameters);
-				void *pProcess = nullptr;
-
-				NMib::NThread::CMutual ProcessLaunchLock;
-				NMib::NStorage::TCUniquePointer<NMib::NProcess::CProcessLaunch> pProcessLaunch;
-
-				NMib::NThread::CEvent Exited;
-				Exited.f_ResetSignaled();
-
-				auto fAddStats = [&](NMib::NProcess::CProcessStatistics const &_Stats)
-					{
-						for (auto iStatistic = _Stats.m_Statistics.f_GetIterator(); iStatistic; ++iStatistic)
-						{
-							fp64 Value = iStatistic->m_Value;
-							NMib::NStr::CStr Name = iStatistic.f_GetKey();
-							switch (iStatistic->m_Unit)
-							{
-							case NMib::NProcess::EProcessStatUnit_GeneralNumber:
-								{
-									if (!iStatistic->m_CustomUnit.f_IsEmpty())
-										Name += NMib::NStr::CStr::CFormat(" ({})") << iStatistic->m_CustomUnit;
-								}
-								break;
-							case NMib::NProcess::EProcessStatUnit_Bytes:
-								{
-									if (iStatistic->m_IdealScale == fp64(1024 * 1024 * 1024))
-									{
-										Value /= iStatistic->m_IdealScale;
-										Name += " (GiB)";
-									}
-									else if (iStatistic->m_IdealScale == fp64(1024 * 1024))
-									{
-										Value /= iStatistic->m_IdealScale;
-										Name += " (MiB)";
-									}
-									else if (iStatistic->m_IdealScale == fp64(1024))
-									{
-										Value /= iStatistic->m_IdealScale;
-										Name += " (KiB)";
-									}
-									else
-										Name += " (Bytes)";
-								}
-								break;
-							case NMib::NProcess::EProcessStatUnit_Cycles:
-								{
-									Name += " (Cycles)";
-								}
-								break;
-							case NMib::NProcess::EProcessStatUnit_Seconds:
-								{
-									if (iStatistic->m_IdealScale == fp64(0.000000001))
-									{
-										Value /= iStatistic->m_IdealScale;
-										Name += " (ns)";
-									}
-									else if (iStatistic->m_IdealScale == fp64(0.000001))
-									{
-										Value /= iStatistic->m_IdealScale;
-										Name += " (µs)";
-									}
-									else if (iStatistic->m_IdealScale == fp64(0.001))
-									{
-										Value /= iStatistic->m_IdealScale;
-										Name += " (ms)";
-									}
-									else
-										Name += " (s)";
-								}
-								break;
-							case NMib::NProcess::EProcessStatUnit_Fraction:
-								{
-									Value *= 100.0;
-									Name += " (%)";
-								}
-								break;
-							default: DMibNeverGetHere(iStatistic->m_Unit); break;
-							}
-							Result.m_PerformanceCounters[Name] = CTestStats(Value);
-						}
-					}
-				;
-
-				Params.m_fOnStateChange = [&](NMib::NProcess::CProcessLaunchStateChangeVariant const &_State, fp64 _TimeSinceStart)
-					{
-						switch (_State.f_GetTypeID())
-						{
-						case NMib::NProcess::EProcessLaunchState_Exited:
-							{
-								//uint32 ExitCode = _State.f_Get<NMib::NProcess::EProcessLaunchState_Exited>();
-								DMibCheck(pProcess);
-								if (pProcess)
-								{
-									DMibLock(ProcessLaunchLock);
-									NMib::NProcess::CProcessStatistics MemoryStats = pProcessLaunch->f_GetOverallMemoryStatistics();
-									NMib::NProcess::CProcessStatistics ExecutionStats = pProcessLaunch->f_GetOverallExecutionStatistics();
-
-									fAddStats(ExecutionStats);
-									fAddStats(MemoryStats);
-									/*
-									for (auto Iter = MemoryStats.m_Statistics.f_GetIterator(); Iter; ++Iter)
-									{
-										if (Iter.f_GetKey() == "Peak working set size")
-											MemoryResult.m_AllAllocations.m_BytesMaxAlloc = CTestStats(fp64(*Iter));
-										MemoryResult.m_PerAllocationType[Iter.f_GetKey()].m_BytesMaxAlloc = CTestStats(fp64(*Iter));
-									}*/
-								}
-								Exited.f_SetSignaled();
-							}
-							break;
-						case NMib::NProcess::EProcessLaunchState_Launched:
-							{
-								pProcess = _State.f_Get<NMib::NProcess::EProcessLaunchState_Launched>();
-							}
-							break;
-						case NMib::NProcess::EProcessLaunchState_LaunchFailed:
-							{
-								DMibConErrOut("Error: {}\r\n", _State.f_Get<NMib::NProcess::EProcessLaunchState_LaunchFailed>());
-								Exited.f_SetSignaled();
-							}
-							break;
-						}
-					}
-				;
-				Params.m_fOnOutput = [&](NMib::NProcess::EProcessLaunchOutputType _OutputType, NMib::NStr::CStr const &_Output)
-					{
-						if (_OutputType == NMib::NProcess::EProcessLaunchOutputType_StdOut)
-							ResultParser.f_FeedText(_Output);
-						else
-							DMibConErrOut("{}", _Output);
-					}
-				;
-				{
-					DMibLock(ProcessLaunchLock);
-					pProcessLaunch = NMib::fg_Construct(Params, NMib::NProcess::EProcessLaunchCloseFlag_BlockOnExit);
-				}
-
-				NMib::NProcess::CProcessStatistics SampledMemoryStats;
-
-				while (true)
-				{
-					try
-					{
-						auto ThisStat = pProcessLaunch->f_GetMemoryStatistics();
-						for (auto iStat = ThisStat.m_Statistics.f_GetIterator(); iStat; ++iStat)
-						{
-							auto Mapped = SampledMemoryStats.m_Statistics("(Sampled Max) " + iStat.f_GetKey(), *iStat);
-							if (!Mapped.f_WasCreated())
-							{
-								if (iStat->m_Value > (*Mapped).m_Value)
-									(*Mapped).m_Value = iStat->m_Value;
-							}
-						}
-					}
-					catch (NMib::NException::CException const &)
-					{
-					}
-
-					if (!Exited.f_WaitTimeout(0.01))
-						break; // Exited
-				}
-
-				{
-					DMibLock(ProcessLaunchLock);
-					pProcessLaunch.f_Clear();
-				}
-
-				fAddStats(SampledMemoryStats);
-
-				if (ResultParser.m_bFailedTest)
-					DMibTest(!DMibExpr(ResultParser.m_bFailedTest))(ETestFlag_Aggregated);
-
-				if (ResultParser.m_bValidResult)
-				{
-					_PerfTest.f_Add(Result);
-
-					if (!MemoryResult.m_PerAllocationType.f_IsEmpty())
-					{
-						MemoryResult.m_MeasureType = Result.m_MeasureType;
-						MemoryResult.m_Name = Result.m_Name;
-						MemoryResult.m_nIterations = 1;
-						MemoryResult.m_nRepetitions = 1;
-						_MemoryTest.f_Add(MemoryResult);
-					}
-				}
-				else
-					DMibTest(DMibExpr(false) && DMibExpr("Recursive test failed"))(Params.m_Parameters);
-
+			if (!tf_CHeap::fs_ShouldRun(_nThreads, tf_CAllocPattern::fs_Alignment()))
 				return;
-			}
 
-			struct CPerfromTest
+			CTestPerformanceResult Result;
+			CTestMemoryResult MemoryResult;
+			struct CLocalParser : public CTestResultParser
 			{
-				CPerformance_Tests &m_This;
-				CPerfromTest(CPerformance_Tests &_This)
-					: m_This(_This)
+				CLocalParser(CTestPerformanceResult &_Result, ETestMeasureType _MeasureType, ch8 const *_pName)
+					: m_Result(_Result)
+					, m_MeasureType(_MeasureType)
+					, m_pName(_pName)
+					, m_bValidResult(false)
 				{
 				}
 
-				void f_Perform(CTestPerformance &_PerfTest, ETestMeasureType _MeasureType, ch8 const *_pName, umint _MaxAllocSize, umint _nThreads)
+				virtual void f_HandleHeader(NMib::NContainer::CRegistry const &_Reg) override
 				{
-					m_This.f_DoTestPerform<tf_CHeap, tf_CAllocPattern>(_PerfTest, _MeasureType, _pName, _MaxAllocSize, _nThreads);
 				}
-			};
 
-			CPerfromTest Performer(*this);
-
-			DMibTestSuite(_pName)
-			{
-				Performer.f_Perform(_PerfTest, _MeasureType, _pName, _MaxAllocSize, _nThreads);
-				DMibTest(DMibExpr(_PerfTest));
-			};
-		}
-
-		template <typename tf_CAllocPattern>
-		void f_DoTestsManagers(umint _MaxAllocSize, tf_CAllocPattern const &_Pattern, umint _nThreads)
-		{
-			CTestPerformance PerfTest(0.5, false);
-			CTestMemory MemoryTest(0.5, false);
-			f_DoTest<CMalterlibMemoryDummy, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Baseline, "Baseline", _MaxAllocSize, _nThreads);
-#ifdef DMemoryManagerTestEnable_Malterlib
-			f_DoTest<CMalterlibMemoryMalterlib, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlib_SubSlabLists, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_SubSlabLists", _MaxAllocSize, _nThreads);
-#	if DMibPPtrBits >= 64
-			f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmaps, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_SubSlabBitmap", _MaxAllocSize, _nThreads);
-#	endif
-			f_DoTest<CMalterlibMemoryMalterlib_SubSlabListsReap, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_ListsReap", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmapsReap, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_BitmapReap", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlib_SubSlabListsReapOrder, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_ListsOrder", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmapsReapOrder, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_BitmapOrder", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlib_NoCheckout, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_Checkout", _MaxAllocSize, _nThreads);
-#	if DMibPPtrBits >= 64
-			f_DoTest<CMalterlibMemoryMalterlib_LowBranch, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_LowBranch", _MaxAllocSize, _nThreads);
-#	endif
-
-			//f_DoTest<CMalterlibMemoryMalterlib_Tracked, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_Tracked", _MaxAllocSize, _nThreads);
-			//f_DoTest<CMalterlibMemoryMalterlib_Debug, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_Debug", _MaxAllocSize, _nThreads);
-			/*
-			f_DoTest<CMalterlibMemoryMalterlib_NoCommit, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_NoCommit", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlib_NoDeferCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_DirectCleanup", _MaxAllocSize, _nThreads);
-			f_DoTest<CMalterlibMemoryMalterlib_NoCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_NoCleanup", _MaxAllocSize, _nThreads);
-			*/
-#endif
-
-#ifdef DMibConfig_MemoryManager_UseMalterlib
-			ETestMeasureType ApplicationMeasureType = ETestMeasureType_Normal;
-#else
-			ETestMeasureType ApplicationMeasureType = ETestMeasureType_Reference;
-#endif
-
-#ifdef DMibConfig_OverrideSystemMalloc
-			NMib::NStr::CStr SystemMallocOverrideSuffix = " (Overridden)";
-			ETestMeasureType SystemMeasureType = ApplicationMeasureType;
-#else
-			NMib::NStr::CStr SystemMallocOverrideSuffix;
-			ETestMeasureType SystemMeasureType = ETestMeasureType_Reference;
-#endif
-
-#ifdef DMemoryManagerTestEnable_MacOS
-			f_DoTest<CMalterlibMemoryMacOS, tf_CAllocPattern>(PerfTest, MemoryTest, SystemMeasureType, "macOS" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
-#endif
-#ifdef DMemoryManagerTestEnable_StdLib
-			f_DoTest<CMalterlibMemoryStdLib, tf_CAllocPattern>(PerfTest, MemoryTest, SystemMeasureType, "StdLib" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
-#endif
-#ifdef DMemoryManagerTestEnable_Application
-			f_DoTest<CMalterlibMemoryApplication, tf_CAllocPattern>(PerfTest, MemoryTest, ApplicationMeasureType, "Application", _MaxAllocSize, _nThreads);
-#endif
-#ifdef DMemoryManagerTestEnable_TcMalloc
-			f_DoTest<CMalterlibMemoryTcMalloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "TcMalloc", _MaxAllocSize, _nThreads);
-#endif
-#ifdef DMemoryManagerTestEnable_MiMalloc
-			f_DoTest<CMalterlibMemoryMiMalloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "MiMalloc", _MaxAllocSize, _nThreads);
-#endif
-#ifdef DMemoryManagerTestEnable_WindowsLF
-			f_DoTest<TCMalterlibMemoryWindowsLF<false>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "WindowsLF", _MaxAllocSize, _nThreads);
-#endif
-#ifdef DMemoryManagerTestEnable_WindowsDefault
-			f_DoTest<TCMalterlibMemoryWindows<false, true>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "Windows", _MaxAllocSize, _nThreads);
-#endif
-
-			if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
-			{
-				DMibTest(DMibExpr(PerfTest));
-				if (!MemoryTest.f_IsEmpty())
-					DMibTest(DMibExpr(MemoryTest));
-			}
-		}
-
-		template <typename tf_CAllocPattern>
-		void f_DoTests(umint _MaxAllocSize, tf_CAllocPattern const &_Pattern, umint _nThreads)
-		{
-			f_DoTestsManagers(_MaxAllocSize, _Pattern, _nThreads);
-		}
-
-		template <typename tf_CAllocPattern>
-		void f_DoTests(ch8 const *_pPattern, tf_CAllocPattern const &_Pattern)
-		{
-			auto fRunTests = [&]
+				virtual void f_HandleFooter(NMib::NContainer::CRegistry const &_Reg) override
 				{
-					for
-#if 1
-					(umint MaxAllocSize = 1; MaxAllocSize <= 1024 * 1024 * 8; MaxAllocSize = MaxAllocSize << 1)
-#else
-					(
-						umint MaxAllocSize = 1
-						//; MaxAllocSize <= 1024*1024*8
-#	if DMibPPtrBits == 64
-						; MaxAllocSize <= 12
-#	else
-						; MaxAllocSize <= 4
-#	endif
-						; MaxAllocSize = MaxAllocSize < 4 ? MaxAllocSize << 1 : MaxAllocSize + 4
-					)
-#endif
+				}
+
+				virtual void f_HandleCategory(NMib::NContainer::CRegistry const &_Reg) override
+				{
+				}
+
+				virtual void f_HandleResult(NMib::NContainer::CRegistry const &_Reg) override
+				{
+					CTestResult Result;
+					CTestResultParser::fs_DecodeResult(_Reg, Result);
+
+					if (Result.m_Result == ETestResult_Fail && Result.m_TestPath.f_Find("m_bFailed") >= 0)
+						m_bFailedTest = true;
+				}
+
+				virtual void f_HandlePerformanceResult(NMib::NContainer::CRegistry const &_Reg) override
+				{
+					CTestPerformanceResults Results;
+					CTestResultParser::fs_DecodePerformanceResults(_Reg, Results);
+
+					DMibCheck(Results.m_Results.f_GetLen() == 1);
+					if (!Results.m_Results.f_IsEmpty())
 					{
-						DMibTestCategory(NMib::NStr::CStr::CFormat("Max Alloc({})") << MaxAllocSize)
+						m_Result = Results.m_Results.f_GetFirst();
+						m_bValidResult = true;
+					}
+				}
+
+				virtual void f_HandleMemoryResult(NMib::NContainer::CRegistry const &_Reg) override
+				{
+				}
+
+				CTestPerformanceResult &m_Result;
+				ETestMeasureType m_MeasureType;
+				ch8 const *m_pName;
+				bool m_bValidResult;
+				bool m_bFailedTest = false;
+			} ResultParser(Result, _MeasureType, _pName);
+
+			NMib::NProcess::CProcessLaunchParams Params;
+			Params.m_Target = NMib::NFile::CFile::fs_GetProgramPath();
+			Params.m_Parameters = NMib::NProcess::CProcessLaunchParams::fs_GetParams
+				(
+					{
+						"--test"
+						, fg_TestGetCurrentPath() / _pName
+						, "--logger"
+						, "Registry"
+						, "--filter-results"
+						, "[\"All\"]"
+						, "--process-recursive"
+						, "--groups"
+						, "[\"Performance\"]"
+					}
+				)
+			;
+
+			DMibLog(Info, "{} {}", Params.m_Target, Params.m_Parameters);
+			void *pProcess = nullptr;
+
+			NMib::NThread::CMutual ProcessLaunchLock;
+			NMib::NStorage::TCUniquePointer<NMib::NProcess::CProcessLaunch> pProcessLaunch;
+
+			NMib::NThread::CEvent Exited;
+			Exited.f_ResetSignaled();
+
+			auto fAddStats = [&](NMib::NProcess::CProcessStatistics const &_Stats)
+				{
+					for (auto iStatistic = _Stats.m_Statistics.f_GetIterator(); iStatistic; ++iStatistic)
+					{
+						fp64 Value = iStatistic->m_Value;
+						NMib::NStr::CStr Name = iStatistic.f_GetKey();
+						switch (iStatistic->m_Unit)
 						{
-							f_DoPattern(_pPattern, _Pattern, MaxAllocSize);
-						};
+						case NMib::NProcess::EProcessStatUnit_GeneralNumber:
+							{
+								if (!iStatistic->m_CustomUnit.f_IsEmpty())
+									Name += NMib::NStr::CStr::CFormat(" ({})") << iStatistic->m_CustomUnit;
+							}
+							break;
+						case NMib::NProcess::EProcessStatUnit_Bytes:
+							{
+								if (iStatistic->m_IdealScale == fp64(1024 * 1024 * 1024))
+								{
+									Value /= iStatistic->m_IdealScale;
+									Name += " (GiB)";
+								}
+								else if (iStatistic->m_IdealScale == fp64(1024 * 1024))
+								{
+									Value /= iStatistic->m_IdealScale;
+									Name += " (MiB)";
+								}
+								else if (iStatistic->m_IdealScale == fp64(1024))
+								{
+									Value /= iStatistic->m_IdealScale;
+									Name += " (KiB)";
+								}
+								else
+									Name += " (Bytes)";
+							}
+							break;
+						case NMib::NProcess::EProcessStatUnit_Cycles:
+							{
+								Name += " (Cycles)";
+							}
+							break;
+						case NMib::NProcess::EProcessStatUnit_Seconds:
+							{
+								if (iStatistic->m_IdealScale == fp64(0.000000001))
+								{
+									Value /= iStatistic->m_IdealScale;
+									Name += " (ns)";
+								}
+								else if (iStatistic->m_IdealScale == fp64(0.000001))
+								{
+									Value /= iStatistic->m_IdealScale;
+									Name += " (µs)";
+								}
+								else if (iStatistic->m_IdealScale == fp64(0.001))
+								{
+									Value /= iStatistic->m_IdealScale;
+									Name += " (ms)";
+								}
+								else
+									Name += " (s)";
+							}
+							break;
+						case NMib::NProcess::EProcessStatUnit_Fraction:
+							{
+								Value *= 100.0;
+								Name += " (%)";
+							}
+							break;
+						default: DMibNeverGetHere(iStatistic->m_Unit); break;
+						}
+						Result.m_PerformanceCounters[Name] = CTestStats(Value);
 					}
 				}
 			;
-			if (NMib::NStr::fg_StrStartsWith(_pPattern, "Random"))
-			{
-				DMibTestCategory(_pPattern)
+
+			Params.m_fOnStateChange = [&](NMib::NProcess::CProcessLaunchStateChangeVariant const &_State, fp64 _TimeSinceStart)
 				{
-					fRunTests();
-				};
+					switch (_State.f_GetTypeID())
+					{
+					case NMib::NProcess::EProcessLaunchState_Exited:
+						{
+							//uint32 ExitCode = _State.f_Get<NMib::NProcess::EProcessLaunchState_Exited>();
+							DMibCheck(pProcess);
+							if (pProcess)
+							{
+								DMibLock(ProcessLaunchLock);
+								NMib::NProcess::CProcessStatistics MemoryStats = pProcessLaunch->f_GetOverallMemoryStatistics();
+								NMib::NProcess::CProcessStatistics ExecutionStats = pProcessLaunch->f_GetOverallExecutionStatistics();
+
+								fAddStats(ExecutionStats);
+								fAddStats(MemoryStats);
+								/*
+								for (auto Iter = MemoryStats.m_Statistics.f_GetIterator(); Iter; ++Iter)
+								{
+									if (Iter.f_GetKey() == "Peak working set size")
+										MemoryResult.m_AllAllocations.m_BytesMaxAlloc = CTestStats(fp64(*Iter));
+									MemoryResult.m_PerAllocationType[Iter.f_GetKey()].m_BytesMaxAlloc = CTestStats(fp64(*Iter));
+								}*/
+							}
+							Exited.f_SetSignaled();
+						}
+						break;
+					case NMib::NProcess::EProcessLaunchState_Launched:
+						{
+							pProcess = _State.f_Get<NMib::NProcess::EProcessLaunchState_Launched>();
+						}
+						break;
+					case NMib::NProcess::EProcessLaunchState_LaunchFailed:
+						{
+							DMibConErrOut("Error: {}\r\n", _State.f_Get<NMib::NProcess::EProcessLaunchState_LaunchFailed>());
+							Exited.f_SetSignaled();
+						}
+						break;
+					}
+				}
+			;
+			Params.m_fOnOutput = [&](NMib::NProcess::EProcessLaunchOutputType _OutputType, NMib::NStr::CStr const &_Output)
+				{
+					if (_OutputType == NMib::NProcess::EProcessLaunchOutputType_StdOut)
+						ResultParser.f_FeedText(_Output);
+					else
+						DMibConErrOut("{}", _Output);
+				}
+			;
+			{
+				DMibLock(ProcessLaunchLock);
+				pProcessLaunch = NMib::fg_Construct(Params, NMib::NProcess::EProcessLaunchCloseFlag_BlockOnExit);
+			}
+
+			NMib::NProcess::CProcessStatistics SampledMemoryStats;
+
+			while (true)
+			{
+				try
+				{
+					auto ThisStat = pProcessLaunch->f_GetMemoryStatistics();
+					for (auto iStat = ThisStat.m_Statistics.f_GetIterator(); iStat; ++iStat)
+					{
+						auto Mapped = SampledMemoryStats.m_Statistics("(Sampled Max) " + iStat.f_GetKey(), *iStat);
+						if (!Mapped.f_WasCreated())
+						{
+							if (iStat->m_Value > (*Mapped).m_Value)
+								(*Mapped).m_Value = iStat->m_Value;
+						}
+					}
+				}
+				catch (NMib::NException::CException const &)
+				{
+				}
+
+				if (!Exited.f_WaitTimeout(0.01))
+					break; // Exited
+			}
+
+			{
+				DMibLock(ProcessLaunchLock);
+				pProcessLaunch.f_Clear();
+			}
+
+			fAddStats(SampledMemoryStats);
+
+			if (ResultParser.m_bFailedTest)
+				DMibTest(!DMibExpr(ResultParser.m_bFailedTest))(ETestFlag_Aggregated);
+
+			if (ResultParser.m_bValidResult)
+			{
+				_PerfTest.f_Add(Result);
+
+				if (!MemoryResult.m_PerAllocationType.f_IsEmpty())
+				{
+					MemoryResult.m_MeasureType = Result.m_MeasureType;
+					MemoryResult.m_Name = Result.m_Name;
+					MemoryResult.m_nIterations = 1;
+					MemoryResult.m_nRepetitions = 1;
+					_MemoryTest.f_Add(MemoryResult);
+				}
 			}
 			else
-			{
-				DMibTestCategory(CTestCategory(_pPattern) << CTestGroup("Manual"))
-				{
-					fRunTests();
-				};
-			}
+				DMibTest(DMibExpr(false) && DMibExpr("Recursive test failed"))(Params.m_Parameters);
+
+			return;
 		}
 
-		template <typename tf_CAllocPattern>
-		void f_DoPattern(ch8 const *_pPattern, tf_CAllocPattern const &_Pattern, umint _MaxAlloc)
+		struct CPerfromTest
 		{
-			umint nPhysicalCores = NMib::NSys::fg_Thread_GetPhysicalCores();
-			umint nVirtualCores = NMib::NSys::fg_Thread_GetVirtualCores();
-			umint nCores = m_nCores;
-			//nCores = 1;
-			umint nThreads = 1;
-			NMib::NContainer::TCSet<umint> AlreadyRan;
+			CPerfromTest(CPerformance_Tests &_This)
+				: m_This(_This)
+			{
+			}
 
-			auto fRunTest = [&](umint _nThreads)
+			void f_Perform(CTestPerformance &_PerfTest, ETestMeasureType _MeasureType, ch8 const *_pName, umint _MaxAllocSize, umint _nThreads)
+			{
+				m_This.f_DoTestPerform<tf_CHeap, tf_CAllocPattern>(_PerfTest, _MeasureType, _pName, _MaxAllocSize, _nThreads);
+			}
+
+			CPerformance_Tests &m_This;
+		};
+
+		CPerfromTest Performer(*this);
+
+		DMibTestSuite(_pName)
+		{
+			Performer.f_Perform(_PerfTest, _MeasureType, _pName, _MaxAllocSize, _nThreads);
+			DMibTest(DMibExpr(_PerfTest));
+		};
+	}
+
+	template <typename tf_CAllocPattern>
+	void CPerformance_Tests::f_DoTestsManagers(umint _MaxAllocSize, tf_CAllocPattern const &_Pattern, umint _nThreads)
+	{
+		CTestPerformance PerfTest(0.5, false);
+		CTestMemory MemoryTest(0.5, false);
+		f_DoTest<CMalterlibMemoryDummy, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Baseline, "Baseline", _MaxAllocSize, _nThreads);
+#ifdef DMemoryManagerTestEnable_Malterlib
+		f_DoTest<CMalterlibMemoryMalterlib, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "Malterlib", _MaxAllocSize, _nThreads);
+		f_DoTest<CMalterlibMemoryMalterlib_SubSlabLists, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_SubSlabLists", _MaxAllocSize, _nThreads);
+#	if DMibPPtrBits >= 64
+		f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmaps, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_SubSlabBitmap", _MaxAllocSize, _nThreads);
+#	endif
+		f_DoTest<CMalterlibMemoryMalterlib_SubSlabListsReap, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_ListsReap", _MaxAllocSize, _nThreads);
+		f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmapsReap, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_BitmapReap", _MaxAllocSize, _nThreads);
+		f_DoTest<CMalterlibMemoryMalterlib_SubSlabListsReapOrder, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_ListsOrder", _MaxAllocSize, _nThreads);
+		f_DoTest<CMalterlibMemoryMalterlib_SubSlabBitmapsReapOrder, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_BitmapOrder", _MaxAllocSize, _nThreads);
+		f_DoTest<CMalterlibMemoryMalterlib_NoCheckout, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Normal, "M_Checkout", _MaxAllocSize, _nThreads);
+#	if DMibPPtrBits >= 64
+		f_DoTest<CMalterlibMemoryMalterlib_LowBranch, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_LowBranch", _MaxAllocSize, _nThreads);
+#	endif
+
+		//f_DoTest<CMalterlibMemoryMalterlib_Tracked, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_Tracked", _MaxAllocSize, _nThreads);
+		//f_DoTest<CMalterlibMemoryMalterlib_Debug, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_Debug", _MaxAllocSize, _nThreads);
+		/*
+		f_DoTest<CMalterlibMemoryMalterlib_NoCommit, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_NoCommit", _MaxAllocSize, _nThreads);
+		f_DoTest<CMalterlibMemoryMalterlib_NoDeferCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_DirectCleanup", _MaxAllocSize, _nThreads);
+		f_DoTest<CMalterlibMemoryMalterlib_NoCleanup, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Debug, "M_NoCleanup", _MaxAllocSize, _nThreads);
+		*/
+#endif
+
+#ifdef DMibConfig_MemoryManager_UseMalterlib
+		ETestMeasureType ApplicationMeasureType = ETestMeasureType_Normal;
+#else
+		ETestMeasureType ApplicationMeasureType = ETestMeasureType_Reference;
+#endif
+
+#ifdef DMibConfig_OverrideSystemMalloc
+		NMib::NStr::CStr SystemMallocOverrideSuffix = " (Overridden)";
+		ETestMeasureType SystemMeasureType = ApplicationMeasureType;
+#else
+		NMib::NStr::CStr SystemMallocOverrideSuffix;
+		ETestMeasureType SystemMeasureType = ETestMeasureType_Reference;
+#endif
+
+#ifdef DMemoryManagerTestEnable_MacOS
+		f_DoTest<CMalterlibMemoryMacOS, tf_CAllocPattern>(PerfTest, MemoryTest, SystemMeasureType, "macOS" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
+#endif
+#ifdef DMemoryManagerTestEnable_StdLib
+		f_DoTest<CMalterlibMemoryStdLib, tf_CAllocPattern>(PerfTest, MemoryTest, SystemMeasureType, "StdLib" + SystemMallocOverrideSuffix, _MaxAllocSize, _nThreads);
+#endif
+#ifdef DMemoryManagerTestEnable_Application
+		f_DoTest<CMalterlibMemoryApplication, tf_CAllocPattern>(PerfTest, MemoryTest, ApplicationMeasureType, "Application", _MaxAllocSize, _nThreads);
+#endif
+#ifdef DMemoryManagerTestEnable_TcMalloc
+		f_DoTest<CMalterlibMemoryTcMalloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "TcMalloc", _MaxAllocSize, _nThreads);
+#endif
+#ifdef DMemoryManagerTestEnable_MiMalloc
+		f_DoTest<CMalterlibMemoryMiMalloc, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "MiMalloc", _MaxAllocSize, _nThreads);
+#endif
+#ifdef DMemoryManagerTestEnable_WindowsLF
+		f_DoTest<TCMalterlibMemoryWindowsLF<false>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "WindowsLF", _MaxAllocSize, _nThreads);
+#endif
+#ifdef DMemoryManagerTestEnable_WindowsDefault
+		f_DoTest<TCMalterlibMemoryWindows<false, true>, tf_CAllocPattern>(PerfTest, MemoryTest, ETestMeasureType_Reference, "Windows", _MaxAllocSize, _nThreads);
+#endif
+
+		if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
+		{
+			DMibTest(DMibExpr(PerfTest));
+			if (!MemoryTest.f_IsEmpty())
+				DMibTest(DMibExpr(MemoryTest));
+		}
+	}
+
+	template <typename tf_CAllocPattern>
+	void CPerformance_Tests::f_DoTests(umint _MaxAllocSize, tf_CAllocPattern const &_Pattern, umint _nThreads)
+	{
+		f_DoTestsManagers(_MaxAllocSize, _Pattern, _nThreads);
+	}
+
+	template <typename tf_CAllocPattern>
+	void CPerformance_Tests::f_DoTests(ch8 const *_pPattern, tf_CAllocPattern const &_Pattern)
+	{
+		auto fRunTests = [&]
+			{
+				for
+#if 1
+				(umint MaxAllocSize = 1; MaxAllocSize <= 1024 * 1024 * 8; MaxAllocSize = MaxAllocSize << 1)
+#else
+				(
+					umint MaxAllocSize = 1
+					//; MaxAllocSize <= 1024*1024*8
+#	if DMibPPtrBits == 64
+					; MaxAllocSize <= 12
+#	else
+					; MaxAllocSize <= 4
+#	endif
+					; MaxAllocSize = MaxAllocSize < 4 ? MaxAllocSize << 1 : MaxAllocSize + 4
+				)
+#endif
 				{
-					if (!AlreadyRan(_nThreads).f_WasCreated())
-						return;
-					if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
+					DMibTestCategory(NMib::NStr::CStr::CFormat("Max Alloc({})") << MaxAllocSize)
 					{
-						if
-						(
-							(_MaxAlloc == gc_TestSize || _MaxAlloc == gc_TestSizeBig)
-							&& (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores || _nThreads == nPhysicalCores * 2)
-						)
+						f_DoPattern(_pPattern, _Pattern, MaxAllocSize);
+					};
+				}
+			}
+		;
+		if (NMib::NStr::fg_StrStartsWith(_pPattern, "Random"))
+		{
+			DMibTestCategory(_pPattern)
+			{
+				fRunTests();
+			};
+		}
+		else
+		{
+			DMibTestCategory(CTestCategory(_pPattern) << CTestGroup("Manual"))
+			{
+				fRunTests();
+			};
+		}
+	}
+
+	template <typename tf_CAllocPattern>
+	void CPerformance_Tests::f_DoPattern(ch8 const *_pPattern, tf_CAllocPattern const &_Pattern, umint _MaxAlloc)
+	{
+		umint nPhysicalCores = NMib::NSys::fg_Thread_GetPhysicalCores();
+		umint nVirtualCores = NMib::NSys::fg_Thread_GetVirtualCores();
+		umint nCores = m_nCores;
+		//nCores = 1;
+		umint nThreads = 1;
+		NMib::NContainer::TCSet<umint> AlreadyRan;
+
+		auto fRunTest = [&](umint _nThreads)
+			{
+				if (!AlreadyRan(_nThreads).f_WasCreated())
+					return;
+				if (!(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
+				{
+					if
+					(
+						(_MaxAlloc == gc_TestSize || _MaxAlloc == gc_TestSizeBig)
+						&& (_nThreads == 1 || _nThreads == 2 || _nThreads == nPhysicalCores || _nThreads == nVirtualCores || _nThreads == nPhysicalCores * 2)
+					)
+					{
+						DMibTestSuite(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads)
 						{
-							DMibTestSuite(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads)
-							{
-								f_DoTests(_MaxAlloc, _Pattern, _nThreads);
-							};
-						}
-						else
-						{
-							DMibTestSuite(CTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads) << CTestGroup("Manual"))
-							{
-								f_DoTests(_MaxAlloc, _Pattern, _nThreads);
-							};
-						}
+							f_DoTests(_MaxAlloc, _Pattern, _nThreads);
+						};
 					}
 					else
 					{
-						DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads)
+						DMibTestSuite(CTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads) << CTestGroup("Manual"))
 						{
 							f_DoTests(_MaxAlloc, _Pattern, _nThreads);
 						};
 					}
 				}
-			;
+				else
+				{
+					DMibTestCategory(NMib::NStr::CStr::CFormat("Threads({})") << _nThreads)
+					{
+						f_DoTests(_MaxAlloc, _Pattern, _nThreads);
+					};
+				}
+			}
+		;
 
-			umint nEndCores = NMib::fg_Max(nCores * 2, 128u);
+		umint nEndCores = NMib::fg_Max(nCores * 2, 128u);
 
-			for (; nThreads <= nEndCores; nThreads = nThreads << 1)
-				fRunTest(nThreads);
-
-			if (!NMib::fg_IsPowerOfTwo(nPhysicalCores) && nPhysicalCores != nCores)
-				fRunTest(nPhysicalCores);
-
-			nThreads = nCores;
+		for (; nThreads <= nEndCores; nThreads = nThreads << 1)
 			fRunTest(nThreads);
-			nThreads = nThreads << 1;
+
+		if (!NMib::fg_IsPowerOfTwo(nPhysicalCores) && nPhysicalCores != nCores)
+			fRunTest(nPhysicalCores);
+
+		nThreads = nCores;
+		fRunTest(nThreads);
+		nThreads = nThreads << 1;
 #if 0
-			umint nEndCores = NMib::fg_Min(nCores * 1024, 64u); // Max 4096 threads as it taskes some time to start threads
-			//umint nEndCores = NMib::fg_Min(nCores*1024, 4096u); // Max 4096 threads as it taskes some time to start threads
-			if (NMib::NSys::fg_System_BeingDebugged() && !(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
-				nEndCores = NMib::fg_Min(nEndCores, 128u); // Running in debugger the debugger makes creating threads really slow
+		umint nEndCores = NMib::fg_Min(nCores * 1024, 64u); // Max 4096 threads as it taskes some time to start threads
+		//umint nEndCores = NMib::fg_Min(nCores*1024, 4096u); // Max 4096 threads as it taskes some time to start threads
+		if (NMib::NSys::fg_System_BeingDebugged() && !(fg_TestReportFlags() & ETestReportFlag_ProcessRecursive))
+			nEndCores = NMib::fg_Min(nEndCores, 128u); // Running in debugger the debugger makes creating threads really slow
 #endif
 
-			for (; nThreads <= nEndCores; nThreads = nThreads << 1)
-				fRunTest(nThreads);
-		}
+		for (; nThreads <= nEndCores; nThreads = nThreads << 1)
+			fRunTest(nThreads);
+	}
 
-		void f_DoPatterns()
-		{
-			f_DoTests("Random", CAllocPattern_Random());
-			f_DoTests("OneSize", CAllocPattern_OneSize());
-			f_DoTests("OneSizeLinear", CAllocPattern_OneSizeLinear());
-			f_DoTests("RandomAligned", CAllocPattern_RandomAlignment());
-		}
+	void CPerformance_Tests::f_DoPatterns()
+	{
+		f_DoTests("Random", CAllocPattern_Random());
+		f_DoTests("OneSize", CAllocPattern_OneSize());
+		f_DoTests("OneSizeLinear", CAllocPattern_OneSizeLinear());
+		f_DoTests("RandomAligned", CAllocPattern_RandomAlignment());
+	}
 
-		void f_DoTests()
+	void CPerformance_Tests::f_DoTests()
+	{
+		DMibTestCategory(CTestCategory("Synthetic") << CTestGroup("Performance"))
 		{
-			DMibTestCategory(CTestCategory("Synthetic") << CTestGroup("Performance"))
-			{
-				f_DoPatterns();
-			};
-		}
-	};
+			f_DoPatterns();
+		};
+	}
 
 	DMibTestRegister(CPerformance_Tests, Malterlib::Memory::MemoryManager);
 }

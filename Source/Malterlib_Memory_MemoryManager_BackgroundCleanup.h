@@ -31,7 +31,6 @@ namespace NMib::NMemory
 	private:
 		void fp_StartupThread();
 
-	private:
 		TCMemoryManager<t_CParams> *mp_pMemoryManager;
 		TCMemoryManagerNumaArena<t_CParams> *mp_pNumaArena;
 		align_cacheline NAtomic::TCAtomic<uint32> mp_bStarted;

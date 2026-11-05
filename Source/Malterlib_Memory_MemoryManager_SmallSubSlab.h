@@ -24,8 +24,6 @@ namespace NMib::NMemory
 			uint16 m_Alignment;
 		};
 
-		CParams m_Params;
-
 		TCMemoryManagerSubSlab_SmallSizeShared(umint _AllocSize);
 
 		uint8 *f_GetArray();
@@ -36,12 +34,17 @@ namespace NMib::NMemory
 		void f_OnFillFree(TCMemoryManagerArena<t_CParams> &_Arena);
 		bool f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, EMemoryManagerCheckFlag _Flags);
 		bool f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, EMemoryManagerCheckFlag _Flags);
+
+		CParams m_Params;
 	};
 
 	template <typename t_CParams, umint t_AllocSize>
 	struct TCMemoryManagerSubSlab_SmallSize : TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>
 	{
 		using typename TCMemoryManagerSubSlab_SmallSizeShared<t_CParams>::CParams;
+
+		TCMemoryManagerSubSlab_SmallSize();
+
 		static constexpr umint mc_Alignment = 1 << gc_LowestBitSet<t_AllocSize>;
 		static constexpr umint mc_NumAllocs = (t_CParams::mc_SubSlabSize - TCAlignUp<umint, sizeof(CParams), mc_Alignment>::mc_Value) / t_AllocSize;
 		static constexpr umint mc_SmallSlabIndex
@@ -65,8 +68,6 @@ namespace NMib::NMemory
 		static_assert(!t_CParams::mc_bUseSmallSizes || t_AllocSize != 8 || mc_SmallSlabIndex == 3);
 		static_assert(!t_CParams::mc_bUseSmallSizes || t_AllocSize != 12 || mc_SmallSlabIndex == 4);
 		static_assert(!t_CParams::mc_bUseSmallSizes || t_AllocSize != 16 || mc_SmallSlabIndex == 5);
-
-		TCMemoryManagerSubSlab_SmallSize();
 	};
 
 	template <typename t_CParams>
@@ -81,13 +82,6 @@ namespace NMib::NMemory
 			uint16 m_nAllocated;
 		};
 
-		CParams m_Params;
-
-		static constexpr umint mc_NumAllocs = (t_CParams::mc_SubSlabSize - sizeof(CParams));
-		static constexpr umint mc_NumAllocRegions = (mc_NumAllocs + 254) / 255;
-		static constexpr umint mc_SmallSlabIndex = 0;
-		static_assert(mc_NumAllocRegions < 256, "Out of bounds");
-
 		TCMemoryManagerSubSlab_SmallSize();
 
 		uint8 *f_GetArray();
@@ -98,5 +92,12 @@ namespace NMib::NMemory
 		void f_OnFillFree(TCMemoryManagerArena<t_CParams> &_Arena);
 		bool f_OnCheckFree(TCMemoryManagerArena<t_CParams> &_Arena, void *_pAlloc, EMemoryManagerCheckFlag _Flags);
 		bool f_CheckFree(TCMemoryManagerArena<t_CParams> &_Arena, EMemoryManagerCheckFlag _Flags);
+
+		static constexpr umint mc_NumAllocs = (t_CParams::mc_SubSlabSize - sizeof(CParams));
+		static constexpr umint mc_NumAllocRegions = (mc_NumAllocs + 254) / 255;
+		static constexpr umint mc_SmallSlabIndex = 0;
+		static_assert(mc_NumAllocRegions < 256, "Out of bounds");
+
+		CParams m_Params;
 	};
 }

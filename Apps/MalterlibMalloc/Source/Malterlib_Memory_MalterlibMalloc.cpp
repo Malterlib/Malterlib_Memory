@@ -7,10 +7,12 @@ void fg_MalterlibMallocOverrideInit();
 
 struct CTest
 {
-	CTest()
-	{
-		fg_MalterlibMallocOverrideInit();
-	}
+	CTest();
 };
+
+CTest::CTest()
+{
+	fg_MalterlibMallocOverrideInit();
+}
 
 CTest g_Test;

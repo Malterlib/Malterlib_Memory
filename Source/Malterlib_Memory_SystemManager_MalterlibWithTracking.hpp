@@ -139,8 +139,6 @@ namespace NMib::NMemory
 
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
 	{
-		static constexpr bool mc_bSizePenalty = false;
-
 		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_GarbageCollect(CMemoryManagerCrossModule *_pModule)
 		{
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -393,9 +391,7 @@ namespace NMib::NMemory
 			//DNonTrackedHeap->f_SetNumaNode(_NumaNode);
 		}
 
-		static constexpr bool mc_bSupportsNonTracked = true;
 #if DEnableDebugMemoryManager
-		static constexpr bool mc_bSupportsDebug = true;
 		inline_always static void * DMibCrossmoduleAPI fs_AllocWithSizeDebug(CMemoryManagerCrossModule *_pModule, umint &_Size, ch8 const *_pFile, aint _Line, EHeapDebugFlag _Flags)
 		{
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
@@ -530,8 +526,6 @@ namespace NMib::NMemory
 				;
 			}
 		}
-#else
-		static constexpr bool mc_bSupportsDebug = false;
 #endif
 
 		inline_always static umint DMibCrossmoduleAPI fs_NonTracked_Granularity(CMemoryManagerCrossModule *_pModule)
@@ -879,6 +873,14 @@ namespace NMib::NMemory
 #endif
 				return DMainHeapMax->f_AllocAligned(_Size, _Align);
 		}
+
+		static constexpr bool mc_bSupportsNonTracked = true;
+#if DEnableDebugMemoryManager
+		static constexpr bool mc_bSupportsDebug = true;
+#else
+		static constexpr bool mc_bSupportsDebug = false;
+#endif
+		static constexpr bool mc_bSizePenalty = false;
 	};
 
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size)

@@ -11,8 +11,6 @@ namespace NMib::NMemory
 
 	struct ICMemoryManagerReturnCheckout
 	{
-		uint32 m_Version;
-
 		// Available in version 0x101
 		virtual void f_ReturnCheckoutVirtual() = 0;
 		virtual void f_TemporaryReturn() = 0;
@@ -23,14 +21,16 @@ namespace NMib::NMemory
 
 		// Available in version 0x103
 		virtual bool f_GarbageCollectLocalArenaIfPending() = 0;
+
+		uint32 m_Version;
 	};
 
 	struct CMemoryManagerCheckout
 	{
 		CMemoryManagerCheckout(CMemoryManagerCheckout &&_Other);
 		CMemoryManagerCheckout(ICMemoryManagerReturnCheckout *_pThreadLocal);
-		CMemoryManagerCheckout &operator = (CMemoryManagerCheckout &&_Other);
 		~CMemoryManagerCheckout();
+		CMemoryManagerCheckout &operator = (CMemoryManagerCheckout &&_Other);
 
 		bool f_IsCheckedOut() const;
 
@@ -43,10 +43,10 @@ namespace NMib::NMemory
 		bool f_GarbageCollectLocalArenaIfPending();
 
 	private:
-		ICMemoryManagerReturnCheckout *mp_pThreadLocal;
-
 		CMemoryManagerCheckout(CMemoryManagerCheckout const &_Other);
 		CMemoryManagerCheckout &operator = (CMemoryManagerCheckout const &_Other);
+
+		ICMemoryManagerReturnCheckout *mp_pThreadLocal;
 	};
 }
 

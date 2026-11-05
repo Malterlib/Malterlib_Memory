@@ -23,12 +23,12 @@ namespace NMib::NMemory
 	struct TCMemoryManagerLimitedTemporaryReturn
 	{
 		TCMemoryManagerLimitedTemporaryReturn(TCMemoryManagerLimitedTemporaryReturn const &_Other) = delete;
-		TCMemoryManagerLimitedTemporaryReturn &operator = (TCMemoryManagerLimitedTemporaryReturn const &_Other) = delete;
 		TCMemoryManagerLimitedTemporaryReturn(TCMemoryManagerLimitedTemporaryReturn &&_Other);
 		TCMemoryManagerLimitedTemporaryReturn(TCMemoryManagerThreadLocal<t_CParams> *_pThreadLocal);
 		TCMemoryManagerLimitedTemporaryReturn(TCMemoryManager<t_CParams> &_Manager);
-		TCMemoryManagerLimitedTemporaryReturn &operator = (TCMemoryManagerLimitedTemporaryReturn &&_Other);
 		~TCMemoryManagerLimitedTemporaryReturn();
+		TCMemoryManagerLimitedTemporaryReturn &operator = (TCMemoryManagerLimitedTemporaryReturn const &_Other) = delete;
+		TCMemoryManagerLimitedTemporaryReturn &operator = (TCMemoryManagerLimitedTemporaryReturn &&_Other);
 
 	private:
 		TCMemoryManagerThreadLocal<t_CParams> *mp_pThreadLocal = nullptr;
@@ -37,28 +37,6 @@ namespace NMib::NMemory
 	template <typename t_CParams>
 	struct align_cacheline TCMemoryManagerThreadLocal
 	{
-		TCMemoryManagerArena<t_CParams> *m_pArena = nullptr;
-		umint m_Reentrant = 0;
-		TCMemoryManagerArena<t_CParams> *m_pPreferredArena = nullptr;
-		umint m_TemporaryReturnCheckoutCount = 0;
-		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
-		bool m_bLazyCheckout = false;
-		bool m_bLimited = false;
-		bool m_bForcingCleanup = false;
-#if DMibEnableSafeCheck > 0
-		bool m_bInLightCheckout = false;
-#endif
-#if DMibConfig_Memory_Shims_Lightweight
-		CReportMemoryLightweight *m_pLightweightReporter = nullptr;
-		EMemoryReportLightweightScopeFlag m_LightweightScopeFlags = EMemoryReportLightweightScopeFlag_None;
-#endif
-#if DMibConfig_Memory_CustomThreadLocal
-		TCAutoClear<void *> m_Custom[DMibConfig_Memory_CustomThreadLocal];
-#endif
-		uint32 m_RandomIndex = 0;
-		uint32 m_nPendingGarbageCollects = 0;
-		NMisc::CRandomShiftRNG m_LimitedRandom;
-
 		struct CRentrantScope
 		{
 			CRentrantScope(TCMemoryManagerThreadLocal *_pThreadLocal);
@@ -72,7 +50,6 @@ namespace NMib::NMemory
 			TCMemoryManagerThreadLocal *m_pThreadLocal;
 		};
 
-	public:
 		TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal const &_Other) = delete;
 		TCMemoryManagerThreadLocal(TCMemoryManagerThreadLocal &&_Other, TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
 		TCMemoryManagerThreadLocal(TCMemoryManagerNumaArena<t_CParams> *_pNumaArena);
@@ -94,6 +71,28 @@ namespace NMib::NMemory
 		inline_never void f_TrackAlloc(umint _Size);
 		inline_never void f_TrackFree(umint _Size);
 #endif
+
+		TCMemoryManagerArena<t_CParams> *m_pArena = nullptr;
+		umint m_Reentrant = 0;
+		TCMemoryManagerArena<t_CParams> *m_pPreferredArena = nullptr;
+		umint m_TemporaryReturnCheckoutCount = 0;
+		TCMemoryManagerNumaArena<t_CParams> *m_pNumaArena;
+		bool m_bLazyCheckout = false;
+		bool m_bLimited = false;
+		bool m_bForcingCleanup = false;
+#if DMibEnableSafeCheck > 0
+		bool m_bInLightCheckout = false;
+#endif
+#if DMibConfig_Memory_Shims_Lightweight
+		CReportMemoryLightweight *m_pLightweightReporter = nullptr;
+		EMemoryReportLightweightScopeFlag m_LightweightScopeFlags = EMemoryReportLightweightScopeFlag_None;
+#endif
+#if DMibConfig_Memory_CustomThreadLocal
+		TCAutoClear<void *> m_Custom[DMibConfig_Memory_CustomThreadLocal];
+#endif
+		uint32 m_RandomIndex = 0;
+		uint32 m_nPendingGarbageCollects = 0;
+		NMisc::CRandomShiftRNG m_LimitedRandom;
 	};
 
 	template <typename t_CParams>
@@ -104,9 +103,6 @@ namespace NMib::NMemory
 			inline_small ENumaNode operator () (TCMemoryManagerNumaArena const &_Node) const;
 		};
 
-		NIntrusive::TCAVLLink<> m_Link;
-
-	public:
 		TCMemoryManagerNumaArena(ENumaNode _NumaNode, TCMemoryManager<t_CParams> *_pMemoryManager, uint64 _Magic, bool _bLimitedArenas);
 		~TCMemoryManagerNumaArena();
 
@@ -130,6 +126,8 @@ namespace NMib::NMemory
 		void f_CanStartThreads();
 		void f_ForceStartCleanupThread();
 
+		NIntrusive::TCAVLLink<> m_Link;
+
 	private:
 		template <typename t_CParams2>
 		friend struct TCMemoryManager;
@@ -152,7 +150,6 @@ namespace NMib::NMemory
 		template <typename t_CParams2>
 		friend struct TCMemoryManagerLimitedTemporaryReturn;
 
-	private:
 		TCPool<TCMemoryManagerArena<t_CParams>, 16, NThread::CLowLevelLock, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> mp_Pool;
 		TCPool<TCMemoryManagerThreadLocal<t_CParams>, 128, NThread::CLowLevelLock, NMemory::CPoolType_Freeable, typename t_CParams::CAllocator> mp_PoolThreadLocal;
 		TCMemoryManager<t_CParams> *mp_pMemoryManager;

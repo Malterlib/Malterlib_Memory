@@ -11,9 +11,13 @@ namespace NMib::NMemory
 {
 	struct CCategoriesMemoryReporter : public CGlobalReportMemory
 	{
-		static CCategoriesMemoryReporter *ms_pThis;
+		struct CThreadLocal
+		{
+			CThreadLocal();
 
-	public:
+			CMemoryCategory *m_pCurrentCategory;
+		};
+
 		CCategoriesMemoryReporter();
 		~CCategoriesMemoryReporter();
 
@@ -62,14 +66,7 @@ namespace NMib::NMemory
 
 		void f_Report(bool _bFullReport) override;
 
-	public:
-		struct CThreadLocal
-		{
-			CMemoryCategory *m_pCurrentCategory;
-
-			CThreadLocal();
-		};
-
+		static CCategoriesMemoryReporter *ms_pThis;
 		NThread::TCThreadLocal<CThreadLocal, CAllocator_NonTrackedHeap> m_ThreadLocal;
 
 	private:
