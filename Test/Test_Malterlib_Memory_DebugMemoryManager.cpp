@@ -7,27 +7,29 @@ namespace
 {
 	struct CDebugMemoryManager_Tests : public CTest
 	{
-		void f_DoTests()
-		{
-			DMibTestSuite("TestAlloc")
-			{
-				NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_None> TestManager;
-
-				void *Allocations[10000];
-				for (umint iAlloc = 0; iAlloc < 10000; ++iAlloc)
-				{
-					umint Size = iAlloc;
-					Allocations[iAlloc] = TestManager.f_AllocWithSize(Size, 1);
-				}
-				for (umint iAlloc = 0; iAlloc < 10000; ++iAlloc)
-				{
-					umint Size = NMib::fg_Max(iAlloc, 1u);
-					TestManager.f_Free(Allocations[iAlloc], Size);
-				}
-				return "";
-			};
-		}
+		void f_DoTests();
 	};
+
+	void CDebugMemoryManager_Tests::f_DoTests()
+	{
+		DMibTestSuite("TestAlloc")
+		{
+			NMib::NMemory::TCDebugMemoryManager<NMib::NMemory::EDebugMemoryManager_None> TestManager;
+
+			void *Allocations[10000];
+			for (umint iAlloc = 0; iAlloc < 10000; ++iAlloc)
+			{
+				umint Size = iAlloc;
+				Allocations[iAlloc] = TestManager.f_AllocWithSize(Size, 1);
+			}
+			for (umint iAlloc = 0; iAlloc < 10000; ++iAlloc)
+			{
+				umint Size = NMib::fg_Max(iAlloc, 1u);
+				TestManager.f_Free(Allocations[iAlloc], Size);
+			}
+			return "";
+		};
+	}
 
 	DMibTestRegister(CDebugMemoryManager_Tests, Malterlib::Memory);
 }

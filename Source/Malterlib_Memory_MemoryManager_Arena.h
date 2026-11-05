@@ -55,6 +55,62 @@ namespace NMib::NMemory
 
 		bool f_IsContended(TCMemoryManagerThreadLocal<t_CParams> *_pLocalArena) const;
 
+		static constexpr bool mc_bSubSlabStore = t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists;
+		static constexpr bool mc_bSubSlabLists = t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabLists;
+		static constexpr bool mc_bSubSlabBitmaps = t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps;
+
+		// With no block metadata every cross-thread free lands in the reap pending bits, so the
+		// free-message machinery (spread stacks, availability counter, deferred lists) compiles
+		// out entirely
+		static constexpr bool mc_bUseFreeMessages = !t_CParams::mc_bNoBlockMetadata;
+
+		// The reap pending-slab stack only exists when cross-thread frees land in pending state
+		static constexpr bool mc_bUseRemoteFreeReap = mc_bSubSlabStore && t_CParams::mc_bReapInCleanup;
+
+#ifdef DCompiler_MSVC_Workaround
+		static constexpr umint mc_MinArraySize = 1;
+#else
+		static constexpr umint mc_MinArraySize = 0;
+#endif
+
+		static constexpr bool mc_bUseFreeBlockCounting = t_CParams::mc_bUseFreeBlockCounting;
+		static constexpr bool mc_bSpecialCaseSlabType0 = t_CParams::mc_bSpecialCaseSlabType0;
+		static constexpr bool mc_bUseSmallSizes = t_CParams::mc_bUseSmallSizes;
+		static constexpr umint mc_MinAllocSize = mc_bUseSmallSizes ? 1 : t_CParams::mc_MinNormalAllocSize;
+		static constexpr umint mc_MinAlignment = 4; // Can be 4 or 8
+		static constexpr umint mc_nSmallSizeSlabsAligned = NMib::gc_HighestBitSet<mc_MinAlignment> + 1;
+		static constexpr umint mc_nSmallSizeSlabs = mc_bUseSmallSizes ? (mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment * 2) / mc_MinAlignment) : mc_MinArraySize;
+		static constexpr umint mc_nLevel0Lists = mc_bUseSmallSizes ? (32 - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment : mc_MinArraySize;
+		static constexpr umint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels - 1 : t_CParams::mc_NumNormalSizeLevels;
+
+		// The per-size-class arrays are indexed by one flat class number, size level major, so
+		// neighbouring size classes are neighbours in memory
+		static constexpr umint mc_nNormalSizeClasses = mc_nNormalSizeLists * t_CParams::mc_NumSizesPerLevel;
+
+		static constexpr umint mc_Level0SmallestSize = 32 - t_CParams::mc_MinNormalSizeAlignment;
+		static constexpr bool mc_bEnableCallbacks = t_CParams::CNotifier::CArena::mc_bEnableCallbacks;
+#if defined(DArchitecture_arm64) || defined(DArchitecture_arm64e)
+		static constexpr umint mc_MessagesSpread = 16;
+#else
+		static constexpr umint mc_MessagesSpread = 1;
+#endif
+
+		// Cross-thread frees store their delete message in the freed block itself, which the small
+		// size slab rescue path in fp_FreeOtherThread only makes safe on 32 bit; stores that keep
+		// no metadata in free blocks do not use delete messages at all and are exempt
+		static_assert
+			(
+				mc_bUseSmallSizes || t_CParams::mc_bNoBlockMetadata || sizeof(void *) > 4
+				, "Disabling the small size slabs on 32 bit is only supported for free stores that keep no metadata in free blocks"
+			)
+		;
+
+		// Links need to be public
+		DMibMemoryManagerLink(TCMemoryManagerArena, m_NumaArenaLink);
+		DMibMemoryManagerLink(TCMemoryManagerArena, m_Link);
+		DMibMemoryManagerLink(TCMemoryManagerArena, m_FreeArenasLink);
+		DMibMemoryManagerLink(TCMemoryManagerArena, m_CleanupLink);
+
 	private:
 		template <typename t_CParams2>
 		friend struct TCMemoryManager;
@@ -87,20 +143,6 @@ namespace NMib::NMemory
 			>
 		;
 
-	public:
-		static constexpr bool mc_bSubSlabStore = t_CParams::mc_FreeStoreMode != EMemoryManagerFreeStore_ArenaBlockLists;
-		static constexpr bool mc_bSubSlabLists = t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabLists;
-		static constexpr bool mc_bSubSlabBitmaps = t_CParams::mc_FreeStoreMode == EMemoryManagerFreeStore_SubSlabBitmaps;
-
-		// With no block metadata every cross-thread free lands in the reap pending bits, so the
-		// free-message machinery (spread stacks, availability counter, deferred lists) compiles
-		// out entirely
-		static constexpr bool mc_bUseFreeMessages = !t_CParams::mc_bNoBlockMetadata;
-
-		// The reap pending-slab stack only exists when cross-thread frees land in pending state
-		static constexpr bool mc_bUseRemoteFreeReap = mc_bSubSlabStore && t_CParams::mc_bReapInCleanup;
-
-	private:
 		// The per-size-class lists hold free blocks with ArenaBlockLists and sub-slabs with the
 		// sub-slab store modes
 		using CNormalFreeStoreList = TCConditional<mc_bSubSlabStore, CMemoryManagerSubSlab_SubSlabList, CMemoryManagerSubSlab_NormalFreeList>;
@@ -153,14 +195,58 @@ namespace NMib::NMemory
 
 		using CNormalFreeStoreCurrent = TCConditional<mc_bSubSlabStore, CCurrentSubSlab, CCurrentSubSlabEmpty>;
 
-	public:
-		// Links need to be public
-		DMibMemoryManagerLink(TCMemoryManagerArena, m_NumaArenaLink);
-		DMibMemoryManagerLink(TCMemoryManagerArena, m_Link);
-		DMibMemoryManagerLink(TCMemoryManagerArena, m_FreeArenasLink);
-		DMibMemoryManagerLink(TCMemoryManagerArena, m_CleanupLink);
+		using FSmallAllocJump = void *(*)(TCMemoryManagerArena *_pThis);
 
-	private:
+		// The arena lock, its contention counter and the checkout count are all written by
+		// other threads, so each gets a private cache line; the struct size rounds up to
+		// whole lines, which keeps neighbouring members off all three lines regardless of
+		// which conditional states below are empty
+		struct CLockState
+		{
+			align_cacheline NThread::CLowLevelLock m_Lock;
+			align_cacheline NAtomic::TCAtomic<umint> m_LockContended;
+			align_cacheline NAtomic::TCAtomic<umint> m_CheckoutCount = 0;
+		};
+
+		struct CMessageState
+		{
+			struct CSpreadMessage
+			{
+				align_cacheline NAtomic::TCAtomic<umint> m_Messages = 0;
+			};
+
+			align_cacheline NAtomic::TCAtomic<umint> m_MessagesAvailable = 0;
+			CSpreadMessage m_SpreadMessages[mc_MessagesSpread];
+			umint m_DeferredMessages[mc_MessagesSpread] = {};
+		};
+
+		struct CMessageStateEmpty
+		{
+		};
+
+		// mc_bReapInCleanup: Treiber stack of slabs with pending cross-thread frees (slab
+		// pointers linked through m_pRemoteFreeNotify->m_StackNext, 0 terminated). Pushed by the
+		// freeing thread that observes the slab's empty-to-pending transition, popped only while
+		// holding the arena.
+		struct CRemoteFreeState
+		{
+			align_cacheline NAtomic::TCAtomic<umint> m_RemoteFreeSlabs = 0;
+		};
+
+		struct CRemoteFreeStateEmpty
+		{
+		};
+
+		struct CCurrentSubSlabs
+		{
+			CCurrentSubSlab m_Level0[mc_nLevel0Lists];
+			CCurrentSubSlab m_Normal[mc_nNormalSizeClasses];
+		};
+
+		struct CCurrentSubSlabsEmpty
+		{
+		};
+
 		template <uint32 tf_SlabType>
 		TCMemoryManagerSlabShared<t_CParams> *fp_CreateSlab(void *_pMemory, TCMemoryManagerSlabShared<t_CParams> *_pOldSlab);
 
@@ -272,50 +358,9 @@ namespace NMib::NMemory
 
 		void fp_RequestCleanup();
 
-	public:
-#ifdef DCompiler_MSVC_Workaround
-		static constexpr umint mc_MinArraySize = 1;
-#else
-		static constexpr umint mc_MinArraySize = 0;
-#endif
-
-		static constexpr bool mc_bUseFreeBlockCounting = t_CParams::mc_bUseFreeBlockCounting;
-		static constexpr bool mc_bSpecialCaseSlabType0 = t_CParams::mc_bSpecialCaseSlabType0;
-		static constexpr bool mc_bUseSmallSizes = t_CParams::mc_bUseSmallSizes;
-		static constexpr umint mc_MinAllocSize = mc_bUseSmallSizes ? 1 : t_CParams::mc_MinNormalAllocSize;
-		static constexpr umint mc_MinAlignment = 4; // Can be 4 or 8
-		static constexpr umint mc_nSmallSizeSlabsAligned = NMib::gc_HighestBitSet<mc_MinAlignment> + 1;
-		static constexpr umint mc_nSmallSizeSlabs = mc_bUseSmallSizes ? (mc_nSmallSizeSlabsAligned + (20 - mc_MinAlignment * 2) / mc_MinAlignment) : mc_MinArraySize;
-		static constexpr umint mc_nLevel0Lists = mc_bUseSmallSizes ? (32 - sizeof(void *) * 2) / t_CParams::mc_MinNormalSizeAlignment : mc_MinArraySize;
-		static constexpr umint mc_nNormalSizeLists = mc_bUseSmallSizes ? t_CParams::mc_NumNormalSizeLevels - 1 : t_CParams::mc_NumNormalSizeLevels;
-
-		// The per-size-class arrays are indexed by one flat class number, size level major, so
-		// neighbouring size classes are neighbours in memory
-		static constexpr umint mc_nNormalSizeClasses = mc_nNormalSizeLists * t_CParams::mc_NumSizesPerLevel;
-
-		static constexpr umint mc_Level0SmallestSize = 32 - t_CParams::mc_MinNormalSizeAlignment;
-		static constexpr bool mc_bEnableCallbacks = t_CParams::CNotifier::CArena::mc_bEnableCallbacks;
-#if defined(DArchitecture_arm64) || defined(DArchitecture_arm64e)
-		static constexpr umint mc_MessagesSpread = 16;
-#else
-		static constexpr umint mc_MessagesSpread = 1;
-#endif
-
-		// Cross-thread frees store their delete message in the freed block itself, which the small
-		// size slab rescue path in fp_FreeOtherThread only makes safe on 32 bit; stores that keep
-		// no metadata in free blocks do not use delete messages at all and are exempt
-		static_assert
-			(
-				mc_bUseSmallSizes || t_CParams::mc_bNoBlockMetadata || sizeof(void *) > 4
-				, "Disabling the small size slabs on 32 bit is only supported for free stores that keep no metadata in free blocks"
-			)
-		;
-
-	private:
 		static constexpr umint mcp_SmallAllocCategoryJumpTableSize = mc_bUseSmallSizes ? (t_CParams::mc_SmallSizeSlabsLargestSize == 16 ? 6 : 5) : 1;
 
-		using FSmallAllocJump = void *(*)(TCMemoryManagerArena *_pThis);
-		struct CSmallAllocJumbTable
+		struct CSmallAllocJumbTable // NOLINT(malterlib-member-order): its table uses mcp_SmallAllocCategoryJumpTableSize, so it comes after it
 		{
 			FSmallAllocJump m_Table[mcp_SmallAllocCategoryJumpTableSize];
 		};
@@ -369,49 +414,9 @@ namespace NMib::NMemory
 #endif
 		DMibMemoryManagerList_FromTemplate(TCMemoryManagerSlabShared<t_CParams>, m_LinkNeedDecommit) mp_SlabsNeedingDecommit;
 
-		// The arena lock, its contention counter and the checkout count are all written by
-		// other threads, so each gets a private cache line; the struct size rounds up to
-		// whole lines, which keeps neighbouring members off all three lines regardless of
-		// which conditional states below are empty
-		struct CLockState
-		{
-			align_cacheline NThread::CLowLevelLock m_Lock;
-			align_cacheline NAtomic::TCAtomic<umint> m_LockContended;
-			align_cacheline NAtomic::TCAtomic<umint> m_CheckoutCount = 0;
-		};
-
 		CLockState mp_LockState;
 
-		struct CMessageState
-		{
-			align_cacheline NAtomic::TCAtomic<umint> m_MessagesAvailable = 0;
-			struct CSpreadMessage
-			{
-				align_cacheline NAtomic::TCAtomic<umint> m_Messages = 0;
-			};
-
-			CSpreadMessage m_SpreadMessages[mc_MessagesSpread];
-			umint m_DeferredMessages[mc_MessagesSpread] = {};
-		};
-
-		struct CMessageStateEmpty
-		{
-		};
-
 		DMibNoUniqueAddress TCConditional<mc_bUseFreeMessages, CMessageState, CMessageStateEmpty> mp_MessageState;
-
-		// mc_bReapInCleanup: Treiber stack of slabs with pending cross-thread frees (slab
-		// pointers linked through m_pRemoteFreeNotify->m_StackNext, 0 terminated). Pushed by the
-		// freeing thread that observes the slab's empty-to-pending transition, popped only while
-		// holding the arena.
-		struct CRemoteFreeState
-		{
-			align_cacheline NAtomic::TCAtomic<umint> m_RemoteFreeSlabs = 0;
-		};
-
-		struct CRemoteFreeStateEmpty
-		{
-		};
 
 		DMibNoUniqueAddress TCConditional<mc_bUseRemoteFreeReap, CRemoteFreeState, CRemoteFreeStateEmpty> mp_RemoteFreeState;
 
@@ -420,16 +425,6 @@ namespace NMib::NMemory
 
 		CNormalFreeStoreList mp_NormalSizeSlabsLevel0[mc_nLevel0Lists];
 		CNormalFreeStoreList mp_NormalSizeSlabs[mc_nNormalSizeClasses];
-
-		struct CCurrentSubSlabs
-		{
-			CCurrentSubSlab m_Level0[mc_nLevel0Lists];
-			CCurrentSubSlab m_Normal[mc_nNormalSizeClasses];
-		};
-
-		struct CCurrentSubSlabsEmpty
-		{
-		};
 
 		DMibNoUniqueAddress TCConditional<mc_bSubSlabStore, CCurrentSubSlabs, CCurrentSubSlabsEmpty> mp_CurrentSubSlabs;
 

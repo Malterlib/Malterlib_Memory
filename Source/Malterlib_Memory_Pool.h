@@ -21,25 +21,35 @@ namespace NMib::NMemory
 		struct TCChunk
 		{
 			using CChunk = TCChunk;
-			DMibListLinkAllocatorS_Link(CChunk, m_Link, t_CAllocator);
-			umint m_Size;
+
+			inline_large TCChunk(DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) &_Blocks, umint _Size);
+			~TCChunk();
 
 			static constexpr aint mc_BlockSize = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize;
 			static constexpr aint mc_DataSize = (mc_BlockSize + t_Alignment - 1) & (~(t_Alignment - 1));
 
-			inline_large TCChunk(DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) &_Blocks, umint _Size);
-			~TCChunk();
+			DMibListLinkAllocatorS_Link(CChunk, m_Link, t_CAllocator);
+			umint m_Size;
 		};
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		struct TCPool
 		{
-			constexpr TCPool(EAggregateInitialization _Init);
-			inline_always TCPool();
-
 			using CBlock = TCBlock<t_CAllocator>;
 
 			using CChunk = TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))>;
+
+			constexpr TCPool(EAggregateInitialization _Init);
+			inline_always TCPool();
+
+			void f_Construct(ENumaNode _NumaNode, umint _GrowSize);
+			void f_Destruct(ch8 const *_pTypeName);
+			void *f_GetBlock();
+			static void fs_FreeChunk(CChunk *_pChunk);
+			fp32 f_Overhead() const;
+			void f_ReturnBlock(void *_pBlock);
+
+			static constexpr aint mc_DataSize = CChunk::mc_DataSize;
 
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorSA_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
@@ -48,15 +58,6 @@ namespace NMib::NMemory
 #endif
 			ENumaNode m_NumaNode;
 			umint m_GrowSize;
-
-			static constexpr aint mc_DataSize = CChunk::mc_DataSize;
-
-			void f_Construct(ENumaNode _NumaNode, umint _GrowSize);
-			void f_Destruct(ch8 const *_pTypeName);
-			void *f_GetBlock();
-			static void fs_FreeChunk(CChunk *_pChunk);
-			fp32 f_Overhead() const;
-			void f_ReturnBlock(void *_pBlock);
 
 		private:
 			void fp_AddChunk(void *_pMem, umint _Size);
@@ -85,36 +86,27 @@ namespace NMib::NMemory
 		{
 			using CChunk = TCChunk;
 
-			DMibListLinkAllocatorD_Link(CChunk, m_Link, t_CAllocator);
-			DMibListLinkAllocatorS_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
-			aint m_NumUsed;
-			umint m_Size;
+			inline_large TCChunk(umint _Size);
+			~TCChunk();
 
 			static constexpr aint mc_BlockSize = (sizeof(TCBlock<t_CAllocator>) + t_Alignment - 1) & (~(t_Alignment - 1));
 			static constexpr aint mc_DataSize = ((mc_BlockSize + t_DataSize) + t_Alignment - 1) & (~(t_Alignment - 1));
 
-			inline_large TCChunk(umint _Size);
-			~TCChunk();
+			DMibListLinkAllocatorD_Link(CChunk, m_Link, t_CAllocator);
+			DMibListLinkAllocatorS_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks;
+			aint m_NumUsed;
+			umint m_Size;
 		};
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		struct TCPool
 		{
-			constexpr TCPool(EAggregateInitialization _Init);
-			inline_always TCPool();
-
 			using CBlock = TCBlock<t_CAllocator>;
 
 			using CChunk = TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))>;
 
-			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
-			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
-			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
-			ENumaNode m_NumaNode;
-			umint m_GrowSize;
-
-			static constexpr aint mc_DataSize = CChunk::mc_DataSize;
-			static constexpr aint mc_BlockSize = CChunk::mc_BlockSize;
+			constexpr TCPool(EAggregateInitialization _Init);
+			inline_always TCPool();
 
 			void f_Construct(ENumaNode _NumaNode, umint _GrowSize);
 			void f_Destruct(ch8 const *_pTypeName);
@@ -123,6 +115,15 @@ namespace NMib::NMemory
 			static void fs_FreeChunk(CChunk *_pChunk);
 			fp32 f_Overhead() const;
 			void f_ReturnBlock(void *_pBlock);
+
+			static constexpr aint mc_DataSize = CChunk::mc_DataSize;
+			static constexpr aint mc_BlockSize = CChunk::mc_BlockSize;
+
+			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
+			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
+			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_EmptyChunks;
+			ENumaNode m_NumaNode;
+			umint m_GrowSize;
 		};
 	};
 
@@ -147,27 +148,37 @@ namespace NMib::NMemory
 				inline_small void const *operator () (TCChunk const &_Node) const;
 			};
 
+			inline_large TCChunk(umint _Size);
+			~TCChunk();
+
+			static constexpr aint mc_BlockSize = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize;
+			static constexpr aint mc_DataSize = (mc_BlockSize + t_Alignment - 1) & (~(t_Alignment - 1));
+
 			NIntrusive::TCAVLLink<> m_TreeLink;
 			DMibListLinkAllocatorD_Link(CChunk, m_Link, t_CAllocator); // 2
 			DMibListLinkAllocatorS_ListNoLastPtr_FromTemplate(TCBlock<t_CAllocator>, m_FreeLink, t_CAllocator) m_FreeBlocks; // 1
 			aint m_NumUsed; // 1
 			umint m_Size;
-
-			static constexpr aint mc_BlockSize = t_DataSize < sizeof(TCBlock<t_CAllocator>) ? sizeof(TCBlock<t_CAllocator>) : t_DataSize;
-			static constexpr aint mc_DataSize = (mc_BlockSize + t_Alignment - 1) & (~(t_Alignment - 1));
-
-			inline_large TCChunk(umint _Size);
-			~TCChunk();
 		};
 
 		template <typename t_CAllocator, umint t_DataSize, umint t_Alignment>
 		struct TCPool
 		{
+			using CBlock = TCBlock<t_CAllocator>;
+			using CChunk = TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))>;
+
 			constexpr TCPool(EAggregateInitialization _Init);
 			inline_always TCPool();
 
-			using CBlock = TCBlock<t_CAllocator>;
-			using CChunk = TCChunk<t_CAllocator, fg_Max(t_DataSize, sizeof(CBlock)), fg_Max(t_Alignment, alignof(CBlock))>;
+			void f_Construct(ENumaNode _NumaNode, umint _GrowSize);
+			void f_Destruct(ch8 const *_pTypeName);
+			bool f_ContainsBlock(void *_pBlock);
+			fp32 f_Overhead() const;
+			void *f_GetBlock();
+			static void fs_FreeChunk(CChunk *_pChunk);
+			void f_ReturnBlock(void *_pBlock);
+
+			static constexpr aint mc_DataSize = CChunk::mc_DataSize;
 
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_Chunks;
 			DMibListLinkAllocatorDA_List_FromTemplate(CChunk, m_Link, t_CAllocator) m_FreeChunks;
@@ -177,16 +188,6 @@ namespace NMib::NMemory
 
 			ENumaNode m_NumaNode;
 			umint m_GrowSize;
-
-			static constexpr aint mc_DataSize = CChunk::mc_DataSize;
-
-			void f_Construct(ENumaNode _NumaNode, umint _GrowSize);
-			void f_Destruct(ch8 const *_pTypeName);
-			bool f_ContainsBlock(void *_pBlock);
-			fp32 f_Overhead() const;
-			void *f_GetBlock();
-			static void fs_FreeChunk(CChunk *_pChunk);
-			void f_ReturnBlock(void *_pBlock);
 		};
 	};
 
@@ -196,11 +197,11 @@ namespace NMib::NMemory
 		constexpr TCPoolAggregateData(EAggregateInitialization _Init);
 		inline_always TCPoolAggregateData();
 
-		umint m_bDoneInit;
-
 		inline_small void f_Construct();
 		inline_small void f_InitDone();
 		inline_small bool f_ShouldInit();
+
+		umint m_bDoneInit;
 	};
 
 	template
@@ -215,23 +216,13 @@ namespace NMib::NMemory
 	>
 	struct TCPoolAggregate : public t_CAggregateData
 	{
+		using CData = t_CData;
+
 		constexpr TCPoolAggregate(EAggregateInitialization _Init);
 		inline_always TCPoolAggregate();
 
-#if DMibConfig_Memory_Shims_Enable
-		t_CDebugStrType m_DebugName;
-#endif
-
-	public:
-		static constexpr aint mc_Reporting = t_CAllocator::mc_Reporting;
-		static constexpr aint mc_CanBeStatic = false;
-		static constexpr bool mc_bMethodsStatic = false;
-
 		constexpr bool operator == (TCPoolAggregate const &_Right) const noexcept;
 		constexpr auto operator <=> (TCPoolAggregate const &_Right) const noexcept;
-
-		typename t_CPoolType::template TCPool<t_CAllocator, sizeof(t_CData), alignof(t_CData)> m_Pool;
-		using CData = t_CData;
 
 		void f_Construct(ENumaNode _NumaNode);
 		void f_Destruct();
@@ -241,6 +232,15 @@ namespace NMib::NMemory
 		inline_small void f_Delete(t_CData *_pToDelete);
 		template <typename ...tfp_CParams>
 		t_CData *f_New(tfp_CParams && ...p_Params);
+
+		static constexpr aint mc_Reporting = t_CAllocator::mc_Reporting;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
+
+#if DMibConfig_Memory_Shims_Enable
+		t_CDebugStrType m_DebugName;
+#endif
+		typename t_CPoolType::template TCPool<t_CAllocator, sizeof(t_CData), alignof(t_CData)> m_Pool;
 
 	private:
 		inline_small void fp_ReturnBlock(void *_pBlock);
@@ -318,15 +318,11 @@ namespace NMib::NMemory
 	>
 	struct TCStaticPoolAllocator : public CAllocator_Base
 	{
-		static constexpr aint mc_Reporting = t_CAllocator::mc_Reporting;
-		static constexpr aint mc_CanBeStatic = false;
-		static constexpr bool mc_bMethodsStatic = true;
+		using CAutoDestroy = TCAllocator_AutoDestroyStatic<TCStaticPoolAllocator>;
+		using CStaticPool = TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>;
 
 		constexpr bool operator == (TCStaticPoolAllocator const &_Right) const noexcept;
 		constexpr auto operator <=> (TCStaticPoolAllocator const &_Right) const noexcept;
-
-		using CAutoDestroy = TCAllocator_AutoDestroyStatic<TCStaticPoolAllocator>;
-		using CStaticPool = TCStaticPool<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>;
 
 		DMibNamedAsMemberFunction static inline_small umint f_StaticAddresses();
 		DMibNamedAsMemberFunction static inline_small umint f_GranularityAlloc(bool _bLargePages = false);
@@ -455,16 +451,19 @@ namespace NMib::NMemory
 			)
 		;
 		DMibNamedAsMemberFunction static CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
+
+		static constexpr aint mc_Reporting = t_CAllocator::mc_Reporting;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = true;
 	};
 
 	template <typename t_CType, umint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
 	struct TCStaticPool
 	{
 		using CPoolType = TCPool<t_CType, t_GrowSize, t_CLockType, t_CPoolType, t_CAllocator>;
+		using CAllocator = TCStaticPoolAllocator<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>;
 
 		static NStorage::TCAggregate<CPoolType, 16> ms_Pool;
-
-		using CAllocator = TCStaticPoolAllocator<t_CType, t_GrowSize, t_CAllocator, t_CPoolType, t_CLockType>;
 	};
 
 	template <typename t_CType, umint t_GrowSize, typename t_CAllocator, typename t_CPoolType, typename t_CLockType>
@@ -487,16 +486,10 @@ namespace NMib::NMemory
 	>
 	struct TCPoolAllocator : public CAllocator_Base
 	{
-		static constexpr aint mc_Reporting = t_CAllocator::mc_Reporting;
-		static constexpr aint mc_CanBeStatic = false;
-		static constexpr bool mc_bMethodsStatic = false;
+		using CAutoDestroy = TCAllocator_AutoDestroy<TCPoolAllocator>;
 
 		constexpr bool operator == (TCPoolAllocator const &_Right) const noexcept;
 		constexpr auto operator <=> (TCPoolAllocator const &_Right) const noexcept;
-
-		using CAutoDestroy = TCAllocator_AutoDestroy<TCPoolAllocator>;
-
-		TCPool<t_CType, t_GrowSize, t_CLockType, t_CPoolType, t_CAllocator> m_Pool;
 
 		DMibNamedAsMemberFunction static inline_small umint f_StaticAddresses();
 		DMibNamedAsMemberFunction static inline_small umint f_GranularityAlloc(bool _bLargePages = false);
@@ -583,24 +576,24 @@ namespace NMib::NMemory
 		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		only_parameters_aliased CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
+
+		static constexpr aint mc_Reporting = t_CAllocator::mc_Reporting;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
+
+		TCPool<t_CType, t_GrowSize, t_CLockType, t_CPoolType, t_CAllocator> m_Pool;
 	};
 
 	template <typename t_CPoolType>
 	struct TCPoolReferenceAllocator : public CAllocator_Base
 	{
-		static constexpr aint mc_Reporting = t_CPoolType::mc_Reporting;
-		static constexpr aint mc_CanBeStatic = false;
-		static constexpr bool mc_bMethodsStatic = false;
-
-		constexpr bool operator == (TCPoolReferenceAllocator const &_Right) const noexcept;
-		constexpr auto operator <=> (TCPoolReferenceAllocator const &_Right) const noexcept;
-
 		using CData = typename t_CPoolType::CData;
 		using CAutoDestroy = TCAllocator_AutoDestroy<TCPoolReferenceAllocator>;
 
-		t_CPoolType &m_Pool;
-
 		TCPoolReferenceAllocator(t_CPoolType &_Pool);
+
+		constexpr bool operator == (TCPoolReferenceAllocator const &_Right) const noexcept;
+		constexpr auto operator <=> (TCPoolReferenceAllocator const &_Right) const noexcept;
 
 		DMibNamedAsMemberFunction static inline_small umint f_StaticAddresses();
 		DMibNamedAsMemberFunction static inline_small umint f_GranularityAlloc(bool _bLargePages = false);
@@ -687,6 +680,12 @@ namespace NMib::NMemory
 		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		only_parameters_aliased CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
+
+		static constexpr aint mc_Reporting = t_CPoolType::mc_Reporting;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
+
+		t_CPoolType &m_Pool;
 	};
 }
 

@@ -75,26 +75,24 @@ namespace
 #ifdef DMemoryManagerTestEnable_Malterlib
 	struct CMalterlibMemoryMalterlib
 	{
-	private:
-		// Declared before the public section, whose f_Checkout return type uses mp_MemoryManager.
-		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
-		{
-		};
-
-		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
-
-	public:
 		CMalterlibMemoryMalterlib();
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
 		void f_SetNumaNode(NMib::ENumaNode _Node);
 		bool f_Init(umint _nThreads, umint _MaxSize);
 		void f_InitThread();
-		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout());
+		auto f_Checkout();
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
 		inline_small void *f_Alloc(umint _Size);
 		inline_small void f_FreeNoSize(void *_pMem);
 		void f_Clear();
 		void f_CheckHeap();
+
+	private:
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
+		{
+		};
+
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 	};
 
 #	if DMibPPtrBits >= 64
@@ -102,8 +100,19 @@ namespace
 	// small size slabs on 32 bit
 	struct CMalterlibMemoryMalterlib_SubSlabBitmaps
 	{
+		CMalterlibMemoryMalterlib_SubSlabBitmaps();
+		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
+		void f_SetNumaNode(NMib::ENumaNode _Node);
+		bool f_Init(umint _nThreads, umint _MaxSize);
+		void f_InitThread();
+		auto f_Checkout();
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
+		inline_small void *f_Alloc(umint _Size);
+		inline_small void f_FreeNoSize(void *_pMem);
+		void f_Clear();
+		void f_CheckHeap();
+
 	private:
-		// Declared before the public section, whose f_Checkout return type uses mp_MemoryManager.
 		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EMemoryManagerFreeStore mc_FreeStoreMode = NMib::NMemory::EMemoryManagerFreeStore_SubSlabBitmaps;
@@ -115,26 +124,24 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
-
-	public:
-		CMalterlibMemoryMalterlib_SubSlabBitmaps();
-		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
-		void f_SetNumaNode(NMib::ENumaNode _Node);
-		bool f_Init(umint _nThreads, umint _MaxSize);
-		void f_InitThread();
-		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout());
-		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
-		inline_small void *f_Alloc(umint _Size);
-		inline_small void f_FreeNoSize(void *_pMem);
-		void f_Clear();
-		void f_CheckHeap();
 	};
 #	endif
 
 	struct CMalterlibMemoryMalterlib_SubSlabLists
 	{
+		CMalterlibMemoryMalterlib_SubSlabLists();
+		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
+		void f_SetNumaNode(NMib::ENumaNode _Node);
+		bool f_Init(umint _nThreads, umint _MaxSize);
+		void f_InitThread();
+		auto f_Checkout();
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
+		inline_small void *f_Alloc(umint _Size);
+		inline_small void f_FreeNoSize(void *_pMem);
+		void f_Clear();
+		void f_CheckHeap();
+
 	private:
-		// Declared before the public section, whose f_Checkout return type uses mp_MemoryManager.
 		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EMemoryManagerFreeStore mc_FreeStoreMode = NMib::NMemory::EMemoryManagerFreeStore_SubSlabLists;
@@ -145,26 +152,24 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
-
-	public:
-		CMalterlibMemoryMalterlib_SubSlabLists();
-		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
-		void f_SetNumaNode(NMib::ENumaNode _Node);
-		bool f_Init(umint _nThreads, umint _MaxSize);
-		void f_InitThread();
-		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout());
-		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
-		inline_small void *f_Alloc(umint _Size);
-		inline_small void f_FreeNoSize(void *_pMem);
-		void f_Clear();
-		void f_CheckHeap();
 	};
 
 	template <NMib::NMemory::EMemoryManagerFreeStore t_FreeStoreMode, bool t_bGlobalAddressOrder>
 	struct TCMalterlibMemoryMalterlib_Reap
 	{
+		TCMalterlibMemoryMalterlib_Reap();
+		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
+		void f_SetNumaNode(NMib::ENumaNode _Node);
+		bool f_Init(umint _nThreads, umint _MaxSize);
+		void f_InitThread();
+		auto f_Checkout();
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
+		inline_small void *f_Alloc(umint _Size);
+		inline_small void f_FreeNoSize(void *_pMem);
+		void f_Clear();
+		void f_CheckHeap();
+
 	private:
-		// Declared before the public section, whose f_Checkout return type uses mp_MemoryManager.
 		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EMemoryManagerFreeStore mc_FreeStoreMode = t_FreeStoreMode;
@@ -178,19 +183,6 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
-
-	public:
-		TCMalterlibMemoryMalterlib_Reap();
-		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
-		void f_SetNumaNode(NMib::ENumaNode _Node);
-		bool f_Init(umint _nThreads, umint _MaxSize);
-		void f_InitThread();
-		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout());
-		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
-		inline_small void *f_Alloc(umint _Size);
-		inline_small void f_FreeNoSize(void *_pMem);
-		void f_Clear();
-		void f_CheckHeap();
 	};
 
 	using CMalterlibMemoryMalterlib_SubSlabListsReap = TCMalterlibMemoryMalterlib_Reap<NMib::NMemory::EMemoryManagerFreeStore_SubSlabLists, false>;
@@ -201,8 +193,19 @@ namespace
 #	if DMibPPtrBits >= 64
 	struct CMalterlibMemoryMalterlib_LowBranch
 	{
+		CMalterlibMemoryMalterlib_LowBranch();
+		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
+		void f_SetNumaNode(NMib::ENumaNode _Node);
+		bool f_Init(umint _nThreads, umint _MaxSize);
+		void f_InitThread();
+		auto f_Checkout();
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
+		inline_small void *f_Alloc(umint _Size);
+		inline_small void f_FreeNoSize(void *_pMem);
+		void f_Clear();
+		void f_CheckHeap();
+
 	private:
-		// Declared before the public section, whose f_Checkout return type uses mp_MemoryManager.
 		struct CParamsOverrides : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr bool mc_bUseSmallSizes = false;
@@ -215,80 +218,74 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
-
-	public:
-		CMalterlibMemoryMalterlib_LowBranch();
-		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
-		void f_SetNumaNode(NMib::ENumaNode _Node);
-		bool f_Init(umint _nThreads, umint _MaxSize);
-		void f_InitThread();
-		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout());
-		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
-		inline_small void *f_Alloc(umint _Size);
-		inline_small void f_FreeNoSize(void *_pMem);
-		void f_Clear();
-		void f_CheckHeap();
 	};
 #	endif
 
 	struct CMalterlibMemoryMalterlib_Debug
 	{
+		CMalterlibMemoryMalterlib_Debug();
+		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
+		void f_SetNumaNode(NMib::ENumaNode _Node);
+		bool f_Init(umint _nThreads, umint _MaxSize);
+		void f_InitThread();
+		auto f_Checkout();
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
+		inline_small void *f_Alloc(umint _Size);
+		inline_small void f_FreeNoSize(void *_pMem);
+		void f_Clear();
+		void f_CheckHeap();
+
 	private:
-		// Declared before the public section, whose f_Checkout return type uses mp_MemoryManager.
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
+		{
+		};
+
 #	ifdef DMibNeedDebugException
 		static constexpr bool mcp_bHasExceptions = true;
 #	else
 		static constexpr bool mcp_bHasExceptions = false;
 #	endif
 
-		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
-		{
-		};
-
 		NMib::NMemory::TCMemoryManagerDebug<CParams, mcp_bHasExceptions> mp_MemoryManager;
-
-	public:
-		CMalterlibMemoryMalterlib_Debug();
-		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
-		void f_SetNumaNode(NMib::ENumaNode _Node);
-		bool f_Init(umint _nThreads, umint _MaxSize);
-		void f_InitThread();
-		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout());
-		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
-		inline_small void *f_Alloc(umint _Size);
-		inline_small void f_FreeNoSize(void *_pMem);
-		void f_Clear();
-		void f_CheckHeap();
 	};
 
 	struct CMalterlibMemoryMalterlib_Tracked
 	{
-	private:
-		// Declared before the public section, whose f_Checkout return type uses mp_MemoryManager.
-		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
-		{
-		};
-
-		NMib::NMemory::TCMemoryManagerTracked<NMib::NMemory::TCMemoryManager<CParams>> mp_MemoryManager;
-
-	public:
 		CMalterlibMemoryMalterlib_Tracked();
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
 		void f_SetNumaNode(NMib::ENumaNode _Node);
 		bool f_Init(umint _nThreads, umint _MaxSize);
 		void f_InitThread();
-		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout());
+		auto f_Checkout();
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
 		inline_small void *f_Alloc(umint _Size);
 		inline_small void f_FreeNoSize(void *_pMem);
 		void f_Clear();
 		void f_CheckHeap();
+
+	private:
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<>
+		{
+		};
+
+		NMib::NMemory::TCMemoryManagerTracked<NMib::NMemory::TCMemoryManager<CParams>> mp_MemoryManager;
 	};
 
 	struct CMalterlibMemoryMalterlib_NoCleanup
 	{
+		CMalterlibMemoryMalterlib_NoCleanup();
+		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
+		void f_SetNumaNode(NMib::ENumaNode _Node);
+		bool f_Init(umint _nThreads, umint _MaxSize);
+		void f_InitThread();
+		auto f_Checkout();
+		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
+		inline_small void *f_Alloc(umint _Size);
+		inline_small void f_FreeNoSize(void *_pMem);
+		void f_Clear();
+		void f_CheckHeap();
+
 	private:
-		// Declared before the public section, whose f_Checkout return type uses mp_MemoryManager.
 		struct CLocalParams : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup = NMib::NMemory::EDeferCleanup
@@ -303,25 +300,23 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
+	};
 
-	public:
-		CMalterlibMemoryMalterlib_NoCleanup();
+	struct CMalterlibMemoryMalterlib_NoDeferCleanup
+	{
+		CMalterlibMemoryMalterlib_NoDeferCleanup();
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
 		void f_SetNumaNode(NMib::ENumaNode _Node);
 		bool f_Init(umint _nThreads, umint _MaxSize);
 		void f_InitThread();
-		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout());
+		auto f_Checkout();
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
 		inline_small void *f_Alloc(umint _Size);
 		inline_small void f_FreeNoSize(void *_pMem);
 		void f_Clear();
 		void f_CheckHeap();
-	};
 
-	struct CMalterlibMemoryMalterlib_NoDeferCleanup
-	{
 	private:
-		// Declared before the public section, whose f_Checkout return type uses mp_MemoryManager.
 		struct CLocalParams : public NMib::NMemory::CDefaultMemoryManagerParams
 		{
 			static constexpr NMib::NMemory::EDeferCleanup mc_DeferCleanup = NMib::NMemory::EDeferCleanup_None;
@@ -332,19 +327,6 @@ namespace
 		};
 
 		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
-
-	public:
-		CMalterlibMemoryMalterlib_NoDeferCleanup();
-		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
-		void f_SetNumaNode(NMib::ENumaNode _Node);
-		bool f_Init(umint _nThreads, umint _MaxSize);
-		void f_InitThread();
-		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout());
-		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
-		inline_small void *f_Alloc(umint _Size);
-		inline_small void f_FreeNoSize(void *_pMem);
-		void f_Clear();
-		void f_CheckHeap();
 	};
 
 	struct CMalterlibMemoryMalterlib_NoCheckout
@@ -371,26 +353,24 @@ namespace
 
 	struct CMalterlibMemoryMalterlib_NoCommit
 	{
-	private:
-		// Declared before the public section, whose f_Checkout return type uses mp_MemoryManager.
-		struct CParams : public NMib::NMemory::TCMemoryManagerParams<NMib::NMemory::CMemoryManagerParams_NoCommit>
-		{
-		};
-
-		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
-
-	public:
 		CMalterlibMemoryMalterlib_NoCommit();
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
 		void f_SetNumaNode(NMib::ENumaNode _Node);
 		bool f_Init(umint _nThreads, umint _MaxSize);
 		void f_InitThread();
-		auto f_Checkout() -> decltype(mp_MemoryManager.f_Checkout());
+		auto f_Checkout();
 		inline_small void *f_AllocAligned(umint _Size, umint _Alignment);
 		inline_small void *f_Alloc(umint _Size);
 		inline_small void f_FreeNoSize(void *_pMem);
 		void f_Clear();
 		void f_CheckHeap();
+
+	private:
+		struct CParams : public NMib::NMemory::TCMemoryManagerParams<NMib::NMemory::CMemoryManagerParams_NoCommit>
+		{
+		};
+
+		NMib::NMemory::TCMemoryManager<CParams> mp_MemoryManager;
 	};
 #endif
 
@@ -494,8 +474,6 @@ namespace
 		~TCMalterlibMemoryWindows();
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
 		void f_SetNumaNode(NMib::ENumaNode _Node);
-
-		HANDLE m_pHeap;
 		bool f_Init(umint _nThreads, umint _MaxSize);
 		void f_InitThread();
 		int f_Checkout();
@@ -504,6 +482,8 @@ namespace
 		inline_small void f_FreeNoSize(void *_pMem);
 		void f_Clear();
 		void f_CheckHeap();
+
+		HANDLE m_pHeap;
 	};
 #endif
 
@@ -513,8 +493,6 @@ namespace
 	{
 		TCMalterlibMemoryWindowsLF();
 		~TCMalterlibMemoryWindowsLF();
-
-		HANDLE m_pHeap;
 
 		static bool fs_ShouldRun(umint _nThreads, bool _bAlignment);
 		void f_SetNumaNode(NMib::ENumaNode _Node);
@@ -527,6 +505,8 @@ namespace
 		inline_small void f_FreeNoSize(void *_pMem);
 		void f_Clear();
 		void f_CheckHeap();
+
+		HANDLE m_pHeap;
 	};
 #endif
 

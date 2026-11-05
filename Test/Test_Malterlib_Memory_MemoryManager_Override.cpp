@@ -102,12 +102,14 @@ namespace
 	// thread created after that has allocated.
 	struct CSubSystem_WaitForLateThread : public CSubSystem
 	{
-		~CSubSystem_WaitForLateThread()
-		{
-			for (umint iWait = 0; iWait < 10000 && !g_bLateThreadAllocated.f_Load(); ++iWait)
-				usleep(1000);
-		}
+		~CSubSystem_WaitForLateThread();
 	};
+
+	CSubSystem_WaitForLateThread::~CSubSystem_WaitForLateThread()
+	{
+		for (umint iWait = 0; iWait < 10000 && !g_bLateThreadAllocated.f_Load(); ++iWait)
+			usleep(1000);
+	}
 
 	constinit TCSubSystem<CSubSystem_WaitForLateThread, ESubSystemDestruction_BeforeMemoryManager> g_SubSystem_WaitForLateThread = {DAggregateInit};
 
@@ -135,312 +137,314 @@ namespace
 
 	struct COverride_Tests : public CTest
 	{
-		void f_DoTests()
-		{
+		void f_DoTests();
+	};
+
+	void COverride_Tests::f_DoTests()
+	{
 #if defined(DPlatformFamily_macOS) || defined(DPlatformFamily_Linux)
-			DMibTestSuite("ForeignThreadAfterDestroy")
+		DMibTestSuite("ForeignThreadAfterDestroy")
+		{
+			if (fg_GetSys()->f_GetEnvironmentVariable("MalterlibForeignThreadAfterDestroyChild", "") == "true")
 			{
-				if (fg_GetSys()->f_GetEnvironmentVariable("MalterlibForeignThreadAfterDestroyChild", "") == "true")
+				constexpr fp64 c_Timeout = 60.0;
+
+				// The blocks of the threads that still allocate at exit are not leaks, and reporting leaks would wait for the
+				// arena locks of those threads, which they take again before a waiter gets them
+				fg_GetSys()->f_MemoryManager_DisableLeakReport(true);
+
+				[[maybe_unused]] auto &WaitForLateThread = *g_SubSystem_WaitForLateThread;
+
+				// The threads are still allocating when the process exits, which destroys the memory manager
+				for (umint iThread = 0; iThread < 4; ++iThread)
 				{
-					constexpr fp64 c_Timeout = 60.0;
-
-					// The blocks of the threads that still allocate at exit are not leaks, and reporting leaks would wait for the
-					// arena locks of those threads, which they take again before a waiter gets them
-					fg_GetSys()->f_MemoryManager_DisableLeakReport(true);
-
-					[[maybe_unused]] auto &WaitForLateThread = *g_SubSystem_WaitForLateThread;
-
-					// The threads are still allocating when the process exits, which destroys the memory manager
-					for (umint iThread = 0; iThread < 4; ++iThread)
-					{
 #	ifdef DPlatformFamily_macOS
-						dispatch_async_f(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), nullptr, &fg_AllocateUntilProcessExits);
+					dispatch_async_f(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), nullptr, &fg_AllocateUntilProcessExits);
 #	else
-						pthread_t Thread;
-						if (pthread_create(&Thread, nullptr, &fg_AllocateOnNewThread, nullptr) == 0)
-							pthread_detach(Thread);
+					pthread_t Thread;
+					if (pthread_create(&Thread, nullptr, &fg_AllocateOnNewThread, nullptr) == 0)
+						pthread_detach(Thread);
 #	endif
-					}
-
-					NTime::CStopwatch Stopwatch(true);
-					while (!g_bForeignThreadAllocating.f_Load() && Stopwatch.f_GetTime() < c_Timeout)
-						NSys::fg_Thread_Sleep(0.001);
-
-					constexpr umint c_nLateThreads = 64;
-					constexpr umint c_DelayStep = 50;
-
-					umint nLateThreads = 0;
-					for (umint iThread = 0; iThread < c_nLateThreads; ++iThread)
-					{
-						pthread_t Thread;
-						if (pthread_create(&Thread, nullptr, &fg_AllocateLate, (void *)(iThread * c_DelayStep)) == 0)
-						{
-							pthread_detach(Thread);
-							++nLateThreads;
-						}
-					}
-
-					Stopwatch.f_Start();
-					while (g_nForeignThreadsStarted.f_Load() < nLateThreads && Stopwatch.f_GetTime() < c_Timeout)
-						NSys::fg_Thread_Sleep(0.0001);
-
-					return;
 				}
 
-				constexpr fp64 c_Timeout = 120.0;
-				constexpr umint c_nChildren = 20;
+				NTime::CStopwatch Stopwatch(true);
+				while (!g_bForeignThreadAllocating.f_Load() && Stopwatch.f_GetTime() < c_Timeout)
+					NSys::fg_Thread_Sleep(0.001);
 
-				struct CChild
+				constexpr umint c_nLateThreads = 64;
+				constexpr umint c_DelayStep = 50;
+
+				umint nLateThreads = 0;
+				for (umint iThread = 0; iThread < c_nLateThreads; ++iThread)
 				{
-					NThread::CMutual m_Lock;
-					NThread::CEventAutoReset m_Exited;
-					CStr m_Output;
-					uint32 m_ExitCode = 0;
-					bool m_bLaunched = false;
-				};
-
-				umint nFailed = 0;
-				umint nTimedOut = 0;
-				umint nWithLateThread = 0;
-				umint nLateThreadsNotCreated = 0;
-				CStr FirstOutput;
-
-				for (umint iChild = 0; iChild < c_nChildren; ++iChild)
-				{
-					NStorage::TCSharedPointer<CChild> pChild = fg_Construct();
-
-					NProcess::CProcessLaunchParams Params;
-					Params.m_Target = NFile::CFile::fs_GetProgramPath();
-					Params.m_Parameters = NProcess::CProcessLaunchParams::fs_GetParams({"--test", fg_TestGetCurrentPath(), "--process-recursive"});
-					Params.m_Environment["MalterlibForeignThreadAfterDestroyChild"] = "true";
-					Params.m_bMergeEnvironment = true;
-					Params.m_bSeparateStdErr = true;
-
-					Params.m_fOnStateChange = [pChild](NProcess::CProcessLaunchStateChangeVariant const &_State, fp64 _TimeSinceStart)
-						{
-							switch (_State.f_GetTypeID())
-							{
-							case NProcess::EProcessLaunchState_Launched:
-								{
-									DMibLock(pChild->m_Lock);
-									pChild->m_bLaunched = true;
-								}
-
-								break;
-							case NProcess::EProcessLaunchState_LaunchFailed:
-								{
-									DMibLock(pChild->m_Lock);
-									pChild->m_Output += _State.f_Get<NProcess::EProcessLaunchState_LaunchFailed>();
-								}
-
-								pChild->m_Exited.f_Signal();
-
-								break;
-							case NProcess::EProcessLaunchState_Exited:
-								{
-									DMibLock(pChild->m_Lock);
-									pChild->m_ExitCode = _State.f_Get<NProcess::EProcessLaunchState_Exited>();
-								}
-
-								pChild->m_Exited.f_Signal();
-
-								break;
-							}
-						}
-					;
-
-					Params.m_fOnOutput = [pChild](NProcess::EProcessLaunchOutputType _OutputType, CStr const &_Output)
-						{
-							DMibLock(pChild->m_Lock);
-							pChild->m_Output += _Output;
-						}
-					;
-
-					bool bTimedOut = false;
+					pthread_t Thread;
+					if (pthread_create(&Thread, nullptr, &fg_AllocateLate, (void *)(iThread * c_DelayStep)) == 0)
 					{
-						NProcess::CProcessLaunch Launch(Params, NProcess::EProcessLaunchCloseFlag_BlockOnExit);
-
-						// A process that stops while it exits is ended, so that it is reported and not waited for
-						bTimedOut = pChild->m_Exited.f_WaitTimeout(c_Timeout);
-						if (bTimedOut)
-						{
-							int KillResult = kill(pid_t(Launch.f_GetProcessID()), SIGKILL);
-							if (KillResult != 0)
-								DMibConOut("Failed to end the process that timed out: {}\n", CStr(strerror(errno)));
-						}
+						pthread_detach(Thread);
+						++nLateThreads;
 					}
-
-					DMibLock(pChild->m_Lock);
-
-					nTimedOut += bTimedOut;
-					nWithLateThread += pChild->m_Output.f_Find(gc_LateThreadAllocated) >= 0;
-					nLateThreadsNotCreated += pChild->m_Output.f_Find(gc_LateThreadNotCreated) >= 0;
-
-					if (pChild->m_bLaunched && pChild->m_ExitCode == 0 && !bTimedOut)
-						continue;
-
-					if (!nFailed)
-						FirstOutput = pChild->m_Output;
-
-					++nFailed;
 				}
 
-				if (nFailed)
-					DMibConOut("{}\n", FirstOutput);
+				Stopwatch.f_Start();
+				while (g_nForeignThreadsStarted.f_Load() < nLateThreads && Stopwatch.f_GetTime() < c_Timeout)
+					NSys::fg_Thread_Sleep(0.0001);
 
-				DMibExpect(nFailed, ==, 0);
-				DMibExpect(nTimedOut, ==, 0);
-				DMibExpect(nLateThreadsNotCreated, ==, 0);
+				return;
+			}
 
-				DMibExpect(nWithLateThread, ==, c_nChildren);
+			constexpr fp64 c_Timeout = 120.0;
+			constexpr umint c_nChildren = 20;
+
+			struct CChild
+			{
+				NThread::CMutual m_Lock;
+				NThread::CEventAutoReset m_Exited;
+				CStr m_Output;
+				uint32 m_ExitCode = 0;
+				bool m_bLaunched = false;
 			};
+
+			umint nFailed = 0;
+			umint nTimedOut = 0;
+			umint nWithLateThread = 0;
+			umint nLateThreadsNotCreated = 0;
+			CStr FirstOutput;
+
+			for (umint iChild = 0; iChild < c_nChildren; ++iChild)
+			{
+				NStorage::TCSharedPointer<CChild> pChild = fg_Construct();
+
+				NProcess::CProcessLaunchParams Params;
+				Params.m_Target = NFile::CFile::fs_GetProgramPath();
+				Params.m_Parameters = NProcess::CProcessLaunchParams::fs_GetParams({"--test", fg_TestGetCurrentPath(), "--process-recursive"});
+				Params.m_Environment["MalterlibForeignThreadAfterDestroyChild"] = "true";
+				Params.m_bMergeEnvironment = true;
+				Params.m_bSeparateStdErr = true;
+
+				Params.m_fOnStateChange = [pChild](NProcess::CProcessLaunchStateChangeVariant const &_State, fp64 _TimeSinceStart)
+					{
+						switch (_State.f_GetTypeID())
+						{
+						case NProcess::EProcessLaunchState_Launched:
+							{
+								DMibLock(pChild->m_Lock);
+								pChild->m_bLaunched = true;
+							}
+
+							break;
+						case NProcess::EProcessLaunchState_LaunchFailed:
+							{
+								DMibLock(pChild->m_Lock);
+								pChild->m_Output += _State.f_Get<NProcess::EProcessLaunchState_LaunchFailed>();
+							}
+
+							pChild->m_Exited.f_Signal();
+
+							break;
+						case NProcess::EProcessLaunchState_Exited:
+							{
+								DMibLock(pChild->m_Lock);
+								pChild->m_ExitCode = _State.f_Get<NProcess::EProcessLaunchState_Exited>();
+							}
+
+							pChild->m_Exited.f_Signal();
+
+							break;
+						}
+					}
+				;
+
+				Params.m_fOnOutput = [pChild](NProcess::EProcessLaunchOutputType _OutputType, CStr const &_Output)
+					{
+						DMibLock(pChild->m_Lock);
+						pChild->m_Output += _Output;
+					}
+				;
+
+				bool bTimedOut = false;
+				{
+					NProcess::CProcessLaunch Launch(Params, NProcess::EProcessLaunchCloseFlag_BlockOnExit);
+
+					// A process that stops while it exits is ended, so that it is reported and not waited for
+					bTimedOut = pChild->m_Exited.f_WaitTimeout(c_Timeout);
+					if (bTimedOut)
+					{
+						int KillResult = kill(pid_t(Launch.f_GetProcessID()), SIGKILL);
+						if (KillResult != 0)
+							DMibConOut("Failed to end the process that timed out: {}\n", CStr(strerror(errno)));
+					}
+				}
+
+				DMibLock(pChild->m_Lock);
+
+				nTimedOut += bTimedOut;
+				nWithLateThread += pChild->m_Output.f_Find(gc_LateThreadAllocated) >= 0;
+				nLateThreadsNotCreated += pChild->m_Output.f_Find(gc_LateThreadNotCreated) >= 0;
+
+				if (pChild->m_bLaunched && pChild->m_ExitCode == 0 && !bTimedOut)
+					continue;
+
+				if (!nFailed)
+					FirstOutput = pChild->m_Output;
+
+				++nFailed;
+			}
+
+			if (nFailed)
+				DMibConOut("{}\n", FirstOutput);
+
+			DMibExpect(nFailed, ==, 0);
+			DMibExpect(nTimedOut, ==, 0);
+			DMibExpect(nLateThreadsNotCreated, ==, 0);
+
+			DMibExpect(nWithLateThread, ==, c_nChildren);
+		};
 #endif
 
 #ifdef DPlatformFamily_macOS
-			DMibTestSuite("TrySize")
+		DMibTestSuite("TrySize")
+		{
+			void *pMemory = malloc(5);
+			auto Cleanup = g_OnScopeExit / [&]
+				{
+					free(pMemory);
+				}
+			;
+			auto Size = malloc_size(pMemory);
+			DMibExpect(Size, >, 0);
+
+			auto Size2 = malloc_size(&pMemory);
+			DMibExpect(Size2, ==, 0);
+
+			auto *pInvalidMemory = (void **)(umint)4096;
+
+			auto SizeInvalidMemory = malloc_size(pInvalidMemory);
+			DMibExpect(SizeInvalidMemory, ==, 0);
+		};
+		DMibTestSuite("BatchMalloc")
+		{
+			auto fTestZone = [](malloc_zone_t *_pZone)
+				{
+					constexpr unsigned c_nRequested = 64;
+					constexpr size_t c_Size = 48;
+
+					void *Allocations[c_nRequested] = {};
+					unsigned nAllocated = malloc_zone_batch_malloc(_pZone, c_Size, Allocations, c_nRequested);
+#	ifdef DMibConfig_OverrideSystemMalloc
+					DMibExpect(nAllocated, ==, c_nRequested);
+#	else
+					// Without the override the zone is the system's or a sanitizer's, which may allocate fewer than requested.
+					DMibExpect(nAllocated, <=, c_nRequested);
+#	endif
+
+					umint nValid = 0;
+					for (unsigned iAllocation = 0; iAllocation < nAllocated; ++iAllocation)
+					{
+						if (!Allocations[iAllocation] || malloc_size(Allocations[iAllocation]) < c_Size)
+							continue;
+						memset(Allocations[iAllocation], int(iAllocation), c_Size);
+						++nValid;
+					}
+					DMibExpect(nValid, ==, nAllocated);
+
+					malloc_zone_batch_free(_pZone, Allocations, nAllocated);
+
+					// Memory from the ordinary malloc functions can also be freed in a batch.
+					void *Single[2] = {malloc_zone_malloc(_pZone, c_Size), malloc_zone_malloc(_pZone, c_Size)};
+					malloc_zone_batch_free(_pZone, Single, 2);
+				}
+			;
+
 			{
-				void *pMemory = malloc(5);
+				DMibTestPath("Default zone");
+				fTestZone(malloc_default_zone());
+			}
+			{
+				DMibTestPath("Created zone");
+				malloc_zone_t *pZone = malloc_create_zone(0, 0);
 				auto Cleanup = g_OnScopeExit / [&]
 					{
-						free(pMemory);
+						malloc_destroy_zone(pZone);
 					}
 				;
-				auto Size = malloc_size(pMemory);
-				DMibExpect(Size, >, 0);
-
-				auto Size2 = malloc_size(&pMemory);
-				DMibExpect(Size2, ==, 0);
-
-				auto *pInvalidMemory = (void **)(umint)4096;
-
-				auto SizeInvalidMemory = malloc_size(pInvalidMemory);
-				DMibExpect(SizeInvalidMemory, ==, 0);
-			};
-			DMibTestSuite("BatchMalloc")
-			{
-				auto fTestZone = [](malloc_zone_t *_pZone)
-					{
-						constexpr unsigned c_nRequested = 64;
-						constexpr size_t c_Size = 48;
-
-						void *Allocations[c_nRequested] = {};
-						unsigned nAllocated = malloc_zone_batch_malloc(_pZone, c_Size, Allocations, c_nRequested);
-#	ifdef DMibConfig_OverrideSystemMalloc
-						DMibExpect(nAllocated, ==, c_nRequested);
-#	else
-						// Without the override the zone is the system's or a sanitizer's, which may allocate fewer than requested.
-						DMibExpect(nAllocated, <=, c_nRequested);
-#	endif
-
-						umint nValid = 0;
-						for (unsigned iAllocation = 0; iAllocation < nAllocated; ++iAllocation)
-						{
-							if (!Allocations[iAllocation] || malloc_size(Allocations[iAllocation]) < c_Size)
-								continue;
-							memset(Allocations[iAllocation], int(iAllocation), c_Size);
-							++nValid;
-						}
-						DMibExpect(nValid, ==, nAllocated);
-
-						malloc_zone_batch_free(_pZone, Allocations, nAllocated);
-
-						// Memory from the ordinary malloc functions can also be freed in a batch.
-						void *Single[2] = {malloc_zone_malloc(_pZone, c_Size), malloc_zone_malloc(_pZone, c_Size)};
-						malloc_zone_batch_free(_pZone, Single, 2);
-					}
-				;
-
+				fTestZone(pZone);
+			}
+		};
+		DMibTestSuite(CTestCategory("TrySizePerf") << CTestGroup("Performance"))
+		{
+			auto fDoTest = [](umint _nZones)
 				{
-					DMibTestPath("Default zone");
-					fTestZone(malloc_default_zone());
-				}
-				{
-					DMibTestPath("Created zone");
-					malloc_zone_t *pZone = malloc_create_zone(0, 0);
+					DMibTestPath("{} Zones"_f << _nZones);
+
+					TCVector<malloc_zone_t *> Zones;
+
+					for (umint iZone = 0; iZone < _nZones; ++iZone)
+						Zones.f_Insert(malloc_create_zone(0, 0));
+
+					void *pMemory;
+					if (_nZones)
+						pMemory = malloc_zone_malloc(Zones.f_GetLast(), 5);
+					else
+						pMemory = malloc(5);
+
 					auto Cleanup = g_OnScopeExit / [&]
 						{
-							malloc_destroy_zone(pZone);
+							free(pMemory);
+
+							for (auto &pZone : Zones)
+								malloc_destroy_zone(pZone);
 						}
 					;
-					fTestZone(pZone);
-				}
-			};
-			DMibTestSuite(CTestCategory("TrySizePerf") << CTestGroup("Performance"))
-			{
-				auto fDoTest = [](umint _nZones)
+
 					{
-						DMibTestPath("{} Zones"_f << _nZones);
+						constexpr umint c_nTests = 5;
+						constexpr umint c_nSizeTests = 10000;
 
-						TCVector<malloc_zone_t *> Zones;
-
-						for (umint iZone = 0; iZone < _nZones; ++iZone)
-							Zones.f_Insert(malloc_create_zone(0, 0));
-
-						void *pMemory;
-						if (_nZones)
-							pMemory = malloc_zone_malloc(Zones.f_GetLast(), 5);
-						else
-							pMemory = malloc(5);
-
-						auto Cleanup = g_OnScopeExit / [&]
-							{
-								free(pMemory);
-
-								for (auto &pZone : Zones)
-									malloc_destroy_zone(pZone);
-							}
-						;
-
+						CTestPerformanceMeasure MallocSizeTime("malloc_size");
+						for (umint iTest = 0; iTest < c_nTests; ++iTest)
 						{
-							constexpr umint c_nTests = 5;
-							constexpr umint c_nSizeTests = 10000;
-
-							CTestPerformanceMeasure MallocSizeTime("malloc_size");
-							for (umint iTest = 0; iTest < c_nTests; ++iTest)
+							DMibTestScopeMeasure(MallocSizeTime, c_nSizeTests);
+							for (umint iSizeTest = 0; iSizeTest < c_nSizeTests; ++iSizeTest)
 							{
-								DMibTestScopeMeasure(MallocSizeTime, c_nSizeTests);
-								for (umint iSizeTest = 0; iSizeTest < c_nSizeTests; ++iSizeTest)
-								{
-									auto *pInvalidMemory = (void **)(umint)4096;
-									[[maybe_unused]] auto SizeInvalidMemory = malloc_size(pInvalidMemory);
-								}
+								auto *pInvalidMemory = (void **)(umint)4096;
+								[[maybe_unused]] auto SizeInvalidMemory = malloc_size(pInvalidMemory);
 							}
-
-							CTestPerformance SadCase(1.0);
-							SadCase.f_Add(MallocSizeTime);
-
-							DMibTest(DMibExpr(SadCase));
 						}
-						{
-							constexpr umint c_nTests = 5;
-							constexpr umint c_nSizeTests = 10000;
 
-							CTestPerformanceMeasure MallocSizeTime("malloc_size");
+						CTestPerformance SadCase(1.0);
+						SadCase.f_Add(MallocSizeTime);
 
-							for (umint iTest = 0; iTest < c_nTests; ++iTest)
-							{
-								DMibTestScopeMeasure(MallocSizeTime, c_nSizeTests);
-								for (umint iSizeTest = 0; iSizeTest < c_nSizeTests; ++iSizeTest)
-									[[maybe_unused]] auto SizeInvalidMemory = malloc_size(pMemory);
-							}
-
-							CTestPerformance HappyCase(1.0);
-							HappyCase.f_Add(MallocSizeTime);
-
-							DMibTest(DMibExpr(HappyCase));
-						}
+						DMibTest(DMibExpr(SadCase));
 					}
-				;
-				fDoTest(0);
-				fDoTest(10);
-				fDoTest(100);
+					{
+						constexpr umint c_nTests = 5;
+						constexpr umint c_nSizeTests = 10000;
+
+						CTestPerformanceMeasure MallocSizeTime("malloc_size");
+
+						for (umint iTest = 0; iTest < c_nTests; ++iTest)
+						{
+							DMibTestScopeMeasure(MallocSizeTime, c_nSizeTests);
+							for (umint iSizeTest = 0; iSizeTest < c_nSizeTests; ++iSizeTest)
+								[[maybe_unused]] auto SizeInvalidMemory = malloc_size(pMemory);
+						}
+
+						CTestPerformance HappyCase(1.0);
+						HappyCase.f_Add(MallocSizeTime);
+
+						DMibTest(DMibExpr(HappyCase));
+					}
+				}
+			;
+			fDoTest(0);
+			fDoTest(10);
+			fDoTest(100);
 #	ifndef DMibDebug
-				fDoTest(200);
+			fDoTest(200);
 #	endif
-			};
+		};
 #endif
-		}
-	};
+	}
 
 	DMibTestRegister(COverride_Tests, Malterlib::Memory::MemoryManager);
 }

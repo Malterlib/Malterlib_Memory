@@ -292,17 +292,19 @@ namespace NMib::NMemory
 	struct CMemoryReportThreadInfo
 	{
 		CMemoryReportThreadInfo() = default;
-		CMemoryReportThreadInfo(CMemoryReportThreadInfo const &_Other)
-		{
-			DMibLock(_Other.m_Lock);
-			m_pReportTo = _Other.m_pReportTo;
-			m_ReportDepth = _Other.m_ReportDepth;
-		}
+		CMemoryReportThreadInfo(CMemoryReportThreadInfo const &_Other);
 
 		mutable NThread::CMutual m_Lock;
 		CReportMemory *m_pReportTo = nullptr;
 		umint m_ReportDepth = 0;
 	};
+
+	CMemoryReportThreadInfo::CMemoryReportThreadInfo(CMemoryReportThreadInfo const &_Other)
+	{
+		DMibLock(_Other.m_Lock);
+		m_pReportTo = _Other.m_pReportTo;
+		m_ReportDepth = _Other.m_ReportDepth;
+	}
 
 	constinit NStorage::TCAggregate<NThread::TCThreadLocal<CMemoryReportThreadInfo, NMemory::CAllocator_NonTrackedHeap, NThread::EThreadLocalFlag_Inherit>, 10> g_MemoryReporter =
 		{

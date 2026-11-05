@@ -43,22 +43,6 @@ namespace NMib::NMemory
 #ifdef DPlatformFamily_Windows
 	struct CPerformanceCounters
 	{
-		GUID m_ProdiverGUID;
-		GUID m_CounterSetGUID;
-
-		HANDLE m_pMalterlibPerfProvider = nullptr;
-
-		bool m_bValid = false;
-
-		struct
-		{
-			PERF_COUNTERSET_INFO m_CounterSet;
-			PERF_COUNTER_INFO m_Counter0;
-			PERF_COUNTER_INFO m_Counter1;
-		} m_MemoryUsedInfo;
-
-		NContainer::TCMap<NStr::CStrNonTracked, PPERF_COUNTERSET_INSTANCE, NMib::CSort_Default, NMib::NMemory::CAllocator_NonTrackedHeap> m_PerfCounters;
-
 		~CPerformanceCounters()
 		{
 			if (m_pMalterlibPerfProvider != NULL)
@@ -242,6 +226,22 @@ namespace NMib::NMemory
 				return;
 			}
 		}
+
+		GUID m_ProdiverGUID;
+		GUID m_CounterSetGUID;
+
+		HANDLE m_pMalterlibPerfProvider = nullptr;
+
+		bool m_bValid = false;
+
+		struct
+		{
+			PERF_COUNTERSET_INFO m_CounterSet;
+			PERF_COUNTER_INFO m_Counter0;
+			PERF_COUNTER_INFO m_Counter1;
+		} m_MemoryUsedInfo;
+
+		NContainer::TCMap<NStr::CStrNonTracked, PPERF_COUNTERSET_INSTANCE, NMib::CSort_Default, NMib::NMemory::CAllocator_NonTrackedHeap> m_PerfCounters;
 	};
 
 	constinit NThread::CMutualAggregate g_PerfcountersLock = {DAggregateInit};
@@ -316,9 +316,6 @@ namespace NMib::NMemory
 	{
 		struct CStatsEntry
 		{
-			NStr::CStrNonTracked m_Name;
-			int64 m_nBytes;
-			int64 m_nAllocations;
 			COrdering_Strong operator <=> (CStatsEntry const &_Right) const noexcept
 			{
 				if (auto Result = _Right.m_nBytes <=> m_nBytes; Result != 0)
@@ -326,6 +323,10 @@ namespace NMib::NMemory
 
 				return m_Name <=> _Right.m_Name;
 			}
+
+			NStr::CStrNonTracked m_Name;
+			int64 m_nBytes;
+			int64 m_nAllocations;
 		};
 
 		CStatsEntry Total;

@@ -135,23 +135,23 @@ namespace NMib::NMemory
 
 	struct CAllocator_Base
 	{
-		static constexpr bool mc_bIsDefault = false;
-
 		constexpr bool operator == (CAllocator_Base const &_Right) const noexcept = default;
+
+		static constexpr bool mc_bIsDefault = false;
 	};
 
 	struct CAllocator_AutoDestroy
 	{
-		void *m_pMemory;
-		umint m_Size;
-
 		CAllocator_AutoDestroy(void *_pMemory, umint _Size);
 		CAllocator_AutoDestroy(CAllocator_AutoDestroy &&_Other);
-		CAllocator_AutoDestroy &operator = (CAllocator_AutoDestroy &&_Other);
 		CAllocator_AutoDestroy();
+		CAllocator_AutoDestroy &operator = (CAllocator_AutoDestroy &&_Other);
 
 		only_parameters_aliased malloc_like void *f_Get() const;
 		void f_Claim();
+
+		void *m_pMemory;
+		umint m_Size;
 	};
 
 	template <typename t_CAllocator>
@@ -159,9 +159,9 @@ namespace NMib::NMemory
 	{
 		TCAllocator_AutoDestroyStatic(void *_pMemory, umint _Size);
 		TCAllocator_AutoDestroyStatic(TCAllocator_AutoDestroyStatic &&_Other) = default;
-		TCAllocator_AutoDestroyStatic &operator = (TCAllocator_AutoDestroyStatic &&_Other) = default;
 		TCAllocator_AutoDestroyStatic() = default;
 		~TCAllocator_AutoDestroyStatic();
+		TCAllocator_AutoDestroyStatic &operator = (TCAllocator_AutoDestroyStatic &&_Other) = default;
 	};
 
 	template <typename t_CAllocator>
@@ -169,9 +169,9 @@ namespace NMib::NMemory
 	{
 		TCAllocator_AutoDestroy(void *_pMemory, umint _Size, t_CAllocator &_Allocator);
 		TCAllocator_AutoDestroy(TCAllocator_AutoDestroy &&_Other) = default;
-		TCAllocator_AutoDestroy &operator = (TCAllocator_AutoDestroy &&_Other) = default;
 		TCAllocator_AutoDestroy(t_CAllocator &_Allocator);
 		~TCAllocator_AutoDestroy();
+		TCAllocator_AutoDestroy &operator = (TCAllocator_AutoDestroy &&_Other) = default;
 
 		t_CAllocator &m_Allocator;
 	};

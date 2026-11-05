@@ -97,7 +97,7 @@ namespace
 	}
 
 	template <NMib::NMemory::EMemoryManagerFreeStore t_FreeStoreMode, bool t_bGlobalAddressOrder>
-	inline auto TCMalterlibMemoryMalterlib_Reap<t_FreeStoreMode, t_bGlobalAddressOrder>::f_Checkout() -> decltype(mp_MemoryManager.f_Checkout())
+	inline auto TCMalterlibMemoryMalterlib_Reap<t_FreeStoreMode, t_bGlobalAddressOrder>::f_Checkout()
 	{
 		return mp_MemoryManager.f_Checkout();
 	}

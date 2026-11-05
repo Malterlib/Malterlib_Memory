@@ -262,91 +262,110 @@ namespace
 #if DMibConfig_MalterlibMemoryManager_NeedDualPageSize
 	struct CMemoryManagerZoneSmall
 	{
-		CMemoryManagerZoneSmall(CMemoryManagerConfig const &_Config)
-#	if DMibConfig_Memory_Shims_Enable
-			: m_MemoryManager("macOS Zone", _Config)
-#	else
-			: m_MemoryManager(_Config)
-#	endif
-		{
-		}
+		CMemoryManagerZoneSmall(CMemoryManagerConfig const &_Config);
+
+		malloc_zone_t_known_version *f_GetMallocZone();
 
 		malloc_zone_t_known_version m_MallocZone;
 		CMemoryManagerSmall m_MemoryManager;
 		DMibListLinkDS_Link(CMemoryManagerZoneSmall, m_Link);
-		malloc_zone_t_known_version *f_GetMallocZone()
-		{
-			return &m_MallocZone;
-		}
 	};
 
 	static_assert(__builtin_offsetof(CMemoryManagerZoneSmall, m_MallocZone) == 0);
+
+	CMemoryManagerZoneSmall::CMemoryManagerZoneSmall(CMemoryManagerConfig const &_Config)
+#	if DMibConfig_Memory_Shims_Enable
+		: m_MemoryManager("macOS Zone", _Config)
+#	else
+		: m_MemoryManager(_Config)
+#	endif
+	{
+	}
+
+	malloc_zone_t_known_version *CMemoryManagerZoneSmall::f_GetMallocZone()
+	{
+		return &m_MallocZone;
+	}
 #endif
 
 	struct CMemoryManagerZoneMax
 	{
-		CMemoryManagerZoneMax(CMemoryManagerConfig const &_Config)
-#if DMibConfig_Memory_Shims_Enable
-			: m_MemoryManager("macOS Zone", _Config)
-#else
-			: m_MemoryManager(_Config)
-#endif
-		{
-		}
+		CMemoryManagerZoneMax(CMemoryManagerConfig const &_Config);
+
+		malloc_zone_t_known_version *f_GetMallocZone();
 
 		malloc_zone_t_known_version m_MallocZone;
 		CMemoryManagerMax m_MemoryManager;
 		DMibListLinkDS_Link(CMemoryManagerZoneMax, m_Link);
-		malloc_zone_t_known_version *f_GetMallocZone()
-		{
-			return &m_MallocZone;
-		}
 	};
 
 	static_assert(__builtin_offsetof(CMemoryManagerZoneMax, m_MallocZone) == 0);
 
+	CMemoryManagerZoneMax::CMemoryManagerZoneMax(CMemoryManagerConfig const &_Config)
+#if DMibConfig_Memory_Shims_Enable
+		: m_MemoryManager("macOS Zone", _Config)
+#else
+		: m_MemoryManager(_Config)
+#endif
+	{
+	}
+
+	malloc_zone_t_known_version *CMemoryManagerZoneMax::f_GetMallocZone()
+	{
+		return &m_MallocZone;
+	}
+
 	struct CLowLevelGlobalState
 	{
-		CLowLevelGlobalState()
-		{
-			m_iThreadLocal = NSys::fg_Thread_AllocLocal();
-			m_iThreadLocalReentrant = NSys::fg_Thread_AllocLocal();
-		}
+		CLowLevelGlobalState();
+		~CLowLevelGlobalState();
 
-		~CLowLevelGlobalState()
-		{
-			NSys::fg_Thread_FreeLocal(m_iThreadLocal);
-			NSys::fg_Thread_FreeLocal(m_iThreadLocalReentrant);
-		}
-
-		jmp_buf *f_GetJumpBuffer()
-		{
-			return (jmp_buf *)NSys::fg_Thread_GetLocal(m_iThreadLocal);
-		}
-
-		void f_SetJumpBuffer(jmp_buf *_pBuffer)
-		{
-			return NSys::fg_Thread_SetLocal(m_iThreadLocal, _pBuffer);
-		}
-
-		umint f_GetRentrant()
-		{
-			return (umint)NSys::fg_Thread_GetLocal(m_iThreadLocalReentrant);
-		}
-
-		void f_IncRentrant()
-		{
-			NSys::fg_Thread_SetLocal(m_iThreadLocalReentrant, (void *)(f_GetRentrant() + 1));
-		}
-
-		void f_DecRentrant()
-		{
-			NSys::fg_Thread_SetLocal(m_iThreadLocalReentrant, (void *)(f_GetRentrant() - 1));
-		}
+		jmp_buf *f_GetJumpBuffer();
+		void f_SetJumpBuffer(jmp_buf *_pBuffer);
+		umint f_GetRentrant();
+		void f_IncRentrant();
+		void f_DecRentrant();
 
 		umint m_iThreadLocal;
 		umint m_iThreadLocalReentrant;
 	};
+
+	CLowLevelGlobalState::CLowLevelGlobalState()
+	{
+		m_iThreadLocal = NSys::fg_Thread_AllocLocal();
+		m_iThreadLocalReentrant = NSys::fg_Thread_AllocLocal();
+	}
+
+	CLowLevelGlobalState::~CLowLevelGlobalState()
+	{
+		NSys::fg_Thread_FreeLocal(m_iThreadLocal);
+		NSys::fg_Thread_FreeLocal(m_iThreadLocalReentrant);
+	}
+
+	jmp_buf *CLowLevelGlobalState::f_GetJumpBuffer()
+	{
+		return (jmp_buf *)NSys::fg_Thread_GetLocal(m_iThreadLocal);
+	}
+
+	void CLowLevelGlobalState::f_SetJumpBuffer(jmp_buf *_pBuffer)
+	{
+		return NSys::fg_Thread_SetLocal(m_iThreadLocal, _pBuffer);
+	}
+
+	umint CLowLevelGlobalState::f_GetRentrant()
+	{
+		return (umint)NSys::fg_Thread_GetLocal(m_iThreadLocalReentrant);
+	}
+
+	void CLowLevelGlobalState::f_IncRentrant()
+	{
+		NSys::fg_Thread_SetLocal(m_iThreadLocalReentrant, (void *)(f_GetRentrant() + 1));
+	}
+
+	void CLowLevelGlobalState::f_DecRentrant()
+	{
+		NSys::fg_Thread_SetLocal(m_iThreadLocalReentrant, (void *)(f_GetRentrant() - 1));
+	}
 
 	constinit NStorage::TCAggregateSimple<CLowLevelGlobalState> g_LowLevelGlobalState = {DAggregateInit};
 
@@ -2188,18 +2207,20 @@ namespace
 	{
 		struct CRegionData
 		{
-			uint32 m_Type;
+			bool operator == (CRegionData const &_Right) const noexcept;
 
-			bool operator == (CRegionData const &_Right) const noexcept
-			{
-				return m_Type == _Right.m_Type;
-			}
+			uint32 m_Type;
 		};
 
 		using CRegionAllocator = TCStaticPoolAllocator<NContainer::TCMapNode<umint, NContainer::TCRegionData<umint, CRegionData>>, 128, CAllocator_VirtualNoTracking>;
 
 		NContainer::TCRegions<umint, CRegionData, CRegionAllocator> m_Regions;
 	};
+
+	bool CInvalidRegionCacheThreadLocal::CRegionData::operator == (CRegionData const &_Right) const noexcept
+	{
+		return m_Type == _Right.m_Type;
+	}
 
 	constinit NStorage::TCAggregate<NThread::TCThreadLocal<CInvalidRegionCacheThreadLocal>> g_InvalidRegionCache = {DAggregateInit};
 

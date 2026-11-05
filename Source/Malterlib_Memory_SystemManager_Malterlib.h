@@ -22,8 +22,9 @@ namespace NMib
 {
 	struct CMemoryManagerParamsCommonOverrides : CMemoryManagerParamsFlavorOverrides
 	{
-		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 		using CAllocator = CMainHeapVirtualAllocator;
+
+		static constexpr EAllocationFlag mc_AllocationFlags = EAllocationFlag_MainHeap;
 	};
 
 #	if DMibConfig_MalterlibMemoryManager_NeedDualPageSize

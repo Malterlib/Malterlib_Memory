@@ -16,8 +16,6 @@ namespace NMib::NMemory
 
 	struct CCrossModuleImplementationDefaults
 	{
-		static constexpr bool mc_bSizePenalty = true;
-
 		static void DMibCrossmoduleAPI fs_MemoryManager_GarbageCollect(CMemoryManagerCrossModule *_pModule);
 		static void DMibCrossmoduleAPI fs_CreateMemoryManager(CMemoryManagerCrossModule *_pModule);
 		static CMemoryManagerCheckout DMibCrossmoduleAPI fs_MemoryManager_Checkout(CMemoryManagerCrossModule *_pModule);
@@ -202,6 +200,8 @@ namespace NMib::NMemory
 
 		static bool DMibCrossmoduleAPI fs_AllocHasDeterministicSize(CMemoryManagerCrossModule *_pModule);
 		static EMemoryManagerFeatureFlag DMibCrossmoduleAPI fs_MemoryManagerFeatures(CMemoryManagerCrossModule *_pModule);
+
+		static constexpr bool mc_bSizePenalty = true;
 	};
 
 	struct CCrossModuleImplementation : public CCrossModuleImplementationDefaults

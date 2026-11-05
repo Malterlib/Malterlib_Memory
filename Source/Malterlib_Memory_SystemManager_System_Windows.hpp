@@ -191,9 +191,6 @@ namespace NMib::NMemory
 
 	struct CCrossModuleImplementationExtra : public CCrossModuleImplementation
 	{
-		static constexpr bool mc_bSupportsNonTracked = true;
-		static constexpr bool mc_bSupportsDebug = false;
-
 		inline_always static void DMibCrossmoduleAPI fs_CreateMemoryManager(CMemoryManagerCrossModule *_pModule)
 		{
 			DMibMemoryReportAllocatorName(g_pMemoryManagerName, g_pMemoryManagerName);
@@ -299,6 +296,9 @@ namespace NMib::NMemory
 
 			return pReturn;
 		}
+
+		static constexpr bool mc_bSupportsNonTracked = true;
+		static constexpr bool mc_bSupportsDebug = false;
 	};
 
 	inline_always void * DMibCrossmoduleAPI CCrossModuleImplementation::fs_AllocWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size)

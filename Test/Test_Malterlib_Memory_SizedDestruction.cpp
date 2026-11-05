@@ -13,19 +13,21 @@ namespace
 	// virtual destructor is what that destructor reported for the dynamic type.
 	struct CRecordingAllocator : public NMemory::CAllocator_Heap
 	{
+		DMibNamedAsMemberFunction static void f_Free(void *_pBlock, umint _Size);
+
 		static constexpr bool mc_bIsDefault = false;
-
-		DMibNamedAsMemberFunction static void f_Free(void *_pBlock, umint _Size)
-		{
-			ms_pFreed = _pBlock;
-			ms_FreedSize = _Size;
-
-			NMemory::CAllocator_Heap::f_Free(_pBlock, _Size);
-		}
 
 		static void *ms_pFreed;
 		static umint ms_FreedSize;
 	};
+
+	void CRecordingAllocator::f_Free(void *_pBlock, umint _Size)
+	{
+		ms_pFreed = _pBlock;
+		ms_FreedSize = _Size;
+
+		NMemory::CAllocator_Heap::f_Free(_pBlock, _Size);
+	}
 
 	void *CRecordingAllocator::ms_pFreed = nullptr;
 	umint CRecordingAllocator::ms_FreedSize = 0;
@@ -34,37 +36,45 @@ namespace
 
 	struct CBase
 	{
-		virtual ~CBase()
-		{
-			++g_nDestroyed;
-		}
+		virtual ~CBase();
 
 		long m_Base = 0;
 	};
 
+	CBase::~CBase()
+	{
+		++g_nDestroyed;
+	}
+
 	struct CDerived : public CBase
 	{
-		~CDerived() override
-		{
-			++g_nDestroyed;
-		}
+		~CDerived() override;
 
 		long m_Derived[3] = {};
 	};
 
+	CDerived::~CDerived()
+	{
+		++g_nDestroyed;
+	}
+
 	struct CSecondBase
 	{
-		virtual ~CSecondBase()
-		{
-			++g_nDestroyed;
-		}
+		virtual ~CSecondBase();
 
-		virtual void f_Second()
-		{
-		}
+		virtual void f_Second();
 
 		long m_Second = 0;
 	};
+
+	CSecondBase::~CSecondBase()
+	{
+		++g_nDestroyed;
+	}
+
+	void CSecondBase::f_Second()
+	{
+	}
 
 	struct CMultiple : public CBase, public CSecondBase
 	{
@@ -88,90 +98,92 @@ namespace
 
 	struct CSizedDestruction_Tests : public CTest
 	{
-		void f_DoTests()
-		{
-			DMibTestSuite("SizedDestruction")
-			{
-				DMibTestCategory("MostDerivedSize")
-				{
-					g_nDestroyed = 0;
-
-					CBase *pObject = fg_ConstructObject<CDerived>(CRecordingAllocator());
-					void *pMemory = pObject;
-
-					fg_DeleteObject(CRecordingAllocator(), pObject);
-
-					DMibExpect(g_nDestroyed, ==, 2);
-					DMibExpect(CRecordingAllocator::ms_pFreed, ==, pMemory);
-					DMibExpect(CRecordingAllocator::ms_FreedSize, ==, sizeof(CDerived));
-				};
-
-				DMibTestCategory("SecondBase")
-				{
-					g_nDestroyed = 0;
-
-					CMultiple *pMultiple = fg_ConstructObject<CMultiple>(CRecordingAllocator());
-					void *pMemory = pMultiple;
-					CSecondBase *pObject = pMultiple;
-
-					// The second base lives at an offset, so the destructor has to
-					// hand back the address of the complete object.
-					DMibExpectTrue((void *)pObject != pMemory);
-
-					fg_DeleteObject(CRecordingAllocator(), pObject);
-
-					DMibExpect(g_nDestroyed, ==, 2);
-					DMibExpect(CRecordingAllocator::ms_pFreed, ==, pMemory);
-					DMibExpect(CRecordingAllocator::ms_FreedSize, ==, sizeof(CMultiple));
-				};
-
-				DMibTestCategory("VirtualBase")
-				{
-					g_nDestroyed = 0;
-
-					CVirtualDerived *pDerived = fg_ConstructObject<CVirtualDerived>(CRecordingAllocator());
-					void *pMemory = pDerived;
-					CBase *pObject = pDerived;
-
-					fg_DeleteObject(CRecordingAllocator(), pObject);
-
-					DMibExpect(g_nDestroyed, ==, 1);
-					DMibExpect(CRecordingAllocator::ms_pFreed, ==, pMemory);
-					DMibExpect(CRecordingAllocator::ms_FreedSize, ==, sizeof(CVirtualDerived));
-				};
-
-				DMibTestCategory("StaticSize")
-				{
-					// A final class and a class without a virtual destructor are
-					// freed with the size of their static type.
-					g_nDestroyed = 0;
-
-					CFinal *pFinal = fg_ConstructObject<CFinal>(CRecordingAllocator());
-					fg_DeleteObject(CRecordingAllocator(), pFinal);
-
-					DMibExpect(g_nDestroyed, ==, 1);
-					DMibExpect(CRecordingAllocator::ms_FreedSize, ==, sizeof(CFinal));
-
-					CPlain *pPlain = fg_ConstructObject<CPlain>(CRecordingAllocator());
-					fg_DeleteObject(CRecordingAllocator(), pPlain);
-
-					DMibExpect(CRecordingAllocator::ms_FreedSize, ==, sizeof(CPlain));
-				};
-
-				DMibTestCategory("DeleteExpression")
-				{
-					// The other mode of the deleting destructor still frees the
-					// object itself.
-					g_nDestroyed = 0;
-
-					CBase *pObject = new CDerived;
-					delete pObject;
-
-					DMibExpect(g_nDestroyed, ==, 2);
-				};
-			};
-		}
+		void f_DoTests();
 	};
+
+	void CSizedDestruction_Tests::f_DoTests()
+	{
+		DMibTestSuite("SizedDestruction")
+		{
+			DMibTestCategory("MostDerivedSize")
+			{
+				g_nDestroyed = 0;
+
+				CBase *pObject = fg_ConstructObject<CDerived>(CRecordingAllocator());
+				void *pMemory = pObject;
+
+				fg_DeleteObject(CRecordingAllocator(), pObject);
+
+				DMibExpect(g_nDestroyed, ==, 2);
+				DMibExpect(CRecordingAllocator::ms_pFreed, ==, pMemory);
+				DMibExpect(CRecordingAllocator::ms_FreedSize, ==, sizeof(CDerived));
+			};
+
+			DMibTestCategory("SecondBase")
+			{
+				g_nDestroyed = 0;
+
+				CMultiple *pMultiple = fg_ConstructObject<CMultiple>(CRecordingAllocator());
+				void *pMemory = pMultiple;
+				CSecondBase *pObject = pMultiple;
+
+				// The second base lives at an offset, so the destructor has to
+				// hand back the address of the complete object.
+				DMibExpectTrue((void *)pObject != pMemory);
+
+				fg_DeleteObject(CRecordingAllocator(), pObject);
+
+				DMibExpect(g_nDestroyed, ==, 2);
+				DMibExpect(CRecordingAllocator::ms_pFreed, ==, pMemory);
+				DMibExpect(CRecordingAllocator::ms_FreedSize, ==, sizeof(CMultiple));
+			};
+
+			DMibTestCategory("VirtualBase")
+			{
+				g_nDestroyed = 0;
+
+				CVirtualDerived *pDerived = fg_ConstructObject<CVirtualDerived>(CRecordingAllocator());
+				void *pMemory = pDerived;
+				CBase *pObject = pDerived;
+
+				fg_DeleteObject(CRecordingAllocator(), pObject);
+
+				DMibExpect(g_nDestroyed, ==, 1);
+				DMibExpect(CRecordingAllocator::ms_pFreed, ==, pMemory);
+				DMibExpect(CRecordingAllocator::ms_FreedSize, ==, sizeof(CVirtualDerived));
+			};
+
+			DMibTestCategory("StaticSize")
+			{
+				// A final class and a class without a virtual destructor are
+				// freed with the size of their static type.
+				g_nDestroyed = 0;
+
+				CFinal *pFinal = fg_ConstructObject<CFinal>(CRecordingAllocator());
+				fg_DeleteObject(CRecordingAllocator(), pFinal);
+
+				DMibExpect(g_nDestroyed, ==, 1);
+				DMibExpect(CRecordingAllocator::ms_FreedSize, ==, sizeof(CFinal));
+
+				CPlain *pPlain = fg_ConstructObject<CPlain>(CRecordingAllocator());
+				fg_DeleteObject(CRecordingAllocator(), pPlain);
+
+				DMibExpect(CRecordingAllocator::ms_FreedSize, ==, sizeof(CPlain));
+			};
+
+			DMibTestCategory("DeleteExpression")
+			{
+				// The other mode of the deleting destructor still frees the
+				// object itself.
+				g_nDestroyed = 0;
+
+				CBase *pObject = new CDerived;
+				delete pObject;
+
+				DMibExpect(g_nDestroyed, ==, 2);
+			};
+		};
+	}
 
 	DMibTestRegister(CSizedDestruction_Tests, Malterlib::Memory);
 }

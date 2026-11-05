@@ -10,10 +10,6 @@ namespace NMib::NMemory
 	{
 		using CAutoDestroy = TCAllocator_AutoDestroy<TCAllocator_MemoryManager>;
 
-		static constexpr aint mc_Reporting = false;
-		static constexpr aint mc_CanBeStatic = false;
-		static constexpr bool mc_bMethodsStatic = false;
-
 		TCAllocator_MemoryManager(TCMemoryManager<t_CParams> *_pMemoryManager);
 
 		constexpr bool operator == (TCAllocator_MemoryManager const &_Right) const noexcept;
@@ -156,6 +152,10 @@ namespace NMib::NMemory
 		only_parameters_aliased CAutoDestroy f_AllocSafeWithSize(umint &_Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		only_parameters_aliased CAutoDestroy f_AllocSafe(umint _Size, umint _Alignment, EAllocationFlag _AllocFlags = EAllocationFlag_None, ENumaNode _NumaNode = ENumaNode_Default);
 		CAutoDestroy f_MakeSafe(void *_pMemory, umint _Size);
+
+		static constexpr aint mc_Reporting = false;
+		static constexpr aint mc_CanBeStatic = false;
+		static constexpr bool mc_bMethodsStatic = false;
 
 	private:
 		TCMemoryManager<t_CParams> *mp_pMemoryManager;

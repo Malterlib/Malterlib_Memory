@@ -64,8 +64,6 @@ namespace NMib::NMemory
 		{
 			// The arena notifier is called in the context of an arena so you can safely assume that this will only be called from one thread at a time
 
-			static constexpr aint mc_bEnableCallbacks = false;
-
 			CArena(CGlobal *_pGlobal);
 
 			void f_OnAlloc(uint8 *_pMemory, umint _nBytes);
@@ -74,13 +72,13 @@ namespace NMib::NMemory
 
 			void f_OnFillFree(uint8 *_pMemory, umint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
 			bool f_OnCheckFree(uint8 *_pUntouchedMemory, umint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
+
+			static constexpr aint mc_bEnableCallbacks = false;
 		};
 
 		struct CHeap
 		{
 			// The heap notifiers are called when the heap lock is taken so you can assume thread safety
-
-			static constexpr aint mc_bEnableCallbacks = false;
 
 			CHeap(CGlobal *_pGlobal);
 
@@ -89,13 +87,13 @@ namespace NMib::NMemory
 
 			void f_OnFillFree(uint8 *_pMemory, umint _nBytes, EMemoryManagerCheckFlag _Flags = EMemoryManagerCheckFlag_Protect);
 			bool f_OnCheckFree(uint8 *_pUntouchedMemory, umint _nUntouchedBytes, EMemoryManagerCheckFlag _Flags);
+
+			static constexpr aint mc_bEnableCallbacks = false;
 		};
 
 		struct CGlobal
 		{
 			// The global notifier is called in the global context so you have to provide thread safety
-
-			static constexpr aint mc_bEnableCallbacks = false;
 
 			template <typename tf_CMemoryManager>
 			CGlobal(tf_CMemoryManager &_MemMan);
@@ -105,6 +103,8 @@ namespace NMib::NMemory
 
 			void f_OnCommit(uint8 *_pMemory, umint _nBytes);
 			void f_OnDecommit(uint8 *_pMemory, umint _nBytes);
+
+			static constexpr aint mc_bEnableCallbacks = false;
 		};
 	};
 
@@ -116,6 +116,9 @@ namespace NMib::NMemory
 
 	struct CDefaultMemoryManagerParams
 	{
+		using CAllocator = CAllocator_Virtual;
+		using CNotifier = CDefaultMemoryManagerNotifier;
+
 		static constexpr umint mc_NumSizesPerLevel = 8;
 		static constexpr umint mc_SubSlabSize = gc_OsMaxPageSize; // Should be the page size
 		static constexpr bool mc_bRandomizeSlabHeader = false;
@@ -161,9 +164,6 @@ namespace NMib::NMemory
 		static constexpr umint mc_MaxPendingSubSlabs = 0;
 		// Owner full collects retain up to this many pending sub-slabs per slab type as a ready-to-reuse cache; pressure and background paths reclaim fully
 		static constexpr umint mc_nOwnerReclaimRetainSubSlabs = 0;
-
-		using CAllocator = CAllocator_Virtual;
-		using CNotifier = CDefaultMemoryManagerNotifier;
 	};
 
 	template <umint t_nSizesPerLevel>
@@ -232,6 +232,31 @@ namespace NMib::NMemory
 			)
 		;
 
+		static constexpr umint fs_CalculateNumAllocsPerSubSlab(umint _Index) // NOLINT(malterlib-header-declarations-only): the static constexpr members below use it in their initializers
+		{
+			if (_Index == 0)
+				return t_CParams::mc_SubSlabSize;
+
+			umint LowestBitSet = fg_GetLowestBitSetNoZero(_Index);
+			umint SizesPerLevelBits = fg_GetHighestBitSetNoZero(t_CParams::mc_NumSizesPerLevel);
+			return t_CParams::mc_SubSlabSize * (umint(1) << (SizesPerLevelBits - LowestBitSet));
+		}
+
+		// The smallest bucket at which a slab type's size class can actually be requested:
+		// requested sizes are aligned to mc_MinNormalSizeAlignment before classing, so classes
+		// whose size 2^Bucket + Index * 2^(Bucket - mc_SizesPerLevelShift) is not a multiple of
+		// that alignment are unreachable and must not inflate the per-sub-slab block bound
+		static constexpr umint fs_MinReachableSlabBucket(umint _Index) // NOLINT(malterlib-header-declarations-only): the initializer of mc_MaxAllocsPerSubSlabActual below uses it
+		{
+			umint Bucket = mc_MinNormalSlabBucket;
+			while (((umint(1) << Bucket) + (_Index << (Bucket - mc_SizesPerLevelShift))) % mc_MinNormalSizeAlignment != 0)
+				++Bucket;
+			return Bucket;
+		}
+
+		inline_always static uint32 fs_DivideBySlabMultiplier(uint32 _Offset, uint32 _SlabMultiplier);
+		inline_always static uint32 fs_GetSlabTypeMetaSize(uint32 _SlabType);
+
 		static constexpr umint mc_SizesPerLevelShift = gc_HighestBitSet<t_CParams::mc_NumSizesPerLevel>;
 
 		static constexpr umint mc_SlabSize = t_CParams::mc_SubSlabSize * 1024 * 4; // Carefully choosen to minimize waste in different subslab types
@@ -282,17 +307,8 @@ namespace NMib::NMemory
 			)
 		;
 
+		// NOLINTNEXTLINE(malterlib-member-order): it uses mc_MaxNumSubSlabs, so it comes after it
 		using CSubSlabIndex = NTraits::TCUnsigned<NTraits::TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(mc_MaxNumSubSlabs - 1) + 1 + 7) / 8>>;
-
-		static constexpr umint fs_CalculateNumAllocsPerSubSlab(umint _Index) // NOLINT(malterlib-header-declarations-only): the static constexpr members below use it in their initializers
-		{
-			if (_Index == 0)
-				return t_CParams::mc_SubSlabSize;
-
-			umint LowestBitSet = fg_GetLowestBitSetNoZero(_Index);
-			umint SizesPerLevelBits = fg_GetHighestBitSetNoZero(t_CParams::mc_NumSizesPerLevel);
-			return t_CParams::mc_SubSlabSize * (umint(1) << (SizesPerLevelBits - LowestBitSet));
-		}
 
 		static constexpr umint mc_MinNormalSlabBucket = NMib::fg_GetHighestBitSetNoZero(mc_MinNormalAllocSize);
 		static constexpr umint mc_NumNormalSizeLevels = mc_NumSizeLevels - mc_MinNormalSlabBucket;
@@ -303,18 +319,6 @@ namespace NMib::NMemory
 			}
 			()
 		;
-
-		// The smallest bucket at which a slab type's size class can actually be requested:
-		// requested sizes are aligned to mc_MinNormalSizeAlignment before classing, so classes
-		// whose size 2^Bucket + Index * 2^(Bucket - mc_SizesPerLevelShift) is not a multiple of
-		// that alignment are unreachable and must not inflate the per-sub-slab block bound
-		static constexpr umint fs_MinReachableSlabBucket(umint _Index) // NOLINT(malterlib-header-declarations-only): the initializer of mc_MaxAllocsPerSubSlabActual below uses it
-		{
-			umint Bucket = mc_MinNormalSlabBucket;
-			while (((umint(1) << Bucket) + (_Index << (Bucket - mc_SizesPerLevelShift))) % mc_MinNormalSizeAlignment != 0)
-				++Bucket;
-			return Bucket;
-		}
 
 		static constexpr umint mc_MaxAllocsPerSubSlabActual = []
 			{
@@ -383,6 +387,7 @@ namespace NMib::NMemory
 			}
 		;
 
+		// NOLINTNEXTLINE(malterlib-member-order): it uses mc_MaxAllocsPerSubSlab, so it comes after it
 		using CNumAllocsPerSubSlabIndex = NTraits::TCUnsigned<NTraits::TCIntFromSizeLarger<(NMib::fg_GetHighestBitSetNoZero(mc_MaxAllocsPerSubSlab) + 1 + 7) / 8>>;
 
 		static constexpr CNumAllocsPerSubSlabIndex mc_NumAllocsPerSubSlab[t_CParams::mc_NumSizesPerLevel] =
@@ -393,7 +398,7 @@ namespace NMib::NMemory
 
 		// The per-slab-type constants the allocation and free paths need together, in one
 		// cache line. m_BlockIndexShift is the odd-multiplier shift of the block size.
-		struct CSlabTypeFast
+		struct CSlabTypeFast // NOLINT(malterlib-member-order): it uses CNumAllocsPerSubSlabIndex, which comes after mc_MaxAllocsPerSubSlab
 		{
 			uint16 m_DivideMultiply;
 			CNumAllocsPerSubSlabIndex m_nAllocsPerSubSlab;
@@ -419,9 +424,6 @@ namespace NMib::NMemory
 		// Eight bytes per entry, so the whole table is one cache line at the default eight sizes
 		// per level and two at sixteen
 		static_assert(sizeof(CSlabTypeFast) == 8, "The per-slab-type constants should stay packed");
-
-		inline_always static uint32 fs_DivideBySlabMultiplier(uint32 _Offset, uint32 _SlabMultiplier);
-		inline_always static uint32 fs_GetSlabTypeMetaSize(uint32 _SlabType);
 	};
 
 	struct CMemoryManagerParams_NoCommit : public CDefaultMemoryManagerParams
