@@ -29,8 +29,8 @@ namespace
 
 	void CMalterlibMemoryDummy::f_InitThread()
 	{
-		(*mp_Memory).f_SetLen(mp_MaxSize * 2);
-		(*mp_MemoryStart) = (*mp_Memory).f_GetArray();
+		(*mp_Memory).m_Memory.f_SetLen(mp_MaxSize * 2);
+		(*mp_MemoryStart) = (*mp_Memory).m_Memory.f_GetArray();
 	}
 
 	int CMalterlibMemoryDummy::f_Checkout()
