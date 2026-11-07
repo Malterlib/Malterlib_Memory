@@ -60,7 +60,12 @@ namespace
 		void f_CheckHeap();
 
 	private:
-		NMib::NThread::TCThreadLocal<NMib::NContainer::CByteVector> mp_Memory;
+		struct CThreadMemory
+		{
+			NMib::NContainer::CByteVector m_Memory;
+		};
+
+		NMib::NThread::TCThreadLocal<CThreadMemory> mp_Memory;
 		NMib::NThread::TCThreadLocal
 			<
 				uint8 *
