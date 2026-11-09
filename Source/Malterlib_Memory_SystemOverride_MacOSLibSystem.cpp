@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #define module_export __attribute__ ((__visibility__("default")))
-#define assure_used __attribute__((used))
+#ifndef assure_used
+#	define assure_used __attribute__((used)) __attribute__((retain))
+#endif
 
 #if defined(DMibMemoryOverrideDll)
 #	define DMibMalterlibOverrideMallocExport
