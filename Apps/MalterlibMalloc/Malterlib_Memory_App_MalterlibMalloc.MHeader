@@ -25,6 +25,12 @@ Property
 		{
 			!!PlatformFamily "macOS"
 		}
+		// Weak, and missing from newer macOS SDKs: it binds to null where the system doesn't have it, and dyld then skips its
+		// interpose.
+		LinkWithLibraries += [["-Wl,-U,_malloc_type_zone_malloc_with_options_np"]]
+		{
+			!!PlatformFamily "macOS"
+		}
 	}
 	%Group "Source"
 	{
