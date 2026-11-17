@@ -228,6 +228,7 @@ Repository
 		"MI_OVERRIDE=OFF"
 		, "MI_USE_CXX=ON"
 		, "MI_PADDING=OFF"
+		, "MI_STATS=OFF"
 		, "MI_BUILD_SHARED=OFF"
 		, "MI_BUILD_OBJECT=OFF"
 	]
@@ -251,7 +252,7 @@ Repository
 		!!CompileDialect "C"
 		Analyzer false
 
-		PreprocessorDefines += ["MI_STAT=0", "MI_PADDING=0", "MI_SECURE=0", "MI_MALLOC_OVERRIDE_TLS_SUPPORT=1", "MI_USE_RTLGENRANDOM=1"]
+		PreprocessorDefines += ["MI_STATS=0", "MI_PADDING=0", "MI_SECURE=0", "MI_MALLOC_OVERRIDE_TLS_SUPPORT=1", "MI_USE_RTLGENRANDOM=1"]
 	}
 	%Target "Lib_libmimalloc_mimalloc-static"
 	{
