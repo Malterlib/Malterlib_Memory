@@ -116,6 +116,10 @@ Repository
 
 				%File "../../External/gperftools/src/^*.h"
 				%File "../../External/gperftools/src/^*.cc"
+				%File "../../External/gperftools/src/stacktrace-aw-backtrace.cc" // Upstream builds it only with its vendored aw-backtrace
+				{
+					Compile.Disabled true
+				}
 				%File "../../External/gperftools/src/debugallocation.cc"
 				{
 					Compile.Disabled true
@@ -164,31 +168,6 @@ Repository
 					Compile.Disabled true
 					{
 						!!PlatformFamily "Windows"
-					}
-				}
-				%File "../../External/gperftools/src/emergency_malloc_for_stacktrace.cc"
-				{
-					Compile.Disabled true
-					{
-						!!PlatformFamily "Windows"
-					}
-				}
-				%File "../../External/gperftools/src/heap-checker.cc"
-				{
-					Compile.Disabled true
-					{
-						!PlatformFamily "Linux"
-					}
-				}
-				%File "../../External/gperftools/src/heap-checker-bcad.cc"
-				{
-					Compile.Disabled true
-				}
-				%Group "base"
-				{
-					%File "../../External/gperftools/src/base/linuxthreads.cc"
-					{
-						Compile.Disabled true
 					}
 				}
 				%Group "windows"
