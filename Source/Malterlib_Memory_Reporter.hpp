@@ -34,22 +34,22 @@ namespace NMib::NMemory
 
 	inline CMemoryReportLightweightScopeFlagScope::CMemoryReportLightweightScopeFlagScope(EMemoryReportLightweightScopeFlag _AddFlags)
 	{
-		m_OldFlags = fg_MemoryLightweightScopeAddFlags(_AddFlags);
+		mp_OldFlags = fg_MemoryLightweightScopeAddFlags(_AddFlags);
 	}
 
 	inline CMemoryReportLightweightScopeFlagScope::~CMemoryReportLightweightScopeFlagScope()
 	{
-		fg_MemoryLightweightScopeSetFlags(m_OldFlags);
+		fg_MemoryLightweightScopeSetFlags(mp_OldFlags);
 	}
 
 	inline CMemoryReportLightweightScopeFlagLowLevelScope::CMemoryReportLightweightScopeFlagLowLevelScope(EMemoryReportLightweightScopeFlag _AddFlags)
 	{
-		m_OldFlags = fg_MemoryLightweightScopeAddFlags(_AddFlags);
+		mp_OldFlags = fg_MemoryLightweightScopeAddFlags(_AddFlags);
 	}
 
 	inline CMemoryReportLightweightScopeFlagLowLevelScope::~CMemoryReportLightweightScopeFlagLowLevelScope()
 	{
-		fg_MemoryLightweightScopeSetFlags(m_OldFlags);
+		fg_MemoryLightweightScopeSetFlags(mp_OldFlags);
 	}
 #endif
 

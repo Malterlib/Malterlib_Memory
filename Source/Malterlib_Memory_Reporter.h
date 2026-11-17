@@ -46,7 +46,7 @@ namespace NMib::NMemory
 
 	private:
 		DMibThreadLocalScopeDebugMember;
-		EMemoryReportLightweightScopeFlag m_OldFlags;
+		EMemoryReportLightweightScopeFlag mp_OldFlags;
 	};
 
 	struct CMemoryReportLightweightScopeFlagLowLevelScope
@@ -55,7 +55,7 @@ namespace NMib::NMemory
 		~CMemoryReportLightweightScopeFlagLowLevelScope();
 
 	private:
-		EMemoryReportLightweightScopeFlag m_OldFlags;
+		EMemoryReportLightweightScopeFlag mp_OldFlags;
 	};
 
 #	define DMibMemLightweightTrackDisableScope NMib::NMemory::CMemoryReportLightweightScope DisableLightweightTrack(nullptr)
