@@ -1,4 +1,5 @@
 ../../../../External/mimalloc/CMakeLists.txt
 ../../../../External/mimalloc/cmake/JoinPaths.cmake
 ../../../../External/mimalloc/cmake/mimalloc-config-version.cmake
+../../../../External/mimalloc/cmake/util.cmake
 ../../../../External/mimalloc/mimalloc.pc.in
