@@ -1337,6 +1337,18 @@ void fg_MalterlibMallocOverrideEnable()
 		fg_InstallAllocInterposers(false);
 	}
 
+	// The interposed fork functions of the system allocator run the fork handling, also for the memory managers that install no
+	// zone. Registered here, the system doesn't register handlers of its own, which would run the fork handling a second time.
+	DMibFastCheck(!g_bRegisteredAtFork);
+	if (!g_bRegisteredAtFork)
+	{
+		g_bRegisteredAtFork = true;
+		if (g_OriginalFunctions._malloc_fork_prepare && g_OriginalFunctions._malloc_fork_parent && g_OriginalFunctions._malloc_fork_child)
+			; //pthread_atfork(&fg_Override_PrepareForkDummy, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
+		else
+			pthread_atfork(&fg_Override_PrepareFork, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
+	}
+
 #if !defined(DMibConfig_MemoryManager_UseMalterlib) && !defined(DMibConfig_MemoryManager_UseOverwriteCheck) && !defined(DMibConfig_MemoryManager_UseSystem)
 	return;
 #endif
@@ -1374,15 +1386,6 @@ void fg_MalterlibMallocOverrideEnable()
 	}
 
 	malloc_set_zone_name((malloc_zone_t *)&g_MalterlibMallocZone, "MalterlibMemoryManager");
-	DMibFastCheck(!g_bRegisteredAtFork);
-	if (!g_bRegisteredAtFork)
-	{
-		g_bRegisteredAtFork = true;
-		if (g_OriginalFunctions._malloc_fork_prepare && g_OriginalFunctions._malloc_fork_parent && g_OriginalFunctions._malloc_fork_child)
-			; //pthread_atfork(&fg_Override_PrepareForkDummy, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
-		else
-			pthread_atfork(&fg_Override_PrepareFork, &fg_Override_ForkedParent, &fg_Override_ForkedChild);
-	}
 }
 
 void fg_MalterlibMallocOverrideDisable()
