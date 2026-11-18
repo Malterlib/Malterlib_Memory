@@ -231,7 +231,8 @@ Repository
 		!!CompileDialect "C"
 		Analyzer false
 
-		PreprocessorDefines += ["MI_STATS=0", "MI_PADDING=0", "MI_SECURE=0", "MI_USE_RTLGENRANDOM=1"]
+		// MI_NO_PTHREAD_ATFORK: the memory manager forwards the fork handling of Malterlib to mimalloc
+		PreprocessorDefines += ["MI_STATS=0", "MI_PADDING=0", "MI_SECURE=0", "MI_USE_RTLGENRANDOM=1", "MI_NO_PTHREAD_ATFORK=1"]
 
 		// The heap of a thread in a fixed thread slot, which is the fastest to reach and doesn't allocate
 		PreprocessorDefines += "MI_TLS_MODEL_FIXED=1"
