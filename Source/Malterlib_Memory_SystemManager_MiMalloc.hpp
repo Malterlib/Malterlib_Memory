@@ -129,6 +129,17 @@ namespace NMib::NMemory
 			DMibMemoryReportAllocatorDelete(g_pMemoryManagerName, g_pMemoryManagerName);
 		}
 
+		// mimalloc is built without its own handler for fork (MI_NO_PTHREAD_ATFORK), which cleans up after the threads that the
+		// child doesn't have. They can be inside mimalloc when the process forks, so here the child leaves alone what they can
+		// have been changing.
+		// Forks are best effort with mimalloc, and don't have to be more: a child only has to work as well as with upstream
+		// mimalloc, which expects it to exec or exit when the parent has other threads. So fs_MemoryManager_PrepareFork and
+		// fs_MemoryManager_ForkedParent deliberately stay the defaults, which take no locks of mimalloc around the fork.
+		inline_always static void DMibCrossmoduleAPI fs_MemoryManager_ForkedChild(CMemoryManagerCrossModule *_pModule)
+		{
+			mi_process_forked_child();
+		}
+
 		inline_always static void * DMibCrossmoduleAPI fs_NonTracked_AllocWithSize(CMemoryManagerCrossModule *_pModule, umint &_Size)
 		{
 			auto *pRet = mi_malloc(_Size);
