@@ -231,7 +231,16 @@ Repository
 		!!CompileDialect "C"
 		Analyzer false
 
-		PreprocessorDefines += ["MI_STATS=0", "MI_PADDING=0", "MI_SECURE=0", "MI_MALLOC_OVERRIDE_TLS_SUPPORT=1", "MI_USE_RTLGENRANDOM=1"]
+		PreprocessorDefines += ["MI_STATS=0", "MI_PADDING=0", "MI_SECURE=0", "MI_USE_RTLGENRANDOM=1"]
+
+		// The heap of a thread in a fixed thread slot, which is the fastest to reach and doesn't allocate
+		PreprocessorDefines += "MI_TLS_MODEL_FIXED=1"
+		{
+			&
+			{
+				PlatformFamily "macOS"
+			}
+		}
 	}
 	%Target "Lib_libmimalloc_mimalloc-static"
 	{
