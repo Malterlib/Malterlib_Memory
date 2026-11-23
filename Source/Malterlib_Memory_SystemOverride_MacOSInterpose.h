@@ -51,7 +51,7 @@ extern "C" void vfree(void *_pMemory) __attribute__((weak_import));
 
 using malloc_options_np_t = uint64_t; // NOLINT(malterlib-type-naming): the name in the macOS SDK
 #if __MAC_OS_X_VERSION_MAX_ALLOWED < 260000
-using malloc_zone_malloc_options_t = uint64_t;
+using malloc_zone_malloc_options_t = uint64_t; // NOLINT(malterlib-type-naming): the name in the macOS SDK
 
 extern "C" void *malloc_zone_malloc_with_options(malloc_zone_t *_pZone, size_t _Alignment, size_t _Size, malloc_zone_malloc_options_t _Options) __attribute__((weak_import));
 extern "C" void *malloc_type_zone_malloc_with_options
