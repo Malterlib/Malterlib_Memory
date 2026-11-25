@@ -1992,9 +1992,14 @@ assure_used extern "C" DMibMalterlibOverrideMallocExport void fg_Malterlib__mall
 }
 
 // A spawned child inherits the exception ports, which point at the handler of this process. That handler forwards the
-// exceptions of other tasks to the ports it replaced, which the child gets directly instead, so its exceptions go where
-// they would have gone without the handler, also once this process has exited. A forked child cannot get them, as the
-// rights are not inherited by fork.
+// exceptions of other tasks to the ports it replaced. The child gets those ports directly instead, unless their behavior
+// sends the task and thread ports, so its exceptions go where they would have gone without the handler, also once this
+// process has exited. A forked child cannot get them, as the rights are not inherited by fork.
+//
+// A port whose behavior sends the task and thread ports (EXCEPTION_DEFAULT or EXCEPTION_STATE_IDENTITY) is left out:
+// macOS 14 kills the spawning process with EXC_GUARD SET_EXCEPTION_BEHAVIOR when the spawn attributes set one on a valid
+// port. The child keeps the null port, so its bad accesses become signals as without a handler. This is not gated on the
+// OS version, as the first refusal is a SIGKILL and the versions that enforce it are not known.
 //
 // The parameters are only written when the handler is installed, and a later install replaces the same ports, so they
 // can be read without a lock while the handler is being uninstalled. _pSpawnAttributes is a posix_spawnattr_t. Returns
@@ -2018,6 +2023,10 @@ int NMib::NSys::fg_Mem_PrepareSpawnAttributes(void *_pSpawnAttributes)
 	for (umint iType = 0; iType < Params.m_nTypes; ++iType)
 	{
 		if (Params.m_Ports[iType] == MACH_PORT_NULL || !(Params.m_Masks[iType] & EXC_MASK_BAD_ACCESS))
+			continue;
+
+		exception_behavior_t Behavior = Params.m_Behaviors[iType] & ~MACH_EXCEPTION_MASK;
+		if (Behavior == EXCEPTION_DEFAULT || Behavior == EXCEPTION_STATE_IDENTITY)
 			continue;
 
 		exception_mask_t Mask = Params.m_Masks[iType] & EXC_MASK_BAD_ACCESS;
